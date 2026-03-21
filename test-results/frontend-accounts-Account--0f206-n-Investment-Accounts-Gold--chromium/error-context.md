@@ -1,0 +1,570 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e1]:
+  - button "Open Next.js Dev Tools" [ref=e7] [cursor=pointer]:
+    - img [ref=e8]
+  - alert [ref=e11]
+  - generic [ref=e12]:
+    - navigation [ref=e13]:
+      - generic [ref=e15]:
+        - generic [ref=e16]:
+          - generic [ref=e18]: Nexworth
+          - generic [ref=e19]:
+            - link "Dashboard" [ref=e20] [cursor=pointer]:
+              - /url: /dashboard
+            - link "Accounts" [ref=e21] [cursor=pointer]:
+              - /url: /dashboard/accounts
+            - link "Users Management" [ref=e22] [cursor=pointer]:
+              - /url: /dashboard/users
+            - link "Banks Management" [ref=e23] [cursor=pointer]:
+              - /url: /dashboard/banks
+        - generic [ref=e24]:
+          - generic [ref=e25]:
+            - img [ref=e26]
+            - generic [ref=e28]: Admin
+          - generic [ref=e29]:
+            - img [ref=e30]
+            - generic [ref=e33]: admin@nexworth.local
+          - button "Logout" [ref=e34] [cursor=pointer]:
+            - img [ref=e35]
+    - main [ref=e38]:
+      - generic [ref=e40]:
+        - generic [ref=e41]:
+          - generic [ref=e42]:
+            - heading "My Accounts" [level=1] [ref=e43]
+            - paragraph [ref=e44]: Manage your Bank, Investment (Stock), and Gold accounts here.
+          - button "Add Account" [ref=e46] [cursor=pointer]
+        - table [ref=e51]:
+          - rowgroup [ref=e52]:
+            - row "Account Name Type Institution Balance Status Actions" [ref=e53]:
+              - columnheader "Account Name" [ref=e54]
+              - columnheader "Type" [ref=e55]
+              - columnheader "Institution" [ref=e56]
+              - columnheader "Balance" [ref=e57]
+              - columnheader "Status" [ref=e58]
+              - columnheader "Actions" [ref=e59]
+          - rowgroup [ref=e60]:
+            - 'row "Test Gold Acc 900472 Owner: System Administrator GOLD - ฿12,500.50 Active Edit Delete" [ref=e61]':
+              - 'cell "Test Gold Acc 900472 Owner: System Administrator" [ref=e62]':
+                - generic [ref=e63]:
+                  - img [ref=e64]
+                  - text: Test Gold Acc 900472
+                - generic [ref=e69]: "Owner: System Administrator"
+              - cell "GOLD" [ref=e70]:
+                - generic [ref=e71]: GOLD
+              - cell "-" [ref=e72]
+              - cell "฿12,500.50" [ref=e73]
+              - cell "Active" [ref=e74]:
+                - generic [ref=e75]: Active
+              - cell "Edit Delete" [ref=e76]:
+                - button "Edit" [ref=e77] [cursor=pointer]:
+                  - img [ref=e78]
+                - button "Delete" [active] [ref=e80] [cursor=pointer]:
+                  - img [ref=e81]
+            - 'row "Test Stock Acc 889252 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e84]':
+              - 'cell "Test Stock Acc 889252 Owner: System Administrator" [ref=e85]':
+                - generic [ref=e86]:
+                  - img [ref=e87]
+                  - text: Test Stock Acc 889252
+                - generic [ref=e90]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e91]:
+                - generic [ref=e92]: STOCK
+              - cell "-" [ref=e93]
+              - cell "฿50,000.00" [ref=e94]
+              - cell "Active" [ref=e95]:
+                - generic [ref=e96]: Active
+              - cell "Edit Delete" [ref=e97]:
+                - button "Edit" [ref=e98] [cursor=pointer]:
+                  - img [ref=e99]
+                - button "Delete" [ref=e101] [cursor=pointer]:
+                  - img [ref=e102]
+            - 'row "Test Bank Acc 886537 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e105]':
+              - 'cell "Test Bank Acc 886537 Owner: System Administrator" [ref=e106]':
+                - generic [ref=e107]:
+                  - img [ref=e108]
+                  - text: Test Bank Acc 886537
+                - generic [ref=e112]: "Owner: System Administrator"
+              - cell "BANK" [ref=e113]:
+                - generic [ref=e114]: BANK
+              - cell "Bangkok Bank" [ref=e115]:
+                - generic [ref=e116]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e118]
+              - cell "Active" [ref=e119]:
+                - generic [ref=e120]: Active
+              - cell "Edit Delete" [ref=e121]:
+                - button "Edit" [ref=e122] [cursor=pointer]:
+                  - img [ref=e123]
+                - button "Delete" [ref=e125] [cursor=pointer]:
+                  - img [ref=e126]
+            - 'row "Test Gold Acc 603571 Owner: System Administrator GOLD - ฿12,500.50 Active Edit Delete" [ref=e129]':
+              - 'cell "Test Gold Acc 603571 Owner: System Administrator" [ref=e130]':
+                - generic [ref=e131]:
+                  - img [ref=e132]
+                  - text: Test Gold Acc 603571
+                - generic [ref=e137]: "Owner: System Administrator"
+              - cell "GOLD" [ref=e138]:
+                - generic [ref=e139]: GOLD
+              - cell "-" [ref=e140]
+              - cell "฿12,500.50" [ref=e141]
+              - cell "Active" [ref=e142]:
+                - generic [ref=e143]: Active
+              - cell "Edit Delete" [ref=e144]:
+                - button "Edit" [ref=e145] [cursor=pointer]:
+                  - img [ref=e146]
+                - button "Delete" [ref=e148] [cursor=pointer]:
+                  - img [ref=e149]
+            - 'row "Test Stock Acc 592161 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e152]':
+              - 'cell "Test Stock Acc 592161 Owner: System Administrator" [ref=e153]':
+                - generic [ref=e154]:
+                  - img [ref=e155]
+                  - text: Test Stock Acc 592161
+                - generic [ref=e158]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e159]:
+                - generic [ref=e160]: STOCK
+              - cell "-" [ref=e161]
+              - cell "฿50,000.00" [ref=e162]
+              - cell "Active" [ref=e163]:
+                - generic [ref=e164]: Active
+              - cell "Edit Delete" [ref=e165]:
+                - button "Edit" [ref=e166] [cursor=pointer]:
+                  - img [ref=e167]
+                - button "Delete" [ref=e169] [cursor=pointer]:
+                  - img [ref=e170]
+            - 'row "Test Bank Acc 589309 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e173]':
+              - 'cell "Test Bank Acc 589309 Owner: System Administrator" [ref=e174]':
+                - generic [ref=e175]:
+                  - img [ref=e176]
+                  - text: Test Bank Acc 589309
+                - generic [ref=e180]: "Owner: System Administrator"
+              - cell "BANK" [ref=e181]:
+                - generic [ref=e182]: BANK
+              - cell "Bangkok Bank" [ref=e183]:
+                - generic [ref=e184]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e186]
+              - cell "Active" [ref=e187]:
+                - generic [ref=e188]: Active
+              - cell "Edit Delete" [ref=e189]:
+                - button "Edit" [ref=e190] [cursor=pointer]:
+                  - img [ref=e191]
+                - button "Delete" [ref=e193] [cursor=pointer]:
+                  - img [ref=e194]
+            - 'row "Test Gold Acc 549965 Owner: System Administrator GOLD - ฿12,500.50 Active Edit Delete" [ref=e197]':
+              - 'cell "Test Gold Acc 549965 Owner: System Administrator" [ref=e198]':
+                - generic [ref=e199]:
+                  - img [ref=e200]
+                  - text: Test Gold Acc 549965
+                - generic [ref=e205]: "Owner: System Administrator"
+              - cell "GOLD" [ref=e206]:
+                - generic [ref=e207]: GOLD
+              - cell "-" [ref=e208]
+              - cell "฿12,500.50" [ref=e209]
+              - cell "Active" [ref=e210]:
+                - generic [ref=e211]: Active
+              - cell "Edit Delete" [ref=e212]:
+                - button "Edit" [ref=e213] [cursor=pointer]:
+                  - img [ref=e214]
+                - button "Delete" [ref=e216] [cursor=pointer]:
+                  - img [ref=e217]
+            - 'row "Test Stock Acc 538584 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e220]':
+              - 'cell "Test Stock Acc 538584 Owner: System Administrator" [ref=e221]':
+                - generic [ref=e222]:
+                  - img [ref=e223]
+                  - text: Test Stock Acc 538584
+                - generic [ref=e226]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e227]:
+                - generic [ref=e228]: STOCK
+              - cell "-" [ref=e229]
+              - cell "฿50,000.00" [ref=e230]
+              - cell "Active" [ref=e231]:
+                - generic [ref=e232]: Active
+              - cell "Edit Delete" [ref=e233]:
+                - button "Edit" [ref=e234] [cursor=pointer]:
+                  - img [ref=e235]
+                - button "Delete" [ref=e237] [cursor=pointer]:
+                  - img [ref=e238]
+            - 'row "Test Bank Acc 535621 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e241]':
+              - 'cell "Test Bank Acc 535621 Owner: System Administrator" [ref=e242]':
+                - generic [ref=e243]:
+                  - img [ref=e244]
+                  - text: Test Bank Acc 535621
+                - generic [ref=e248]: "Owner: System Administrator"
+              - cell "BANK" [ref=e249]:
+                - generic [ref=e250]: BANK
+              - cell "Bangkok Bank" [ref=e251]:
+                - generic [ref=e252]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e254]
+              - cell "Active" [ref=e255]:
+                - generic [ref=e256]: Active
+              - cell "Edit Delete" [ref=e257]:
+                - button "Edit" [ref=e258] [cursor=pointer]:
+                  - img [ref=e259]
+                - button "Delete" [ref=e261] [cursor=pointer]:
+                  - img [ref=e262]
+            - 'row "Test Gold Acc 512841 Owner: System Administrator GOLD - ฿12,500.50 Active Edit Delete" [ref=e265]':
+              - 'cell "Test Gold Acc 512841 Owner: System Administrator" [ref=e266]':
+                - generic [ref=e267]:
+                  - img [ref=e268]
+                  - text: Test Gold Acc 512841
+                - generic [ref=e273]: "Owner: System Administrator"
+              - cell "GOLD" [ref=e274]:
+                - generic [ref=e275]: GOLD
+              - cell "-" [ref=e276]
+              - cell "฿12,500.50" [ref=e277]
+              - cell "Active" [ref=e278]:
+                - generic [ref=e279]: Active
+              - cell "Edit Delete" [ref=e280]:
+                - button "Edit" [ref=e281] [cursor=pointer]:
+                  - img [ref=e282]
+                - button "Delete" [ref=e284] [cursor=pointer]:
+                  - img [ref=e285]
+            - 'row "Test Stock Acc 501112 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e288]':
+              - 'cell "Test Stock Acc 501112 Owner: System Administrator" [ref=e289]':
+                - generic [ref=e290]:
+                  - img [ref=e291]
+                  - text: Test Stock Acc 501112
+                - generic [ref=e294]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e295]:
+                - generic [ref=e296]: STOCK
+              - cell "-" [ref=e297]
+              - cell "฿50,000.00" [ref=e298]
+              - cell "Active" [ref=e299]:
+                - generic [ref=e300]: Active
+              - cell "Edit Delete" [ref=e301]:
+                - button "Edit" [ref=e302] [cursor=pointer]:
+                  - img [ref=e303]
+                - button "Delete" [ref=e305] [cursor=pointer]:
+                  - img [ref=e306]
+            - 'row "Test Bank Acc 498704 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e309]':
+              - 'cell "Test Bank Acc 498704 Owner: System Administrator" [ref=e310]':
+                - generic [ref=e311]:
+                  - img [ref=e312]
+                  - text: Test Bank Acc 498704
+                - generic [ref=e316]: "Owner: System Administrator"
+              - cell "BANK" [ref=e317]:
+                - generic [ref=e318]: BANK
+              - cell "Bangkok Bank" [ref=e319]:
+                - generic [ref=e320]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e322]
+              - cell "Active" [ref=e323]:
+                - generic [ref=e324]: Active
+              - cell "Edit Delete" [ref=e325]:
+                - button "Edit" [ref=e326] [cursor=pointer]:
+                  - img [ref=e327]
+                - button "Delete" [ref=e329] [cursor=pointer]:
+                  - img [ref=e330]
+            - 'row "Test Gold Acc 490113 Owner: System Administrator GOLD - ฿12,500.50 Active Edit Delete" [ref=e333]':
+              - 'cell "Test Gold Acc 490113 Owner: System Administrator" [ref=e334]':
+                - generic [ref=e335]:
+                  - img [ref=e336]
+                  - text: Test Gold Acc 490113
+                - generic [ref=e341]: "Owner: System Administrator"
+              - cell "GOLD" [ref=e342]:
+                - generic [ref=e343]: GOLD
+              - cell "-" [ref=e344]
+              - cell "฿12,500.50" [ref=e345]
+              - cell "Active" [ref=e346]:
+                - generic [ref=e347]: Active
+              - cell "Edit Delete" [ref=e348]:
+                - button "Edit" [ref=e349] [cursor=pointer]:
+                  - img [ref=e350]
+                - button "Delete" [ref=e352] [cursor=pointer]:
+                  - img [ref=e353]
+            - 'row "Test Bank Acc 480394 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e356]':
+              - 'cell "Test Bank Acc 480394 Owner: System Administrator" [ref=e357]':
+                - generic [ref=e358]:
+                  - img [ref=e359]
+                  - text: Test Bank Acc 480394
+                - generic [ref=e363]: "Owner: System Administrator"
+              - cell "BANK" [ref=e364]:
+                - generic [ref=e365]: BANK
+              - cell "Bangkok Bank" [ref=e366]:
+                - generic [ref=e367]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e369]
+              - cell "Active" [ref=e370]:
+                - generic [ref=e371]: Active
+              - cell "Edit Delete" [ref=e372]:
+                - button "Edit" [ref=e373] [cursor=pointer]:
+                  - img [ref=e374]
+                - button "Delete" [ref=e376] [cursor=pointer]:
+                  - img [ref=e377]
+            - 'row "Test Gold Acc 467650 Owner: System Administrator GOLD - ฿12,500.50 Active Edit Delete" [ref=e380]':
+              - 'cell "Test Gold Acc 467650 Owner: System Administrator" [ref=e381]':
+                - generic [ref=e382]:
+                  - img [ref=e383]
+                  - text: Test Gold Acc 467650
+                - generic [ref=e388]: "Owner: System Administrator"
+              - cell "GOLD" [ref=e389]:
+                - generic [ref=e390]: GOLD
+              - cell "-" [ref=e391]
+              - cell "฿12,500.50" [ref=e392]
+              - cell "Active" [ref=e393]:
+                - generic [ref=e394]: Active
+              - cell "Edit Delete" [ref=e395]:
+                - button "Edit" [ref=e396] [cursor=pointer]:
+                  - img [ref=e397]
+                - button "Delete" [ref=e399] [cursor=pointer]:
+                  - img [ref=e400]
+            - 'row "Test Stock Acc 456022 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e403]':
+              - 'cell "Test Stock Acc 456022 Owner: System Administrator" [ref=e404]':
+                - generic [ref=e405]:
+                  - img [ref=e406]
+                  - text: Test Stock Acc 456022
+                - generic [ref=e409]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e410]:
+                - generic [ref=e411]: STOCK
+              - cell "-" [ref=e412]
+              - cell "฿50,000.00" [ref=e413]
+              - cell "Active" [ref=e414]:
+                - generic [ref=e415]: Active
+              - cell "Edit Delete" [ref=e416]:
+                - button "Edit" [ref=e417] [cursor=pointer]:
+                  - img [ref=e418]
+                - button "Delete" [ref=e420] [cursor=pointer]:
+                  - img [ref=e421]
+            - 'row "Test Bank Acc 453245 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e424]':
+              - 'cell "Test Bank Acc 453245 Owner: System Administrator" [ref=e425]':
+                - generic [ref=e426]:
+                  - img [ref=e427]
+                  - text: Test Bank Acc 453245
+                - generic [ref=e431]: "Owner: System Administrator"
+              - cell "BANK" [ref=e432]:
+                - generic [ref=e433]: BANK
+              - cell "Bangkok Bank" [ref=e434]:
+                - generic [ref=e435]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e437]
+              - cell "Active" [ref=e438]:
+                - generic [ref=e439]: Active
+              - cell "Edit Delete" [ref=e440]:
+                - button "Edit" [ref=e441] [cursor=pointer]:
+                  - img [ref=e442]
+                - button "Delete" [ref=e444] [cursor=pointer]:
+                  - img [ref=e445]
+            - 'row "Test Gold Acc 403460 Owner: System Administrator GOLD - ฿12,500.50 Active Edit Delete" [ref=e448]':
+              - 'cell "Test Gold Acc 403460 Owner: System Administrator" [ref=e449]':
+                - generic [ref=e450]:
+                  - img [ref=e451]
+                  - text: Test Gold Acc 403460
+                - generic [ref=e456]: "Owner: System Administrator"
+              - cell "GOLD" [ref=e457]:
+                - generic [ref=e458]: GOLD
+              - cell "-" [ref=e459]
+              - cell "฿12,500.50" [ref=e460]
+              - cell "Active" [ref=e461]:
+                - generic [ref=e462]: Active
+              - cell "Edit Delete" [ref=e463]:
+                - button "Edit" [ref=e464] [cursor=pointer]:
+                  - img [ref=e465]
+                - button "Delete" [ref=e467] [cursor=pointer]:
+                  - img [ref=e468]
+            - 'row "Test Stock Acc 391999 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e471]':
+              - 'cell "Test Stock Acc 391999 Owner: System Administrator" [ref=e472]':
+                - generic [ref=e473]:
+                  - img [ref=e474]
+                  - text: Test Stock Acc 391999
+                - generic [ref=e477]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e478]:
+                - generic [ref=e479]: STOCK
+              - cell "-" [ref=e480]
+              - cell "฿50,000.00" [ref=e481]
+              - cell "Active" [ref=e482]:
+                - generic [ref=e483]: Active
+              - cell "Edit Delete" [ref=e484]:
+                - button "Edit" [ref=e485] [cursor=pointer]:
+                  - img [ref=e486]
+                - button "Delete" [ref=e488] [cursor=pointer]:
+                  - img [ref=e489]
+            - 'row "Test Bank Acc 389316 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e492]':
+              - 'cell "Test Bank Acc 389316 Owner: System Administrator" [ref=e493]':
+                - generic [ref=e494]:
+                  - img [ref=e495]
+                  - text: Test Bank Acc 389316
+                - generic [ref=e499]: "Owner: System Administrator"
+              - cell "BANK" [ref=e500]:
+                - generic [ref=e501]: BANK
+              - cell "Bangkok Bank" [ref=e502]:
+                - generic [ref=e503]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e505]
+              - cell "Active" [ref=e506]:
+                - generic [ref=e507]: Active
+              - cell "Edit Delete" [ref=e508]:
+                - button "Edit" [ref=e509] [cursor=pointer]:
+                  - img [ref=e510]
+                - button "Delete" [ref=e512] [cursor=pointer]:
+                  - img [ref=e513]
+            - 'row "Test Stock Acc 544124 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e516]':
+              - 'cell "Test Stock Acc 544124 Owner: System Administrator" [ref=e517]':
+                - generic [ref=e518]:
+                  - img [ref=e519]
+                  - text: Test Stock Acc 544124
+                - generic [ref=e522]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e523]:
+                - generic [ref=e524]: STOCK
+              - cell "-" [ref=e525]
+              - cell "฿50,000.00" [ref=e526]
+              - cell "Active" [ref=e527]:
+                - generic [ref=e528]: Active
+              - cell "Edit Delete" [ref=e529]:
+                - button "Edit" [ref=e530] [cursor=pointer]:
+                  - img [ref=e531]
+                - button "Delete" [ref=e533] [cursor=pointer]:
+                  - img [ref=e534]
+            - 'row "Test Bank Acc 536901 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e537]':
+              - 'cell "Test Bank Acc 536901 Owner: System Administrator" [ref=e538]':
+                - generic [ref=e539]:
+                  - img [ref=e540]
+                  - text: Test Bank Acc 536901
+                - generic [ref=e544]: "Owner: System Administrator"
+              - cell "BANK" [ref=e545]:
+                - generic [ref=e546]: BANK
+              - cell "Bangkok Bank" [ref=e547]:
+                - generic [ref=e548]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e550]
+              - cell "Active" [ref=e551]:
+                - generic [ref=e552]: Active
+              - cell "Edit Delete" [ref=e553]:
+                - button "Edit" [ref=e554] [cursor=pointer]:
+                  - img [ref=e555]
+                - button "Delete" [ref=e557] [cursor=pointer]:
+                  - img [ref=e558]
+            - 'row "Test Stock Acc 497238 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e561]':
+              - 'cell "Test Stock Acc 497238 Owner: System Administrator" [ref=e562]':
+                - generic [ref=e563]:
+                  - img [ref=e564]
+                  - text: Test Stock Acc 497238
+                - generic [ref=e567]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e568]:
+                - generic [ref=e569]: STOCK
+              - cell "-" [ref=e570]
+              - cell "฿50,000.00" [ref=e571]
+              - cell "Active" [ref=e572]:
+                - generic [ref=e573]: Active
+              - cell "Edit Delete" [ref=e574]:
+                - button "Edit" [ref=e575] [cursor=pointer]:
+                  - img [ref=e576]
+                - button "Delete" [ref=e578] [cursor=pointer]:
+                  - img [ref=e579]
+            - 'row "Test Bank Acc 490119 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e582]':
+              - 'cell "Test Bank Acc 490119 Owner: System Administrator" [ref=e583]':
+                - generic [ref=e584]:
+                  - img [ref=e585]
+                  - text: Test Bank Acc 490119
+                - generic [ref=e589]: "Owner: System Administrator"
+              - cell "BANK" [ref=e590]:
+                - generic [ref=e591]: BANK
+              - cell "Bangkok Bank" [ref=e592]:
+                - generic [ref=e593]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e595]
+              - cell "Active" [ref=e596]:
+                - generic [ref=e597]: Active
+              - cell "Edit Delete" [ref=e598]:
+                - button "Edit" [ref=e599] [cursor=pointer]:
+                  - img [ref=e600]
+                - button "Delete" [ref=e602] [cursor=pointer]:
+                  - img [ref=e603]
+            - 'row "Test Stock Acc 398737 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e606]':
+              - 'cell "Test Stock Acc 398737 Owner: System Administrator" [ref=e607]':
+                - generic [ref=e608]:
+                  - img [ref=e609]
+                  - text: Test Stock Acc 398737
+                - generic [ref=e612]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e613]:
+                - generic [ref=e614]: STOCK
+              - cell "-" [ref=e615]
+              - cell "฿50,000.00" [ref=e616]
+              - cell "Active" [ref=e617]:
+                - generic [ref=e618]: Active
+              - cell "Edit Delete" [ref=e619]:
+                - button "Edit" [ref=e620] [cursor=pointer]:
+                  - img [ref=e621]
+                - button "Delete" [ref=e623] [cursor=pointer]:
+                  - img [ref=e624]
+            - 'row "Test Bank Acc 391706 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e627]':
+              - 'cell "Test Bank Acc 391706 Owner: System Administrator" [ref=e628]':
+                - generic [ref=e629]:
+                  - img [ref=e630]
+                  - text: Test Bank Acc 391706
+                - generic [ref=e634]: "Owner: System Administrator"
+              - cell "BANK" [ref=e635]:
+                - generic [ref=e636]: BANK
+              - cell "Bangkok Bank" [ref=e637]:
+                - generic [ref=e638]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e640]
+              - cell "Active" [ref=e641]:
+                - generic [ref=e642]: Active
+              - cell "Edit Delete" [ref=e643]:
+                - button "Edit" [ref=e644] [cursor=pointer]:
+                  - img [ref=e645]
+                - button "Delete" [ref=e647] [cursor=pointer]:
+                  - img [ref=e648]
+            - 'row "Test Stock Acc 365541 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e651]':
+              - 'cell "Test Stock Acc 365541 Owner: System Administrator" [ref=e652]':
+                - generic [ref=e653]:
+                  - img [ref=e654]
+                  - text: Test Stock Acc 365541
+                - generic [ref=e657]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e658]:
+                - generic [ref=e659]: STOCK
+              - cell "-" [ref=e660]
+              - cell "฿50,000.00" [ref=e661]
+              - cell "Active" [ref=e662]:
+                - generic [ref=e663]: Active
+              - cell "Edit Delete" [ref=e664]:
+                - button "Edit" [ref=e665] [cursor=pointer]:
+                  - img [ref=e666]
+                - button "Delete" [ref=e668] [cursor=pointer]:
+                  - img [ref=e669]
+            - 'row "Test Bank Acc 358192 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e672]':
+              - 'cell "Test Bank Acc 358192 Owner: System Administrator" [ref=e673]':
+                - generic [ref=e674]:
+                  - img [ref=e675]
+                  - text: Test Bank Acc 358192
+                - generic [ref=e679]: "Owner: System Administrator"
+              - cell "BANK" [ref=e680]:
+                - generic [ref=e681]: BANK
+              - cell "Bangkok Bank" [ref=e682]:
+                - generic [ref=e683]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e685]
+              - cell "Active" [ref=e686]:
+                - generic [ref=e687]: Active
+              - cell "Edit Delete" [ref=e688]:
+                - button "Edit" [ref=e689] [cursor=pointer]:
+                  - img [ref=e690]
+                - button "Delete" [ref=e692] [cursor=pointer]:
+                  - img [ref=e693]
+            - 'row "Test Stock Acc 325544 Owner: System Administrator STOCK - ฿50,000.00 Active Edit Delete" [ref=e696]':
+              - 'cell "Test Stock Acc 325544 Owner: System Administrator" [ref=e697]':
+                - generic [ref=e698]:
+                  - img [ref=e699]
+                  - text: Test Stock Acc 325544
+                - generic [ref=e702]: "Owner: System Administrator"
+              - cell "STOCK" [ref=e703]:
+                - generic [ref=e704]: STOCK
+              - cell "-" [ref=e705]
+              - cell "฿50,000.00" [ref=e706]
+              - cell "Active" [ref=e707]:
+                - generic [ref=e708]: Active
+              - cell "Edit Delete" [ref=e709]:
+                - button "Edit" [ref=e710] [cursor=pointer]:
+                  - img [ref=e711]
+                - button "Delete" [ref=e713] [cursor=pointer]:
+                  - img [ref=e714]
+            - 'row "Test Bank Acc 318450 Owner: System Administrator BANK Bangkok Bank ฿1,500.00 Active Edit Delete" [ref=e717]':
+              - 'cell "Test Bank Acc 318450 Owner: System Administrator" [ref=e718]':
+                - generic [ref=e719]:
+                  - img [ref=e720]
+                  - text: Test Bank Acc 318450
+                - generic [ref=e724]: "Owner: System Administrator"
+              - cell "BANK" [ref=e725]:
+                - generic [ref=e726]: BANK
+              - cell "Bangkok Bank" [ref=e727]:
+                - generic [ref=e728]: Bangkok Bank
+              - cell "฿1,500.00" [ref=e730]
+              - cell "Active" [ref=e731]:
+                - generic [ref=e732]: Active
+              - cell "Edit Delete" [ref=e733]:
+                - button "Edit" [ref=e734] [cursor=pointer]:
+                  - img [ref=e735]
+                - button "Delete" [ref=e737] [cursor=pointer]:
+                  - img [ref=e738]
+```
