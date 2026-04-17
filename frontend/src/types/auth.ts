@@ -1,9 +1,19 @@
+export interface Permission {
+  resource: string;
+  canView: boolean;
+  canCreate: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+}
+
 export interface User {
   id: string;
   email: string;
   firstName?: string;
   lastName?: string;
   role: string;
+  permissions: Permission[];
+  orgName?: string;
 }
 
 export interface AuthResponse {
@@ -17,5 +27,7 @@ export interface MeResponse {
     sub: string;
     email: string;
     role: string;
+    permissions: Permission[];
+    orgName?: string;
   };
 }

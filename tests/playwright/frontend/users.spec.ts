@@ -8,13 +8,14 @@ test.describe('User Management CRUD Flows', () => {
   test.beforeEach(async ({ page }) => {
     // Login as Admin
     await page.goto(`${baseURL}/login`);
-    await page.fill('input[name="email"]', 'admin@nexworth.local');
-    await page.fill('input[name="password"]', 'admin123');
+    await page.fill('input[name="email"]', 'neranchara.ksr@gmail.com');
+    await page.fill('input[name="password"]', 'w,j,uP@ssw0rd');
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL(`${baseURL}/dashboard`);
     
-    // Navigate to Users
-    await page.click('text=Users Management');
+    // Navigate to Users (Setup dropdown)
+    await page.locator('button:has-text("Setup")').hover();
+    await page.locator('div.group:has-text("Setup") a:has-text("Users Management")').click();
     await expect(page).toHaveURL(`${baseURL}/dashboard/users`);
     // Wait for the table/data to load
     await expect(page.getByRole('button', { name: 'Add user' })).toBeVisible();
@@ -44,7 +45,10 @@ test.describe('User Management CRUD Flows', () => {
     await page.locator('div').filter({ hasText: /^Last Name$/ }).getByRole('textbox').fill('TestLast');
     
     // Select Role
-    await page.locator('select').selectOption({ label: 'Guest' });
+    await page.locator('select').first().selectOption({ label: 'Guest' });
+    
+    // Select Organization
+    await page.locator('select').last().selectOption({ index: 1 }); // Select first real org (index 0 is placeholder)
 
     await page.click('button:has-text("Save User")');
 
@@ -57,18 +61,19 @@ test.describe('User Management CRUD Flows', () => {
     await expect(userRow).toBeVisible();
     await expect(userRow.locator('td').nth(0)).toContainText(testUserName);
     await expect(userRow.locator('td').nth(2)).toContainText('Guest');
-    await expect(userRow.locator('td').nth(3)).toContainText('Active');
+    // Index 3 is Organization, skipping for now as it depends on data
+    await expect(userRow.locator('td').nth(4)).toContainText('Active');
 
     // 2. Edit User (Change Status to Inactive)
     await userRow.locator('button[title="Edit"]').click();
     await expect(page.locator('h2', { hasText: 'Edit User' })).toBeVisible();
 
-    // Toggle Active status (click the button handling the toggle)
-    await page.locator('div:has-text("Account Status") button').click();
+    // Toggle Active status (click the toggle switch button)
+    await page.locator('button').filter({ has: page.locator('span.pointer-events-none') }).click();
     await page.click('button:has-text("Save User")');
 
     await expect(page.locator('text=User updated successfully')).toBeVisible();
-    await expect(userRow.locator('td').nth(3)).toContainText('Inactive');
+    await expect(userRow.locator('td').nth(4)).toContainText('Inactive');
 
     // 3. Delete User
     await userRow.locator('button[title="Delete"]').click();

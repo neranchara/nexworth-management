@@ -20,3 +20,111 @@ body {
   font-family: Arial, Helvetica, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
+
+/* =============================================
+   Dashboard Grid Layout Styles
+   ============================================= */
+
+.grid-item-wrapper {
+  position: relative;
+  height: 100%;
+  overflow: hidden;
+  border-radius: 0.75rem;
+}
+
+.grid-item-content {
+  height: 100%;
+  overflow: auto;
+}
+
+/* Drag Handle */
+.grid-drag-handle {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  z-index: 20;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+  background: rgba(59, 130, 246, 0.15);
+  border: 1px solid rgba(59, 130, 246, 0.3);
+  border-radius: 6px;
+  cursor: grab;
+  color: #3b82f6;
+  opacity: 0.6;
+  transition: all 0.2s ease;
+}
+
+.grid-drag-handle:hover {
+  opacity: 1;
+  background: rgba(59, 130, 246, 0.25);
+  transform: scale(1.05);
+}
+
+.grid-drag-handle:active {
+  cursor: grabbing;
+}
+
+/* Placeholder (drop zone) */
+.react-grid-placeholder {
+  background: rgba(59, 130, 246, 0.12) !important;
+  border: 2px dashed rgba(59, 130, 246, 0.4) !important;
+  border-radius: 0.75rem !important;
+  opacity: 1 !important;
+  transition: all 0.15s ease !important;
+}
+
+/* Resize Handle */
+.react-resizable-handle {
+  z-index: 20;
+}
+
+.react-resizable-handle::after {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+/* Grid item transitions */
+.react-grid-item {
+  transition: all 200ms ease !important;
+}
+
+.react-grid-item.cssTransforms {
+  transition-property: transform !important;
+}
+
+.react-grid-item.resizing {
+  z-index: 10;
+  opacity: 0.9;
+}
+
+.react-grid-item.react-draggable-dragging {
+  z-index: 100;
+  opacity: 0.85;
+  box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.15);
+  border-radius: 0.75rem;
+  transition: none !important;
+}
+
+/* Dark mode adjustments */
+@media (prefers-color-scheme: dark) {
+  .grid-drag-handle {
+    background: rgba(96, 165, 250, 0.15);
+    border-color: rgba(96, 165, 250, 0.3);
+    color: #60a5fa;
+  }
+  
+  .grid-drag-handle:hover {
+    background: rgba(96, 165, 250, 0.25);
+  }
+
+  .react-grid-placeholder {
+    background: rgba(96, 165, 250, 0.08) !important;
+    border-color: rgba(96, 165, 250, 0.3) !important;
+  }
+
+  .react-grid-item.react-draggable-dragging {
+    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4);
+  }
+}

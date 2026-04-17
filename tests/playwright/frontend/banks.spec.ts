@@ -6,13 +6,14 @@ test.describe('Bank Master Data Management CRUD', () => {
   test.beforeEach(async ({ page }) => {
     // Login as Admin
     await page.goto(`${baseURL}/login`);
-    await page.fill('input[name="email"]', 'admin@nexworth.local');
-    await page.fill('input[name="password"]', 'admin123');
+    await page.fill('input[name="email"]', 'neranchara.ksr@gmail.com');
+    await page.fill('input[name="password"]', 'w,j,uP@ssw0rd');
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL(`${baseURL}/dashboard`);
     
-    // Navigate to Banks Management
-    await page.click('text=Banks Management');
+    // Navigate to Banks (Setup dropdown)
+    await page.locator('button:has-text("Setup")').hover();
+    await page.locator('div.group:has-text("Setup") a:has-text("Banks Management")').click();
     await expect(page).toHaveURL(`${baseURL}/dashboard/banks`);
     await expect(page.getByRole('button', { name: 'Add New Bank' })).toBeVisible();
 
@@ -43,14 +44,14 @@ test.describe('Bank Master Data Management CRUD', () => {
     await page.fill('input[placeholder="e.g. Kasikornbank"]', newName);
     await page.click('button:has-text("Save Bank")');
 
-    await expect(page.locator('text=Bank updated successfully')).toBeVisible();
+    await expect(page.getByText('Bank updated successfully')).toBeVisible();
     await expect(page.locator('tr').filter({ hasText: newName })).toBeVisible();
 
     // 4. Delete
     const updatedRow = page.locator('tr').filter({ hasText: newName });
     await updatedRow.locator('button[title="Delete"]').click();
 
-    await expect(page.locator('text=Bank deleted successfully')).toBeVisible();
+    await expect(page.getByText('Bank deleted successfully')).toBeVisible();
     await expect(updatedRow).not.toBeVisible();
   });
 });

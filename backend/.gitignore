@@ -1,5 +1,11 @@
 node_modules
-# Keep environment variables out of version control
 .env
-
-/generated/prisma
+.env.staging
+.env.production
+/dist/
+/src/generated/
+prisma/check_db.ts
+scripts/debug-account.ts
+scripts/find-value.ts
+scripts/recover-data.ts
+scripts/list-modified-today.ts

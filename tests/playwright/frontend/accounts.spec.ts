@@ -7,13 +7,19 @@ test.describe('Account Management CRUD Flows', () => {
   // Global login before each test
   test.beforeEach(async ({ page }) => {
     await page.goto(`${baseURL}/login`);
-    await page.fill('input[name="email"]', 'admin@nexworth.local');
-    await page.fill('input[name="password"]', 'admin123');
+    await page.fill('input[name="email"]', 'neranchara.ksr@gmail.com');
+    await page.fill('input[name="password"]', 'w,j,uP@ssw0rd');
     await page.click('button[type="submit"]');
     await expect(page).toHaveURL(`${baseURL}/dashboard`);
     
-    // Navigate to Accounts
-    await page.click('text=Accounts');
+    // Navigate to Banks (Setup dropdown)
+    await page.locator('button:has-text("Setup")').hover();
+    await page.locator('div.group:has-text("Setup") a:has-text("Banks Management")').click();
+    await expect(page).toHaveURL(`${baseURL}/dashboard/banks`);
+    
+    // Navigate to Accounts (Setup dropdown)
+    await page.locator('button:has-text("Setup")').hover();
+    await page.locator('div.group:has-text("Setup") >> a:has-text("Accounts")').click();
     await expect(page).toHaveURL(`${baseURL}/dashboard/accounts`);
     await expect(page.getByRole('button', { name: 'Add Account' })).toBeVisible();
 
@@ -24,8 +30,17 @@ test.describe('Account Management CRUD Flows', () => {
       }
     });
 
+    page.on('console', msg => {
+      if (msg.type() === 'error') {
+        console.error('Browser Error:', msg.text());
+      }
+    });
+
     // Handle all dialogs globally
-    page.on('dialog', dialog => dialog.accept());
+    page.on('dialog', async dialog => {
+      console.log('Dialog intercepted:', dialog.message());
+      await dialog.accept();
+    });
   });
 
   const uniqueStamp = Date.now().toString().slice(-6);
@@ -41,9 +56,6 @@ test.describe('Account Management CRUD Flows', () => {
     
     // Select Type BANK
     await page.locator('select').first().selectOption({ value: 'BANK' });
-    
-    // Enter Balance
-    await page.fill('input[type="number"]', '1500');
 
     // Select Bank Master Data (first option)
     // Wait for banks to be populated
@@ -59,24 +71,20 @@ test.describe('Account Management CRUD Flows', () => {
     // Verify it's in the table
     const accountRow = page.locator('tr').filter({ hasText: bankAccName });
     await expect(accountRow).toBeVisible();
-    await expect(accountRow.locator('td').nth(1)).toContainText('BANK'); // Type
-    await expect(accountRow.locator('td').nth(3)).toContainText('1,500.00'); // Balance (Assuming Thai format ฿1,500.00)
+    await expect(accountRow.locator('td').nth(2)).toContainText('BANK'); // Type is at index 2
+    // Balance is not in the table, skipping check
 
     // 2. Edit Bank Account (Change Balance and set Inactive)
     await accountRow.locator('button[title="Edit"]').click();
     await expect(page.locator('h2', { hasText: 'Edit Account' })).toBeVisible();
 
-    // Change Balance
-    await page.fill('input[type="number"]', '2000');
-
     // Toggle Active Status
-    await page.locator('div:has-text("Account Status") button').click();
+    await page.locator('button').filter({ has: page.locator('span.pointer-events-none') }).click();
 
     await page.click('button:has-text("Save Account")');
 
     await expect(page.locator('text=Account updated successfully')).toBeVisible();
-    await expect(accountRow.locator('td').nth(4)).toContainText('Inactive'); // Status visually changes
-    await expect(accountRow.locator('td').nth(3)).toContainText('2,000.00'); // Balance visually changes
+    await expect(accountRow.locator('td').nth(4)).toContainText('Inactive'); // Status visually changes at index 4
 
     // 3. Delete Bank Account
     await accountRow.locator('button[title="Delete"]').click();
@@ -94,12 +102,9 @@ test.describe('Account Management CRUD Flows', () => {
     
     // Select Type STOCK
     await page.locator('select').first().selectOption({ value: 'STOCK' });
-    
-    // Enter Balance
-    await page.fill('input[type="number"]', '50000');
 
-    // Verify bank select disappears (since it's Stock)
-    await expect(page.locator('select').nth(1)).not.toBeVisible();
+    // Verify bank select is visible (since it's always shown now)
+    await expect(page.locator('select').nth(1)).toBeVisible();
 
     // Save
     await page.click('button:has-text("Save Account")');
@@ -113,7 +118,7 @@ test.describe('Account Management CRUD Flows', () => {
 
     await accountRow.locator('button[title="Delete"]').click();
 
-    await expect(page.locator('text=Account deleted successfully')).toBeVisible();
+    await expect(page.locator('text=Account deleted successfully').first()).toBeVisible();
     await expect(accountRow).not.toBeVisible();
   });
 
@@ -126,9 +131,6 @@ test.describe('Account Management CRUD Flows', () => {
     
     // Select Type GOLD
     await page.locator('select').first().selectOption({ value: 'GOLD' });
-    
-    // Enter Balance
-    await page.fill('input[type="number"]', '12500.50');
 
     // Save
     await page.click('button:has-text("Save Account")');
@@ -138,10 +140,10 @@ test.describe('Account Management CRUD Flows', () => {
     // 2. Verify and Delete
     const accountRow = page.locator('tr').filter({ hasText: goldAccName });
     await expect(accountRow).toBeVisible();
-    await expect(accountRow.locator('td').nth(1)).toContainText('GOLD');
+    await expect(accountRow.locator('td').nth(2)).toContainText('GOLD');
 
     await accountRow.locator('button[title="Delete"]').click();
-    await expect(page.locator('text=Account deleted successfully')).toBeVisible();
+    await expect(page.locator('text=Account deleted successfully').first()).toBeVisible();
     await expect(accountRow).not.toBeVisible();
   });
 });

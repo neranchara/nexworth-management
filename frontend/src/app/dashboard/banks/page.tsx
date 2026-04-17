@@ -3,12 +3,15 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2 } from 'lucide-react';
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function BanksManagementPage() {
   const [banks, setBanks] = useState<any[]>([]);
+  const { hasPermission } = usePermissions();
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
   
   // Alert state
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -107,15 +110,63 @@ export default function BanksManagementPage() {
     }
   };
 
+  // Sorting logic
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedBanks = () => {
+    if (!sortConfig) return banks;
+
+    return [...banks].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortConfig.key) {
+        case 'name':
+          aValue = (a.name || '').toLowerCase();
+          bValue = (b.name || '').toLowerCase();
+          break;
+        case 'code':
+          aValue = (a.code || '').toLowerCase();
+          bValue = (b.code || '').toLowerCase();
+          break;
+        case 'color':
+          aValue = (a.color || '').toLowerCase();
+          bValue = (b.color || '').toLowerCase();
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedBanks = getSortedBanks();
+
+  const SortIcon = ({ column }: { column: string }) => {
+    if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
+    return sortConfig.direction === 'asc' ? 
+      <ArrowUpCircle className="w-3 h-3 ml-1 text-blue-500" /> : 
+      <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
+  };
+
   if (loading && banks.length === 0) return <div className="p-6 text-gray-500 dark:text-gray-400">Loading master data...</div>;
   
   // Restricted access UI
-  if (user?.role !== 'Admin') {
+  if (!hasPermission('banks', 'canView')) {
     return (
       <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow text-center">
          <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
          <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h1>
-         <p className="text-gray-600 dark:text-gray-400">Only administrators can manage bank master data.</p>
+         <p className="text-gray-600 dark:text-gray-400">You do not have permission to view bank master data.</p>
       </div>
     );
   }
@@ -139,12 +190,14 @@ export default function BanksManagementPage() {
             </p>
           </div>
           <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            <button 
-              onClick={openAddModal}
-              className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-            >
-              Add New Bank
-            </button>
+            {hasPermission('banks', 'canCreate') && (
+              <button 
+                onClick={openAddModal}
+                className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+              >
+                Add New Bank
+              </button>
+            )}
           </div>
         </div>
         
@@ -155,18 +208,36 @@ export default function BanksManagementPage() {
                 <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">Bank Name</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Code</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Color Mark</th>
+                      <th 
+                        scope="col" 
+                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleSort('name')}
+                      >
+                        <div className="flex items-center">Bank Name <SortIcon column="name" /></div>
+                      </th>
+                      <th 
+                        scope="col" 
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleSort('code')}
+                      >
+                        <div className="flex items-center">Code <SortIcon column="code" /></div>
+                      </th>
+                      <th 
+                        scope="col" 
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleSort('color')}
+                      >
+                        <div className="flex items-center">Color Mark <SortIcon column="color" /></div>
+                      </th>
                       <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6 whitespace-nowrap text-right text-sm font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                    {banks.length === 0 ? (
+                    {sortedBanks.length === 0 ? (
                       <tr>
                         <td colSpan={4} className="py-8 text-center text-sm text-gray-500">No banks defined in system.</td>
                       </tr>
-                    ) : banks.map((bank) => (
+                    ) : sortedBanks.map((bank) => (
                       <tr key={bank.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
                           <div className="flex items-center gap-2">
@@ -186,12 +257,16 @@ export default function BanksManagementPage() {
                            </div>
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          <button onClick={() => openEditModal(bank)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
-                            <Edit2 className="w-4 h-4 inline" />
-                          </button>
-                          <button onClick={() => handleDelete(bank.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                            <Trash2 className="w-4 h-4 inline" />
-                          </button>
+                          {hasPermission('banks', 'canUpdate') && (
+                            <button onClick={() => openEditModal(bank)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
+                              <Edit2 className="w-4 h-4 inline" />
+                            </button>
+                          )}
+                          {hasPermission('banks', 'canDelete') && (
+                            <button onClick={() => handleDelete(bank.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                              <Trash2 className="w-4 h-4 inline" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -234,8 +309,29 @@ export default function BanksManagementPage() {
                     />
                  </div>
 
-                 <div>
+                  <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Brand Color</label>
+                    <div className="flex flex-wrap gap-2 mb-3">
+                      {[
+                        { name: 'KBANK', color: '#00A950' },
+                        { name: 'SCB', color: '#4E2E7F' },
+                        { name: 'BBL', color: '#0047AB' },
+                        { name: 'KTB', color: '#00ADEF' },
+                        { name: 'BAY', color: '#FFD200' },
+                        { name: 'TTB', color: '#EF4822' },
+                        { name: 'GSB', color: '#EB198D' },
+                        { name: 'UOB', color: '#003679' },
+                      ].map((preset) => (
+                        <button
+                          key={preset.name}
+                          type="button"
+                          onClick={() => setFormData({ ...formData, color: preset.color })}
+                          className={`w-6 h-6 rounded-full border border-gray-200 dark:border-gray-600 shadow-sm transition-transform hover:scale-110 active:scale-95 ${formData.color === preset.color ? 'ring-2 ring-offset-2 ring-blue-500 scale-110' : ''}`}
+                          style={{ backgroundColor: preset.color }}
+                          title={preset.name}
+                        />
+                      ))}
+                    </div>
                     <div className="flex gap-3 items-center">
                        <input 
                          type="color" value={formData.color} onChange={(e) => setFormData({...formData, color: e.target.value})}
@@ -246,7 +342,7 @@ export default function BanksManagementPage() {
                          className="flex-1 rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-sm font-mono" 
                        />
                     </div>
-                 </div>
+                  </div>
 
                  <div className="pt-4 border-t dark:border-gray-700 flex justify-end gap-3">
                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 flex-1">Cancel</button>

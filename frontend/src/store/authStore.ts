@@ -46,7 +46,9 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: { 
           id: response.data.user.sub, 
           email: response.data.user.email,
-          role: response.data.user.role
+          role: response.data.user.role,
+          permissions: response.data.user.permissions || [],
+          orgName: response.data.user.orgName
         }, 
         isAuthenticated: true, 
         isLoading: false 

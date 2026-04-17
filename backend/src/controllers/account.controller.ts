@@ -4,20 +4,20 @@ import { z } from 'zod';
 import { AccountType } from '../generated/client/index.js';
 
 const accountSchema = z.object({
-  name: z.string().min(1),
+  name: z.string().min(1, 'Account name is required'),
+  accountNumber: z.string().optional().nullable(),
   type: z.nativeEnum(AccountType),
   bankId: z.string().optional().nullable(),
-  balance: z.number().default(0),
   isActive: z.boolean().default(true),
+  actualDate: z.string().datetime().optional().nullable(),
 });
 
 export const listAccountsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, role: string };
+    const user = request.user as { sub: string, role: string, orgId: string };
     
-    // If admin, they could see all. If standard user, only theirs.
-    // Assuming standard behavior: user only sees their own accounts unless Admin.
-    const whereClause = user.role === 'Admin' ? {} : { userId: user.sub };
+    // Strict isolation by organizationId
+    const whereClause = { organizationId: user.orgId };
 
     const accounts = await prisma.account.findMany({
       where: whereClause,
@@ -37,23 +37,28 @@ export const listAccountsHandler = async (request: FastifyRequest, reply: Fastif
 export const createAccountHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const body = accountSchema.parse(request.body);
-    const user = request.user as { sub: string };
+    const user = request.user as { sub: string, orgId: string };
     
+    // Relaxed bankId requirement
+    /*
     if (body.type === 'BANK' && !body.bankId) {
       return reply.status(400).send({ error: 'Bank ID is required for BANK accounts' });
     }
     if (body.type !== 'BANK') {
       body.bankId = null;
     }
+    */
 
     const newAccount = await prisma.account.create({
       data: {
         userId: user.sub,
+        organizationId: user.orgId,
         name: body.name,
+        accountNumber: body.accountNumber || "",
         type: body.type,
         bankId: body.bankId,
-        balance: body.balance,
         isActive: body.isActive,
+        actualDate: body.actualDate ? new Date(body.actualDate) : null,
       },
       include: { bank: true }
     });
@@ -70,26 +75,35 @@ export const updateAccountHandler = async (request: FastifyRequest<{ Params: { i
   try {
     const id = request.params.id;
     const body = accountSchema.parse(request.body);
-    const user = request.user as { sub: string, role: string };
+    const user = request.user as { sub: string, role: string, orgId: string };
     
     const existing = await prisma.account.findUnique({ where: { id } });
     if (!existing) return reply.status(404).send({ error: 'Account not found' });
 
-    // Check ownership
-    if (existing.userId !== user.sub && user.role !== 'Admin') {
-      return reply.status(403).send({ error: 'Forbidden' });
+    // Check organization isolation
+    if (existing.organizationId !== user.orgId) {
+      return reply.status(403).send({ error: 'Forbidden: Access to other organization denied' });
     }
 
+    /*
     if (body.type === 'BANK' && !body.bankId) {
       return reply.status(400).send({ error: 'Bank ID is required for BANK accounts' });
     }
     if (body.type !== 'BANK') {
       body.bankId = null;
     }
+    */
 
     const updatedAccount = await prisma.account.update({
       where: { id },
-      data: body,
+      data: {
+        name: body.name,
+        accountNumber: body.accountNumber || "",
+        type: body.type,
+        bankId: body.bankId,
+        isActive: body.isActive,
+        actualDate: body.actualDate ? new Date(body.actualDate) : null,
+      },
       include: { bank: true }
     });
 
@@ -104,20 +118,23 @@ export const updateAccountHandler = async (request: FastifyRequest<{ Params: { i
 export const deleteAccountHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
     const id = request.params.id;
-    const user = request.user as { sub: string, role: string };
+    const user = request.user as { sub: string, role: string, orgId: string };
 
     const existing = await prisma.account.findUnique({ where: { id } });
     if (!existing) return reply.status(404).send({ error: 'Account not found' });
 
-    // Check ownership
-    if (existing.userId !== user.sub && user.role !== 'Admin') {
-      return reply.status(403).send({ error: 'Forbidden' });
+    // Check organization isolation
+    if (existing.organizationId !== user.orgId) {
+      return reply.status(403).send({ error: 'Forbidden: Access to other organization denied' });
     }
 
     await prisma.account.delete({ where: { id } });
     return reply.send({ message: 'Account deleted' });
   } catch (error) {
-    request.log.error(error);
-    return reply.status(500).send({ error: 'Internal Server Error' });
+    request.log.error({ id: request.params.id, error }, 'Delete Account Error');
+    return reply.status(500).send({ 
+      error: 'Internal Server Error',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
   }
 };

@@ -1,16 +1,20 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle } from 'lucide-react';
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function UsersManagementPage() {
   const [users, setUsers] = useState<any[]>([]);
+  const { hasPermission } = usePermissions();
   const [roles, setRoles] = useState<any[]>([]);
+  const [organizations, setOrganizations] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
+  const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'firstName', direction: 'asc' });
   
   // Alert state
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -28,13 +32,13 @@ export default function UsersManagementPage() {
     firstName: '',
     lastName: '',
     roleId: '',
+    organizationId: '',
     isActive: true
   });
 
   const { user } = useAuthStore();
   const router = useRouter();
-
-  const fetchUsersAndRoles = async () => {
+  const fetchUsersAndRoles = useCallback(async () => {
     try {
       setLoading(true);
       const [usersRes, rolesRes] = await Promise.all([
@@ -43,21 +47,22 @@ export default function UsersManagementPage() {
       ]);
       setUsers(usersRes.data.users);
       setRoles(rolesRes.data.roles);
+      setOrganizations(rolesRes.data.organizations || []);
     } catch (err) {
       setError('Failed to load users or roles');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     // RBAC Protection on Client Side
-    if (user && user.role !== 'Admin') {
+    if (user && !hasPermission('users', 'canView')) {
       router.push('/dashboard');
       return;
     }
     fetchUsersAndRoles();
-  }, [user, router]);
+  }, [user, router, hasPermission, fetchUsersAndRoles]);
 
   const showAlert = (message: string, type: 'success' | 'error') => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -72,6 +77,7 @@ export default function UsersManagementPage() {
       firstName: '',
       lastName: '',
       roleId: roles.length > 0 ? roles[0].id : '',
+      organizationId: organizations.length > 0 ? organizations[0].id : '',
       isActive: true
     });
     setIsEditing(false);
@@ -90,6 +96,7 @@ export default function UsersManagementPage() {
       firstName: u.firstName || '',
       lastName: u.lastName || '',
       roleId: roles.find(r => r.name === u.role?.name)?.id || '',
+      organizationId: u.organization?.id || '',
       isActive: u.isActive
     });
     setIsEditing(true);
@@ -133,6 +140,62 @@ export default function UsersManagementPage() {
     }
   };
 
+  // Sorting logic
+  const handleSort = (key: string) => {
+    let direction: 'asc' | 'desc' = 'asc';
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
+      direction = 'desc';
+    }
+    setSortConfig({ key, direction });
+  };
+
+  const getSortedUsers = () => {
+    if (!sortConfig) return users;
+
+    return [...users].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
+
+      switch (sortConfig.key) {
+        case 'name':
+          aValue = `${a.firstName} ${a.lastName}`.toLowerCase();
+          bValue = `${b.firstName} ${b.lastName}`.toLowerCase();
+          break;
+        case 'email':
+          aValue = (a.email || '').toLowerCase();
+          bValue = (b.email || '').toLowerCase();
+          break;
+        case 'role':
+          aValue = (a.role?.name || '').toLowerCase();
+          bValue = (b.role?.name || '').toLowerCase();
+          break;
+        case 'organization':
+          aValue = (a.organization?.name || '').toLowerCase();
+          bValue = (b.organization?.name || '').toLowerCase();
+          break;
+        case 'isActive':
+          aValue = a.isActive ? 1 : 0;
+          bValue = b.isActive ? 1 : 0;
+          break;
+        default:
+          return 0;
+      }
+
+      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+      return 0;
+    });
+  };
+
+  const sortedUsers = getSortedUsers();
+
+  const SortIcon = ({ column }: { column: string }) => {
+    if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
+    return sortConfig.direction === 'asc' ? 
+      <ArrowUpCircle className="w-3 h-3 ml-1 text-blue-500" /> : 
+      <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
+  };
+
   if (loading && users.length === 0) return <div className="p-6">Loading data...</div>;
   if (error && users.length === 0) return <div className="p-6 text-red-500">{error}</div>;
 
@@ -155,12 +218,14 @@ export default function UsersManagementPage() {
             </p>
           </div>
           <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            <button 
-              onClick={openAddModal}
-              className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
-            >
-              Add user
-            </button>
+            {hasPermission('users', 'canCreate') && (
+              <button 
+                onClick={openAddModal}
+                className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
+              >
+                Add user
+              </button>
+            )}
           </div>
         </div>
         
@@ -171,15 +236,46 @@ export default function UsersManagementPage() {
                 <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
                   <thead className="bg-gray-50 dark:bg-gray-700">
                     <tr>
-                      <th scope="col" className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6">Name</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Email</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Role</th>
-                      <th scope="col" className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Status</th>
+                      <th 
+                        scope="col" 
+                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleSort('name')}
+                      >
+                        <div className="flex items-center">Name <SortIcon column="name" /></div>
+                      </th>
+                      <th 
+                        scope="col" 
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleSort('email')}
+                      >
+                        <div className="flex items-center">Email <SortIcon column="email" /></div>
+                      </th>
+                      <th 
+                        scope="col" 
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleSort('role')}
+                      >
+                        <div className="flex items-center">Role <SortIcon column="role" /></div>
+                      </th>
+                      <th 
+                        scope="col" 
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleSort('organization')}
+                      >
+                        <div className="flex items-center">Organization <SortIcon column="organization" /></div>
+                      </th>
+                      <th 
+                        scope="col" 
+                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                        onClick={() => handleSort('isActive')}
+                      >
+                        <div className="flex items-center">Status <SortIcon column="isActive" /></div>
+                      </th>
                       <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6 whitespace-nowrap text-right text-sm font-medium">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                    {users.map((person) => (
+                    {sortedUsers.map((person) => (
                       <tr key={person.id}>
                         <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
                           {person.firstName} {person.lastName}
@@ -190,6 +286,9 @@ export default function UsersManagementPage() {
                             {person.role?.name || 'Unknown'}
                           </span>
                         </td>
+                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
+                          {person.organization?.name || 'No Organization'}
+                        </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
                           {person.isActive ? (
                              <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">Active</span>
@@ -198,12 +297,16 @@ export default function UsersManagementPage() {
                           )}
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          <button onClick={() => openEditModal(person)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
-                            <Edit2 className="w-4 h-4 inline" />
-                          </button>
-                          <button onClick={() => handleDelete(person.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                            <Trash2 className="w-4 h-4 inline" />
-                          </button>
+                          {hasPermission('users', 'canUpdate') && (
+                            <button onClick={() => openEditModal(person)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
+                              <Edit2 className="w-4 h-4 inline" />
+                            </button>
+                          )}
+                          {hasPermission('users', 'canDelete') && (
+                            <button onClick={() => handleDelete(person.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                              <Trash2 className="w-4 h-4 inline" />
+                            </button>
+                          )}
                         </td>
                       </tr>
                     ))}
@@ -227,7 +330,7 @@ export default function UsersManagementPage() {
                    <X className="w-5 h-5" />
                  </button>
               </div>
-              <form onSubmit={handleFormSubmit} className="p-5 space-y-5">
+              <form onSubmit={handleFormSubmit} className="p-5 space-y-5 overflow-y-auto max-h-[80vh]">
                  <div>
                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
                    <input 
@@ -263,17 +366,31 @@ export default function UsersManagementPage() {
                    </div>
                  </div>
 
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
-                   <select 
-                     required value={formData.roleId} onChange={(e) => setFormData({...formData, roleId: e.target.value})}
-                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                   >
-                     <option value="" disabled>Select a role...</option>
-                     {roles.map(r => (
-                       <option key={r.id} value={r.id}>{r.name}</option>
-                     ))}
-                   </select>
+                 <div className="flex gap-4">
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
+                      <select 
+                        required value={formData.roleId} onChange={(e) => setFormData({...formData, roleId: e.target.value})}
+                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="" disabled>Select a role...</option>
+                        {roles.map(r => (
+                          <option key={r.id} value={r.id}>{r.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="flex-1">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</label>
+                      <select 
+                        required value={formData.organizationId} onChange={(e) => setFormData({...formData, organizationId: e.target.value})}
+                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                      >
+                        <option value="" disabled>Select an organization...</option>
+                        {organizations.map(o => (
+                          <option key={o.id} value={o.id}>{o.name}</option>
+                        ))}
+                      </select>
+                    </div>
                  </div>
 
                  <div className="flex items-center justify-between pt-2 pb-2">

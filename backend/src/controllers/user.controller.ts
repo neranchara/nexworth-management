@@ -9,6 +9,7 @@ const createUserSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   roleId: z.string().uuid(),
+  organizationId: z.string().uuid(),
   isActive: z.boolean().default(true),
 });
 
@@ -18,6 +19,7 @@ const updateUserSchema = z.object({
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   roleId: z.string().uuid().optional(),
+  organizationId: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
 });
 
@@ -34,6 +36,9 @@ export const listUsersHandler = async (request: FastifyRequest, reply: FastifyRe
         createdAt: true,
         role: {
           select: { name: true }
+        },
+        organization: {
+          select: { id: true, name: true }
         }
       }
     });
@@ -63,6 +68,7 @@ export const createUserHandler = async (request: FastifyRequest, reply: FastifyR
         firstName: body.firstName,
         lastName: body.lastName,
         roleId: body.roleId,
+        organizationId: body.organizationId,
         isActive: body.isActive,
       },
       select: {
@@ -72,6 +78,9 @@ export const createUserHandler = async (request: FastifyRequest, reply: FastifyR
         lastName: true,
         isActive: true,
         role: {
+          select: { name: true }
+        },
+        organization: {
           select: { name: true }
         }
       }
@@ -89,8 +98,13 @@ export const createUserHandler = async (request: FastifyRequest, reply: FastifyR
 
 export const listRolesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const roles = await prisma.role.findMany();
-    return reply.send({ roles });
+    const roles = await prisma.role.findMany({
+      include: { _count: { select: { users: true } } }
+    });
+    const organizations = await prisma.organization.findMany({
+      select: { id: true, name: true }
+    });
+    return reply.send({ roles, organizations });
   } catch (error) {
     request.log.error(error);
     return reply.status(500).send({ error: 'Internal Server Error' });
@@ -117,7 +131,8 @@ export const updateUserHandler = async (request: FastifyRequest<{ Params: { id: 
         firstName: true,
         lastName: true,
         isActive: true,
-        role: { select: { name: true } }
+        role: { select: { name: true } },
+        organization: { select: { name: true } }
       }
     });
 

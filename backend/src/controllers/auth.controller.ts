@@ -14,7 +14,10 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
 
     const user = await prisma.user.findUnique({
       where: { email },
-      include: { role: true }
+      include: { 
+        role: { include: { permissions: true } }, 
+        organization: true 
+      }
     });
 
     if (!user || !user.isActive) {
@@ -32,7 +35,10 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
     const tokenPayload = {
       sub: user.id,
       email: user.email,
-      role: user.role?.name || 'Guest'
+      role: user.role?.name || 'Guest',
+      orgId: user.organizationId,
+      orgName: user.organization?.name,
+      permissions: user.role?.permissions || []
     };
 
     const token = await reply.jwtSign(tokenPayload, { expiresIn: '1d' });
@@ -53,7 +59,10 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
-        role: user.role?.name
+        role: user.role?.name,
+        permissions: user.role?.permissions || [],
+        orgId: user.organizationId,
+        orgName: user.organization?.name
       }
     });
   } catch (error) {

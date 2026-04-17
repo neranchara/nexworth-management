@@ -6,6 +6,12 @@
   "scripts": {
     "test": "vitest run",
     "dev": "tsx watch src/server.ts",
+    "dev:stg": "cross-env NODE_ENV=staging tsx watch src/server.ts",
+    "dev:staging": "npm run dev:stg",
+    "dev:prod": "cross-env NODE_ENV=production tsx watch src/server.ts",
+    "migrate:stg": "cross-env DATABASE_URL=postgresql://postgres:nop@ssw0rd@localhost:5432/stg_nexworth_db?schema=public npx prisma db push --force-reset && npx prisma db seed",
+    "migrate:prod": "cross-env DATABASE_URL=postgresql://postgres:nop@ssw0rd@localhost:5432/prod_nexworth_db?schema=public npx prisma db push --force-reset && npx prisma db seed",
+    "reset:stg": "cross-env NODE_ENV=staging npx prisma db push --force-reset && cross-env NODE_ENV=staging npx prisma db seed",
     "build": "tsc"
   },
   "prisma": {
@@ -35,6 +41,7 @@
     "tsx": "^4.21.0",
     "typescript": "^5.9.3",
     "vite-tsconfig-paths": "^6.1.1",
-    "vitest": "^4.0.18"
+    "vitest": "^4.0.18",
+    "cross-env": "^7.0.3"
   }
 }

@@ -1,1 +1,10 @@
 node_modules
+.agents/
+test-results/
+playwright-report/
+blob-report/
+/backend/dist/
+/backend/src/generated/
+/frontend/.next/
+*.log
+nul
