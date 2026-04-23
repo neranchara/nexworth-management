@@ -109,7 +109,6 @@ async function main() {
         accountNumber: '000-000-0000',
         type: acc.type as any,
         bankId: getBankId(acc.bankCode),
-        balance: 0,
       }
     });
   }
