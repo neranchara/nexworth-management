@@ -118,7 +118,7 @@ async function main() {
   const typeData = [
     { name: 'รายรับ', behavior: 'INCOME' },
     { name: 'รายจ่าย', behavior: 'EXPENSE' },
-    { name: 'ออม/ลงทุน', behavior: 'SAVING_INVESTMENT' },
+    { name: 'ออม/ลงทุน', behavior: 'SAVING' },
     { name: 'โอนภายใน', behavior: 'INTERNAL_TRANSFER' },
     { name: 'หนี้', behavior: 'DEBT' },
     { name: 'ยืมเงินภายใน', behavior: 'LOAN_BORROW' },
