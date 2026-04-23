@@ -6,12 +6,19 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { Edit2, Trash2, X, CheckCircle, AlertCircle, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { User, Organization } from '@/types/models';
+
+interface Role {
+  id: string;
+  name: string;
+}
+
 
 export default function UsersManagementPage() {
-  const [users, setUsers] = useState<any[]>([]);
+  const [users, setUsers] = useState<User[]>([]);
   const { hasPermission } = usePermissions();
-  const [roles, setRoles] = useState<any[]>([]);
-  const [organizations, setOrganizations] = useState<any[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
+  const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'firstName', direction: 'asc' });
@@ -48,7 +55,7 @@ export default function UsersManagementPage() {
       setUsers(usersRes.data.users);
       setRoles(rolesRes.data.roles);
       setOrganizations(rolesRes.data.organizations || []);
-    } catch (err) {
+    } catch {
       setError('Failed to load users or roles');
     } finally {
       setLoading(false);
@@ -89,7 +96,7 @@ export default function UsersManagementPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (u: any) => {
+  const openEditModal = (u: User) => {
     setFormData({
       email: u.email,
       password: '', // blank for edit unless they want to change
@@ -110,15 +117,16 @@ export default function UsersManagementPage() {
       await api.delete(`/users/${id}`);
       showAlert('User deleted successfully', 'success');
       fetchUsersAndRoles();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Delete failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
     }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: any = { ...formData };
+      const payload: Partial<User> & { password?: string } = { ...formData };
       if (isEditing && !payload.password) {
         delete payload.password; // Don't send empty password on edit
       }
@@ -132,11 +140,13 @@ export default function UsersManagementPage() {
       }
       setIsModalOpen(false);
       fetchUsersAndRoles();
-    } catch (err: any) {
-      const message = err.response?.data?.error?.issues?.[0]?.message 
-        || err.response?.data?.error 
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string | { issues?: { message: string }[] } } } };
+      const errorData = errorResponse.response?.data?.error;
+      const message = (typeof errorData === 'object' && errorData?.issues?.[0]?.message)
+        || (typeof errorData === 'string' ? errorData : null)
         || 'Save failed';
-      showAlert(typeof message === 'string' ? message : JSON.stringify(message), 'error');
+      showAlert(message, 'error');
     }
   };
 
@@ -153,8 +163,8 @@ export default function UsersManagementPage() {
     if (!sortConfig) return users;
 
     return [...users].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortConfig.key) {
         case 'name':

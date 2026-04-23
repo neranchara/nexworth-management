@@ -4,7 +4,8 @@ import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, TrendingUp, Coins, PlusCircle, Wallet, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
-import { useAuthStore } from '@/store/authStore';
+import { Account, Bank, FinancialRecord } from '@/types/models';
+import { useCallback } from 'react';
 
 const ALLOWED_ASSET_TYPES = ['SAVING', 'GOAL', 'INVESTMENT', 'EMERGENCY'];
 
@@ -16,11 +17,10 @@ const ASSET_TYPES = [
 ];
 
 export default function AssetsPage() {
-  const [records, setRecords] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]); // Master list of accounts for dropdown
+  const [records, setRecords] = useState<FinancialRecord[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]); // Master list of accounts for dropdown
   const { hasPermission } = usePermissions();
-  const [banks, setBanks] = useState<any[]>([]);
-  const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
@@ -46,38 +46,36 @@ export default function AssetsPage() {
     date: new Date().toISOString().split('T')[0],
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [recordsRes, accountsRes, banksRes, statsRes] = await Promise.all([
+      const [recordsRes, accountsRes, banksRes] = await Promise.all([
         api.get('/financial-records?type=ASSET'),
         api.get('/accounts'),
         api.get('/banks'),
-        api.get('/dashboard/stats'),
       ]);
 
       // Filter records and accounts for Assets page based on restricted types
-      const filteredRecords = (recordsRes.data.records || []).filter((r: any) => 
-        ALLOWED_ASSET_TYPES.includes(r.account?.type)
+      const filteredRecords = (recordsRes.data.records || []).filter((r: FinancialRecord) => 
+        ALLOWED_ASSET_TYPES.includes(r.account?.type || '')
       );
-      const filteredAccounts = (accountsRes.data.accounts || []).filter((acc: any) => 
+      const filteredAccounts = (accountsRes.data.accounts || []).filter((acc: Account) => 
         ALLOWED_ASSET_TYPES.includes(acc.type)
       );
 
       setRecords(filteredRecords);
       setAccounts(filteredAccounts); 
       setBanks(banksRes.data.banks);
-      setDashboardStats(statsRes.data);
-    } catch (err) {
+    } catch {
       setError('Failed to load data');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const showAlert = (message: string, type: 'success' | 'error') => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -105,7 +103,7 @@ export default function AssetsPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (r: any) => {
+  const openEditModal = (r: FinancialRecord) => {
     setFormData({
       accountId: r.accountId,
       newAccountName: '',
@@ -127,8 +125,9 @@ export default function AssetsPage() {
       await api.delete(`/financial-records/${id}`);
       showAlert('Asset record removed successfully', 'success');
       fetchData();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Remove failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Remove failed', 'error');
     }
   };
 
@@ -154,12 +153,13 @@ export default function AssetsPage() {
       }
       setIsModalOpen(false);
       fetchData();
-    } catch (err: any) {
-      const message =
-        err.response?.data?.error?.issues?.[0]?.message ||
-        err.response?.data?.error ||
-        'Save failed';
-      showAlert(typeof message === 'string' ? message : JSON.stringify(message), 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string | { issues?: { message: string }[] } } } };
+      const errorData = errorResponse.response?.data?.error;
+      const message = (typeof errorData === 'object' && errorData?.issues?.[0]?.message)
+        || (typeof errorData === 'string' ? errorData : null)
+        || 'Save failed';
+      showAlert(message, 'error');
     }
   };
 
@@ -209,8 +209,8 @@ export default function AssetsPage() {
     if (!sortConfig) return records;
 
     return [...records].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortConfig.key) {
         case 'name':
@@ -377,6 +377,7 @@ export default function AssetsPage() {
                     ) : (
                       sortedRecords.map((record) => {
                         const account = record.account;
+                        if (!account) return null;
                         return (
                           <tr key={record.id}>
                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">

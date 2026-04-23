@@ -15,9 +15,9 @@ model Organization {
   updatedAt        DateTime              @updatedAt
   accounts         Account[]
   assets           Asset[]
-  liabilities      Liability[]
   banks            Bank[]
   financialRecords FinancialRecord[]
+  liabilities      Liability[]
   loans            Loan[]
   transactions     Transaction[]
   categories       TransactionCategory[]
@@ -34,12 +34,14 @@ model User {
   roleId           String?
   organizationId   String?
   isActive         Boolean           @default(true)
+  lineUserId       String?           @unique
+  pairingCode      String?           @unique
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   accounts         Account[]
   assets           Asset[]
-  liabilities      Liability[]
   financialRecords FinancialRecord[]
+  liabilities      Liability[]
   loans            Loan[]
   sessions         Session[]
   transactions     Transaction[]
@@ -101,6 +103,7 @@ model Account {
   type             AccountType
   bankId           String?
   isActive         Boolean           @default(true)
+  isPersonal       Boolean           @default(true)
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
   accountNumber    String            @default("-")
@@ -109,8 +112,8 @@ model Account {
   organization     Organization?     @relation(fields: [organizationId], references: [id])
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
   asset            Asset?
-  liability        Liability?
   financialRecords FinancialRecord[]
+  liability        Liability?
   transactions     Transaction[]
 }
 
@@ -125,8 +128,8 @@ model Asset {
   account        Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions   Transaction[]
   loans          Loan[]
+  transactions   Transaction[]
 }
 
 model Liability {
@@ -140,8 +143,8 @@ model Liability {
   account        Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  transactions   Transaction[]
   loans          Loan[]
+  transactions   Transaction[]
 }
 
 model FinancialRecord {
@@ -197,27 +200,27 @@ model Transaction {
   accountId           String
   categoryId          String
   typeId              String
-  assetId             String?
-  liabilityId         String?
   amount              Float
   description         String?
   date                DateTime            @default(now())
   note                String?
   loanId              String?
-  linkedTransactionId String?
   createdAt           DateTime            @default(now())
   updatedAt           DateTime            @updatedAt
   actualDate          DateTime?
-  category            TransactionCategory @relation(fields: [categoryId], references: [id])
+  assetId             String?
+  liabilityId         String?
+  linkedTransactionId String?
   account             Account             @relation(fields: [accountId], references: [id])
+  asset               Asset?              @relation(fields: [assetId], references: [id])
+  category            TransactionCategory @relation(fields: [categoryId], references: [id])
+  liability           Liability?          @relation(fields: [liabilityId], references: [id])
+  linkedTransaction   Transaction?        @relation("LinkedTransactions", fields: [linkedTransactionId], references: [id])
+  linkedFrom          Transaction[]       @relation("LinkedTransactions")
   loan                Loan?               @relation(fields: [loanId], references: [id])
   organization        Organization?       @relation(fields: [organizationId], references: [id])
   type                TransactionType     @relation(fields: [typeId], references: [id])
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  asset               Asset?              @relation(fields: [assetId], references: [id])
-  liability           Liability?          @relation(fields: [liabilityId], references: [id])
-  linkedTransaction   Transaction?        @relation("LinkedTransactions", fields: [linkedTransactionId], references: [id])
-  linkedFrom          Transaction[]       @relation("LinkedTransactions")
 }
 
 model Loan {
@@ -226,8 +229,6 @@ model Loan {
   code           String?
   userId         String
   accountId      String
-  assetId        String?
-  liabilityId    String?
   name           String
   totalAmount    Float         @default(0)
   status         String        @default("ACTIVE")
@@ -235,11 +236,13 @@ model Loan {
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   actualDate     DateTime?
+  assetId        String?
+  liabilityId    String?
+  asset          Asset?        @relation(fields: [assetId], references: [id])
+  liability      Liability?    @relation(fields: [liabilityId], references: [id])
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions   Transaction[]
-  asset          Asset?        @relation(fields: [assetId], references: [id])
-  liability      Liability?    @relation(fields: [liabilityId], references: [id])
 }
 
 enum FinancialRecordType {
@@ -266,11 +269,11 @@ enum TransactionBehavior {
   EXPENSE
   SAVING
   INVESTMENT
-  GOAL
   GOAL_SAVING
-  EMERGENCY
   INTERNAL_TRANSFER
   DEBT
   LOAN_BORROW
   LOAN_REPAY
+  GOAL
+  EMERGENCY
 }

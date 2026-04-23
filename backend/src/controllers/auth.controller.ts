@@ -107,3 +107,23 @@ export const logoutHandler = async (request: FastifyRequest, reply: FastifyReply
     return reply.status(401).send({ error: 'Unauthorized' });
   }
 };
+
+export const generateLinePairingCodeHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    await request.jwtVerify();
+    const decoded = request.user as any;
+    
+    // Generate a random 6-character code
+    const code = 'LINK-' + Math.random().toString(36).substring(2, 8).toUpperCase();
+    
+    await prisma.user.update({
+      where: { id: decoded.sub },
+      data: { pairingCode: code }
+    });
+
+    return reply.send({ code });
+  } catch (err) {
+    request.log.error(err);
+    return reply.status(500).send({ error: 'Failed to generate pairing code' });
+  }
+};

@@ -1,16 +1,18 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 import { Edit2, Trash2, X, CheckCircle, AlertCircle, PlusCircle, CreditCard, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { Account, Bank, FinancialRecord } from '@/types/models';
+
 
 export default function LiabilitiesPage() {
-  const [records, setRecords] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [records, setRecords] = useState<FinancialRecord[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const { hasPermission } = usePermissions();
-  const [banks, setBanks] = useState<any[]>([]);
-  const [dashboardStats, setDashboardStats] = useState<any>(null);
+  const [banks, setBanks] = useState<Bank[]>([]);
+  const [dashboardStats, setDashboardStats] = useState<{ summary: { totalLiabilities: number } } | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
@@ -36,7 +38,7 @@ export default function LiabilitiesPage() {
     date: new Date().toISOString().split('T')[0],
   });
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [recordsRes, accountsRes, banksRes, statsRes] = await Promise.all([
@@ -50,16 +52,16 @@ export default function LiabilitiesPage() {
       setAccounts(accountsRes.data.accounts);
       setBanks(banksRes.data.banks);
       setDashboardStats(statsRes.data);
-    } catch (err) {
+    } catch {
       setError('Failed to load data');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const showAlert = (message: string, type: 'success' | 'error') => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -87,7 +89,7 @@ export default function LiabilitiesPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (r: any) => {
+  const openEditModal = (r: FinancialRecord) => {
     setFormData({
       accountId: r.accountId,
       newAccountName: '',
@@ -109,8 +111,9 @@ export default function LiabilitiesPage() {
       await api.delete(`/financial-records/${id}`);
       showAlert('Liability record removed successfully', 'success');
       fetchData();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Remove failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Remove failed', 'error');
     }
   };
 
@@ -136,12 +139,13 @@ export default function LiabilitiesPage() {
       }
       setIsModalOpen(false);
       fetchData();
-    } catch (err: any) {
-      const message =
-        err.response?.data?.error?.issues?.[0]?.message ||
-        err.response?.data?.error ||
-        'Save failed';
-      showAlert(typeof message === 'string' ? message : JSON.stringify(message), 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string | { issues?: { message: string }[] } } } };
+      const errorData = errorResponse.response?.data?.error;
+      const message = (typeof errorData === 'object' && errorData?.issues?.[0]?.message)
+        || (typeof errorData === 'string' ? errorData : null)
+        || 'Save failed';
+      showAlert(message, 'error');
     }
   };
 
@@ -158,8 +162,8 @@ export default function LiabilitiesPage() {
     if (!sortConfig) return records;
 
     return [...records].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortConfig.key) {
         case 'name':
@@ -316,6 +320,7 @@ export default function LiabilitiesPage() {
                     ) : (
                       sortedRecords.map((record) => {
                         const account = record.account;
+                        if (!account) return null;
                         return (
                           <tr key={record.id}>
                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">

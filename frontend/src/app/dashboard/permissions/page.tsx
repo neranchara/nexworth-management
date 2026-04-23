@@ -6,6 +6,12 @@ import { Shield, Save, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import { Permission } from '@/types/auth';
 import { usePermissions } from '@/hooks/usePermissions';
 
+interface Role {
+  id: string;
+  name: string;
+}
+
+
 const RESOURCES = [
   { id: 'dashboard', name: 'Dashboard' },
   { id: 'monthly', name: 'Monthly Summary' },
@@ -22,7 +28,7 @@ const RESOURCES = [
 ];
 
 export default function PermissionsPage() {
-  const [roles, setRoles] = useState<any[]>([]);
+  const [roles, setRoles] = useState<Role[]>([]);
   const { hasPermission } = usePermissions();
   const [selectedRole, setSelectedRole] = useState<string>('');
   const [permissions, setPermissions] = useState<Permission[]>([]);
@@ -52,7 +58,7 @@ export default function PermissionsPage() {
       
       // Merge with default list of resources
       const merged = RESOURCES.map(resDef => {
-        const found = existing.find((p: any) => p.resource === resDef.id);
+        const found = existing.find((p: Permission) => p.resource === resDef.id);
         return found || {
           resource: resDef.id,
           canView: false,
@@ -95,7 +101,7 @@ export default function PermissionsPage() {
       await api.post(`/roles/${selectedRole}/permissions`, permissions);
       setMessage({ text: 'Permissions updated successfully', type: 'success' });
       setTimeout(() => setMessage(null), 3000);
-    } catch (err) {
+    } catch {
       setMessage({ text: 'Failed to update permissions', type: 'error' });
     } finally {
       setSaving(false);

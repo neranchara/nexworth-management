@@ -1,17 +1,18 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, Tag, Layers, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, Tag, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { TransactionCategory, TransactionType } from '@/types/models';
+
 
 export default function CategoriesManagementPage() {
-  const [categories, setCategories] = useState<any[]>([]);
+  const [categories, setCategories] = useState<TransactionCategory[]>([]);
   const { hasPermission } = usePermissions();
-  const [types, setTypes] = useState<any[]>([]);
+  const [types, setTypes] = useState<TransactionType[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
   
   // Alert state
@@ -30,9 +31,9 @@ export default function CategoriesManagementPage() {
     isActive: true
   });
 
-  const { user } = useAuthStore();
 
-  const fetchInitialData = async () => {
+
+  const fetchInitialData = useCallback(async () => {
     try {
       setLoading(true);
       const [catRes, typeRes] = await Promise.all([
@@ -46,16 +47,16 @@ export default function CategoriesManagementPage() {
       if (typesList.length > 0 && !formData.typeId) {
         setFormData(prev => ({ ...prev, typeId: typesList[0].id }));
       }
-    } catch (err) {
-      setError('Failed to load categories or types');
+    } catch {
+      console.error('Failed to load categories or types');
     } finally {
       setLoading(false);
     }
-  };
+  }, [formData.typeId]);
 
   useEffect(() => {
     fetchInitialData();
-  }, []);
+  }, [fetchInitialData]);
 
   const showAlert = (message: string, type: 'success' | 'error') => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -78,7 +79,7 @@ export default function CategoriesManagementPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (c: any) => {
+  const openEditModal = (c: TransactionCategory) => {
     setFormData({
       name: c.name,
       typeId: c.typeId,
@@ -95,8 +96,9 @@ export default function CategoriesManagementPage() {
       await api.delete(`/categories/${id}`);
       showAlert('Category deleted successfully', 'success');
       fetchInitialData();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Delete failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
     }
   };
 
@@ -112,8 +114,9 @@ export default function CategoriesManagementPage() {
       }
       setIsModalOpen(false);
       fetchInitialData();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Save failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Save failed', 'error');
     }
   };
 
@@ -130,8 +133,8 @@ export default function CategoriesManagementPage() {
     if (!sortConfig) return categories;
 
     return [...categories].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortConfig.key) {
         case 'name':
@@ -264,7 +267,7 @@ export default function CategoriesManagementPage() {
                           </div>
                         </td>
                         <td className="whitespace-nowrap px-3 py-4 text-sm">
-                           <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getTypeBadge(cat.type?.behavior)}`}>
+                           <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getTypeBadge(cat.type?.behavior || '')}`}>
                              {cat.type?.name || 'Unset'}
                            </span>
                         </td>

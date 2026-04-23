@@ -121,10 +121,10 @@ export default function DashboardLayout({
                 <span className="font-medium">{user.role}</span>
               </div>
               
-              <div className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300">
+              <Link href="/dashboard/profile" className="flex items-center space-x-2 text-sm text-gray-700 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors">
                 <UserIcon className="w-5 h-5" />
                 <span>{user.email}</span>
-              </div>
+              </Link>
               
               <button
                 onClick={handleLogout}

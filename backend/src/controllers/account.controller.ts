@@ -9,6 +9,7 @@ const accountSchema = z.object({
   type: z.nativeEnum(AccountType),
   bankId: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
+  isPersonal: z.boolean().default(true),
   actualDate: z.string().datetime().optional().nullable(),
 });
 
@@ -58,6 +59,7 @@ export const createAccountHandler = async (request: FastifyRequest, reply: Fasti
         type: body.type,
         bankId: body.bankId,
         isActive: body.isActive,
+        isPersonal: body.isPersonal,
         actualDate: body.actualDate ? new Date(body.actualDate) : null,
       },
       include: { bank: true }
@@ -102,6 +104,7 @@ export const updateAccountHandler = async (request: FastifyRequest<{ Params: { i
         type: body.type,
         bankId: body.bankId,
         isActive: body.isActive,
+        isPersonal: body.isPersonal,
         actualDate: body.actualDate ? new Date(body.actualDate) : null,
       },
       include: { bank: true }

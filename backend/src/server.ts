@@ -2,6 +2,7 @@ import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
 import * as dotenv from 'dotenv';
+import fastifyRawBody from 'fastify-raw-body';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import transactionRoutes from './routes/transaction.routes.js';
@@ -20,6 +21,12 @@ const buildServer = async (): Promise<FastifyInstance> => {
   });
   await server.register(fastifyJwt, {
     secret: process.env.JWT_SECRET || 'supersecret'
+  });
+  await server.register(fastifyRawBody, {
+    field: 'rawBody',
+    global: false,
+    encoding: 'utf8',
+    runFirst: true
   });
 
   // Health Check Route
@@ -51,6 +58,9 @@ const buildServer = async (): Promise<FastifyInstance> => {
   server.register(financialRecordRoutes, { prefix: '/api/v1' });
   server.register(dashboardRoutes, { prefix: '/api/v1/dashboard' });
   server.register(loanRoutes, { prefix: '/api/v1/loans' });
+  
+  const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes.js')).default;
+  server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
 
   return server;
 };

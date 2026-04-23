@@ -1,30 +1,26 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+
 import { 
   Plus, Search, Download, Upload, MoreHorizontal, 
   ArrowUpCircle, ArrowDownCircle, RefreshCw, Wallet, 
-  Tag, Calendar, Edit2, Trash2, X, CheckCircle, AlertCircle, FileText
+  Calendar, Edit2, Trash2, X, CheckCircle, AlertCircle, ArrowRight
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { usePermissions } from '@/hooks/usePermissions';
 import * as XLSX from 'xlsx';
+import { Transaction, Account, TransactionCategory, TransactionType } from '@/types/models';
 
-const TRANSACTION_TYPES = [
-  { value: 'INCOME', label: 'รายรับ', color: 'bg-green-100 text-green-800', icon: ArrowUpCircle },
-  { value: 'EXPENSE', label: 'รายจ่าย', color: 'bg-red-100 text-red-800', icon: ArrowDownCircle },
-  { value: 'SAVING_INVESTMENT', label: 'ออม/ลงทุน', color: 'bg-blue-100 text-blue-800', icon: Wallet },
-  { value: 'INTERNAL_TRANSFER', label: 'โอนภายใน', color: 'bg-gray-100 text-gray-800', icon: RefreshCw },
-  { value: 'DEBT', label: 'หนี้', color: 'bg-purple-100 text-purple-800', icon: Tag },
-];
+
+
 
 export default function TransactionsPage() {
-  const [transactions, setTransactions] = useState<any[]>([]);
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [categories, setCategories] = useState<any[]>([]);
-  const [types, setTypes] = useState<any[]>([]);
+  const [transactions, setTransactions] = useState<Transaction[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [categories, setCategories] = useState<TransactionCategory[]>([]);
+  const [types, setTypes] = useState<TransactionType[]>([]);
   const [loading, setLoading] = useState(true);
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
@@ -59,10 +55,10 @@ export default function TransactionsPage() {
     note: ''
   });
 
-  const { user } = useAuthStore();
+
   const { hasPermission } = usePermissions();
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       const [txRes, accRes, catRes, typeRes] = await Promise.all([
@@ -75,16 +71,16 @@ export default function TransactionsPage() {
       setAccounts(accRes.data.accounts);
       setCategories(catRes.data.categories);
       setTypes(typeRes.data.types);
-    } catch (err) {
-      console.error('Failed to load data', err);
+    } catch {
+      console.error('Failed to load data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [filterMonth, filterYear]);
 
   useEffect(() => {
     fetchData();
-  }, [filterMonth, filterYear]);
+  }, [fetchData]);
 
   const showAlert = (message: string, type: 'success' | 'error') => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -123,18 +119,39 @@ export default function TransactionsPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (tx: any) => {
-    const behavior = tx.type?.behavior || tx.category?.type?.behavior;
+  const openEditModal = (tx: Transaction) => {
+    const behavior = tx.type?.behavior || tx.category?.type?.behavior || '';
     const isExpense = ['EXPENSE', 'DEBT'].includes(behavior);
     
+    // Find linked account if it's a transfer
+    let fromAccId = isExpense ? tx.accountId : '';
+    let toAccId = !isExpense ? tx.accountId : '';
+    let displayTypeId = tx.typeId;
+    let displayCategoryId = tx.categoryId;
+
+    if (tx.linkedTransactionId) {
+      const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
+      if (linkedTx) {
+        if (isExpense) {
+           toAccId = linkedTx.accountId;
+           // If we are editing the Expense leg, show the Category/Type of the Receiving leg
+           // so the user edits the actual purpose (e.g. Investment) instead of 'Transfer Out'
+           displayTypeId = linkedTx.typeId;
+           displayCategoryId = linkedTx.categoryId;
+        } else {
+           fromAccId = linkedTx.accountId;
+        }
+      }
+    }
+
     setFormData({
       date: format(new Date(tx.date), 'yyyy-MM-dd'),
       actualDate: tx.actualDate ? format(new Date(tx.actualDate), 'yyyy-MM-dd') : '',
-      fromAccountId: isExpense ? tx.accountId : '',
-      toAccountId: !isExpense ? tx.accountId : '',
-      categoryId: tx.categoryId,
-      typeId: tx.typeId,
-      amount: tx.amount.toString(),
+      fromAccountId: fromAccId,
+      toAccountId: toAccId,
+      categoryId: displayCategoryId,
+      typeId: displayTypeId,
+      amount: Math.abs(tx.amount).toString(),
       description: tx.description || '',
       note: tx.note || ''
     });
@@ -149,8 +166,9 @@ export default function TransactionsPage() {
       await api.delete(`/transactions/${id}`);
       showAlert('Transaction deleted successfully', 'success');
       fetchData();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Delete failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
     }
   };
 
@@ -161,7 +179,17 @@ export default function TransactionsPage() {
        return;
     }
 
-    const payload: any = {
+    const payload: {
+      amount: number;
+      date: string;
+      actualDate: string | null;
+      fromAccountId?: string;
+      toAccountId?: string;
+      description?: string;
+      categoryId?: string;
+      note?: string;
+      typeId?: string;
+    } = {
       ...formData,
       amount: parseFloat(formData.amount),
       date: new Date(formData.date).toISOString(),
@@ -172,17 +200,19 @@ export default function TransactionsPage() {
     if (!payload.toAccountId) delete payload.toAccountId;
 
     try {
+      console.log('[DEBUG] Submitting Payload:', payload);
       if (isEditing && currentTxId) {
         await api.put(`/transactions/${currentTxId}`, payload);
-        showAlert('Transaction updated successfully', 'success');
+        showAlert('Transaction updated successfully (v2)', 'success');
       } else {
         await api.post('/transactions', payload);
         showAlert('Transaction created successfully', 'success');
       }
       setIsModalOpen(false);
       fetchData();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Save failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Save failed', 'error');
     }
   };
 
@@ -203,6 +233,28 @@ export default function TransactionsPage() {
             (t.note || '').toLowerCase().includes(query)
         );
     }
+    
+    // UI Improvement: Hide the receiving leg of a transfer when viewing All Accounts
+    if (!filterAccount) {
+      filtered = filtered.filter(t => {
+        if (t.linkedTransactionId) {
+          const linked = transactions.find(tx => tx.id === t.linkedTransactionId);
+          if (!linked) return true; // Show if we can't find the pair
+          
+          // Hide this leg if it's explicitly 'Transfer In'
+          if (t.category?.name === 'โอนเข้าภายใน') return false;
+          
+          // Hide this leg if its partner is 'Transfer Out' (meaning this is the destination)
+          if (linked.category?.name === 'โอนออกภายใน') return false;
+
+          // Tie-breaker fallback to ensure exactly one leg is shown if neither matched hide conditions
+          const wouldLinkedBeHidden = linked.category?.name === 'โอนเข้าภายใน' || t.category?.name === 'โอนออกภายใน';
+          if (!wouldLinkedBeHidden && t.id > linked.id) return false;
+        }
+        return true;
+      });
+    }
+
     if (filterType) filtered = filtered.filter(t => t.typeId === filterType);
     if (filterCategory) filtered = filtered.filter(t => t.categoryId === filterCategory);
     if (filterAccount) filtered = filtered.filter(t => t.accountId === filterAccount);
@@ -210,8 +262,8 @@ export default function TransactionsPage() {
     if (!sortConfig) return filtered;
 
     return [...filtered].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortConfig.key) {
         case 'date':
@@ -282,7 +334,7 @@ export default function TransactionsPage() {
         const workbook = XLSX.read(data, { type: 'array' });
         const sheetName = workbook.SheetNames[0];
         const worksheet = workbook.Sheets[sheetName];
-        const records = XLSX.utils.sheet_to_json(worksheet) as any[];
+        const records = XLSX.utils.sheet_to_json(worksheet) as Record<string, string | number>[];
 
         const payload = [];
         for (const row of records) {
@@ -296,10 +348,10 @@ export default function TransactionsPage() {
           }
 
           payload.push({
-            date: new Date(row.Date).toISOString(),
-            actualDate: row.PaymentDate ? new Date(row.PaymentDate).toISOString() : null,
+            date: new Date(row.Date.toString()).toISOString(),
+            actualDate: row.PaymentDate ? new Date(row.PaymentDate.toString()).toISOString() : null,
             description: row.Description?.toString() || '',
-            amount: parseFloat(row.Amount),
+            amount: parseFloat(row.Amount.toString()),
             categoryId: category.id,
             accountId: account.id,
             note: row.Note?.toString() || ''
@@ -314,8 +366,9 @@ export default function TransactionsPage() {
             showAlert('No valid rows found to import.', 'error');
             setLoading(false);
         }
-      } catch (err: any) {
-        showAlert('Failed to import: ' + err.message, 'error');
+      } catch (err: unknown) {
+        const errorMsg = err instanceof Error ? err.message : String(err);
+        showAlert('Failed to import: ' + errorMsg, 'error');
         setLoading(false);
       } finally {
         if (fileInputRef.current) fileInputRef.current.value = '';
@@ -494,7 +547,7 @@ export default function TransactionsPage() {
                   <td colSpan={7} className="px-6 py-10 text-center text-gray-500">No transactions match your criteria.</td>
                 </tr>
               ) : sortedTransactions.map(tx => {
-                const behavior = tx.type?.behavior || tx.category?.type?.behavior;
+                const behavior = tx.type?.behavior || tx.category?.type?.behavior || '';
                 
                 return (
                   <tr key={tx.id} className="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors">
@@ -512,12 +565,42 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                        <span className="text-xs font-bold text-gray-500 uppercase tracking-tight">
-                          {tx.type?.name}
+                          {(() => {
+                              if (tx.linkedTransactionId && !filterAccount) {
+                                  const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
+                                  if (linkedTx) {
+                                      const primaryIsGeneric = tx.category?.name === 'โอนออกภายใน' || tx.category?.name === 'โอนเข้าภายใน';
+                                      const linkedIsGeneric = linkedTx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน';
+                                      if (primaryIsGeneric && !linkedIsGeneric) return linkedTx.type?.name;
+                                  }
+                              }
+                              return tx.type?.name;
+                          })()}
                        </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap">
-                       <span className={`px-2 py-0.5 rounded text-xs font-medium ${getTypeBadge(behavior)}`}>
-                          {tx.category?.name}
+                       <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getTypeBadge((() => {
+                           if (tx.linkedTransactionId && !filterAccount) {
+                               const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
+                               if (linkedTx) {
+                                   const primaryIsGeneric = tx.category?.name === 'โอนออกภายใน' || tx.category?.name === 'โอนเข้าภายใน';
+                                   const linkedIsGeneric = linkedTx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน';
+                                   if (primaryIsGeneric && !linkedIsGeneric) return linkedTx.category?.type?.behavior || behavior;
+                               }
+                           }
+                           return behavior;
+                       })())}`}>
+                          {(() => {
+                              if (tx.linkedTransactionId && !filterAccount) {
+                                  const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
+                                  if (linkedTx) {
+                                      const primaryIsGeneric = tx.category?.name === 'โอนออกภายใน' || tx.category?.name === 'โอนเข้าภายใน';
+                                      const linkedIsGeneric = linkedTx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน';
+                                      if (primaryIsGeneric && !linkedIsGeneric) return linkedTx.category?.name;
+                                  }
+                              }
+                              return tx.category?.name;
+                          })()}
                        </span>
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5 min-h-[56px]">
@@ -525,8 +608,8 @@ export default function TransactionsPage() {
                         const accountInfo = tx.account;
                         if (!accountInfo) return <span className="text-gray-400 italic">Unknown</span>;
                         
-                        return (
-                          <>
+                        let accountDisplay = (
+                          <div className="flex items-center gap-1.5">
                             {accountInfo.bank?.color ? (
                               <div 
                                 className="w-2 h-2 rounded-full flex-shrink-0" 
@@ -537,8 +620,34 @@ export default function TransactionsPage() {
                               <Wallet className="w-4 h-4 text-gray-400 flex-shrink-0" />
                             )}
                             <span className="truncate">{accountInfo.name}</span>
-                          </>
+                          </div>
                         );
+
+                        // If it's a transfer and we are in "All Accounts" view, show the destination account too
+                        if (tx.linkedTransactionId && !filterAccount) {
+                           const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
+                           if (linkedTx && linkedTx.account) {
+                              accountDisplay = (
+                                 <div className="flex items-center gap-2">
+                                    {accountDisplay}
+                                    <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                                    <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
+                                       {linkedTx.account.bank?.color ? (
+                                         <div 
+                                           className="w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-70" 
+                                           style={{ backgroundColor: linkedTx.account.bank.color }}
+                                         />
+                                       ) : (
+                                         <Wallet className="w-3 h-3 flex-shrink-0 opacity-70" />
+                                       )}
+                                       <span className="truncate text-xs">{linkedTx.account.name}</span>
+                                    </div>
+                                 </div>
+                              );
+                           }
+                        }
+
+                        return accountDisplay;
                       })()}
                     </td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${behavior === 'INCOME' ? 'text-green-600 dark:text-green-400' : (behavior === 'EXPENSE' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white')}`}>

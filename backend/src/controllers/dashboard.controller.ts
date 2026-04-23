@@ -4,10 +4,10 @@ import { prisma } from '../lib/prisma.js';
 export const getDashboardStatsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as { sub: string, orgId: string };
-    const query = request.query as { year?: string };
+    const query = request.query as { year?: string, month?: string };
     const now = new Date();
-    const currentMonth = now.getMonth();
     const currentYear = query.year ? parseInt(query.year) : now.getFullYear();
+    const currentMonth = query.month !== undefined ? parseInt(query.month) : now.getMonth();
     
     // 1. Fetch all accounts and transactions
     const [accountsRaw, transactions] = await Promise.all([
@@ -85,6 +85,7 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
       const txDate = new Date(tx.date);
       const amount = tx.amount;
       const behavior = tx.type.behavior;
+      const categoryName = tx.category?.name;
 
       // Current Year Cashflow
       if (txDate.getFullYear() === currentYear) {
@@ -95,45 +96,68 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
         const isInvestmentAcc = INVESTMENT_TYPES.includes(accType);
         const isGoalAcc = accType === 'GOAL';
 
-        if (behavior === 'INCOME') {
-          monthlyCashflow[mIdx].income += amount;
-        } else if (behavior === 'LOAN_BORROW') {
-          monthlyCashflow[mIdx].income += amount;
-          monthlyCashflow[mIdx].internalLoan += amount;
-        } else if (behavior === 'EXPENSE') {
-          monthlyCashflow[mIdx].expense += amount;
-        } else if (behavior === 'LOAN_REPAY') {
-          monthlyCashflow[mIdx].expense += amount;
-          monthlyCashflow[mIdx].internalLoan += amount;
-        } else if (behavior === 'SAVING') {
-          monthlyCashflow[mIdx].saving += amount;
-        } else if (behavior === 'INVESTMENT') {
-          monthlyCashflow[mIdx].invest += amount;
-        } else if (behavior === 'GOAL' || behavior === 'GOAL_SAVING') {
-          monthlyCashflow[mIdx].goalSaving += amount;
-        } else if (behavior === 'EMERGENCY') {
-          monthlyCashflow[mIdx].saving += amount; // นับรวมกับ Savings
-        } else if (behavior === 'DEBT') {
-          monthlyCashflow[mIdx].debt += amount;
+        const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName === 'โอนเข้าภายใน' || categoryName === 'โอนออกภายใน';
+
+        if (isInternalTransfer) {
+          // If it's an internal transfer, we skip Income/Expense noise.
+          // BUT if it's going into a Goal/Invest account, we count it in those specific buckets.
+          if (isGoalAcc && (behavior === 'INCOME' || behavior === 'GOAL_SAVING' || behavior === 'GOAL')) {
+            monthlyCashflow[mIdx].goalSaving += amount;
+          } else if (isInvestmentAcc && (behavior === 'INCOME' || behavior === 'INVESTMENT')) {
+            monthlyCashflow[mIdx].invest += amount;
+          }
+        } else {
+          if (behavior === 'INCOME') {
+            monthlyCashflow[mIdx].income += amount;
+          } else if (behavior === 'LOAN_BORROW') {
+            monthlyCashflow[mIdx].income += amount;
+            monthlyCashflow[mIdx].internalLoan += amount;
+          } else if (behavior === 'EXPENSE') {
+            monthlyCashflow[mIdx].expense += amount;
+          } else if (behavior === 'LOAN_REPAY') {
+            monthlyCashflow[mIdx].expense += amount;
+            monthlyCashflow[mIdx].internalLoan += amount;
+          } else if (behavior === 'SAVING') {
+            monthlyCashflow[mIdx].saving += amount;
+          } else if (behavior === 'INVESTMENT') {
+            monthlyCashflow[mIdx].invest += amount;
+          } else if (behavior === 'GOAL' || behavior === 'GOAL_SAVING') {
+            monthlyCashflow[mIdx].goalSaving += amount;
+          } else if (behavior === 'EMERGENCY') {
+            monthlyCashflow[mIdx].saving += amount; 
+          } else if (behavior === 'DEBT') {
+            monthlyCashflow[mIdx].debt += amount;
+          }
         }
         
-        // Track record count for any valid transaction in that month
+        // Track record count for all transactions (including transfers) for audit visibility
         monthlyCashflow[mIdx].records += 1;
       }
 
-      // Recent Expenses (Current Month only)
+      // Recent Expenses (Current Month only) - Also exclude internal transfers
       if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
-        if (behavior === 'EXPENSE' || behavior === 'DEBT' || behavior === 'LOAN_REPAY') {
+        const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName === 'โอนเข้าภายใน' || categoryName === 'โอนออกภายใน';
+        if (!isInternalTransfer && (behavior === 'EXPENSE' || behavior === 'DEBT' || behavior === 'LOAN_REPAY')) {
           recentExpenses += amount;
         }
       }
     }
 
     // Calculate Net (Surplus) for each month
-    // Surplus = Income - (Expense + Debt + Saving + GoalSaving + Invest)
     monthlyCashflow.forEach(m => {
       m.net = m.income - (m.expense + m.debt + m.saving + m.goalSaving + m.invest);
     });
+
+    // Calculate Annual Stats
+    const annualStats = monthlyCashflow.reduce((acc, m) => ({
+      income: acc.income + m.income,
+      expense: acc.expense + m.expense,
+      saving: acc.saving + m.saving,
+      goalSaving: acc.goalSaving + m.goalSaving,
+      invest: acc.invest + m.invest,
+      debt: acc.debt + m.debt,
+      net: acc.net + m.net
+    }), { income: 0, expense: 0, saving: 0, goalSaving: 0, invest: 0, debt: 0, net: 0 });
 
     // 3. Calculate Scores and Financial Health Metrics
     const currentMonthData = monthlyCashflow[currentMonth];
@@ -184,7 +208,14 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
         goalRate: Math.round(goalRate * 1000) / 10,
         debtRatio: Math.round(debtRatio * 1000) / 10,
         investmentRatio: Math.round(investmentRatio * 1000) / 10,
-        emergencyMonths: Math.round(emergencyMonths * 10) / 10
+        emergencyMonths: Math.round(emergencyMonths * 10) / 10,
+        annualIncome: annualStats.income,
+        annualExpense: annualStats.expense,
+        annualSaving: annualStats.saving,
+        annualGoalSaving: annualStats.goalSaving,
+        annualInvest: annualStats.invest,
+        annualDebt: annualStats.debt,
+        annualNet: annualStats.net
       },
       health: {
         score: totalHealthScore,

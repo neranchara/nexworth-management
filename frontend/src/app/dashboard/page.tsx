@@ -5,7 +5,7 @@ import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
-import { Wallet, TrendingDown, Calendar, ShieldCheck, Activity, CreditCard, TrendingUp, Info } from 'lucide-react';
+import { Wallet, Calendar, ShieldCheck, Activity, CreditCard, TrendingUp, Info } from 'lucide-react';
 import { 
   BarChart, 
   Bar, 
@@ -22,12 +22,71 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import type { GridItemConfig } from '@/components/DashboardGrid';
 
+interface MonthlyCashflow {
+  month: string;
+  income: number;
+  expense: number;
+  saving: number;
+  goalSaving: number;
+  invest: number;
+  debt: number;
+  net: number;
+  records: number;
+  internalLoan?: number;
+}
+
+interface GoalTracking {
+  id: string;
+  name: string;
+  targetAmount: number;
+  currentAmount: number;
+  percentage: number;
+  dueDate?: string;
+}
+
+export interface Stats {
+  summary: {
+    totalAssets: number;
+    totalGoalAssets: number;
+    totalLiabilities: number;
+    netWorth: number;
+    monthlyIncome: number;
+    monthlyExpense: number;
+    savingRate: number;
+    goalRate: number;
+    debtRatio: number;
+    investmentRatio: number;
+    emergencyMonths: number;
+  };
+  currency: string;
+  monthlyCashflow: MonthlyCashflow[];
+  health: {
+    score: number;
+    status: string;
+    metrics: {
+      savingRate: number;
+      goalRate: number;
+      emergencyMonths: number;
+      debtRatio: number;
+      investmentRatio: number;
+    };
+    scores: {
+      saving: number;
+      emergency: number;
+      debt: number;
+      investment: number;
+    };
+  };
+  goalTracking: GoalTracking[];
+}
+
+
 const DashboardGrid = dynamic(() => import('@/components/DashboardGrid'), { ssr: false });
 
 export default function DashboardPage() {
   const { user } = useAuthStore();
   const { hasPermission } = usePermissions();
-  const [stats, setStats] = useState<any>({ 
+  const [stats, setStats] = useState<Stats>({ 
     summary: {
       totalAssets: 0, 
       totalGoalAssets: 0,
@@ -51,12 +110,22 @@ export default function DashboardPage() {
     },
     goalTracking: []
   });
+  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
+
+  const months = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+
+  const years = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const res = await api.get('/dashboard/stats');
+        setLoading(true);
+        const res = await api.get(`/dashboard/stats?year=${selectedYear}&month=${selectedMonth}`);
         setStats(res.data);
       } catch (err) {
         console.error('Failed to fetch stats', err);
@@ -65,7 +134,7 @@ export default function DashboardPage() {
       }
     };
     fetchStats();
-  }, []);
+  }, [selectedMonth, selectedYear]);
 
   const getHealthColor = (score: number) => {
     if (score >= 90) return '#10b981'; // Green-500
@@ -96,10 +165,14 @@ export default function DashboardPage() {
 
   const welcomeCard = (
     <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 h-full">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
-        Welcome back, {user?.firstName} {user?.lastName}
-      </h1>
-      <p className="text-gray-500 dark:text-gray-400 text-sm mb-6">Here is your real-time financial overview.</p>
+      <div className="flex flex-col md:flex-row md:items-center justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+            Welcome back, {user?.firstName} {user?.lastName}
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Here is your financial overview for the current period.</p>
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {/* Real Assets Card */}
@@ -200,12 +273,31 @@ export default function DashboardPage() {
 
   const monthlyMetricsCard = (
     <div className="h-full">
-      <div className="flex items-center gap-2 mb-3">
-        <Calendar className="w-4 h-4 text-blue-500" />
-        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Monthly Metrics</h3>
-        <span className="text-[10px] text-gray-400 dark:text-gray-500 bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded-full">
-          {new Date().toLocaleString('en-US', { month: 'long', year: 'numeric' })}
-        </span>
+      <div className="flex items-center justify-between gap-2 mb-3">
+        <div className="flex items-center gap-2">
+          <Calendar className="w-4 h-4 text-blue-500" />
+          <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Monthly Metrics</h3>
+        </div>
+        <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-900/50 px-2 py-0.5 rounded-lg border dark:border-gray-700 scale-90 origin-right">
+           <select 
+             value={selectedMonth}
+             onChange={(e) => setSelectedMonth(parseInt(e.target.value))}
+             className="bg-transparent border-none text-[10px] font-bold text-blue-600 dark:text-blue-400 focus:ring-0 cursor-pointer p-0"
+           >
+             {months.map((m, i) => (
+               <option key={i} value={i}>{m.substring(0, 3)}</option>
+             ))}
+           </select>
+           <select 
+             value={selectedYear}
+             onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+             className="bg-transparent border-none text-[10px] font-bold text-gray-500 dark:text-gray-400 focus:ring-0 cursor-pointer p-0 border-l dark:border-gray-700"
+           >
+             {years.map(y => (
+               <option key={y} value={y}>{y}</option>
+             ))}
+           </select>
+        </div>
       </div>
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {[
@@ -315,7 +407,7 @@ export default function DashboardPage() {
               </tr>
             </thead>
             <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700 text-sm">
-              {(stats.monthlyCashflow || []).map((m: any) => (
+              {(stats.monthlyCashflow || []).map((m: MonthlyCashflow) => (
                 <tr key={m.month} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                   <td className="px-4 py-2 font-medium">{m.month}</td>
                   <td className="px-4 py-2 text-right text-green-600 font-mono">{m.income > 0 ? m.income.toLocaleString() : '-'}</td>
@@ -346,7 +438,7 @@ export default function DashboardPage() {
                 <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value.toLocaleString()}`} />
                 <Tooltip 
                   contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: any) => value.toLocaleString()}
+                  formatter={(value: string | number | boolean | null | undefined | readonly (string | number)[]) => (typeof value === 'number' ? value.toLocaleString() : (value?.toString() || ''))}
                 />
                 <Legend verticalAlign="top" height={36}/>
                 <Bar dataKey="income" name="Income" fill="#3b82f6" radius={[4, 4, 0, 0]} />
@@ -371,7 +463,7 @@ export default function DashboardPage() {
       
       {stats.goalTracking?.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {stats.goalTracking.map((goal: any) => (
+          {stats.goalTracking.map((goal: GoalTracking) => (
             <div key={goal.id} className="p-4 border dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-800/50">
               <div className="flex justify-between items-start mb-4">
                 <h3 className="font-bold text-gray-900 dark:text-white">{goal.name}</h3>
@@ -379,7 +471,7 @@ export default function DashboardPage() {
               </div>
               <div className="flex items-end justify-between mb-2">
                 <span className="text-sm text-gray-500 dark:text-gray-400">Current Saved</span>
-                <span className="text-lg font-bold text-gray-900 dark:text-white">{stats.currency}{goal.balance.toLocaleString()}</span>
+                <span className="text-lg font-bold text-gray-900 dark:text-white">{stats.currency}{goal.currentAmount.toLocaleString()}</span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
                 <div className="bg-purple-500 h-full transition-all duration-1000" style={{ width: '100%' }} />

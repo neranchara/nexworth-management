@@ -15,7 +15,7 @@ const transactionSchema = z.object({
   note: z.string().optional().nullable(),
 });
 
-const adjustAccountBalance = async (accountId: string, amount: number, typeId: string, isRemoval: boolean = false) => {
+export const adjustAccountBalance = async (accountId: string, amount: number, typeId: string, isRemoval: boolean = false) => {
   const [account, type] = await Promise.all([
     prisma.account.findUnique({ where: { id: accountId } }),
     prisma.transactionType.findUnique({ where: { id: typeId } })
@@ -108,15 +108,17 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
 
     body.amount = Math.abs(body.amount);
 
-    let baseTypeId = body.typeId;
-    if (!baseTypeId) {
-      const category = await prisma.transactionCategory.findUnique({ where: { id: body.categoryId } });
-      if (!category) return reply.status(400).send({ error: 'Category not found' });
-      baseTypeId = category.typeId;
-    }
-
     const { accountId, fromAccountId, toAccountId, ...commonData } = body;
-    const isTransfer = fromAccountId && toAccountId;
+    
+    // Fetch category to check behavior
+    const category = await prisma.transactionCategory.findUnique({ 
+      where: { id: body.categoryId }, 
+      include: { type: true } 
+    });
+    if (!category) return reply.status(400).send({ error: 'Category not found' });
+    
+    const transferBehaviors = ['INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL_SAVING', 'DEBT', 'EXPENSE', 'INCOME'];
+    const isTransfer = (fromAccountId && toAccountId) && transferBehaviors.includes(category.type.behavior);
 
     const processSingleLeg = async (accId: string, catId: string, tId: string, linkedId: string | null) => {
         const account = await prisma.account.findUnique({ where: { id: accId } });
@@ -159,6 +161,8 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
         await adjustAccountBalance(transaction.accountId, transaction.amount, transaction.typeId);
         return transaction;
     };
+
+    const baseTypeId = category.typeId;
 
     if (isTransfer) {
         const destTx = await processSingleLeg(toAccountId, body.categoryId, baseTypeId as string, null);
@@ -211,46 +215,138 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       return reply.status(404).send({ error: 'Transaction not found or unauthorized' });
     }
 
-    let typeId = body.typeId || existing.typeId;
-    if (body.categoryId !== existing.categoryId && !body.typeId) {
-      const category = await prisma.transactionCategory.findUnique({ where: { id: body.categoryId } });
-      if (category) typeId = category.typeId;
-    }
+    let categoryId = body.categoryId;
+    const category = await prisma.transactionCategory.findUnique({ 
+      where: { id: categoryId }, 
+      include: { type: true } 
+    });
+    if (!category) return reply.status(404).send({ error: 'Category not found' });
+    
+    let typeId = body.typeId || category.typeId;
+    const categoryBehavior = category.type.behavior;
 
-    // Determine accountId
-    const targetAccountId = body.accountId || body.toAccountId || body.fromAccountId || existing.accountId;
+    // Sync linked transaction
+    const linked = existing.linkedTransactionId 
+      ? await prisma.transaction.findUnique({ where: { id: existing.linkedTransactionId } }) 
+      : null;
 
-    let assetId: string | null = existing.assetId;
-    let liabilityId: string | null = existing.liabilityId;
+    const existingType = await prisma.transactionType.findUnique({ where: { id: existing.typeId } });
+    const behavior = existingType?.behavior;
+    const isExistingExpense = behavior === 'EXPENSE' || behavior === 'DEBT';
+    
+    const isTransferIntent = !!(body.fromAccountId && body.toAccountId) && (
+      ['INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL_SAVING', 'DEBT', 'EXPENSE', 'INCOME'].includes(categoryBehavior)
+    );
+    const wasTransfer = !!existing.linkedTransactionId;
+    console.log('[DEBUG-UPDATE] id:', existing.id);
+    console.log('[DEBUG-UPDATE] body.fromAccountId:', body.fromAccountId, 'body.toAccountId:', body.toAccountId);
+    console.log('[DEBUG-UPDATE] categoryBehavior:', categoryBehavior);
+    console.log('[DEBUG-UPDATE] isTransferIntent:', isTransferIntent, 'wasTransfer:', wasTransfer);
 
-    if (targetAccountId && targetAccountId !== existing.accountId) {
-      const account = await prisma.account.findUnique({ where: { id: targetAccountId } });
-      if (account) {
-        if (account.type === 'LIABILITY') {
-          const l = await prisma.liability.findUnique({ where: { accountId: targetAccountId } });
-          liabilityId = l?.id || null;
-          assetId = null;
+    // --- Category Routing for Transfers ---
+    let primaryCategoryId = categoryId;
+    let primaryTypeId = typeId;
+    let linkedCategoryId: string | undefined = undefined;
+    let linkedTypeId: string | undefined = undefined;
+
+    if (wasTransfer && isTransferIntent) {
+      const isRequestedExpenseLike = ['EXPENSE', 'DEBT'].includes(categoryBehavior);
+
+      if (isExistingExpense) {
+        // We are updating the "From" leg.
+        if (isRequestedExpenseLike) {
+           primaryCategoryId = categoryId;
+           primaryTypeId = typeId;
+           // If they requested a new Expense category, linked leg stays (or becomes) Transfer In.
+           let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'INCOME' }});
+           let transferInCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.orgId, name: 'โอนเข้าภายใน' } });
+           if (!transferInCat) transferInCat = await prisma.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.orgId, typeId: incomeType!.id, isActive: true } });
+           
+           linkedCategoryId = transferInCat.id;
+           linkedTypeId = incomeType!.id;
         } else {
-          const a = await prisma.asset.findUnique({ where: { accountId: targetAccountId } });
-          assetId = a?.id || null;
-          liabilityId = null;
+           // They switched from Expense to Investment. Primary becomes Transfer Out, linked becomes Investment.
+           let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'EXPENSE', name: 'รายจ่าย' }}) || await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'EXPENSE' }});
+           let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.orgId, name: 'โอนออกภายใน' } });
+           primaryCategoryId = transferOutCat!.id;
+           primaryTypeId = expenseType!.id;
+
+           linkedCategoryId = categoryId;
+           linkedTypeId = typeId;
+        }
+      } else {
+        // We are updating the "To" leg.
+        if (isRequestedExpenseLike) {
+           // Switched from Investment to Expense. Primary (To) becomes Transfer In, linked (From) becomes Expense.
+           let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'INCOME' }});
+           let transferInCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.orgId, name: 'โอนเข้าภายใน' } });
+           primaryCategoryId = transferInCat!.id;
+           primaryTypeId = incomeType!.id;
+
+           linkedCategoryId = categoryId;
+           linkedTypeId = typeId;
+        } else {
+           primaryCategoryId = categoryId;
+           primaryTypeId = typeId;
+           
+           // Linked leg stays (or becomes) Transfer Out.
+           let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'EXPENSE', name: 'รายจ่าย' }}) || await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'EXPENSE' }});
+           let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.orgId, name: 'โอนออกภายใน' } });
+           if (!transferOutCat) transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.orgId, typeId: expenseType!.id, isActive: true } });
+           
+           linkedCategoryId = transferOutCat.id;
+           linkedTypeId = expenseType!.id;
         }
       }
     }
 
-    const updated = await prisma.transaction.update({
+    let targetPrimaryAccountId = body.accountId;
+    if (!isTransferIntent && !targetPrimaryAccountId) {
+       targetPrimaryAccountId = body.toAccountId || body.fromAccountId || existing.accountId;
+    }
+
+    if (isTransferIntent) {
+      if (wasTransfer) {
+        targetPrimaryAccountId = isExistingExpense ? body.fromAccountId : body.toAccountId;
+      } else {
+        // Converting to transfer. The primary leg is the one that already existed.
+        targetPrimaryAccountId = existing.accountId;
+      }
+    } 
+    
+    let assetId: string | null = null;
+    let liabilityId: string | null = null;
+    const account = await prisma.account.findUnique({ where: { id: targetPrimaryAccountId as string } });
+    if (account) {
+      if (account.type === 'LIABILITY') {
+        const l = await prisma.liability.findUnique({ where: { accountId: targetPrimaryAccountId as string } });
+        liabilityId = l?.id || null;
+      } else {
+        const a = await prisma.asset.findUnique({ where: { accountId: targetPrimaryAccountId as string } });
+        assetId = a?.id || null;
+      }
+    }
+
+    // Reverse old balances
+    await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, true);
+    if (linked) {
+      await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, true);
+    }
+
+    const updatedPrimary = await prisma.transaction.update({
       where: { id },
       data: {
-        accountId: targetAccountId,
-        categoryId: body.categoryId,
+        accountId: targetPrimaryAccountId as string,
+        categoryId: primaryCategoryId,
         amount: body.amount,
         description: body.description !== undefined ? body.description : existing.description,
         note: body.note !== undefined ? body.note : existing.note,
-        typeId,
+        typeId: primaryTypeId,
         assetId,
         liabilityId,
         date: body.date ? new Date(body.date) : existing.date,
         actualDate: body.actualDate !== undefined ? (body.actualDate ? new Date(body.actualDate) : null) : existing.actualDate,
+        linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId
       },
       include: {
         account: { include: { bank: { select: { name: true, color: true } } } },
@@ -261,28 +357,138 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       }
     });
 
-    await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, true);
-    await adjustAccountBalance(updated.accountId, updated.amount, updated.typeId);
+    if (isTransferIntent && !wasTransfer) {
+      console.log('[DEBUG-UPDATE] CONVERSION: Single -> Transfer');
+      // CONVERSION: Single -> Transfer
+      let targetLinkedAccountId = isExistingExpense ? body.toAccountId : body.fromAccountId;
+      if (!targetLinkedAccountId) throw new Error("Missing linked account ID for transfer conversion");
 
-    // Sync linked transaction amount/description/date
-    if (existing.linkedTransactionId) {
-       const linked = await prisma.transaction.findUnique({ where: { id: existing.linkedTransactionId }});
-       if (linked) {
-          await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, true);
-          await prisma.transaction.update({
-             where: { id: linked.id },
-             data: { 
-                 amount: updated.amount, 
-                 date: updated.date, 
-                 actualDate: updated.actualDate,
-                 description: updated.description
-             }
-          });
-          await adjustAccountBalance(linked.accountId, updated.amount, linked.typeId);
-       }
+      let linkedAssetId: string | null = null;
+      let linkedLiabilityId: string | null = null;
+      const linkedAccount = await prisma.account.findUnique({ where: { id: targetLinkedAccountId } });
+      if (linkedAccount) {
+        if (linkedAccount.type === 'LIABILITY') {
+          const l = await prisma.liability.findUnique({ where: { accountId: targetLinkedAccountId } });
+          linkedLiabilityId = l?.id || null;
+        } else {
+          const a = await prisma.asset.findUnique({ where: { accountId: targetLinkedAccountId } });
+          linkedAssetId = a?.id || null;
+        }
+      }
+
+      let newLegTypeId: string;
+      let newLegCategoryId: string;
+
+      if (isExistingExpense) {
+        // Primary is From. New leg is To (Income/Investment).
+        const isRequestedExpenseLike = ['EXPENSE', 'DEBT'].includes(categoryBehavior);
+
+        if (isRequestedExpenseLike) {
+           // Source stays Expense. Dest gets Transfer In.
+           let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'INCOME' }});
+           let transferInCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.orgId, name: 'โอนเข้าภายใน' } });
+           if (!transferInCat) transferInCat = await prisma.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.orgId, typeId: incomeType!.id, isActive: true } });
+           
+           newLegTypeId = incomeType!.id;
+           newLegCategoryId = transferInCat.id;
+           
+           primaryCategoryId = categoryId;
+           primaryTypeId = typeId;
+        } else {
+           // Source becomes Transfer Out. Dest gets Investment.
+           let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'EXPENSE', name: 'รายจ่าย' }}) || await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'EXPENSE' }});
+           let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.orgId, name: 'โอนออกภายใน' } });
+           if (!transferOutCat) transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.orgId, typeId: expenseType!.id, isActive: true } });
+
+           primaryCategoryId = transferOutCat.id;
+           primaryTypeId = expenseType!.id;
+
+           newLegCategoryId = categoryId;
+           newLegTypeId = typeId;
+        }
+      } else {
+        // Primary is To. New leg is From (Expense/Transfer Out).
+        // Similar logic, but typically users don't start from the To leg unless it's a specific scenario.
+        // We will default to standard Investment flow: Source = Transfer Out, Dest = Investment.
+        let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'EXPENSE', name: 'รายจ่าย' }}) || await prisma.transactionType.findFirst({ where: { organizationId: user.orgId, behavior: 'EXPENSE' }});
+        let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.orgId, name: 'โอนออกภายใน' } });
+        if (!transferOutCat) transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.orgId, typeId: expenseType!.id, isActive: true } });
+        
+        newLegTypeId = expenseType!.id;
+        newLegCategoryId = transferOutCat.id;
+      }
+
+      const newLeg = await prisma.transaction.create({
+        data: {
+          accountId: targetLinkedAccountId,
+          categoryId: newLegCategoryId,
+          typeId: newLegTypeId,
+          userId: user.sub,
+          organizationId: user.orgId,
+          amount: updatedPrimary.amount,
+          description: updatedPrimary.description,
+          note: updatedPrimary.note,
+          date: updatedPrimary.date,
+          actualDate: updatedPrimary.actualDate,
+          assetId: linkedAssetId,
+          liabilityId: linkedLiabilityId,
+          linkedTransactionId: updatedPrimary.id
+        }
+      });
+
+      await prisma.transaction.update({
+        where: { id: updatedPrimary.id },
+        data: { linkedTransactionId: newLeg.id }
+      });
+
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
+      await adjustAccountBalance(newLeg.accountId, newLeg.amount, newLeg.typeId);
+
+    } else if (wasTransfer && !isTransferIntent) {
+      // CONVERSION: Transfer -> Single
+      await prisma.transaction.delete({ where: { id: linked!.id } });
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
+
+    } else if (wasTransfer && isTransferIntent) {
+      // STANDARD: Update Transfer
+      const targetLinkedAccountId = (isExistingExpense ? body.toAccountId : body.fromAccountId) || linked!.accountId;
+      
+      let linkedAssetId: string | null = null;
+      let linkedLiabilityId: string | null = null;
+      const linkedAccount = await prisma.account.findUnique({ where: { id: targetLinkedAccountId } });
+      if (linkedAccount) {
+        if (linkedAccount.type === 'LIABILITY') {
+          const l = await prisma.liability.findUnique({ where: { accountId: targetLinkedAccountId } });
+          linkedLiabilityId = l?.id || null;
+        } else {
+          const a = await prisma.asset.findUnique({ where: { accountId: targetLinkedAccountId } });
+          linkedAssetId = a?.id || null;
+        }
+      }
+
+      await prisma.transaction.update({
+        where: { id: linked!.id },
+        data: { 
+          accountId: targetLinkedAccountId,
+          amount: updatedPrimary.amount, 
+          date: updatedPrimary.date, 
+          actualDate: updatedPrimary.actualDate,
+          description: updatedPrimary.description,
+          assetId: linkedAssetId,
+          liabilityId: linkedLiabilityId,
+          categoryId: linkedCategoryId !== undefined ? linkedCategoryId : linked!.categoryId,
+          typeId: linkedTypeId !== undefined ? linkedTypeId : linked!.typeId
+        }
+      });
+      
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
+      await adjustAccountBalance(targetLinkedAccountId, updatedPrimary.amount, linked!.typeId);
+    } else {
+      // STANDARD: Update Single
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
     }
 
-    return reply.send({ message: 'Transaction updated', transaction: updated });
+    return reply.send({ message: 'Transaction updated (v2)', transaction: updatedPrimary });
   } catch (error) {
     if (error instanceof z.ZodError) return reply.status(400).send({ error: error.format() });
     request.log.error(error);

@@ -1,16 +1,17 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
-import { useAuthStore } from '@/store/authStore';
+
 import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { Bank } from '@/types/models';
+
 
 export default function BanksManagementPage() {
-  const [banks, setBanks] = useState<any[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
   const { hasPermission } = usePermissions();
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
   
   // Alert state
@@ -29,23 +30,23 @@ export default function BanksManagementPage() {
     color: '#3B82F6'
   });
 
-  const { user } = useAuthStore();
 
-  const fetchBanks = async () => {
+
+  const fetchBanks = useCallback(async () => {
     try {
       setLoading(true);
       const res = await api.get('/banks');
       setBanks(res.data.banks);
-    } catch (err) {
-      setError('Failed to load banks');
+    } catch {
+      console.error('Failed to load banks');
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchBanks();
-  }, []);
+  }, [fetchBanks]);
 
   const showAlert = (message: string, type: 'success' | 'error') => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -68,7 +69,7 @@ export default function BanksManagementPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (b: any) => {
+  const openEditModal = (b: Bank) => {
     setFormData({
       code: b.code,
       name: b.name,
@@ -85,8 +86,9 @@ export default function BanksManagementPage() {
       await api.delete(`/banks/${id}`);
       showAlert('Bank deleted successfully', 'success');
       fetchBanks();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Delete failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
     }
   };
 
@@ -102,11 +104,13 @@ export default function BanksManagementPage() {
       }
       setIsModalOpen(false);
       fetchBanks();
-    } catch (err: any) {
-      const message = err.response?.data?.error?.issues?.[0]?.message 
-        || err.response?.data?.error 
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string | { issues?: { message: string }[] } } } };
+      const errorData = errorResponse.response?.data?.error;
+      const message = (typeof errorData === 'object' && errorData?.issues?.[0]?.message)
+        || (typeof errorData === 'string' ? errorData : null)
         || 'Save failed';
-      showAlert(typeof message === 'string' ? message : JSON.stringify(message), 'error');
+      showAlert(message, 'error');
     }
   };
 
@@ -123,8 +127,8 @@ export default function BanksManagementPage() {
     if (!sortConfig) return banks;
 
     return [...banks].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortConfig.key) {
         case 'name':
@@ -186,7 +190,7 @@ export default function BanksManagementPage() {
           <div className="sm:flex-auto">
             <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Bank Master Data</h1>
             <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-              A list of supported banks in the system. These will appear in the "Select Bank" dropdown when users create accounts.
+              A list of supported banks in the system. These will appear in the &quot;Select Bank&quot; dropdown when users create accounts.
             </p>
           </div>
           <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">

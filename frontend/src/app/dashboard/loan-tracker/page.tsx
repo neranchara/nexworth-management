@@ -1,20 +1,36 @@
 'use client';
-import { useState, useEffect, useRef } from 'react';
-import { PlusCircle, ArrowUpCircle, X, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from 'react';
+import { PlusCircle, ArrowUpCircle, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import { format } from 'date-fns';
 import { usePermissions } from '@/hooks/usePermissions';
+import { Account } from '@/types/models';
+
+interface Loan {
+  id: string;
+  name: string;
+  accountId: string;
+  accountName: string;
+  totalBorrowed: number;
+  totalRepaid: number;
+  balance: number;
+  date: string;
+  actualDate?: string;
+  code?: string;
+  latestRepaymentDate?: string;
+}
+
 
 export default function LoanTrackerPage() {
-  const [loans, setLoans] = useState<any[]>([]);
+  const [loans, setLoans] = useState<Loan[]>([]);
   const { hasPermission } = usePermissions();
-  const [accounts, setAccounts] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showNewLoanModal, setShowNewLoanModal] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentLoanId, setCurrentLoanId] = useState<string | null>(null);
   const [showRepayModal, setShowRepayModal] = useState(false);
-  const [selectedLoan, setSelectedLoan] = useState<any>(null);
+  const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
 
   // Form states
@@ -31,7 +47,7 @@ export default function LoanTrackerPage() {
     alertTimeoutRef.current = setTimeout(() => setAlert(null), 3000);
   };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setIsLoading(true);
       const [loansRes, accRes] = await Promise.all([
@@ -41,17 +57,17 @@ export default function LoanTrackerPage() {
 
       setLoans(loansRes.data.loans || []);
       setAccounts(accRes.data.accounts || []);
-    } catch (e) {
-      console.error('Failed to fetch data', e);
+    } catch {
+      console.error('Failed to load data');
       showAlert('Failed to load data', 'error');
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [fetchData]);
 
   const handleCreateLoan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,12 +92,13 @@ export default function LoanTrackerPage() {
       setIsEditing(false);
       setCurrentLoanId(null);
       fetchData();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error');
     }
   };
 
-  const openEditModal = (loan: any) => {
+  const openEditModal = (loan: Loan) => {
     setNewLoanForm({
       name: loan.name,
       accountId: loan.accountId,
@@ -108,8 +125,9 @@ export default function LoanTrackerPage() {
       setSelectedLoan(null);
       showAlert('บันทึกรายการสำเร็จ', 'success');
       fetchData();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'เกิดข้อผิดพลาดในการบันทึกรายการ', 'error');
     }
   };
 
@@ -126,8 +144,8 @@ export default function LoanTrackerPage() {
     if (!sortConfig) return loans;
 
     return [...loans].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortConfig.key) {
         case 'date':
@@ -373,7 +391,7 @@ export default function LoanTrackerPage() {
                <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex justify-between">
                   <span>จำนวนเงิน</span>
-                  <span className="text-xs text-gray-500">(Initial: ฿{selectedLoan.totalAmount?.toLocaleString()})</span>
+                  <span className="text-xs text-gray-500">(Initial: ฿{selectedLoan.totalBorrowed?.toLocaleString()})</span>
                 </label>
                 <input required type="number" step="0.01" className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
                   value={repayForm.amount} onChange={e => setRepayForm({...repayForm, amount: e.target.value})} />

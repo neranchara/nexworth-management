@@ -1,9 +1,10 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, Settings, Layers } from 'lucide-react';
+import { TransactionType } from '@/types/models';
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, Layers } from 'lucide-react';
 
 const BEHAVIORS = [
   { value: 'INCOME', label: 'Income (รายรับ)', color: 'text-green-600' },
@@ -18,9 +19,7 @@ const BEHAVIORS = [
 ];
 
 export default function TransactionTypesPage() {
-  const [types, setTypes] = useState<any[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
+  const [types, setTypes] = useState<TransactionType[]>([]);
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -36,21 +35,21 @@ export default function TransactionTypesPage() {
 
   const { user } = useAuthStore();
 
-  const fetchTypes = async () => {
+  const fetchTypes = useCallback(async () => {
     try {
-      setLoading(true);
       const res = await api.get('/types');
       setTypes(res.data.types);
-    } catch (err) {
-      setError('Failed to load transaction types');
-    } finally {
-      setLoading(false);
+    } catch {
+      console.error('Failed to load transaction types');
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchTypes();
-  }, []);
+    const init = async () => {
+      await fetchTypes();
+    };
+    init();
+  }, [fetchTypes]);
 
   const showAlert = (message: string, type: 'success' | 'error') => {
     if (alertTimeoutRef.current) clearTimeout(alertTimeoutRef.current);
@@ -69,7 +68,7 @@ export default function TransactionTypesPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (t: any) => {
+  const openEditModal = (t: TransactionType) => {
     setFormData({
       name: t.name,
       behavior: t.behavior,
@@ -86,8 +85,9 @@ export default function TransactionTypesPage() {
       await api.delete(`/types/${id}`);
       showAlert('Type deleted successfully', 'success');
       fetchTypes();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Delete failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
     }
   };
 
@@ -103,8 +103,9 @@ export default function TransactionTypesPage() {
       }
       setIsModalOpen(false);
       fetchTypes();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Save failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Save failed', 'error');
     }
   };
 

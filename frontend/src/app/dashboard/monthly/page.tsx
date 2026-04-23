@@ -1,22 +1,58 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import api from '@/lib/api';
 import { 
-  ArrowUpCircle, ArrowDownCircle, Wallet, 
+  Wallet, 
   ChevronLeft, ChevronRight, Calendar,
   TrendingUp, TrendingDown, Minus
 } from 'lucide-react';
-import { format, setYear, getMonth, startOfYear, endOfYear } from 'date-fns';
+import { format } from 'date-fns';
 import { usePermissions } from '@/hooks/usePermissions';
+
+interface MonthlyStat {
+  month: number;
+  income: number;
+  expense: number;
+  savings: number;
+  goalSavings: number;
+  invest: number;
+  debt: number;
+  net: number;
+  count: number;
+}
+
+interface AnnualSummary {
+  annualIncome: number;
+  annualExpense: number;
+  annualSaving: number;
+  annualGoalSaving: number;
+  annualInvest: number;
+  annualDebt: number;
+  annualNet: number;
+}
+
+interface BackendCashflow {
+  income: number;
+  expense: number;
+  saving: number;
+  goalSaving: number;
+  invest: number;
+  debt: number;
+  net: number;
+  records: number;
+}
+
+
 
 export default function MonthlySummaryPage() {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { hasPermission } = usePermissions();
   const [loading, setLoading] = useState(true);
-  const [monthlyStats, setMonthlyStats] = useState<any[]>([]);
+  const [monthlyStats, setMonthlyStats] = useState<MonthlyStat[]>([]);
+  const [annualSummary, setAnnualSummary] = useState<AnnualSummary | null>(null);
 
-  const fetchYearlyData = async () => {
+  const fetchYearlyData = useCallback(async () => {
     try {
       setLoading(true);
       // Use the unified backend aggregation instead of client-side loops
@@ -24,7 +60,7 @@ export default function MonthlySummaryPage() {
       const backendStats = res.data.monthlyCashflow || [];
 
       // Map backend fields to frontend table structure
-      const stats = backendStats.map((m: any, idx: number) => ({
+      const stats = backendStats.map((m: BackendCashflow, idx: number) => ({
         month: idx,
         income: m.income || 0,
         expense: m.expense || 0,
@@ -37,16 +73,17 @@ export default function MonthlySummaryPage() {
       }));
 
       setMonthlyStats(stats);
-    } catch (err) {
-      console.error('Failed to load yearly summary from backend', err);
+      setAnnualSummary(res.data.summary);
+    } catch {
+      console.error('Failed to load yearly data');
     } finally {
       setLoading(false);
     }
-  };
+  }, [selectedYear]);
 
   useEffect(() => {
     fetchYearlyData();
-  }, [selectedYear]);
+  }, [fetchYearlyData]);
 
   const nextYear = () => setSelectedYear(prev => prev + 1);
   const prevYear = () => setSelectedYear(prev => prev - 1);
@@ -202,6 +239,39 @@ export default function MonthlySummaryPage() {
                 );
               })}
             </tbody>
+            {annualSummary && (
+              <tfoot className="bg-gray-100 dark:bg-gray-900 border-t-2 border-gray-300 dark:border-gray-600 font-bold">
+                <tr>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white uppercase tracking-wider">
+                    Total (Annual)
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 font-mono">
+                    ฿{annualSummary.annualIncome.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-red-600 font-mono">
+                    ฿{annualSummary.annualExpense.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-blue-600 font-mono">
+                    ฿{annualSummary.annualSaving.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-purple-600 font-mono">
+                    ฿{annualSummary.annualGoalSaving.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-cyan-600 font-mono">
+                    ฿{annualSummary.annualInvest.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-orange-600 font-mono">
+                    ฿{annualSummary.annualDebt.toLocaleString()}
+                  </td>
+                  <td className={`px-6 py-4 whitespace-nowrap text-sm text-right font-mono ${annualSummary.annualNet >= 0 ? 'text-green-600' : 'text-red-600'}`}>
+                    ฿{annualSummary.annualNet.toLocaleString()}
+                  </td>
+                  <td className="px-6 py-4 whitespace-nowrap text-xs text-right text-gray-500">
+                    -
+                  </td>
+                </tr>
+              </tfoot>
+            )}
           </table>
         </div>
       </div>

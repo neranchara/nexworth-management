@@ -81,7 +81,7 @@ export default function DashboardGrid({ items }: DashboardGridProps) {
   useEffect(() => {
     const saved = loadLayouts();
     if (saved) {
-      setLayouts(saved);
+      setTimeout(() => setLayouts(saved), 0);
     }
   }, []);
 

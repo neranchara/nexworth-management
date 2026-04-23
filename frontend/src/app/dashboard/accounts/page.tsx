@@ -3,12 +3,14 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, TrendingUp, Coins, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, TrendingUp, Coins, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, User } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { Account, Bank } from '@/types/models';
+
 
 export default function AccountsManagementPage() {
-  const [accounts, setAccounts] = useState<any[]>([]);
-  const [banks, setBanks] = useState<any[]>([]);
+  const [accounts, setAccounts] = useState<Account[]>([]);
+  const [banks, setBanks] = useState<Bank[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
@@ -28,7 +30,8 @@ export default function AccountsManagementPage() {
     accountNumber: '',
     type: 'BANK', // BANK, STOCK, GOLD
     bankId: '',
-    isActive: true
+    isActive: true,
+    isPersonal: true
   });
 
   const { user } = useAuthStore();
@@ -48,7 +51,7 @@ export default function AccountsManagementPage() {
       if (banksRes.data.banks.length > 0 && formData.bankId === '') {
         setFormData(prev => ({ ...prev, bankId: banksRes.data.banks[0].id }));
       }
-    } catch (err) {
+    } catch {
       setError('Failed to load accounts or banks');
     } finally {
       setLoading(false);
@@ -72,7 +75,8 @@ export default function AccountsManagementPage() {
       accountNumber: '',
       type: 'BANK',
       bankId: banks.length > 0 ? banks[0].id : '',
-      isActive: true
+      isActive: true,
+      isPersonal: true
     });
     setIsEditing(false);
     setCurrentAccountId(null);
@@ -83,13 +87,14 @@ export default function AccountsManagementPage() {
     setIsModalOpen(true);
   };
 
-  const openEditModal = (a: any) => {
+  const openEditModal = (a: Account) => {
     setFormData({
       name: a.name,
       accountNumber: a.accountNumber || '',
       type: a.type,
       bankId: a.bankId || (banks.length > 0 ? banks[0].id : ''),
-      isActive: a.isActive
+      isActive: a.isActive,
+      isPersonal: a.isPersonal !== undefined ? a.isPersonal : true
     });
     setIsEditing(true);
     setCurrentAccountId(a.id);
@@ -102,37 +107,31 @@ export default function AccountsManagementPage() {
       await api.delete(`/accounts/${id}`);
       showAlert('Account deleted successfully', 'success');
       fetchAccountsAndBanks();
-    } catch (err: any) {
-      showAlert(err.response?.data?.error || 'Delete failed', 'error');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
     }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: any = { 
-        ...formData
-      };
-      
-      // Relaxed bankId nullification to allow linking banks to any type
-      // if (payload.type !== 'BANK') {
-      //   payload.bankId = null;
-      // }
-
       if (isEditing && currentAccountId) {
-        await api.put(`/accounts/${currentAccountId}`, payload);
+        await api.put(`/accounts/${currentAccountId}`, formData);
         showAlert('Account updated successfully', 'success');
       } else {
-        await api.post('/accounts', payload);
+        await api.post('/accounts', formData);
         showAlert('Account created successfully', 'success');
       }
       setIsModalOpen(false);
       fetchAccountsAndBanks();
-    } catch (err: any) {
-      const message = err.response?.data?.error?.issues?.[0]?.message 
-        || err.response?.data?.error 
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string | { issues?: { message: string }[] } } } };
+      const errorData = errorResponse.response?.data?.error;
+      const message = (typeof errorData === 'object' && errorData?.issues?.[0]?.message)
+        || (typeof errorData === 'string' ? errorData : null)
         || 'Save failed';
-      showAlert(typeof message === 'string' ? message : JSON.stringify(message), 'error');
+      showAlert(message as string, 'error');
     }
   };
 
@@ -172,8 +171,8 @@ export default function AccountsManagementPage() {
     if (!sortConfig) return accounts;
 
     return [...accounts].sort((a, b) => {
-      let aValue: any;
-      let bValue: any;
+      let aValue: string | number;
+      let bValue: string | number;
 
       switch (sortConfig.key) {
         case 'name':
@@ -304,6 +303,7 @@ export default function AccountsManagementPage() {
                           <div className="flex items-center gap-2">
                             {getAccountIcon(account.type)}
                             {account.name}
+                            {account.isPersonal && <span title="Personal Account"><User className="w-3 h-3 text-blue-400" /></span>}
                           </div>
                           {user?.role === 'Admin' && <div className="text-xs text-gray-400 font-normal mt-1">Owner: {account.user?.firstName} {account.user?.lastName}</div>}
                         </td>
@@ -424,6 +424,20 @@ export default function AccountsManagementPage() {
                         <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
                       ))}
                     </select>
+                  </div>
+
+                  <div className="flex items-center justify-between pt-2 pb-2">
+                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex flex-col">
+                      <span>Personal Account</span>
+                      <span className="text-xs text-gray-500 font-normal">Is this your personal account?</span>
+                    </label>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, isPersonal: !formData.isPersonal})}
+                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.isPersonal ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
+                    >
+                      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.isPersonal ? 'translate-x-5' : 'translate-x-0'}`} />
+                    </button>
                   </div>
 
                  <div className="flex items-center justify-between pt-2 pb-2">
