@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma.js';
 import { z } from 'zod';
-import { TransactionBehavior } from '../generated/client/index.js';
+import { TransactionBehavior } from '@prisma/client';
 
 const typeSchema = z.object({
   name: z.string().min(1),

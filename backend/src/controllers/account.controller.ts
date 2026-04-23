@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma.js';
 import { z } from 'zod';
-import { AccountType } from '../generated/client/index.js';
+import { AccountType } from '@prisma/client';
 
 const accountSchema = z.object({
   name: z.string().min(1, 'Account name is required'),

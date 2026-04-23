@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma.js';
 import { z } from 'zod';
-import { FinancialRecordType, AccountType } from '../generated/client/index.js';
+import { FinancialRecordType, AccountType } from '@prisma/client';
 
 const financialRecordSchema = z.object({
   accountId: z.string().uuid().optional().nullable(),
