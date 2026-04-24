@@ -1,12 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, ReactNode } from 'react';
-import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
+import { Responsive, WidthProvider } from 'react-grid-layout';
 import type { LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 import { Lock, Unlock, RotateCcw, GripVertical } from 'lucide-react';
 
 import 'react-grid-layout/css/styles.css';
+import 'react-resizable/css/styles.css';
 
+const ResponsiveGridLayout = WidthProvider(Responsive);
 const STORAGE_KEY = 'nexworth-dashboard-layout';
 
 export interface GridItemConfig {
@@ -76,16 +78,17 @@ export default function DashboardGrid({ items }: DashboardGridProps) {
   const defaultLayouts = getDefaultLayouts(items);
   const [layouts, setLayouts] = useState<ResponsiveLayouts>(defaultLayouts);
   const [isLocked, setIsLocked] = useState(true);
-  const { width, mounted, containerRef } = useContainerWidth({ initialWidth: 1200 });
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const saved = loadLayouts();
     if (saved) {
       setTimeout(() => setLayouts(saved), 0);
     }
   }, []);
 
-  const handleLayoutChange = useCallback((_currentLayout: readonly LayoutItem[], allLayouts: ResponsiveLayouts) => {
+  const handleLayoutChange = useCallback((_currentLayout: LayoutItem[], allLayouts: ResponsiveLayouts) => {
     if (!isLocked) {
       setLayouts(allLayouts);
       saveLayouts(allLayouts);
@@ -99,11 +102,11 @@ export default function DashboardGrid({ items }: DashboardGridProps) {
   }, [items]);
 
   if (!mounted) {
-    return <div ref={containerRef} className="min-h-screen" />;
+    return <div className="min-h-screen" />;
   }
 
   return (
-    <div ref={containerRef}>
+    <div>
       {/* Controls */}
       <div className="flex items-center justify-end gap-2 mb-3">
         <button
@@ -130,34 +133,32 @@ export default function DashboardGrid({ items }: DashboardGridProps) {
         )}
       </div>
 
-      {width > 0 && (
-        <ResponsiveGridLayout
-          className="dashboard-grid"
-          layouts={layouts}
-          breakpoints={BREAKPOINTS}
-          cols={COLS}
-          rowHeight={40}
-          width={width}
-          dragConfig={{ enabled: !isLocked, handle: '.grid-drag-handle' }}
-          resizeConfig={{ enabled: !isLocked }}
-          onLayoutChange={handleLayoutChange}
-          margin={[16, 16]}
-          containerPadding={[0, 0]}
-        >
-          {items.map(item => (
-            <div key={item.key} className="grid-item-wrapper">
-              {!isLocked && (
-                <div className="grid-drag-handle" title="Drag to move">
-                  <GripVertical className="w-4 h-4" />
-                </div>
-              )}
-              <div className="grid-item-content">
-                {item.content}
+      <ResponsiveGridLayout
+        className="dashboard-grid"
+        layouts={layouts}
+        breakpoints={BREAKPOINTS}
+        cols={COLS}
+        rowHeight={40}
+        draggableHandle=".grid-drag-handle"
+        isDraggable={!isLocked}
+        isResizable={!isLocked}
+        onLayoutChange={handleLayoutChange}
+        margin={[16, 16]}
+        containerPadding={[0, 0]}
+      >
+        {items.map(item => (
+          <div key={item.key} className="grid-item-wrapper">
+            {!isLocked && (
+              <div className="grid-drag-handle" title="Drag to move">
+                <GripVertical className="w-4 h-4" />
               </div>
+            )}
+            <div className="grid-item-content">
+              {item.content}
             </div>
-          ))}
-        </ResponsiveGridLayout>
-      )}
+          </div>
+        ))}
+      </ResponsiveGridLayout>
     </div>
   );
 }
