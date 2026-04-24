@@ -180,13 +180,13 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
     const investmentScore = Math.min(25, (investmentRatio / 0.2) * 25);
 
     const scores = {
-      saving: Math.round(savingScore * 10) / 10,
-      emergency: Math.round(emergencyScore * 10) / 10,
-      debt: Math.round(debtScore * 10) / 10,
-      investment: Math.round(investmentScore * 10) / 10
+      saving: Number.isFinite(savingScore) ? Math.round(savingScore * 10) / 10 : 0,
+      emergency: Number.isFinite(emergencyScore) ? Math.round(emergencyScore * 10) / 10 : 0,
+      debt: Number.isFinite(debtScore) ? Math.round(debtScore * 10) / 10 : 0,
+      investment: Number.isFinite(investmentScore) ? Math.round(investmentScore * 10) / 10 : 0
     };
 
-    const totalHealthScore = Math.round(scores.saving + scores.emergency + scores.debt + scores.investment);
+    const totalHealthScore = Math.round(scores.saving + scores.emergency + scores.debt + scores.investment) || 0;
     
     let healthStatus = 'Critical';
     if (totalHealthScore >= 90) healthStatus = 'Excellent';
@@ -204,11 +204,11 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
         monthlySaving: currentMonthData.saving,
         monthlyIncome: currentMonthData.income,
         monthlyExpense: currentMonthData.expense,
-        savingRate: Math.round(savingRate * 1000) / 10,
-        goalRate: Math.round(goalRate * 1000) / 10,
-        debtRatio: Math.round(debtRatio * 1000) / 10,
-        investmentRatio: Math.round(investmentRatio * 1000) / 10,
-        emergencyMonths: Math.round(emergencyMonths * 10) / 10,
+        savingRate: Number.isFinite(savingRate) ? Math.round(savingRate * 1000) / 10 : 0,
+        goalRate: Number.isFinite(goalRate) ? Math.round(goalRate * 1000) / 10 : 0,
+        debtRatio: Number.isFinite(debtRatio) ? Math.round(debtRatio * 1000) / 10 : 0,
+        investmentRatio: Number.isFinite(investmentRatio) ? Math.round(investmentRatio * 1000) / 10 : 0,
+        emergencyMonths: Number.isFinite(emergencyMonths) ? Math.round(emergencyMonths * 10) / 10 : 0,
         annualIncome: annualStats.income,
         annualExpense: annualStats.expense,
         annualSaving: annualStats.saving,
