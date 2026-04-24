@@ -13,6 +13,7 @@ export interface User {
   lastName?: string;
   role: string;
   permissions: Permission[];
+  organizationId: string;
   orgName?: string;
   isSystemAdmin?: boolean;
 }
@@ -29,6 +30,7 @@ export interface MeResponse {
     email: string;
     role: string;
     permissions: Permission[];
+    organizationId: string;
     orgName?: string;
     isSystemAdmin?: boolean;
   };

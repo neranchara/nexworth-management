@@ -22,6 +22,7 @@ model Organization {
   categories       TransactionCategory[]
   transactionTypes TransactionType[]
   users            User[]
+  roles            Role[]
 }
 
 model User {
@@ -50,12 +51,16 @@ model User {
 }
 
 model Role {
-  id          String       @id @default(uuid())
-  name        String       @unique
-  description String?
-  createdAt   DateTime     @default(now())
-  permissions Permission[]
-  users       User[]
+  id             String        @id @default(uuid())
+  organizationId String?
+  name           String
+  description    String?
+  createdAt      DateTime      @default(now())
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+  permissions    Permission[]
+  users          User[]
+
+  @@unique([organizationId, name])
 }
 
 model Permission {

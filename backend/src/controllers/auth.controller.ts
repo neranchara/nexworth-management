@@ -37,7 +37,7 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
       email: user.email,
       role: user.role?.name || 'Guest',
       isSystemAdmin: user.isSystemAdmin,
-      orgId: user.organizationId,
+      organizationId: user.organizationId,
       orgName: user.organization?.name,
       permissions: user.role?.permissions || []
     };
@@ -65,7 +65,7 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
         role: user.role?.name,
         isSystemAdmin: user.isSystemAdmin,
         permissions: user.role?.permissions || [],
-        orgId: user.organizationId,
+        organizationId: user.organizationId,
         orgName: user.organization?.name
       }
     });

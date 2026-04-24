@@ -50,6 +50,8 @@ export default function DashboardLayout({
     return null; // Will redirect in useEffect
   }
 
+  const isMasterOrg = user?.organizationId === 'master-org-id';
+
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
       <nav className="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
@@ -65,32 +67,32 @@ export default function DashboardLayout({
                 )}
               </div>
               <div className="hidden sm:-my-px sm:flex sm:space-x-8">
-                {hasPermission('dashboard') && (
+                {!isMasterOrg && hasPermission('dashboard') && (
                   <Link href="/dashboard" className="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 hover:border-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Dashboard
                   </Link>
                 )}
-                {hasPermission('monthly') && (
+                {!isMasterOrg && hasPermission('monthly') && (
                   <Link href="/dashboard/monthly" className="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 hover:border-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Monthly Summary
                   </Link>
                 )}
-                {hasPermission('transactions') && (
+                {!isMasterOrg && hasPermission('transactions') && (
                   <Link href="/dashboard/transactions" className="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 hover:border-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Transactions
                   </Link>
                 )}
-                {hasPermission('assets') && (
+                {!isMasterOrg && hasPermission('assets') && (
                   <Link href="/dashboard/assets" className="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 hover:border-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Assets
                   </Link>
                 )}
-                {hasPermission('liabilities') && (
+                {!isMasterOrg && hasPermission('liabilities') && (
                   <Link href="/dashboard/liabilities" className="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 hover:border-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Liabilities
                   </Link>
                 )}
-                {hasPermission('loan-tracker') && (
+                {!isMasterOrg && hasPermission('loan-tracker') && (
                   <Link href="/dashboard/loan-tracker" className="border-transparent text-gray-500 dark:text-gray-300 hover:text-gray-700 hover:border-gray-300 dark:hover:text-white inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Loan Tracker
                   </Link>
@@ -109,11 +111,11 @@ export default function DashboardLayout({
                     </button>
                     <div className="absolute top-10 left-0 mt-2 w-48 bg-white dark:bg-gray-800 shadow-lg rounded-md border border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50 overflow-hidden">
                       <div className="py-1 flex flex-col">
-                        {hasPermission('accounts') && <Link href="/dashboard/accounts" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Accounts</Link>}
+                        {!isMasterOrg && hasPermission('accounts') && <Link href="/dashboard/accounts" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Accounts</Link>}
                         {hasPermission('users') && <Link href="/dashboard/users" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Users Management</Link>}
-                        {hasPermission('banks') && <Link href="/dashboard/banks" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Banks Management</Link>}
-                        {hasPermission('types') && <Link href="/dashboard/types" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Transaction Types</Link>}
-                        {hasPermission('categories') && <Link href="/dashboard/categories" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Categories</Link>}
+                        {!isMasterOrg && hasPermission('banks') && <Link href="/dashboard/banks" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Banks Management</Link>}
+                        {!isMasterOrg && hasPermission('types') && <Link href="/dashboard/types" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Transaction Types</Link>}
+                        {!isMasterOrg && hasPermission('categories') && <Link href="/dashboard/categories" className="block px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700">Categories</Link>}
                         {hasPermission('permissions') && <Link href="/dashboard/permissions" className="block px-4 py-2 text-sm text-orange-600 dark:text-orange-400 font-bold hover:bg-gray-100 dark:hover:bg-gray-700 border-t border-gray-100 dark:border-gray-700">Role Permissions</Link>}
                       </div>
                     </div>
