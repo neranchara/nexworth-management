@@ -50,7 +50,7 @@ export default function DashboardLayout({
     return null; // Will redirect in useEffect
   }
 
-  const isMasterOrg = user?.organizationId === 'master-org-id';
+  const isMasterOrg = user?.organizationId === '16c5a2a7-30f0-4b7a-8722-1d7c4dd9efa0';
 
   return (
     <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
