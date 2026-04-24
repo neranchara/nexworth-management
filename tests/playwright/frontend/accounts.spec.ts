@@ -79,7 +79,7 @@ test.describe('Account Management CRUD Flows', () => {
     await expect(page.locator('h2', { hasText: 'Edit Account' })).toBeVisible();
 
     // Toggle Active Status
-    await page.locator('button').filter({ has: page.locator('span.pointer-events-none') }).click();
+    await page.locator('label').filter({ hasText: 'Account Status' }).locator('xpath=..').locator('button').click();
 
     await page.click('button:has-text("Save Account")');
 

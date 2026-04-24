@@ -36,6 +36,7 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
       sub: user.id,
       email: user.email,
       role: user.role?.name || 'Guest',
+      isSystemAdmin: user.isSystemAdmin,
       orgId: user.organizationId,
       orgName: user.organization?.name,
       permissions: user.role?.permissions || []
@@ -60,6 +61,7 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
         firstName: user.firstName,
         lastName: user.lastName,
         role: user.role?.name,
+        isSystemAdmin: user.isSystemAdmin,
         permissions: user.role?.permissions || [],
         orgId: user.organizationId,
         orgName: user.organization?.name

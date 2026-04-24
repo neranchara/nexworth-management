@@ -62,6 +62,9 @@ const buildServer = async (): Promise<FastifyInstance> => {
   const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes.js')).default;
   server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
 
+  const organizationRoutes = (await import('./routes/organization.routes.js')).default;
+  server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
+
   return server;
 };
 

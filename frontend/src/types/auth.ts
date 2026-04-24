@@ -14,6 +14,7 @@ export interface User {
   role: string;
   permissions: Permission[];
   orgName?: string;
+  isSystemAdmin?: boolean;
 }
 
 export interface AuthResponse {
@@ -29,5 +30,6 @@ export interface MeResponse {
     role: string;
     permissions: Permission[];
     orgName?: string;
+    isSystemAdmin?: boolean;
   };
 }

@@ -32,6 +32,7 @@ model User {
   lastName         String?
   roleId           String?
   organizationId   String?
+  isSystemAdmin    Boolean           @default(false)
   isActive         Boolean           @default(true)
   lineUserId       String?           @unique
   pairingCode      String?           @unique

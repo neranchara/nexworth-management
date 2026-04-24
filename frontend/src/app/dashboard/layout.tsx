@@ -95,6 +95,12 @@ export default function DashboardLayout({
                     Loan Tracker
                   </Link>
                 )}
+
+                {user.isSystemAdmin && (
+                  <Link href="/dashboard/organizations" className="border-transparent text-orange-600 dark:text-orange-400 font-bold hover:text-orange-700 hover:border-orange-300 inline-flex items-center px-1 pt-1 border-b-2 text-sm">
+                    Organizations
+                  </Link>
+                )}
                 
                 {(hasPermission('accounts') || hasPermission('users') || hasPermission('banks') || hasPermission('types') || hasPermission('categories') || hasPermission('permissions')) && (
                   <div className="relative group flex items-center h-full">

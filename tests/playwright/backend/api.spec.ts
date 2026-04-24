@@ -36,13 +36,19 @@ test.describe('Backend API Integration Tests', () => {
   });
 
   test('Should decrease liability amount when recording DEBT behavior transaction', async ({ request }) => {
-    // 2. Look for an existing Liability account from /accounts, NOT from financial-records
+    // 2. Ensure we have a Liability account
     const accountsRes = await request.get(`${backendUrl}/accounts`, { headers });
     const accountsResJson = await accountsRes.json();
-    console.log('accounts from /accounts', accountsResJson);
     const accounts = accountsResJson.accounts || [];
-    const liabilityAccount = accounts.find((a: any) => a.type === 'LIABILITY');
-    test.skip(!liabilityAccount, 'No liability account found in staging DB');
+    let liabilityAccount = accounts.find((a: any) => a.type === 'LIABILITY');
+    
+    if (!liabilityAccount) {
+      const createRes = await request.post(`${backendUrl}/accounts`, {
+        headers,
+        data: { name: 'TEST LIABILITY', type: 'LIABILITY', isActive: true, isPersonal: true }
+      });
+      liabilityAccount = (await createRes.json()).account;
+    }
     const liabilityAccountId = liabilityAccount.id;
 
     // To ensure a starting record exists, we first record an initial balance of -40,000
@@ -112,18 +118,23 @@ test.describe('Backend API Integration Tests', () => {
   });
 
   test('Should perform dual-account transfer and adjust both account balances', async ({ request }) => {
+    // 0. Ensure we have accounts for this test
+    const createAccount = async (name: string) => {
+      const res = await request.post(`${backendUrl}/accounts`, {
+        headers,
+        data: { name, type: 'BANK', isActive: true, isPersonal: true }
+      });
+      return (await res.json()).account;
+    };
+
+    const fromAcc = await createAccount('API TEST FROM');
+    const toAcc = await createAccount('API TEST TO');
+
     // 1. Setup two accounts (Any non-liability account can be used for transfer)
-    const accRes = await request.get(`${backendUrl}/accounts`, { headers });
-    const { accounts } = await accRes.json();
-    console.log('API SPEC DEBUG: accounts count', accounts.length);
-    const assetAccounts = accounts.filter((a: any) => a.type !== 'LIABILITY');
-    console.log('API SPEC DEBUG: suitable accounts count', assetAccounts.length);
+    // ...
+    const assetAccounts = [fromAcc, toAcc];
+    console.log('API SPEC DEBUG: accounts count', assetAccounts.length);
     
-    expect(assetAccounts.length).toBeGreaterThanOrEqual(2);
-
-    const fromAcc = assetAccounts[0];
-    const toAcc = assetAccounts[1];
-
     // Ensure they have financial records (initial state)
     const setupRecords = async () => {
        await request.post(`${backendUrl}/financial-records`, { headers, data: { accountId: fromAcc.id, amount: 1000, type: 'ASSET' } });
