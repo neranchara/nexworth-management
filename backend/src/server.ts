@@ -8,7 +8,7 @@ import userRoutes from './routes/user.routes.js';
 import transactionRoutes from './routes/transaction.routes.js';
 
 const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env';
-dotenv.config({ path: envFile });
+dotenv.config({ path: envFile, override: true });
 console.log(`Loading environment from: ${envFile}`);
 
 const buildServer = async (): Promise<FastifyInstance> => {
@@ -27,6 +27,14 @@ const buildServer = async (): Promise<FastifyInstance> => {
     global: false,
     encoding: 'utf8',
     runFirst: true
+  });
+
+  const fastifyRateLimit = (await import('@fastify/rate-limit')).default;
+  const isStaging = process.env.NODE_ENV === 'staging';
+  
+  await server.register(fastifyRateLimit, {
+    max: isStaging ? 1000 : 100, // Higher limit for tests
+    timeWindow: '1 minute'
   });
 
   // Health Check Route

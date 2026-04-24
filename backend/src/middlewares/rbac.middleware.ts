@@ -1,23 +1,31 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma.js';
+import { authenticate } from './auth.middleware.js';
 
 export const requireRole = (allowedRoles: string[]) => {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-      await request.jwtVerify();
+      // 1. First run centralized authentication (JWT + Session check)
+      await authenticate(request, reply);
+      
+      // If authenticate sent a reply (401), we stop here
+      if (reply.sent) return;
+
       const decoded = request.user as { sub: string; email: string; role: string };
 
       if (!decoded.role) {
         return reply.status(403).send({ error: 'Role not found in token' });
       }
 
-      // Check if the user's role is in the list of allowed roles.
-      // E.g. ['Admin', 'Officer'] 
+      // 2. Check if the user's role is in the list of allowed roles.
       if (!allowedRoles.includes(decoded.role) && !allowedRoles.includes('*')) {
         return reply.status(403).send({ error: 'Forbidden: Insufficient permissions' });
       }
     } catch (err) {
-      return reply.status(401).send({ error: 'Unauthorized' });
+      // If authenticate already sent 401, this block might catch it but we don't want to double-send
+      if (!reply.sent) {
+        return reply.status(401).send({ error: 'Unauthorized' });
+      }
     }
   };
 };

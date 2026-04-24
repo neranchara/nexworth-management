@@ -7,7 +7,7 @@ import { setupOrganizationDefaults } from '../src/services/organization.service.
 const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : 
                process.env.NODE_ENV === 'staging' ? '.env.staging' : '.env';
 
-dotenv.config({ path: path.resolve(process.cwd(), envFile) });
+dotenv.config({ path: path.resolve(process.cwd(), envFile), override: true });
 
 const prisma = new PrismaClient();
 

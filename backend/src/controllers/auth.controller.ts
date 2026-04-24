@@ -44,8 +44,10 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
 
     const token = await reply.jwtSign(tokenPayload, { expiresIn: '1d' });
 
-    await prisma.session.create({
-      data: {
+    await prisma.session.upsert({
+      where: { token: token },
+      update: { expiresAt: expiresAt },
+      create: {
         userId: user.id,
         token: token,
         expiresAt: expiresAt,
@@ -78,14 +80,8 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
 
 export const meHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    await request.jwtVerify();
-    // Verify session in DB
     const decoded = request.user as any;
-    
-    // For production, you may want to double-check if the session token is still valid in DB
-    // Here we just return the decoded payload directly for simplicity/speed
     return reply.send({ user: decoded });
-
   } catch (err) {
     return reply.status(401).send({ error: 'Unauthorized' });
   }
@@ -93,8 +89,6 @@ export const meHandler = async (request: FastifyRequest, reply: FastifyReply) =>
 
 export const logoutHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    await request.jwtVerify();
-    
     // Invalidate the session by extracting the token from header
     const authHeader = request.headers.authorization;
     if (authHeader) {
@@ -112,7 +106,6 @@ export const logoutHandler = async (request: FastifyRequest, reply: FastifyReply
 
 export const generateLinePairingCodeHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    await request.jwtVerify();
     const decoded = request.user as any;
     
     // Generate a random 6-character code

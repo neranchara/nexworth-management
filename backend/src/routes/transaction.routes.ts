@@ -6,16 +6,11 @@ import {
   deleteTransactionHandler,
   bulkCreateTransactionHandler
 } from '../controllers/transaction.controller.js';
+import { authenticate } from '../middlewares/auth.middleware.js';
 
 export default async function transactionRoutes(fastify: FastifyInstance) {
   // All routes require authentication
-  fastify.addHook('preHandler', async (request, reply) => {
-    try {
-      await request.jwtVerify();
-    } catch (err) {
-      reply.status(401).send({ error: 'Unauthorized' });
-    }
-  });
+  fastify.addHook('preHandler', authenticate);
 
   fastify.get('/transactions', listTransactionsHandler);
   fastify.post('/transactions', createTransactionHandler);

@@ -110,19 +110,27 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
 
     const { accountId, fromAccountId, toAccountId, ...commonData } = body;
     
-    // Fetch category to check behavior
-    const category = await prisma.transactionCategory.findUnique({ 
-      where: { id: body.categoryId }, 
+    // Fetch category to check behavior and ownership
+    const category = await prisma.transactionCategory.findFirst({ 
+      where: { 
+        id: body.categoryId,
+        organizationId: user.orgId // IDOR Protection
+      }, 
       include: { type: true } 
     });
-    if (!category) return reply.status(400).send({ error: 'Category not found' });
+    if (!category) return reply.status(400).send({ error: 'Category not found or unauthorized' });
     
     const transferBehaviors = ['INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL_SAVING', 'DEBT', 'EXPENSE', 'INCOME'];
     const isTransfer = (fromAccountId && toAccountId) && transferBehaviors.includes(category.type.behavior);
 
     const processSingleLeg = async (accId: string, catId: string, tId: string, linkedId: string | null) => {
-        const account = await prisma.account.findUnique({ where: { id: accId } });
-        if (!account) throw new Error('Account not found');
+        const account = await prisma.account.findFirst({ 
+          where: { 
+            id: accId,
+            organizationId: user.orgId // IDOR Protection
+          } 
+        });
+        if (!account) throw new Error('Account not found or unauthorized');
         
         let assetId: string | null = null;
         let liabilityId: string | null = null;
@@ -216,11 +224,14 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     }
 
     let categoryId = body.categoryId;
-    const category = await prisma.transactionCategory.findUnique({ 
-      where: { id: categoryId }, 
+    const category = await prisma.transactionCategory.findFirst({ 
+      where: { 
+        id: categoryId,
+        organizationId: user.orgId // IDOR Protection
+      }, 
       include: { type: true } 
     });
-    if (!category) return reply.status(404).send({ error: 'Category not found' });
+    if (!category) return reply.status(404).send({ error: 'Category not found or unauthorized' });
     
     let typeId = body.typeId || category.typeId;
     const categoryBehavior = category.type.behavior;
