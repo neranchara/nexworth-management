@@ -1,13 +1,14 @@
 'use client';
 
 import { useState, useEffect, useCallback, ReactNode } from 'react';
-import { Responsive, WidthProvider } from 'react-grid-layout';
+import * as RGL from 'react-grid-layout';
 import type { LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 import { Lock, Unlock, RotateCcw, GripVertical } from 'lucide-react';
 
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
+const { Responsive, WidthProvider } = RGL;
 const ResponsiveGridLayout = WidthProvider(Responsive);
 const STORAGE_KEY = 'nexworth-dashboard-layout';
 
