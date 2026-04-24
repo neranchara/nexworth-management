@@ -8,8 +8,8 @@ import { Lock, Unlock, RotateCcw, GripVertical } from 'lucide-react';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 
-const { Responsive, WidthProvider } = RGL;
-const ResponsiveGridLayout = WidthProvider(Responsive);
+const { Responsive, WidthProvider } = RGL as any;
+const ResponsiveGridLayout = WidthProvider ? WidthProvider(Responsive) : Responsive;
 const STORAGE_KEY = 'nexworth-dashboard-layout';
 
 export interface GridItemConfig {
