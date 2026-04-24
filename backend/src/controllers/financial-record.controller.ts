@@ -16,19 +16,19 @@ const financialRecordSchema = z.object({
 
 export const listFinancialRecordsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { type } = request.query as { type?: FinancialRecordType };
 
     if (type === 'ASSET' || type === 'LIABILITY') {
       const isLiability = type === 'LIABILITY';
       const records = isLiability 
         ? await prisma.liability.findMany({
-            where: { organizationId: user.orgId },
+            where: { organizationId: user.organizationId },
             include: { account: { include: { bank: true } } },
             orderBy: { account: { name: 'asc' } }
           })
         : await prisma.asset.findMany({
-            where: { organizationId: user.orgId },
+            where: { organizationId: user.organizationId },
             include: { account: { include: { bank: true } } },
             orderBy: { account: { name: 'asc' } }
           });
@@ -47,7 +47,7 @@ export const listFinancialRecordsHandler = async (request: FastifyRequest, reply
     }
 
     // Default: return snapshots from the table
-    const whereClause: any = { organizationId: user.orgId };
+    const whereClause: any = { organizationId: user.organizationId };
     if (type) whereClause.type = type;
 
     const records = await prisma.financialRecord.findMany({
@@ -68,7 +68,7 @@ export const listFinancialRecordsHandler = async (request: FastifyRequest, reply
 
 export const createFinancialRecordHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const body = financialRecordSchema.parse(request.body);
 
     let targetAccountId = body.accountId;
@@ -81,7 +81,7 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
           type: body.newAccountType as AccountType,
           bankId: body.bankId,
           userId: user.sub,
-          organizationId: user.orgId,
+          organizationId: user.organizationId,
           isActive: true
         }
       });
@@ -105,7 +105,7 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
             accountId: targetAccountId,
             amount: amount,
             userId: user.sub,
-            organizationId: user.orgId
+            organizationId: user.organizationId
           },
           include: { account: { include: { bank: true } } }
         });
@@ -117,7 +117,7 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
             accountId: targetAccountId,
             amount: amount,
             userId: user.sub,
-            organizationId: user.orgId
+            organizationId: user.organizationId
           },
           include: { account: { include: { bank: true } } }
         });
@@ -145,7 +145,7 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
         type: body.type,
         note: body.note,
         userId: user.sub,
-        organizationId: user.orgId,
+        organizationId: user.organizationId,
         date: body.date ? new Date(body.date) : new Date(),
       },
       include: {
@@ -165,7 +165,7 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
 
 export const updateFinancialRecordHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
     const body = financialRecordSchema.parse(request.body);
 
@@ -204,7 +204,7 @@ export const updateFinancialRecordHandler = async (request: FastifyRequest, repl
     }
 
     const existing = await prisma.financialRecord.findUnique({ where: { id } });
-    if (!existing || existing.organizationId !== user.orgId) {
+    if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Record not found or unauthorized' });
     }
 
@@ -233,7 +233,7 @@ export const updateFinancialRecordHandler = async (request: FastifyRequest, repl
 
 export const deleteFinancialRecordHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
 
     if (id.startsWith('acc-')) {
@@ -241,10 +241,10 @@ export const deleteFinancialRecordHandler = async (request: FastifyRequest, repl
       // Deleting a real-time record means removing the tracking entry (Asset/Liability)
       // but keeping the master Account record intact.
       const assetDeleted = await prisma.asset.deleteMany({
-        where: { accountId, organizationId: user.orgId }
+        where: { accountId, organizationId: user.organizationId }
       });
       const liabilityDeleted = await prisma.liability.deleteMany({
-        where: { accountId, organizationId: user.orgId }
+        where: { accountId, organizationId: user.organizationId }
       });
 
       if (assetDeleted.count === 0 && liabilityDeleted.count === 0) {
@@ -255,7 +255,7 @@ export const deleteFinancialRecordHandler = async (request: FastifyRequest, repl
     }
 
     const existing = await prisma.financialRecord.findUnique({ where: { id } });
-    if (!existing || existing.organizationId !== user.orgId) {
+    if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Record not found or unauthorized' });
     }
 

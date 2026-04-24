@@ -2,12 +2,13 @@
 
 import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, TrendingUp, Coins, PlusCircle, Wallet, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, TrendingUp, Coins, PlusCircle, Wallet, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, Eye, EyeOff } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Account, Bank, FinancialRecord } from '@/types/models';
 import { useCallback } from 'react';
 
 const ALLOWED_ASSET_TYPES = ['SAVING', 'GOAL', 'INVESTMENT', 'EMERGENCY'];
+const NON_COUNTED_TYPES = ['CASHFLOW', 'BANK'];
 
 const ASSET_TYPES = [
   { value: 'SAVING', label: 'Saving' },
@@ -17,7 +18,9 @@ const ASSET_TYPES = [
 ];
 
 export default function AssetsPage() {
-  const [records, setRecords] = useState<FinancialRecord[]>([]);
+  const [records, setRecords] = useState<FinancialRecord[]>([]); // Counted in total assets
+  const [nonCountedRecords, setNonCountedRecords] = useState<FinancialRecord[]>([]); // Shown but not counted
+  const [showNonCounted, setShowNonCounted] = useState(false);
   const [accounts, setAccounts] = useState<Account[]>([]); // Master list of accounts for dropdown
   const { hasPermission } = usePermissions();
   const [banks, setBanks] = useState<Bank[]>([]);
@@ -55,16 +58,26 @@ export default function AssetsPage() {
         api.get('/banks'),
       ]);
 
-      // Filter records and accounts for Assets page based on restricted types
-      const filteredRecords = (recordsRes.data.records || []).filter((r: FinancialRecord) => 
-        ALLOWED_ASSET_TYPES.includes(r.account?.type || '')
+      // Split records: counted in totals vs. visible-only
+      const allFetchedRecords = recordsRes.data.records || [];
+      const filteredRecords = allFetchedRecords.filter((r: FinancialRecord) => 
+        ALLOWED_ASSET_TYPES.includes(r.account?.type || '') && (r.account?.isPersonal || r.account?.type === 'INVESTMENT')
       );
-      const filteredAccounts = (accountsRes.data.accounts || []).filter((acc: Account) => 
-        ALLOWED_ASSET_TYPES.includes(acc.type)
+      const filteredNonCounted = allFetchedRecords.filter((r: FinancialRecord) =>
+        NON_COUNTED_TYPES.includes(r.account?.type || '') && r.account?.isPersonal
+      );
+
+      const allFetchedAccounts = accountsRes.data.accounts || [];
+      const filteredAccounts = allFetchedAccounts.filter((acc: Account) => 
+        ALLOWED_ASSET_TYPES.includes(acc.type) && (acc.isPersonal || acc.type === 'INVESTMENT')
+      );
+      const filteredNonCountedAccounts = allFetchedAccounts.filter((acc: Account) =>
+        NON_COUNTED_TYPES.includes(acc.type) && acc.isPersonal
       );
 
       setRecords(filteredRecords);
-      setAccounts(filteredAccounts); 
+      setNonCountedRecords(filteredNonCounted);
+      setAccounts([...filteredAccounts, ...filteredNonCountedAccounts]);
       setBanks(banksRes.data.banks);
     } catch {
       setError('Failed to load data');
@@ -245,6 +258,12 @@ export default function AssetsPage() {
 
   const sortedRecords = getSortedRecords();
 
+  // Combine for display when toggle is ON
+  const displayRecords = showNonCounted
+    ? [...sortedRecords, ...nonCountedRecords.slice().sort((a, b) => new Date(b.date || 0).getTime() - new Date(a.date || 0).getTime())]
+    : sortedRecords;
+  const nonCountedIds = new Set(nonCountedRecords.map(r => r.id));
+
   const SortIcon = ({ column }: { column: string }) => {
     if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
     return sortConfig.direction === 'asc' ?
@@ -252,7 +271,8 @@ export default function AssetsPage() {
       <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
   };
 
-  const totalAssets = sortedRecords.reduce((sum, r) => sum + (r.amount || 0), 0);
+  // Total counts ONLY proper asset records (not non-counted ones)
+  const totalAssets = records.reduce((sum, r) => sum + (r.amount || 0), 0);
 
   if (loading && records.length === 0) return <div className="p-6">Loading data...</div>;
   if (error && records.length === 0) return <div className="p-6 text-red-500">{error}</div>;
@@ -289,7 +309,7 @@ export default function AssetsPage() {
           <p className="text-3xl font-bold text-gray-900 dark:text-white">
             ฿{totalAssets.toLocaleString()}
           </p>
-          <span className="text-sm text-gray-500 mt-1">Calculated from latest asset records</span>
+          <span className="text-sm text-gray-500 mt-1">คำนวณจากบัญชีที่นับเป็น Asset เท่านั้น</span>
         </div>
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
           <div className="flex items-center justify-between mb-2">
@@ -312,7 +332,21 @@ export default function AssetsPage() {
               Manage your savings, investments, and other asset values.
             </p>
           </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
+          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none flex gap-2">
+            {/* Toggle: Show non-counted accounts */}
+            <button
+              id="btn-toggle-non-counted"
+              onClick={() => setShowNonCounted(prev => !prev)}
+              className={`inline-flex items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
+                showNonCounted
+                  ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-400'
+                  : 'bg-white border-gray-300 text-gray-700 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-gray-300'
+              }`}
+              title={showNonCounted ? 'ซ่อนบัญชีที่ไม่นับรวม' : 'แสดงบัญชีที่ไม่นับรวม'}
+            >
+              {showNonCounted ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              {showNonCounted ? 'ซ่อนบัญชีทางผ่าน' : 'แสดงบัญชีทางผ่าน'}
+            </button>
             {hasPermission('assets', 'canCreate') && (
               <button
                 id="btn-add-asset"
@@ -368,22 +402,28 @@ export default function AssetsPage() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                    {sortedRecords.length === 0 ? (
+                    {displayRecords.length === 0 ? (
                       <tr>
                         <td colSpan={7} className="py-8 text-center text-sm text-gray-500">
                           No asset records found. Add one to track your savings.
                         </td>
                       </tr>
                     ) : (
-                      sortedRecords.map((record) => {
+                      displayRecords.map((record) => {
                         const account = record.account;
                         if (!account) return null;
+                        const isNonCounted = nonCountedIds.has(record.id);
                         return (
-                          <tr key={record.id}>
+                          <tr key={record.id} className={isNonCounted ? 'opacity-60 bg-gray-50/50 dark:bg-gray-900/20' : ''}>
                             <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
                               <div className="flex items-center gap-2">
                                 {getAccountIcon(account.type)}
                                 {account.name}
+                                {isNonCounted && (
+                                  <span className="inline-flex items-center rounded px-1.5 py-0.5 text-[10px] font-medium bg-gray-100 text-gray-500 dark:bg-gray-700 dark:text-gray-400 ring-1 ring-gray-300 dark:ring-gray-600">
+                                    ไม่นับรวม
+                                  </span>
+                                )}
                               </div>
                             </td>
                             <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">

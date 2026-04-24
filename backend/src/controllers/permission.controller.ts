@@ -64,13 +64,24 @@ export const updateRolePermissionsHandler = async (request: FastifyRequest, repl
 
 export const listAllRolesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     try {
-        const decoded = request.user as any;
+        const user = request.user as any;
+        const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.orgName === 'System Management';
+
+        // 1. Fetch Roles
         const roles = await prisma.role.findMany({
-            where: { organizationId: decoded.organizationId },
+            where: { organizationId: user.organizationId },
             include: { _count: { select: { users: true } } },
             orderBy: { name: 'asc' }
         });
-        return reply.send({ roles });
+
+        // 2. Fetch Organizations (Isolation Logic)
+        const orgWhere = isSystemAdmin ? {} : { id: user.organizationId };
+        const organizations = await prisma.organization.findMany({
+            where: orgWhere,
+            select: { id: true, name: true }
+        });
+
+        return reply.send({ roles, organizations });
     } catch (error) {
         request.log.error(error);
         return reply.status(500).send({ error: 'Internal Server Error' });

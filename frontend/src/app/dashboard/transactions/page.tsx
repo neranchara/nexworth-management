@@ -123,25 +123,47 @@ export default function TransactionsPage() {
     const behavior = tx.type?.behavior || tx.category?.type?.behavior || '';
     const isExpense = ['EXPENSE', 'DEBT'].includes(behavior);
     
-    // Find linked account if it's a transfer
-    let fromAccId = isExpense ? tx.accountId : '';
-    let toAccId = !isExpense ? tx.accountId : '';
+    let fromAccId = '';
+    let toAccId = '';
     let displayTypeId = tx.typeId;
     let displayCategoryId = tx.categoryId;
 
     if (tx.linkedTransactionId) {
       const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
       if (linkedTx) {
-        if (isExpense) {
+        // Correctly identify From/To based on behavior of the legs
+        const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
+        const isLinkedExpense = ['EXPENSE', 'DEBT'].includes(linkedBehavior);
+
+        if (isExpense && !isLinkedExpense) {
+           // Current is Expense (From), Linked is Income (To)
+           fromAccId = tx.accountId;
            toAccId = linkedTx.accountId;
-           // If we are editing the Expense leg, show the Category/Type of the Receiving leg
-           // so the user edits the actual purpose (e.g. Investment) instead of 'Transfer Out'
-           displayTypeId = linkedTx.typeId;
-           displayCategoryId = linkedTx.categoryId;
-        } else {
+        } else if (!isExpense && isLinkedExpense) {
+           // Current is Income (To), Linked is Expense (From)
            fromAccId = linkedTx.accountId;
+           toAccId = tx.accountId;
+        } else {
+           // Fallback if behaviors are same (shouldn't happen with fixed logic)
+           fromAccId = isExpense ? tx.accountId : linkedTx.accountId;
+           toAccId = isExpense ? linkedTx.accountId : tx.accountId;
+        }
+
+        // Logic to show the "Real" category instead of "Transfer In/Out"
+        const isGeneric = (catName?: string) => ['โอนออกภายใน', 'โอนเข้าภายใน'].includes(catName || '');
+        
+        if (isGeneric(tx.category?.name) && !isGeneric(linkedTx.category?.name)) {
+            displayTypeId = linkedTx.typeId;
+            displayCategoryId = linkedTx.categoryId;
+        } else if (!isGeneric(tx.category?.name)) {
+            displayTypeId = tx.typeId;
+            displayCategoryId = tx.categoryId;
         }
       }
+    } else {
+      // Single transaction
+      fromAccId = isExpense ? tx.accountId : '';
+      toAccId = !isExpense ? tx.accountId : '';
     }
 
     setFormData({
@@ -608,46 +630,50 @@ export default function TransactionsPage() {
                         const accountInfo = tx.account;
                         if (!accountInfo) return <span className="text-gray-400 italic">Unknown</span>;
                         
-                        let accountDisplay = (
-                          <div className="flex items-center gap-1.5">
-                            {accountInfo.bank?.color ? (
+                        // Function to render a single account badge
+                        const renderAccount = (acc: any, isSecondary = false) => (
+                          <div className={`flex items-center gap-1.5 ${isSecondary ? 'text-gray-500 dark:text-gray-400' : ''}`}>
+                            {acc.bank?.color ? (
                               <div 
-                                className="w-2 h-2 rounded-full flex-shrink-0" 
-                                style={{ backgroundColor: accountInfo.bank.color }}
-                                title={accountInfo.bank.name}
+                                className={`${isSecondary ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full flex-shrink-0 ${isSecondary ? 'opacity-70' : ''}`}
+                                style={{ backgroundColor: acc.bank.color }}
+                                title={acc.bank.name}
                               />
                             ) : (
-                              <Wallet className="w-4 h-4 text-gray-400 flex-shrink-0" />
+                              <Wallet className={`${isSecondary ? 'w-3 h-3' : 'w-4 h-4'} text-gray-400 flex-shrink-0 ${isSecondary ? 'opacity-70' : ''}`} />
                             )}
-                            <span className="truncate">{accountInfo.name}</span>
+                            <span className={`truncate ${isSecondary ? 'text-xs' : ''}`}>{acc.name}</span>
                           </div>
                         );
 
-                        // If it's a transfer and we are in "All Accounts" view, show the destination account too
+                        // If it's a transfer and we are in "All Accounts" view, show From -> To
                         if (tx.linkedTransactionId && !filterAccount) {
                            const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
                            if (linkedTx && linkedTx.account) {
-                              accountDisplay = (
-                                 <div className="flex items-center gap-2">
-                                    {accountDisplay}
-                                    <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                    <div className="flex items-center gap-1.5 text-gray-500 dark:text-gray-400">
-                                       {linkedTx.account.bank?.color ? (
-                                         <div 
-                                           className="w-1.5 h-1.5 rounded-full flex-shrink-0 opacity-70" 
-                                           style={{ backgroundColor: linkedTx.account.bank.color }}
-                                         />
-                                       ) : (
-                                         <Wallet className="w-3 h-3 flex-shrink-0 opacity-70" />
-                                       )}
-                                       <span className="truncate text-xs">{linkedTx.account.name}</span>
-                                    </div>
-                                 </div>
+                              const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
+                              const isCurrentExpense = ['EXPENSE', 'DEBT'].includes(behavior);
+                              const isLinkedExpense = ['EXPENSE', 'DEBT'].includes(linkedBehavior);
+
+                              let fromAcc = accountInfo;
+                              let toAcc = linkedTx.account;
+
+                              // If current leg is not an expense but the linked one is, then current is "To"
+                              if (!isCurrentExpense && isLinkedExpense) {
+                                 fromAcc = linkedTx.account;
+                                 toAcc = accountInfo;
+                              }
+
+                              return (
+                                <div className="flex items-center gap-2">
+                                   {renderAccount(fromAcc)}
+                                   <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                                   {renderAccount(toAcc, true)}
+                                </div>
                               );
                            }
                         }
 
-                        return accountDisplay;
+                        return renderAccount(accountInfo);
                       })()}
                     </td>
                     <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${behavior === 'INCOME' ? 'text-green-600 dark:text-green-400' : (behavior === 'EXPENSE' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white')}`}>

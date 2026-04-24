@@ -2,13 +2,12 @@
   "name": "nexworth-workspace",
   "version": "1.0.0",
   "scripts": {
-    "test": "npx playwright test",
-    "test:frontend": "npx playwright test tests/playwright/frontend",
-    "test:backend": "npx playwright test tests/playwright/backend",
+    "test": "npx cross-env NODE_ENV=staging npx playwright test",
+    "test:frontend": "npx cross-env NODE_ENV=staging npx playwright test tests/playwright/frontend",
+    "test:backend": "npx cross-env NODE_ENV=staging npx playwright test tests/playwright/backend",
     "dev:all": "npm run dev:staging",
     "dev:staging": "npx cross-env NODE_ENV=staging concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
-    "dev:all:prod": "npx cross-env NODE_ENV=production concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\"",
-    "dev:prod": "npm run dev:all:prod"
+    "dev:prod": "npx cross-env NODE_ENV=production concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\""
   },
   "devDependencies": {
     "@playwright/test": "^1.42.1",

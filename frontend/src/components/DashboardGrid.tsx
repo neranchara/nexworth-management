@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useCallback, ReactNode } from 'react';
-import { ResponsiveGridLayout, useContainerWidth } from 'react-grid-layout';
+import { useState, useEffect, useCallback, ReactNode, useRef } from 'react';
+import { ResponsiveGridLayout } from 'react-grid-layout';
 import type { LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 import { Lock, Unlock, RotateCcw, GripVertical } from 'lucide-react';
 
@@ -21,6 +21,8 @@ export interface GridItemConfig {
 
 interface DashboardGridProps {
   items: GridItemConfig[];
+  isLocked?: boolean;
+  setIsLocked?: (locked: boolean) => void;
 }
 
 const BREAKPOINTS = { lg: 1200, md: 996, sm: 768 };
@@ -72,25 +74,55 @@ function saveLayouts(layouts: ResponsiveLayouts) {
   } catch { /* ignore quota errors */ }
 }
 
-export default function DashboardGrid({ items }: DashboardGridProps) {
-  const defaultLayouts = getDefaultLayouts(items);
-  const [layouts, setLayouts] = useState<ResponsiveLayouts>(defaultLayouts);
-  const [isLocked, setIsLocked] = useState(true);
-  const { width, mounted, containerRef } = useContainerWidth({ initialWidth: 1200 });
+export default function DashboardGrid({ items, isLocked: externalLocked, setIsLocked: setExternalLocked }: DashboardGridProps) {
+  // --- Manual Width Tracking to prevent Infinite Loops ---
+  const [width, setWidth] = useState(0);
+  const [mounted, setMounted] = useState(false);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
-    const saved = loadLayouts();
-    if (saved) {
-      setTimeout(() => setLayouts(saved), 0);
-    }
+    setMounted(true);
+    
+    if (!containerRef.current) return;
+    
+    // Initial width
+    setWidth(containerRef.current.offsetWidth);
+
+    const observer = new ResizeObserver((entries) => {
+      if (!entries || !entries.length) return;
+      const newWidth = entries[0].contentRect.width;
+      // Use requestAnimationFrame to debunced width updates if needed, 
+      // but simple comparison is usually enough.
+      setWidth(prev => Math.floor(newWidth) !== Math.floor(prev) ? newWidth : prev);
+    });
+
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
   }, []);
 
+  // --- Layout State ---
+  const [layouts, setLayouts] = useState<ResponsiveLayouts>(() => {
+    const saved = loadLayouts();
+    return saved || getDefaultLayouts(items);
+  });
+  
+  const [internalLocked, setInternalLocked] = useState(true);
+  const isLocked = externalLocked !== undefined ? externalLocked : internalLocked;
+  const setIsLocked = setExternalLocked !== undefined ? setExternalLocked : setInternalLocked;
+
+  // Sync with default layouts when items change (e.g. goals added)
+  useEffect(() => {
+    if (!loadLayouts()) {
+      setLayouts(getDefaultLayouts(items));
+    }
+  }, [items]);
+
   const handleLayoutChange = useCallback((_currentLayout: readonly LayoutItem[], allLayouts: ResponsiveLayouts) => {
-    if (!isLocked) {
+    if (!isLocked && mounted) {
       setLayouts(allLayouts);
       saveLayouts(allLayouts);
     }
-  }, [isLocked]);
+  }, [isLocked, mounted]);
 
   const handleReset = useCallback(() => {
     const fresh = getDefaultLayouts(items);
@@ -98,65 +130,75 @@ export default function DashboardGrid({ items }: DashboardGridProps) {
     saveLayouts(fresh);
   }, [items]);
 
-  if (!mounted) {
-    return <div ref={containerRef} className="min-h-screen" />;
-  }
-
   return (
-    <div ref={containerRef}>
-      {/* Controls */}
-      <div className="flex items-center justify-end gap-2 mb-3">
-        <button
-          onClick={() => setIsLocked(!isLocked)}
-          className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg transition-all ${
-            isLocked 
-              ? 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600' 
-              : 'bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 hover:bg-blue-200 dark:hover:bg-blue-900/60 ring-1 ring-blue-300 dark:ring-blue-700'
-          }`}
-          title={isLocked ? 'Unlock to drag cards' : 'Lock layout'}
-        >
-          {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-          {isLocked ? 'Locked' : 'Editing'}
-        </button>
-        {!isLocked && (
-          <button
-            onClick={handleReset}
-            className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium rounded-lg bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-400 hover:bg-amber-200 dark:hover:bg-amber-900/50 transition-all"
-            title="Reset to default layout"
-          >
-            <RotateCcw className="w-3.5 h-3.5" />
-            Reset
-          </button>
-        )}
-      </div>
+    <div ref={containerRef} className="w-full relative min-h-[400px]">
+      {!mounted ? (
+        <div className="w-full h-96 flex items-center justify-center">
+           <div className="w-8 h-8 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+        </div>
+      ) : (
+        <>
+          {/* Controls */}
+          <div className="flex items-center justify-end gap-2 mb-4 sticky top-0 z-20 py-2 bg-gray-50/80 dark:bg-[#0f172a]/80 backdrop-blur-sm">
+            <button
+              onClick={() => setIsLocked(!isLocked)}
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all shadow-sm ${
+                isLocked 
+                  ? 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border dark:border-gray-700' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700 ring-2 ring-blue-500/20 shadow-blue-500/20'
+              }`}
+            >
+              {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
+              {isLocked ? 'Layout Locked' : 'Editing Mode'}
+            </button>
+            {!isLocked && (
+              <button
+                onClick={handleReset}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-500/20 transition-all"
+              >
+                <RotateCcw className="w-3.5 h-3.5" />
+                Reset Layout
+              </button>
+            )}
+          </div>
 
-      {width > 0 && (
-        <ResponsiveGridLayout
-          className="dashboard-grid"
-          layouts={layouts}
-          breakpoints={BREAKPOINTS}
-          cols={COLS}
-          rowHeight={40}
-          width={width}
-          dragConfig={{ enabled: !isLocked, handle: '.grid-drag-handle' }}
-          resizeConfig={{ enabled: !isLocked }}
-          onLayoutChange={handleLayoutChange}
-          margin={[16, 16]}
-          containerPadding={[0, 0]}
-        >
-          {items.map(item => (
-            <div key={item.key} className="grid-item-wrapper">
-              {!isLocked && (
-                <div className="grid-drag-handle" title="Drag to move">
-                  <GripVertical className="w-4 h-4" />
+          {width > 0 && (
+            <ResponsiveGridLayout
+              className="dashboard-grid"
+              layouts={Object.keys(layouts).reduce((acc: any, key) => {
+                acc[key] = (layouts as any)[key].map((item: any) => ({
+                  ...item,
+                  static: isLocked
+                }));
+                return acc;
+              }, {})}
+              breakpoints={BREAKPOINTS}
+              cols={COLS}
+              rowHeight={40}
+              width={width}
+              isDraggable={!isLocked}
+              isResizable={!isLocked}
+              draggableHandle=".grid-drag-handle"
+              onLayoutChange={handleLayoutChange}
+              margin={[16, 16]}
+              containerPadding={[0, 0]}
+              useCSSTransforms={mounted}
+            >
+              {items.map(item => (
+                <div key={item.key} className="grid-item-wrapper bg-white dark:bg-gray-800 rounded-2xl shadow-sm border dark:border-gray-700/50 overflow-hidden group">
+                  {!isLocked && (
+                    <div className="grid-drag-handle absolute top-3 right-3 p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg z-20 transition-colors opacity-0 group-hover:opacity-100">
+                      <GripVertical className="w-4 h-4" />
+                    </div>
+                  )}
+                  <div className="h-full w-full">
+                    {item.content}
+                  </div>
                 </div>
-              )}
-              <div className="grid-item-content">
-                {item.content}
-              </div>
-            </div>
-          ))}
-        </ResponsiveGridLayout>
+              ))}
+            </ResponsiveGridLayout>
+          )}
+        </>
       )}
     </div>
   );

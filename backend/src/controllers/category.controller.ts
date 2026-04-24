@@ -10,9 +10,9 @@ const categorySchema = z.object({
 
 export const listCategoriesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const categories = await prisma.transactionCategory.findMany({
-      where: { organizationId: user.orgId },
+      where: { organizationId: user.organizationId },
       include: { type: true },
       orderBy: { name: 'asc' },
     });
@@ -25,15 +25,15 @@ export const listCategoriesHandler = async (request: FastifyRequest, reply: Fast
 
 export const createCategoryHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const body = categorySchema.parse(request.body);
     const exists = await prisma.transactionCategory.findUnique({
-      where: { organizationId_name_typeId: { organizationId: user.orgId, name: body.name, typeId: body.typeId } }
+      where: { organizationId_name_typeId: { organizationId: user.organizationId, name: body.name, typeId: body.typeId } }
     });
     if (exists) return reply.status(400).send({ error: 'Category already exists for this type' });
 
     const newCategory = await prisma.transactionCategory.create({ 
-      data: { ...body, organizationId: user.orgId },
+      data: { ...body, organizationId: user.organizationId },
       include: { type: true }
     });
     return reply.status(201).send({ message: 'Category created', category: newCategory });
@@ -46,12 +46,12 @@ export const createCategoryHandler = async (request: FastifyRequest, reply: Fast
 
 export const updateCategoryHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
     const body = categorySchema.parse(request.body);
     
     const existing = await prisma.transactionCategory.findUnique({ where: { id } });
-    if (!existing || existing.organizationId !== user.orgId) {
+    if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Category not found or unauthorized' });
     }
 
@@ -69,11 +69,11 @@ export const updateCategoryHandler = async (request: FastifyRequest, reply: Fast
 
 export const deleteCategoryHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
     
     const existing = await prisma.transactionCategory.findUnique({ where: { id } });
-    if (!existing || existing.organizationId !== user.orgId) {
+    if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Category not found or unauthorized' });
     }
 

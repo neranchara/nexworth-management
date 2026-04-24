@@ -25,27 +25,27 @@ const addTransactionSchema = z.object({
   note: z.string().optional(),
 });
 
-const getCategory = async (behavior: 'LOAN_BORROW' | 'LOAN_REPAY', orgId: string) => {
+const getCategory = async (behavior: 'LOAN_BORROW' | 'LOAN_REPAY', organizationId: string) => {
   const name = behavior === 'LOAN_BORROW' ? 'ยืมเงินภายใน' : 'คืนเงินภายใน';
   
   // First find the type by behavior
   let type = await prisma.transactionType.findFirst({
-    where: { behavior, organizationId: orgId }
+    where: { behavior, organizationId: organizationId }
   });
   
   if (!type) {
     type = await prisma.transactionType.create({
-      data: { name, behavior, organizationId: orgId }
+      data: { name, behavior, organizationId: organizationId }
     });
   }
 
   let category = await prisma.transactionCategory.findFirst({
-    where: { typeId: type.id, name, organizationId: orgId }
+    where: { typeId: type.id, name, organizationId: organizationId }
   });
 
   if (!category) {
     category = await prisma.transactionCategory.create({
-      data: { name, typeId: type.id, organizationId: orgId }
+      data: { name, typeId: type.id, organizationId: organizationId }
     });
   }
   return { ...category, type };
@@ -78,10 +78,10 @@ const adjustAssetBalance = async (accountId: string, amount: number, type: 'BORR
 
 export const listLoansHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     
     const loans = await prisma.loan.findMany({
-      where: { organizationId: user.orgId },
+      where: { organizationId: user.organizationId },
       include: {
         asset: { include: { account: { select: { id: true, name: true, bank: true } } } },
         liability: { include: { account: { select: { id: true, name: true, bank: true } } } },
@@ -115,14 +115,13 @@ export const listLoansHandler = async (request: FastifyRequest, reply: FastifyRe
       });
 
       const accountInfo = loan.asset?.account || loan.liability?.account;
-      if (!accountInfo) return null;
-
+      
       return {
         id: loan.id,
         code: loan.code,
         name: loan.name,
         accountId: loan.accountId,
-        accountName: accountInfo.name,
+        accountName: accountInfo?.name || 'บัญชีที่ถูกลบ',
         date: loan.date,
         actualDate: loan.actualDate,
         status: borrowed <= repaid ? 'PAID' : 'ACTIVE',
@@ -132,7 +131,7 @@ export const listLoansHandler = async (request: FastifyRequest, reply: FastifyRe
         latestRepaymentDate: latestRepaymentActualDate,
         transactions: loan.transactions
       };
-    }).filter(l => l !== null);
+    });
 
     return reply.send({ loans: parsedLoans });
   } catch (error) {
@@ -143,17 +142,17 @@ export const listLoansHandler = async (request: FastifyRequest, reply: FastifyRe
 
 export const createLoanHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const body = createLoanSchema.parse(request.body);
     
     // Verify account exists
     const account = await prisma.account.findUnique({ where: { id: body.accountId } });
-    if (!account || account.organizationId !== user.orgId) {
+    if (!account || account.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Account not found' });
     }
 
     // Generate a simple code like L001
-    const count = await prisma.loan.count({ where: { organizationId: user.orgId } });
+    const count = await prisma.loan.count({ where: { organizationId: user.organizationId } });
     const code = `L${String(count + 1).padStart(3, '0')}`;
 
     const loanDate = body.date ? new Date(body.date) : new Date();
@@ -173,7 +172,7 @@ export const createLoanHandler = async (request: FastifyRequest, reply: FastifyR
       data: {
         code,
         userId: user.sub,
-        organizationId: user.orgId,
+        organizationId: user.organizationId,
         accountId: body.accountId,
         assetId,
         liabilityId,
@@ -184,12 +183,12 @@ export const createLoanHandler = async (request: FastifyRequest, reply: FastifyR
       }
     });
 
-    const category = await getCategory('LOAN_BORROW', user.orgId);
+    const category = await getCategory('LOAN_BORROW', user.organizationId);
 
     await prisma.transaction.create({
       data: {
         userId: user.sub,
-        organizationId: user.orgId,
+        organizationId: user.organizationId,
         accountId: body.accountId,
         assetId,
         liabilityId,
@@ -217,23 +216,23 @@ export const createLoanHandler = async (request: FastifyRequest, reply: FastifyR
 
 export const addLoanTransactionHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id: loanId } = request.params as { id: string };
     const body = addTransactionSchema.parse(request.body);
 
     const loan = await prisma.loan.findUnique({ where: { id: loanId } });
-    if (!loan || loan.organizationId !== user.orgId) {
+    if (!loan || loan.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Loan not found' });
     }
 
     const categoryType = body.type === 'BORROW' ? 'LOAN_BORROW' : 'LOAN_REPAY';
-    const category = await getCategory(categoryType, user.orgId);
+    const category = await getCategory(categoryType, user.organizationId);
     const txDate = body.date ? new Date(body.date) : new Date();
 
     const transaction = await prisma.transaction.create({
       data: {
         userId: user.sub,
-        organizationId: user.orgId,
+        organizationId: user.organizationId,
         accountId: loan.accountId,
         assetId: loan.assetId,
         liabilityId: loan.liabilityId,
@@ -263,12 +262,12 @@ export const addLoanTransactionHandler = async (request: FastifyRequest, reply: 
 
 export const updateLoanHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
     const body = updateLoanSchema.parse(request.body);
 
     const loan = await prisma.loan.findUnique({ where: { id } });
-    if (!loan || loan.organizationId !== user.orgId) {
+    if (!loan || loan.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Loan not found' });
     }
 

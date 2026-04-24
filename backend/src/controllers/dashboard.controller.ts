@@ -3,20 +3,52 @@ import { prisma } from '../lib/prisma.js';
 
 export const getDashboardStatsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string, email: string, isSystemAdmin?: boolean, orgName?: string };
     const query = request.query as { year?: string, month?: string };
+    
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.orgName === 'System Management';
+
+    if (isSystemAdmin) {
+      // ---------------------------------------------------------
+      // System Admin Dashboard Data
+      // ---------------------------------------------------------
+      const [orgCount, userCount, transactionCount, recentOrgs] = await Promise.all([
+        prisma.organization.count(),
+        prisma.user.count(),
+        prisma.transaction.count(),
+        prisma.organization.findMany({
+          take: 5,
+          orderBy: { createdAt: 'desc' },
+          select: { id: true, name: true, createdAt: true, _count: { select: { users: true } } }
+        })
+      ]);
+
+      return reply.send({
+        isSystemAdmin: true,
+        summary: {
+          totalOrganizations: orgCount,
+          totalUsers: userCount,
+          totalTransactions: transactionCount
+        },
+        recentOrganizations: recentOrgs
+      });
+    }
+
+    // ---------------------------------------------------------
+    // Regular User Dashboard Data (Original Logic)
+    // ---------------------------------------------------------
     const now = new Date();
     const currentYear = query.year ? parseInt(query.year) : now.getFullYear();
     const currentMonth = query.month !== undefined ? parseInt(query.month) : now.getMonth();
     
-    // 1. Fetch all accounts and transactions
+    // ... rest of the original logic ...
     const [accountsRaw, transactions] = await Promise.all([
       prisma.account.findMany({ 
-        where: { organizationId: user.orgId },
+        where: { organizationId: user.organizationId },
         include: { asset: true, liability: true }
       }),
       prisma.transaction.findMany({ 
-        where: { organizationId: user.orgId },
+        where: { organizationId: user.organizationId },
         include: { 
           type: true, 
           category: true,
@@ -44,22 +76,32 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
     accountsRaw.forEach(acc => {
       const balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
       
+      // LOGIC: If it's a non-personal account, we only include it in assets if it's an INVESTMENT (Loan/Lending).
+      // Otherwise, it's considered an external entity we track but don't "own" as part of Net Worth.
+      const shouldIncludeInNetWorth = acc.isPersonal || acc.type === 'INVESTMENT';
+
       if (acc.type === 'LIABILITY') {
         const absBalance = Math.abs(balance);
         totalLiabilities += absBalance;
         if (absBalance !== 0) {
           liabilitiesByAccount.push({ id: acc.id, name: acc.name, type: acc.type, balance: absBalance });
         }
-      } else if (REAL_ASSET_TYPES.includes(acc.type)) {
+      } else if (REAL_ASSET_TYPES.includes(acc.type) && shouldIncludeInNetWorth) {
         totalRealAssets += balance;
         if (LIQUID_TYPES.includes(acc.type)) liquidAssets += balance;
         if (INVESTMENT_TYPES.includes(acc.type)) investmentAssets += balance;
         if (balance !== 0) {
           assetsByAccount.push({ id: acc.id, name: acc.name, type: acc.type, balance });
         }
-      } else if (acc.type === 'GOAL') {
+      } else if (acc.type === 'GOAL' && shouldIncludeInNetWorth) {
         totalGoalAssets += balance;
-        goalTracking.push({ id: acc.id, name: acc.name, balance });
+        goalTracking.push({ 
+          id: acc.id, 
+          name: acc.name, 
+          currentAmount: balance, 
+          targetAmount: 0, 
+          percentage: 0 
+        });
       }
     });
 
@@ -92,45 +134,36 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
         const mIdx = txDate.getMonth();
         const accType = tx.account?.type || tx.asset?.account?.type || tx.liability?.account?.type;
         if (!accType) continue; 
-        
-        const isInvestmentAcc = INVESTMENT_TYPES.includes(accType);
-        const isGoalAcc = accType === 'GOAL';
 
         const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName === 'โอนเข้าภายใน' || categoryName === 'โอนออกภายใน';
-
-        if (isInternalTransfer) {
-          // If it's an internal transfer, we skip Income/Expense noise.
-          // BUT if it's going into a Goal/Invest account, we count it in those specific buckets.
-          if (isGoalAcc && (behavior === 'INCOME' || behavior === 'GOAL_SAVING' || behavior === 'GOAL')) {
-            monthlyCashflow[mIdx].goalSaving += amount;
-          } else if (isInvestmentAcc && (behavior === 'INCOME' || behavior === 'INVESTMENT')) {
-            monthlyCashflow[mIdx].invest += amount;
+        
+        // --- LOGIC: Prioritize Account Type for Cashflow Categorization ---
+        // This ensures money moving into specific "buckets" is counted correctly regardless of behavior.
+        if (accType === 'GOAL') {
+          monthlyCashflow[mIdx].goalSaving += amount;
+        } else if (INVESTMENT_TYPES.includes(accType)) {
+          monthlyCashflow[mIdx].invest += amount;
+        } else if (accType === 'LIABILITY') {
+          // Only count it as "Debt Paid" if it's decreasing the liability (money flowing into the account)
+          // In Nexworth, transfers INTO liability accounts usually have linkedTransactionId or specific behaviors.
+          // For simplicity, we count transfers/income into liability accounts as repayments.
+          if (isInternalTransfer || behavior === 'INCOME' || behavior === 'DEBT') {
+            monthlyCashflow[mIdx].debt += amount;
+          }
+        } else if (accType === 'SAVING' || accType === 'EMERGENCY') {
+          // Internal transfers into savings are counted as "Saving"
+          if (isInternalTransfer || behavior === 'SAVING' || behavior === 'EMERGENCY') {
+            monthlyCashflow[mIdx].saving += amount;
           }
         } else {
-          if (behavior === 'INCOME') {
+          // Regular Income/Expense for "CASHFLOW" or "BANK" accounts
+          if (behavior === 'INCOME' || behavior === 'LOAN_BORROW') {
             monthlyCashflow[mIdx].income += amount;
-          } else if (behavior === 'LOAN_BORROW') {
-            monthlyCashflow[mIdx].income += amount;
-            monthlyCashflow[mIdx].internalLoan += amount;
-          } else if (behavior === 'EXPENSE') {
+          } else if (behavior === 'EXPENSE' || behavior === 'LOAN_REPAY') {
             monthlyCashflow[mIdx].expense += amount;
-          } else if (behavior === 'LOAN_REPAY') {
-            monthlyCashflow[mIdx].expense += amount;
-            monthlyCashflow[mIdx].internalLoan += amount;
-          } else if (behavior === 'SAVING') {
-            monthlyCashflow[mIdx].saving += amount;
-          } else if (behavior === 'INVESTMENT') {
-            monthlyCashflow[mIdx].invest += amount;
-          } else if (behavior === 'GOAL' || behavior === 'GOAL_SAVING') {
-            monthlyCashflow[mIdx].goalSaving += amount;
-          } else if (behavior === 'EMERGENCY') {
-            monthlyCashflow[mIdx].saving += amount; 
-          } else if (behavior === 'DEBT') {
-            monthlyCashflow[mIdx].debt += amount;
           }
         }
         
-        // Track record count for all transactions (including transfers) for audit visibility
         monthlyCashflow[mIdx].records += 1;
       }
 

@@ -11,9 +11,9 @@ const typeSchema = z.object({
 
 export const listTypesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const types = await prisma.transactionType.findMany({
-      where: { organizationId: user.orgId },
+      where: { organizationId: user.organizationId },
       orderBy: { name: 'asc' },
     });
     return reply.send({ types });
@@ -25,11 +25,11 @@ export const listTypesHandler = async (request: FastifyRequest, reply: FastifyRe
 
 export const createTypeHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const body = typeSchema.parse(request.body);
 
     const exists = await prisma.transactionType.findUnique({
-      where: { organizationId_name: { organizationId: user.orgId, name: body.name } }
+      where: { organizationId_name: { organizationId: user.organizationId, name: body.name } }
     });
     if (exists) return reply.status(400).send({ error: 'Type already exists' });
 
@@ -37,7 +37,7 @@ export const createTypeHandler = async (request: FastifyRequest, reply: FastifyR
       data: { 
         ...body, 
         behavior: body.behavior as any,
-        organizationId: user.orgId 
+        organizationId: user.organizationId 
       } 
     });
     return reply.status(201).send({ message: 'Type created', type: newType });
@@ -50,12 +50,12 @@ export const createTypeHandler = async (request: FastifyRequest, reply: FastifyR
 
 export const updateTypeHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
     const body = typeSchema.parse(request.body);
     
     const existing = await prisma.transactionType.findUnique({ where: { id } });
-    if (!existing || existing.organizationId !== user.orgId) {
+    if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Type not found or unauthorized' });
     }
 
@@ -76,11 +76,11 @@ export const updateTypeHandler = async (request: FastifyRequest, reply: FastifyR
 
 export const deleteTypeHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
     
     const existing = await prisma.transactionType.findUnique({ where: { id } });
-    if (!existing || existing.organizationId !== user.orgId) {
+    if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Type not found or unauthorized' });
     }
 

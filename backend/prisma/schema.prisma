@@ -18,11 +18,11 @@ model Organization {
   financialRecords FinancialRecord[]
   liabilities      Liability[]
   loans            Loan[]
+  roles            Role[]
   transactions     Transaction[]
   categories       TransactionCategory[]
   transactionTypes TransactionType[]
   users            User[]
-  roles            Role[]
 }
 
 model User {
@@ -33,12 +33,12 @@ model User {
   lastName         String?
   roleId           String?
   organizationId   String?
-  isSystemAdmin    Boolean           @default(false)
   isActive         Boolean           @default(true)
   lineUserId       String?           @unique
   pairingCode      String?           @unique
   createdAt        DateTime          @default(now())
   updatedAt        DateTime          @updatedAt
+  isSystemAdmin    Boolean           @default(false)
   accounts         Account[]
   assets           Asset[]
   financialRecords FinancialRecord[]
@@ -52,12 +52,12 @@ model User {
 
 model Role {
   id             String        @id @default(uuid())
-  organizationId String?
   name           String
   description    String?
   createdAt      DateTime      @default(now())
-  organization   Organization? @relation(fields: [organizationId], references: [id])
+  organizationId String?
   permissions    Permission[]
+  organization   Organization? @relation(fields: [organizationId], references: [id])
   users          User[]
 
   @@unique([organizationId, name])

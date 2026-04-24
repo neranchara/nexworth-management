@@ -54,6 +54,7 @@ export default function UsersManagementPage() {
       ]);
       setUsers(usersRes.data.users);
       setRoles(rolesRes.data.roles);
+      console.log('[fetchUsersAndRoles] Organizations:', rolesRes.data.organizations);
       setOrganizations(rolesRes.data.organizations || []);
     } catch {
       setError('Failed to load users or roles');
@@ -84,7 +85,7 @@ export default function UsersManagementPage() {
       firstName: '',
       lastName: '',
       roleId: roles.length > 0 ? roles[0].id : '',
-      organizationId: organizations.length > 0 ? organizations[0].id : '',
+      organizationId: user?.organizationId || '',
       isActive: true
     });
     setIsEditing(false);
@@ -109,6 +110,17 @@ export default function UsersManagementPage() {
     setIsEditing(true);
     setCurrentUserId(u.id);
     setIsModalOpen(true);
+  };
+
+  const handleResetPassword = async (id: string) => {
+    if (!window.confirm("คุณต้องการรีเซ็ตรหัสผ่านสำหรับผู้ใช้งานรายนี้ใช่หรือไม่? (รหัสผ่านใหม่จะเป็น orgname@1234)")) return;
+    try {
+      const res = await api.post(`/users/${id}/reset-password`);
+      showAlert(res.data.message, 'success');
+    } catch (err: unknown) {
+      const errorResponse = err as { response?: { data?: { error?: string } } };
+      showAlert(errorResponse.response?.data?.error || 'Reset password failed', 'error');
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -307,15 +319,27 @@ export default function UsersManagementPage() {
                           )}
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          {hasPermission('users', 'canUpdate') && (
-                            <button onClick={() => openEditModal(person)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
-                              <Edit2 className="w-4 h-4 inline" />
+                          {user?.isSystemAdmin && person.organizationId !== user.organizationId ? (
+                             <button 
+                              onClick={() => handleResetPassword(person.id)} 
+                              className="text-amber-600 hover:text-amber-900 bg-amber-50 px-2 py-1 rounded text-xs"
+                              title="Reset Password"
+                            >
+                              Reset Password
                             </button>
-                          )}
-                          {hasPermission('users', 'canDelete') && (
-                            <button onClick={() => handleDelete(person.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                              <Trash2 className="w-4 h-4 inline" />
-                            </button>
+                          ) : (
+                            <>
+                              {hasPermission('users', 'canUpdate') && (
+                                <button onClick={() => openEditModal(person)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
+                                  <Edit2 className="w-4 h-4 inline" />
+                                </button>
+                              )}
+                              {hasPermission('users', 'canDelete') && (
+                                <button onClick={() => handleDelete(person.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                                  <Trash2 className="w-4 h-4 inline" />
+                                </button>
+                              )}
+                            </>
                           )}
                         </td>
                       </tr>
@@ -391,15 +415,23 @@ export default function UsersManagementPage() {
                     </div>
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</label>
-                      <select 
-                        required value={formData.organizationId} onChange={(e) => setFormData({...formData, organizationId: e.target.value})}
-                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="" disabled>Select an organization...</option>
-                        {organizations.map(o => (
-                          <option key={o.id} value={o.id}>{o.name}</option>
-                        ))}
-                      </select>
+                      {user?.isSystemAdmin ? (
+                        <select 
+                          required 
+                          value={formData.organizationId} 
+                          onChange={(e) => setFormData({...formData, organizationId: e.target.value})}
+                          className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        >
+                          <option value="" disabled>Select an organization...</option>
+                          {organizations.map(o => (
+                            <option key={o.id} value={o.id}>{o.name}</option>
+                          ))}
+                        </select>
+                      ) : (
+                        <div className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 font-medium">
+                          {user?.orgName || 'Unknown Organization'}
+                        </div>
+                      )}
                     </div>
                  </div>
 

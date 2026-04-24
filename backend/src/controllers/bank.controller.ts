@@ -10,9 +10,9 @@ const bankSchema = z.object({
 
 export const listBanksHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const banks = await prisma.bank.findMany({ 
-      where: { organizationId: user.orgId },
+      where: { organizationId: user.organizationId },
       orderBy: { name: 'asc' } 
     });
     return reply.send({ banks });
@@ -24,17 +24,17 @@ export const listBanksHandler = async (request: FastifyRequest, reply: FastifyRe
 
 export const createBankHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const body = bankSchema.parse(request.body);
     
     // Check if code exists for this org
     const existing = await prisma.bank.findUnique({ 
-      where: { organizationId_code: { organizationId: user.orgId, code: body.code } } 
+      where: { organizationId_code: { organizationId: user.organizationId, code: body.code } } 
     });
     if (existing) return reply.status(400).send({ error: 'Bank code already exists in your organization' });
 
     const newBank = await prisma.bank.create({ 
-      data: { ...body, organizationId: user.orgId } 
+      data: { ...body, organizationId: user.organizationId } 
     });
     return reply.status(201).send({ message: 'Bank created', bank: newBank });
   } catch (error) {
@@ -46,19 +46,19 @@ export const createBankHandler = async (request: FastifyRequest, reply: FastifyR
 
 export const updateBankHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params;
     const body = bankSchema.parse(request.body);
 
     const existing = await prisma.bank.findUnique({ where: { id } });
-    if (!existing || existing.organizationId !== user.orgId) {
+    if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Bank not found or unauthorized' });
     }
 
     // Check code collision if code changed
     if (body.code !== existing.code) {
       const codeExists = await prisma.bank.findUnique({ 
-        where: { organizationId_code: { organizationId: user.orgId, code: body.code } } 
+        where: { organizationId_code: { organizationId: user.organizationId, code: body.code } } 
       });
       if (codeExists) return reply.status(400).send({ error: 'Bank code already exists' });
     }
@@ -77,16 +77,16 @@ export const updateBankHandler = async (request: FastifyRequest<{ Params: { id: 
 
 export const deleteBankHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params;
     
     const existing = await prisma.bank.findUnique({ where: { id } });
-    if (!existing || existing.organizationId !== user.orgId) {
+    if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Bank not found or unauthorized' });
     }
 
     // Check if used by any accounts
-    const accountCount = await prisma.account.count({ where: { bankId: id, organizationId: user.orgId } });
+    const accountCount = await prisma.account.count({ where: { bankId: id, organizationId: user.organizationId } });
     if (accountCount > 0) {
       return reply.status(400).send({ error: 'Cannot delete bank as it is in use by accounts' });
     }

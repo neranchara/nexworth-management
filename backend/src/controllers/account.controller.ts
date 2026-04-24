@@ -15,10 +15,10 @@ const accountSchema = z.object({
 
 export const listAccountsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const user = request.user as { sub: string, role: string, orgId: string };
+    const user = request.user as { sub: string, role: string, organizationId: string };
     
     // Strict isolation by organizationId
-    const whereClause = { organizationId: user.orgId };
+    const whereClause = { organizationId: user.organizationId };
 
     const accounts = await prisma.account.findMany({
       where: whereClause,
@@ -38,7 +38,7 @@ export const listAccountsHandler = async (request: FastifyRequest, reply: Fastif
 export const createAccountHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const body = accountSchema.parse(request.body);
-    const user = request.user as { sub: string, orgId: string };
+    const user = request.user as { sub: string, organizationId: string };
     
     // Relaxed bankId requirement
     /*
@@ -53,7 +53,7 @@ export const createAccountHandler = async (request: FastifyRequest, reply: Fasti
     const newAccount = await prisma.account.create({
       data: {
         userId: user.sub,
-        organizationId: user.orgId,
+        organizationId: user.organizationId,
         name: body.name,
         accountNumber: body.accountNumber || "",
         type: body.type,
@@ -77,13 +77,13 @@ export const updateAccountHandler = async (request: FastifyRequest<{ Params: { i
   try {
     const id = request.params.id;
     const body = accountSchema.parse(request.body);
-    const user = request.user as { sub: string, role: string, orgId: string };
+    const user = request.user as { sub: string, role: string, organizationId: string };
     
     const existing = await prisma.account.findUnique({ where: { id } });
     if (!existing) return reply.status(404).send({ error: 'Account not found' });
 
     // Check organization isolation
-    if (existing.organizationId !== user.orgId) {
+    if (existing.organizationId !== user.organizationId) {
       return reply.status(403).send({ error: 'Forbidden: Access to other organization denied' });
     }
 
@@ -121,13 +121,13 @@ export const updateAccountHandler = async (request: FastifyRequest<{ Params: { i
 export const deleteAccountHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
     const id = request.params.id;
-    const user = request.user as { sub: string, role: string, orgId: string };
+    const user = request.user as { sub: string, role: string, organizationId: string };
 
     const existing = await prisma.account.findUnique({ where: { id } });
     if (!existing) return reply.status(404).send({ error: 'Account not found' });
 
     // Check organization isolation
-    if (existing.organizationId !== user.orgId) {
+    if (existing.organizationId !== user.organizationId) {
       return reply.status(403).send({ error: 'Forbidden: Access to other organization denied' });
     }
 

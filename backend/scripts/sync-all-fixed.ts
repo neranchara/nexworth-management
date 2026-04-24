@@ -1,9 +1,18 @@
-
 import { PrismaClient } from '../src/generated/client/index.js';
-const prisma = new PrismaClient();
+import * as dotenv from 'dotenv';
+import * as path from 'path';
+
+let prisma: PrismaClient;
 
 async function main() {
+  const isProd = process.env.NODE_ENV === 'production';
+  const envPath = isProd ? '.env.production' : '.env';
+  console.log(`Loading env from ${envPath}`);
+  dotenv.config({ path: path.resolve(process.cwd(), envPath), override: true });
+
+  prisma = new PrismaClient();
   console.log('--- Starting Global Balance Sync ---');
+  console.log('DB URL:', process.env.DATABASE_URL?.split('@')[1] || 'NOT FOUND');
   
   const accounts = await prisma.account.findMany({
     include: {
@@ -16,6 +25,8 @@ async function main() {
     }
   });
 
+  console.log(`Found ${accounts.length} accounts to sync.`);
+
   for (const acc of accounts) {
     console.log(`Processing Account: ${acc.name} (${acc.id})`);
     
@@ -25,7 +36,12 @@ async function main() {
     
     // 2. Sum Transactions
     let txSum = 0;
+    const initialDate = initialRecord ? initialRecord.date : new Date(0);
+    
     for (const tx of acc.transactions) {
+        // Only include transactions on or after the initial record date
+        if (tx.date.getTime() < initialDate.getTime()) continue;
+
         const behavior = tx.type.behavior;
         const isLiability = acc.type === 'LIABILITY';
         let multiplier = 0;

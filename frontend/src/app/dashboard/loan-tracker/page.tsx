@@ -1,5 +1,5 @@
 'use client';
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
 import { PlusCircle, ArrowUpCircle, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
 import api from '@/lib/api';
 import { format } from 'date-fns';
@@ -32,6 +32,7 @@ export default function LoanTrackerPage() {
   const [showRepayModal, setShowRepayModal] = useState(false);
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
+  const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
 
   // Form states
   const [newLoanForm, setNewLoanForm] = useState({ name: '', accountId: '', initialAmount: '', actualDate: '' });
@@ -131,7 +132,52 @@ export default function LoanTrackerPage() {
     }
   };
 
-  // Sorting logic
+  const getFlattenedLots = () => {
+    const allBorrows: any[] = [];
+    
+    // First, collect all borrows across all loans
+    loans.forEach(loan => {
+      let remainingRepayment = loan.totalRepaid;
+      
+      const borrows = loan.transactions
+        .filter((tx: any) => {
+          const behavior = tx.type?.behavior || tx.category?.type?.behavior;
+          return behavior === 'LOAN_BORROW';
+        })
+        .sort((a: any, b: any) => new Date(a.date).getTime() - new Date(b.date).getTime());
+        
+      borrows.forEach((tx: any) => {
+        const amount = tx.amount;
+        const repaidForThisLot = Math.min(amount, remainingRepayment);
+        remainingRepayment -= repaidForThisLot;
+        
+        allBorrows.push({
+          id: tx.id,
+          loanId: loan.id,
+          name: loan.name,
+          accountId: loan.accountId,
+          accountName: loan.accountName,
+          borrowed: amount,
+          repaid: repaidForThisLot,
+          balance: amount - repaidForThisLot,
+          date: tx.date,
+          actualDate: tx.actualDate,
+          fullLoan: loan
+        });
+      });
+    });
+
+    // Sort all borrows globally by date to assign sequential codes
+    allBorrows.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime());
+    
+    return allBorrows.map((lot, index) => ({
+      ...lot,
+      displayCode: `L${String(index + 1).padStart(3, '0')}`
+    }));
+  };
+
+  const flattenedLots = getFlattenedLots();
+
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
     if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
@@ -140,12 +186,12 @@ export default function LoanTrackerPage() {
     setSortConfig({ key, direction });
   };
 
-  const getSortedLoans = () => {
-    if (!sortConfig) return loans;
+  const getSortedLots = () => {
+    if (!sortConfig) return flattenedLots;
 
-    return [...loans].sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
+    return [...flattenedLots].sort((a, b) => {
+      let aValue: any;
+      let bValue: any;
 
       switch (sortConfig.key) {
         case 'date':
@@ -161,12 +207,12 @@ export default function LoanTrackerPage() {
           bValue = (b.accountName || '').toLowerCase();
           break;
         case 'borrowed':
-          aValue = a.totalBorrowed;
-          bValue = b.totalBorrowed;
+          aValue = a.borrowed;
+          bValue = b.borrowed;
           break;
         case 'repaid':
-          aValue = a.totalRepaid;
-          bValue = b.totalRepaid;
+          aValue = a.repaid;
+          bValue = b.repaid;
           break;
         case 'balance':
           aValue = a.balance;
@@ -182,7 +228,7 @@ export default function LoanTrackerPage() {
     });
   };
 
-  const sortedLoans = getSortedLoans();
+  const sortedLots = getSortedLots();
 
   const SortIcon = ({ column }: { column: string }) => {
     if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
@@ -239,97 +285,98 @@ export default function LoanTrackerPage() {
           <thead className="bg-gray-50 dark:bg-gray-900/50">
             <tr>
               <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleSort('date')}
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                onClick={() => handleSort('code')}
               >
-                <div className="flex items-center">Ref / Record <SortIcon column="date" /></div>
+                <div className="flex items-center">REF <SortIcon column="code" /></div>
               </th>
               <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => handleSort('date')} 
               >
-                <div className="flex items-center">Loan Date <SortIcon column="date" /></div>
+                <div className="flex items-center">DATE <SortIcon column="date" /></div>
               </th>
               <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => handleSort('description')}
               >
-                <div className="flex items-center">Description <SortIcon column="description" /></div>
+                <div className="flex items-center">DESCRIPTION <SortIcon column="description" /></div>
               </th>
               <th 
-                className="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => handleSort('account')}
               >
-                <div className="flex items-center">Source Account <SortIcon column="account" /></div>
+                <div className="flex items-center">ACCOUNT <SortIcon column="account" /></div>
               </th>
               <th 
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => handleSort('borrowed')}
               >
-                <div className="flex items-center justify-end">Borrow <SortIcon column="borrowed" /></div>
+                <div className="flex items-center justify-end">BORROW <SortIcon column="borrowed" /></div>
               </th>
               <th 
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => handleSort('repaid')}
               >
-                <div className="flex items-center justify-end">Repaid <SortIcon column="repaid" /></div>
+                <div className="flex items-center justify-end">REPAID <SortIcon column="repaid" /></div>
               </th>
               <th 
-                className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 onClick={() => handleSort('balance')}
               >
-                <div className="flex items-center justify-end">Balance <SortIcon column="balance" /></div>
+                <div className="flex items-center justify-end">BAL <SortIcon column="balance" /></div>
               </th>
-              <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Action</th>
+              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ACTION</th>
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {sortedLoans.map((loan) => (
-              <tr key={loan.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td className="px-6 py-4 whitespace-nowrap">
-                  <div className="text-sm font-medium text-gray-900 dark:text-white">{loan.code || loan.id.substring(0,8)}</div>
-                  <div className="text-xs text-gray-500">{format(new Date(loan.date), 'dd/MM/yyyy')}</div>
+            {sortedLots.map((lot) => (
+              <tr key={lot.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-blue-600 dark:text-blue-400">
+                  {lot.displayCode}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {loan.actualDate ? format(new Date(loan.actualDate), 'dd/MM/yyyy') : '-'}
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
+                  {format(new Date(lot.actualDate || lot.date), 'dd/MM/yyyy')}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">{loan.name}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 flex items-center gap-1.5">
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 font-medium">
+                  {lot.name}
+                </td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-gray-400" />
-                  {loan.accountName}
+                  {lot.accountName}
                 </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-orange-600 text-right">{loan.totalBorrowed.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right">
-                  <div className="text-sm font-medium text-green-600">{loan.totalRepaid.toLocaleString()}</div>
-                  {loan.latestRepaymentDate && (
-                    <div className="text-[10px] text-gray-500 italic mt-0.5">
-                      Last: {format(new Date(loan.latestRepaymentDate), 'dd/MM/yyyy')}
-                    </div>
-                  )}
-                </td>
-                <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-blue-600 text-right">{loan.balance.toLocaleString()}</td>
-                <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 text-right">{lot.borrowed.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600 text-right">{lot.repaid.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 text-right">{lot.balance.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {hasPermission('loan-tracker', 'canUpdate') && (
-                    <>
+                    <div className="flex justify-end gap-2">
                       <button 
-                        onClick={() => { setSelectedLoan(loan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'REPAY' }) }}
-                        className="text-green-600 hover:text-green-900 bg-green-50 px-3 py-1 rounded mx-1"
+                        disabled={lot.balance === 0}
+                        onClick={() => { setSelectedLoan(lot.fullLoan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'REPAY' }) }}
+                        className={`px-3 py-1 rounded ${lot.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-green-600 hover:text-green-900 bg-green-50'}`}
                       >
                         คืนเงิน
                       </button>
                       <button 
-                        onClick={() => { setSelectedLoan(loan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'BORROW' }) }}
-                        className="text-orange-600 hover:text-orange-900 bg-orange-50 px-3 py-1 rounded mx-1"
+                        disabled={lot.balance === 0}
+                        onClick={() => { 
+                          setNewLoanForm({ name: lot.name, accountId: lot.accountId, initialAmount: '', actualDate: '' });
+                          setIsEditing(false);
+                          setShowNewLoanModal(true);
+                        }}
+                        className={`px-3 py-1 rounded ${lot.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-orange-600 hover:text-orange-900 bg-orange-50'}`}
                       >
                         ยืมเพิ่ม
                       </button>
                       <button 
-                        onClick={() => openEditModal(loan)}
-                        className="text-blue-600 hover:text-blue-900 bg-blue-50 px-3 py-1 rounded mx-1 text-xs"
+                        disabled={lot.balance === 0}
+                        onClick={() => openEditModal(lot.fullLoan)}
+                        className={`px-3 py-1 rounded ${lot.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-blue-600 hover:text-blue-900 bg-blue-50'}`}
                       >
                         แก้ไข
                       </button>
-                    </>
+                    </div>
                   )}
                 </td>
               </tr>

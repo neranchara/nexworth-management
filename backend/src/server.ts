@@ -1,15 +1,15 @@
+import * as dotenv from 'dotenv';
+const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env';
+dotenv.config({ path: envFile, override: true });
+console.log(`Loading environment from: ${envFile}`);
+
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
-import * as dotenv from 'dotenv';
 import fastifyRawBody from 'fastify-raw-body';
 import authRoutes from './routes/auth.routes.js';
 import userRoutes from './routes/user.routes.js';
 import transactionRoutes from './routes/transaction.routes.js';
-
-const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env';
-dotenv.config({ path: envFile, override: true });
-console.log(`Loading environment from: ${envFile}`);
 
 const buildServer = async (): Promise<FastifyInstance> => {
   const server = Fastify({ logger: true });
