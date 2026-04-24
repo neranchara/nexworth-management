@@ -7,9 +7,9 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
   
   for (const roleName of roleNames) {
     roles[roleName] = await prisma.role.upsert({
-      where: { name: roleName },
+      where: { organizationId_name: { organizationId: orgId, name: roleName } },
       update: {},
-      create: { name: roleName },
+      create: { name: roleName, organizationId: orgId },
     });
   }
 
