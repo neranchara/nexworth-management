@@ -1,10 +1,38 @@
-node_modules
-.agents/
+# Dependencies
+node_modules/
+
+# Environment files
+.env
+.env.*
+!.env.example
+
+# Next.js & Build outputs
+.next/
+/backend/dist/
+/frontend/out/
+/frontend/build/
+
+# Testing (Playwright)
+tests/
 test-results/
 playwright-report/
 blob-report/
-/backend/dist/
-/backend/src/generated/
-/frontend/.next/
+/playwright/.cache/
+/playwright/.auth/
+/test-results-base/
+
+# Logs
 *.log
+npm-debug.log*
+
+# IDE & OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
 nul
+
+# Project specific
+.agents/
+Untitled-1776941419265.n8n
+backend/src/generated/
