@@ -12,56 +12,64 @@ dotenv.config({ path: path.resolve(process.cwd(), envFile), override: true });
 const prisma = new PrismaClient();
 
 async function main() {
-  console.log('--- Starting Database Seeding ---');
+  console.log('--- Starting Idempotent Database Seeding ---');
 
-  // 1. Cleanup
-  console.log('Cleaning up existing data...');
-  await prisma.transaction.deleteMany();
-  await prisma.account.deleteMany();
-  await prisma.transactionCategory.deleteMany();
-  await prisma.bank.deleteMany();
-  await prisma.user.deleteMany();
-  await prisma.organization.deleteMany();
-  await prisma.permission.deleteMany();
-  await prisma.role.deleteMany();
-  
-  // 2. Create Master Admin
-  console.log('Creating Master Admin...');
-  const masterOrg = await prisma.organization.create({
-    data: { name: 'System Management' }
-  });
+  // 1. Create Master Org (only if not exists)
+  let masterOrg = await prisma.organization.findFirst({ where: { name: 'System Management' } });
+  if (!masterOrg) {
+    console.log('Creating System Management org...');
+    masterOrg = await prisma.organization.create({ data: { name: 'System Management' } });
+  } else {
+    console.log(`System Management org exists: ${masterOrg.id}`);
+  }
 
-  const hashedMasterPassword = await bcrypt.hash('superpassword123', 10);
-  const masterAdmin = await prisma.user.create({
-    data: {
-      email: 'superadmin@nexworth.net',
-      passwordHash: hashedMasterPassword,
-      firstName: 'System',
-      lastName: 'Admin',
-      isSystemAdmin: true,
-      organizationId: masterOrg.id
-    },
-  });
+  // 2. Create Super Admin (only if not exists)
+  let masterAdmin = await prisma.user.findUnique({ where: { email: 'superadmin@nexworth.net' } });
+  if (!masterAdmin) {
+    console.log('Creating superadmin@nexworth.net...');
+    const hashedMasterPassword = await bcrypt.hash('superpassword123', 10);
+    masterAdmin = await prisma.user.create({
+      data: {
+        email: 'superadmin@nexworth.net',
+        passwordHash: hashedMasterPassword,
+        firstName: 'System',
+        lastName: 'Admin',
+        isSystemAdmin: true,
+        organizationId: masterOrg.id
+      },
+    });
+  } else {
+    console.log(`superadmin exists: ${masterAdmin.id}`);
+  }
 
   // Setup defaults for Master Org
   await setupOrganizationDefaults(masterOrg.id, masterAdmin.id);
 
-  // 3. Create Default User (neranchara)
-  console.log('Creating default user org...');
-  const org = await prisma.organization.create({
-    data: { name: 'neranchara' }
-  });
+  // 3. Create Default User Org (only if not exists)
+  let org = await prisma.organization.findFirst({ where: { name: 'neranchara' } });
+  if (!org) {
+    console.log('Creating neranchara org...');
+    org = await prisma.organization.create({ data: { name: 'neranchara' } });
+  } else {
+    console.log(`neranchara org exists: ${org.id}`);
+  }
 
-  const hashedUserPassword = await bcrypt.hash('w,j,uP@ssw0rd', 10);
-  const admin = await prisma.user.create({
-    data: {
-      email: 'neranchara.ksr@gmail.com',
-      passwordHash: hashedUserPassword,
-      firstName: 'Nexworth',
-      lastName: 'Admin',
-      organizationId: org.id
-    },
-  });
+  let admin = await prisma.user.findFirst({ where: { email: 'neranchara.ksr@gmail.com' } });
+  if (!admin) {
+    console.log('Creating neranchara admin...');
+    const hashedUserPassword = await bcrypt.hash('w,j,uP@ssw0rd', 10);
+    admin = await prisma.user.create({
+      data: {
+        email: 'neranchara.ksr@gmail.com',
+        passwordHash: hashedUserPassword,
+        firstName: 'Nexworth',
+        lastName: 'Admin',
+        organizationId: org.id
+      },
+    });
+  } else {
+    console.log(`neranchara admin exists: ${admin.id}`);
+  }
 
   await setupOrganizationDefaults(org.id, admin.id);
 
