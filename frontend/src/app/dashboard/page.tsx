@@ -236,25 +236,31 @@ export default function DashboardPage() {
       <h2 className="text-sm font-bold text-gray-400 uppercase tracking-widest mb-2">Financial Health</h2>
       
       <div className="relative h-48 w-48">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={healthData}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={80}
-              startAngle={225}
-              endAngle={-45}
-              paddingAngle={0}
-              dataKey="value"
-              stroke="none"
-            >
-              <Cell fill={getHealthColor(stats.health?.score || 0)} />
-              <Cell fill="transparent" />
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
+        {!loading && stats.health?.score !== undefined ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={healthData}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                startAngle={225}
+                endAngle={-45}
+                paddingAngle={0}
+                dataKey="value"
+                stroke="none"
+              >
+                <Cell fill={getHealthColor(stats.health?.score || 0)} />
+                <Cell fill="transparent" />
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
         <div className="absolute inset-0 flex flex-col items-center justify-center">
           <span className="text-4xl font-extrabold text-gray-900 dark:text-white">{loading ? '--' : stats.health?.score}</span>
           <span className="text-xs font-bold uppercase tracking-tighter" style={{ color: getHealthColor(stats.health?.score || 0) }}>
@@ -431,24 +437,30 @@ export default function DashboardPage() {
         {/* Chart Visualization */}
         <div className="h-[400px] w-full bg-white dark:bg-gray-800 p-2 rounded-lg border dark:border-gray-700">
            <h3 className="text-center text-sm font-semibold mb-4 text-gray-500 uppercase">Monthly Cashflow Visualization</h3>
-           <ResponsiveContainer width="100%" height="85%">
-              <BarChart data={stats.monthlyCashflow}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} />
-                <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value.toLocaleString()}`} />
-                <Tooltip 
-                  contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
-                  formatter={(value: string | number | boolean | null | undefined | readonly (string | number)[]) => (typeof value === 'number' ? value.toLocaleString() : (value?.toString() || ''))}
-                />
-                <Legend verticalAlign="top" height={36}/>
-                <Bar dataKey="income" name="Income" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="saving" name="Saving" fill="#22c55e" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="internalLoan" name="Int Loan" fill="#f59e0b" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="debt" name="Debt" fill="#06b6d4" radius={[4, 4, 0, 0]} />
-                <Bar dataKey="net" name="Net" fill="#1e3a8a" radius={[4, 4, 0, 0]} />
-              </BarChart>
-           </ResponsiveContainer>
+           {!loading && stats.monthlyCashflow?.length > 0 ? (
+             <ResponsiveContainer width="100%" height="85%">
+                <BarChart data={stats.monthlyCashflow}>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="month" fontSize={12} tickLine={false} axisLine={false} />
+                  <YAxis fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value.toLocaleString()}`} />
+                  <Tooltip 
+                    contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 6px -1px rgb(0 0 0 / 0.1)' }}
+                    formatter={(value: string | number | boolean | null | undefined | readonly (string | number)[]) => (typeof value === 'number' ? value.toLocaleString() : (value?.toString() || ''))}
+                  />
+                  <Legend verticalAlign="top" height={36}/>
+                  <Bar dataKey="income" name="Income" fill="#3b82f6" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="expense" name="Expense" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="saving" name="Saving" fill="#22c55e" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="internalLoan" name="Int Loan" fill="#f59e0b" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="debt" name="Debt" fill="#06b6d4" radius={[4, 4, 0, 0]} />
+                  <Bar dataKey="net" name="Net" fill="#1e3a8a" radius={[4, 4, 0, 0]} />
+                </BarChart>
+             </ResponsiveContainer>
+           ) : (
+             <div className="w-full h-full flex items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-lg">
+                <p className="text-gray-400 text-sm italic">Loading visualization data...</p>
+             </div>
+           )}
         </div>
       </div>
     </div>
