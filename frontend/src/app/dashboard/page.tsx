@@ -692,13 +692,22 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
+        setError(null);
         const res = await api.get(`/dashboard/stats?year=${selectedYear}&month=${selectedMonth}`);
-        setStats(res.data);
-      } catch (err) {
+        if (res.data) {
+          setStats(res.data);
+        } else {
+          throw new Error('API returned empty data');
+        }
+      } catch (err: any) {
+        console.error('Dashboard Stats Error:', err);
+        setError(err.response?.data?.message || err.message || 'Failed to connect to Nexworth API');
       } finally {
         setLoading(false);
       }
@@ -782,15 +791,15 @@ export default function DashboardPage() {
       { key: 'welcome', content: <WelcomeCard user={user} stats={stats} loading={loading} />, defaultLayout: { lg: { x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 4 }, md: { x: 0, y: 0, w: 10, h: 6 }, sm: { x: 0, y: 0, w: 6, h: 7 } } },
       { key: 'health', content: <HealthCard stats={stats} loading={loading} healthData={healthData} />, defaultLayout: { lg: { x: 6, y: 0, w: 3, h: 6, minW: 3, minH: 4 }, md: { x: 0, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 7, w: 6, h: 5 } } },
       
-      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${(stats?.health?.metrics.savingRate * 100).toFixed(1)}%`} score={stats?.health?.scores.saving} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
+      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${((stats?.health?.metrics?.savingRate ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.saving ?? 0} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
       
-      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${(stats?.health?.metrics.goalRate * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
+      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${((stats?.health?.metrics?.goalRate ?? 0) * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
       
-      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${stats?.health?.metrics.emergencyMonths} Mo`} score={stats?.health?.scores.emergency} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
+      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${stats?.health?.metrics?.emergencyMonths ?? 0} Mo`} score={stats?.health?.scores?.emergency ?? 0} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
       
-      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${(stats?.health?.metrics.debtRatio * 100).toFixed(1)}%`} score={stats?.health?.scores.debt} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
+      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${((stats?.health?.metrics?.debtRatio ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.debt ?? 0} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
       
-      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${(stats?.health?.metrics.investmentRatio * 100).toFixed(1)}%`} score={stats?.health?.scores.investment} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
+      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((stats?.health?.metrics?.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
       
       { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} visualMonth={visualMonth} visualYear={visualYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onVisualMonthChange={setVisualMonth} onVisualYearChange={setVisualYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
       
@@ -800,14 +809,63 @@ export default function DashboardPage() {
   }, [user, stats, loading, isLocked, cashflowMode, enabledWidgets, visualMonth, visualYear, pieData, healthData, getGoalsHeight, updateCashflowMode, setSelectedMonth, setSelectedYear, selectedMonth, selectedYear]);
 
   if (!hasPermission('dashboard', 'canView')) {
-    return (<div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow text-center"><ShieldCheck className="w-12 h-12 text-red-500 mx-auto mb-4" /><h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h1><p className="text-gray-600 dark:text-gray-400">No permission to view dashboard.</p></div>);
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+        <div className="bg-slate-900 border border-white/5 rounded-[2.5rem] p-10 max-w-md w-full text-center shadow-2xl">
+          <ShieldCheck className="w-16 h-16 text-rose-500 mx-auto mb-6" />
+          <h1 className="text-2xl font-black text-white tracking-tight mb-3">Access Denied</h1>
+          <p className="text-slate-400 text-sm leading-relaxed mb-6">You don't have the required clearance to view the Nexworth Command Center.</p>
+          <Link href="/login" className="inline-block px-8 py-3 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all uppercase tracking-widest">Return to Login</Link>
+        </div>
+      </div>
+    );
   }
 
   if (loading && !stats) {
-    return (<div className="w-full h-[60vh] flex items-center justify-center"><div className="flex flex-col items-center gap-4"><div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div><p className="text-gray-500 dark:text-gray-400 animate-pulse">Loading system overview...</p></div></div>);
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Activity className="w-6 h-6 text-blue-500 animate-pulse" />
+          </div>
+        </div>
+        <div className="text-center">
+          <h2 className="text-xl font-black text-white tracking-tighter mb-2">Syncing your Wealth...</h2>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest animate-pulse">Initializing Financial Core</p>
+        </div>
+      </div>
+    );
   }
 
-  if (stats?.isSystemAdmin) return <SystemAdminDashboard stats={stats} />;
+  if (error && !stats) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6">
+        <div className="bg-rose-500/10 border border-rose-500/20 rounded-[2.5rem] p-10 max-w-md w-full text-center shadow-2xl">
+          <div className="w-20 h-20 bg-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-rose-500/20 ring-4 ring-rose-500/10">
+            <Info className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-black text-white tracking-tight mb-3">API Connection Error</h2>
+          <p className="text-slate-400 text-sm leading-relaxed mb-8">
+            {error}. <br/> 
+            <span className="text-[10px] text-rose-400 uppercase font-black tracking-widest mt-2 inline-block">
+              Check if NEXT_PUBLIC_API_URL is set in Vercel
+            </span>
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full py-4 bg-white text-slate-950 font-black rounded-2xl hover:bg-slate-200 transition-all uppercase tracking-widest text-xs shadow-xl"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role === 'SUPERADMIN' && stats?.isSystemAdmin) {
+    return <SystemAdminDashboard stats={stats} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-blue-500/30">

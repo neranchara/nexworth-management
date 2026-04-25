@@ -103,17 +103,59 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
   // --- Layout State ---
   const [layouts, setLayouts] = useState<ResponsiveLayouts>(() => {
     const saved = loadLayouts();
-    return saved || getDefaultLayouts(items);
+    const defaults = getDefaultLayouts(items);
+    if (!saved) return defaults;
+    
+    // Safety check: Ensure ALL current items exist in the saved layout
+    // If a new widget was added (e.g. saving-rate), it might be missing in 'saved'
+    let needsSync = false;
+    const synced = { ...saved };
+    
+    (['lg', 'md', 'sm'] as const).forEach(bp => {
+      const bpLayout = synced[bp] || [];
+      items.forEach(item => {
+        if (!bpLayout.find(l => l.i === item.key)) {
+          needsSync = true;
+          const defaultItem = (defaults as any)[bp].find((l: any) => l.i === item.key);
+          if (defaultItem) bpLayout.push(defaultItem);
+        }
+      });
+      synced[bp] = bpLayout;
+    });
+
+    return needsSync ? synced : saved;
   });
   
   const [internalLocked, setInternalLocked] = useState(true);
   const isLocked = externalLocked !== undefined ? externalLocked : internalLocked;
   const setIsLocked = setExternalLocked !== undefined ? setExternalLocked : setInternalLocked;
 
-  // Sync with default layouts when items change (e.g. goals added)
+  // Sync with default layouts when items change (e.g. new metrics or widgets added)
   useEffect(() => {
-    if (!loadLayouts()) {
+    const saved = loadLayouts();
+    if (!saved) {
       setLayouts(getDefaultLayouts(items));
+    } else {
+      // Ensure any new items introduced in 'items' props are added to the existing state
+      setLayouts(current => {
+        const defaults = getDefaultLayouts(items);
+        const next = { ...current };
+        let changed = false;
+
+        (['lg', 'md', 'sm'] as const).forEach(bp => {
+          const bpLayout = [...(next[bp] || [])];
+          items.forEach(item => {
+            if (!bpLayout.find(l => l.i === item.key)) {
+              changed = true;
+              const def = (defaults as any)[bp].find((l: any) => l.i === item.key);
+              if (def) bpLayout.push(def);
+            }
+          });
+          next[bp] = bpLayout;
+        });
+        
+        return changed ? next : current;
+      });
     }
   }, [items]);
 
