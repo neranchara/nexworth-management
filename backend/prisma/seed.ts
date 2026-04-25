@@ -83,7 +83,7 @@ async function main() {
   let testUser = await prisma.user.findFirst({ where: { email: 'test@nexworth.net' } });
   if (!testUser) {
     console.log('Creating test@nexworth.net...');
-    const hashedTestPassword = await bcrypt.hash('TestP@ssw0rd123', 10);
+    const hashedTestPassword = await bcrypt.hash('P@ssword123', 10);
     testUser = await prisma.user.create({
       data: {
         email: 'test@nexworth.net',
@@ -96,6 +96,48 @@ async function main() {
   }
 
   await setupOrganizationDefaults(testOrg.id, testUser.id);
+
+  // 5. Populate specific regression test data for test@nexworth.net
+  console.log('Populating regression test data for test@nexworth.net...');
+  const testAccounts = await prisma.account.findMany({ where: { userId: testUser.id } });
+  const emergencyAcc = testAccounts.find(a => a.type === 'EMERGENCY') || 
+                       await prisma.account.create({ data: { name: 'Emergency Fund', type: 'EMERGENCY', userId: testUser.id, organizationId: testOrg.id, bankId: (await prisma.bank.findFirst({ where: { organizationId: testOrg.id } }))?.id || '' } });
+  
+  const incomeType = await prisma.transactionType.findFirst({ where: { organizationId: testOrg.id, behavior: 'INCOME' } });
+  const internalTransferType = await prisma.transactionType.findFirst({ where: { organizationId: testOrg.id, behavior: 'INTERNAL_TRANSFER' } });
+  
+  const category = await prisma.transactionCategory.findFirst({ where: { organizationId: testOrg.id } });
+
+  // April 2026 transactions
+  const aprilDate = new Date('2026-04-15');
+  
+  // 45,000 Income
+  await prisma.transaction.create({
+    data: {
+      userId: testUser.id,
+      organizationId: testOrg.id,
+      accountId: emergencyAcc.id,
+      typeId: incomeType?.id || '',
+      categoryId: category?.id || '',
+      amount: 45000,
+      description: 'Test Income April',
+      date: aprilDate
+    }
+  });
+
+  // 5,000 Internal Transfer
+  await prisma.transaction.create({
+    data: {
+      userId: testUser.id,
+      organizationId: testOrg.id,
+      accountId: emergencyAcc.id,
+      typeId: internalTransferType?.id || '',
+      categoryId: category?.id || '',
+      amount: 5000,
+      description: 'Test Internal Transfer',
+      date: aprilDate
+    }
+  });
 
   console.log('--- Seeding Completed Successfully ---');
 }
