@@ -5,6 +5,8 @@ import { ResponsiveGridLayout } from 'react-grid-layout';
 import type { LayoutItem, ResponsiveLayouts } from 'react-grid-layout';
 import { Lock, Unlock, RotateCcw, GripVertical } from 'lucide-react';
 
+const ResponsiveGridLayoutComponent = ResponsiveGridLayout as any;
+
 import 'react-grid-layout/css/styles.css';
 
 const STORAGE_KEY = 'nexworth-dashboard-layout';
@@ -208,7 +210,7 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
           </div>
 
           {width > 0 && (
-            <ResponsiveGridLayout
+            <ResponsiveGridLayoutComponent
               className="dashboard-grid"
               layouts={Object.keys(layouts).reduce((acc: any, key) => {
                 acc[key] = (layouts as any)[key].map((item: any) => ({
@@ -241,7 +243,7 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
                   </div>
                 </div>
               ))}
-            </ResponsiveGridLayout>
+            </ResponsiveGridLayoutComponent>
           )}
         </>
       )}
