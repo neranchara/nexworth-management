@@ -18,6 +18,7 @@ interface Loan {
   actualDate?: string;
   code?: string;
   latestRepaymentDate?: string;
+  transactions?: any[];
 }
 
 
@@ -139,7 +140,7 @@ export default function LoanTrackerPage() {
     loans.forEach(loan => {
       let remainingRepayment = loan.totalRepaid;
       
-      const borrows = loan.transactions
+      const borrows = (loan.transactions || [])
         .filter((tx: any) => {
           const behavior = tx.type?.behavior || tx.category?.type?.behavior;
           return behavior === 'LOAN_BORROW';
