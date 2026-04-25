@@ -692,13 +692,22 @@ export default function DashboardPage() {
     }
   }, []);
 
+  const [error, setError] = useState<string | null>(null);
+
   useEffect(() => {
     const fetchStats = async () => {
       try {
         setLoading(true);
+        setError(null);
         const res = await api.get(`/dashboard/stats?year=${selectedYear}&month=${selectedMonth}`);
-        setStats(res.data);
-      } catch (err) {
+        if (res.data) {
+          setStats(res.data);
+        } else {
+          throw new Error('API returned empty data');
+        }
+      } catch (err: any) {
+        console.error('Dashboard Stats Error:', err);
+        setError(err.response?.data?.message || err.message || 'Failed to connect to Nexworth API');
       } finally {
         setLoading(false);
       }
@@ -800,14 +809,63 @@ export default function DashboardPage() {
   }, [user, stats, loading, isLocked, cashflowMode, enabledWidgets, visualMonth, visualYear, pieData, healthData, getGoalsHeight, updateCashflowMode, setSelectedMonth, setSelectedYear, selectedMonth, selectedYear]);
 
   if (!hasPermission('dashboard', 'canView')) {
-    return (<div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow text-center"><ShieldCheck className="w-12 h-12 text-red-500 mx-auto mb-4" /><h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h1><p className="text-gray-600 dark:text-gray-400">No permission to view dashboard.</p></div>);
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+        <div className="bg-slate-900 border border-white/5 rounded-[2.5rem] p-10 max-w-md w-full text-center shadow-2xl">
+          <ShieldCheck className="w-16 h-16 text-rose-500 mx-auto mb-6" />
+          <h1 className="text-2xl font-black text-white tracking-tight mb-3">Access Denied</h1>
+          <p className="text-slate-400 text-sm leading-relaxed mb-6">You don't have the required clearance to view the Nexworth Command Center.</p>
+          <Link href="/login" className="inline-block px-8 py-3 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all uppercase tracking-widest">Return to Login</Link>
+        </div>
+      </div>
+    );
   }
 
   if (loading && !stats) {
-    return (<div className="w-full h-[60vh] flex items-center justify-center"><div className="flex flex-col items-center gap-4"><div className="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div><p className="text-gray-500 dark:text-gray-400 animate-pulse">Loading system overview...</p></div></div>);
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6">
+        <div className="relative">
+          <div className="w-16 h-16 border-4 border-blue-500/20 border-t-blue-500 rounded-full animate-spin" />
+          <div className="absolute inset-0 flex items-center justify-center">
+            <Activity className="w-6 h-6 text-blue-500 animate-pulse" />
+          </div>
+        </div>
+        <div className="text-center">
+          <h2 className="text-xl font-black text-white tracking-tighter mb-2">Syncing your Wealth...</h2>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest animate-pulse">Initializing Financial Core</p>
+        </div>
+      </div>
+    );
   }
 
-  if (stats?.isSystemAdmin) return <SystemAdminDashboard stats={stats} />;
+  if (error && !stats) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center p-6">
+        <div className="bg-rose-500/10 border border-rose-500/20 rounded-[2.5rem] p-10 max-w-md w-full text-center shadow-2xl">
+          <div className="w-20 h-20 bg-rose-500 rounded-3xl flex items-center justify-center mx-auto mb-6 shadow-xl shadow-rose-500/20 ring-4 ring-rose-500/10">
+            <Info className="w-10 h-10 text-white" />
+          </div>
+          <h2 className="text-2xl font-black text-white tracking-tight mb-3">API Connection Error</h2>
+          <p className="text-slate-400 text-sm leading-relaxed mb-8">
+            {error}. <br/> 
+            <span className="text-[10px] text-rose-400 uppercase font-black tracking-widest mt-2 inline-block">
+              Check if NEXT_PUBLIC_API_URL is set in Vercel
+            </span>
+          </p>
+          <button 
+            onClick={() => window.location.reload()}
+            className="w-full py-4 bg-white text-slate-950 font-black rounded-2xl hover:bg-slate-200 transition-all uppercase tracking-widest text-xs shadow-xl"
+          >
+            Retry Connection
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  if (user?.role === 'SUPERADMIN' && stats?.isSystemAdmin) {
+    return <SystemAdminDashboard stats={stats} />;
+  }
 
   return (
     <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-blue-500/30">
