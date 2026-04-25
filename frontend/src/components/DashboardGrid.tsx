@@ -112,7 +112,7 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
     const synced = { ...saved };
     
     (['lg', 'md', 'sm'] as const).forEach(bp => {
-      const bpLayout = synced[bp] || [];
+      const bpLayout = [...(synced[bp] || [])];
       items.forEach(item => {
         if (!bpLayout.find(l => l.i === item.key)) {
           needsSync = true;
