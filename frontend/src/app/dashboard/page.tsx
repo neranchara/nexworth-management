@@ -174,7 +174,7 @@ const WelcomeCard = ({ user, stats, loading }: { user: any; stats: any; loading:
             <item.icon className={`w-3.5 h-3.5 ${item.text}`} />
           </div>
           <p className="text-lg font-black text-white tabular-nums leading-none">
-            {loading ? '...' : `${stats?.currency || '฿'}${(item.value || 0).toLocaleString()}`}
+            {loading ? '...' : `${stats?.currency || '฿'}${(item.value ?? 0).toLocaleString()}`}
           </p>
         </div>
       ))}
@@ -397,25 +397,25 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
                 <tr key={m.month} className="hover:bg-white/5 transition-colors group">
                   <td className="sticky left-0 bg-slate-900/80 backdrop-blur-md px-5 py-4 font-black text-slate-300 z-10">{m.month}</td>
                   <td className="px-5 py-4 text-right text-emerald-400/80 group-hover:text-emerald-400 font-bold tabular-nums">
-                    {m.income.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.income ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
                   <td className="px-5 py-4 text-right text-rose-400/80 group-hover:text-rose-400 font-bold tabular-nums">
-                    {m.expense.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.expense ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
                   <td className="px-5 py-4 text-right text-blue-400/80 group-hover:text-blue-400 font-bold tabular-nums">
-                    {m.saving.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.saving ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
                   <td className="px-5 py-4 text-right text-purple-400/80 group-hover:text-purple-400 font-bold tabular-nums">
-                    {m.goalSaving.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.goalSaving ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
                   <td className="px-5 py-4 text-right text-cyan-400/80 group-hover:text-cyan-400 font-bold tabular-nums">
-                    {m.invest.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.invest ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
                   <td className="px-5 py-4 text-right text-amber-400/80 group-hover:text-amber-400 font-bold tabular-nums">
-                    {m.debt.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.debt ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
-                  <td className={`px-5 py-4 text-right font-black tabular-nums bg-blue-600/5 ${m.net >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                    {m.net.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                  <td className={`px-5 py-4 text-right font-black tabular-nums bg-blue-600/5 ${(m.net ?? 0) >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                    {(m.net ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
                 </tr>
               ))}
@@ -741,11 +741,11 @@ export default function DashboardPage() {
   const pieData = useMemo(() => {
     if (!selectedMonthData) return [];
     return [
-      { name: 'Income', value: selectedMonthData.income, color: '#3b82f6' },
-      { name: 'Expense', value: selectedMonthData.expense, color: '#ef4444' },
-      { name: 'Saving', value: selectedMonthData.saving + selectedMonthData.goalSaving, color: '#22c55e' },
-      { name: 'Investment', value: selectedMonthData.invest, color: '#06b6d4' },
-      { name: 'Debt Paid', value: selectedMonthData.debt, color: '#f59e0b' },
+      { name: 'Income', value: selectedMonthData.income ?? 0, color: '#3b82f6' },
+      { name: 'Expense', value: selectedMonthData.expense ?? 0, color: '#ef4444' },
+      { name: 'Saving', value: (selectedMonthData.saving ?? 0) + (selectedMonthData.goalSaving ?? 0), color: '#22c55e' },
+      { name: 'Investment', value: selectedMonthData.invest ?? 0, color: '#06b6d4' },
+      { name: 'Debt Paid', value: selectedMonthData.debt ?? 0, color: '#f59e0b' },
     ].filter(d => d.value > 0);
   }, [selectedMonthData]);
 
@@ -782,15 +782,15 @@ export default function DashboardPage() {
       { key: 'welcome', content: <WelcomeCard user={user} stats={stats} loading={loading} />, defaultLayout: { lg: { x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 4 }, md: { x: 0, y: 0, w: 10, h: 6 }, sm: { x: 0, y: 0, w: 6, h: 7 } } },
       { key: 'health', content: <HealthCard stats={stats} loading={loading} healthData={healthData} />, defaultLayout: { lg: { x: 6, y: 0, w: 3, h: 6, minW: 3, minH: 4 }, md: { x: 0, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 7, w: 6, h: 5 } } },
       
-      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${(stats?.health?.metrics.savingRate * 100).toFixed(1)}%`} score={stats?.health?.scores.saving} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
+      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${((stats?.health?.metrics?.savingRate ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.saving ?? 0} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
       
-      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${(stats?.health?.metrics.goalRate * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
+      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${((stats?.health?.metrics?.goalRate ?? 0) * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
       
-      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${stats?.health?.metrics.emergencyMonths} Mo`} score={stats?.health?.scores.emergency} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
+      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${stats?.health?.metrics?.emergencyMonths ?? 0} Mo`} score={stats?.health?.scores?.emergency ?? 0} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
       
-      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${(stats?.health?.metrics.debtRatio * 100).toFixed(1)}%`} score={stats?.health?.scores.debt} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
+      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${((stats?.health?.metrics?.debtRatio ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.debt ?? 0} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
       
-      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${(stats?.health?.metrics.investmentRatio * 100).toFixed(1)}%`} score={stats?.health?.scores.investment} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
+      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((stats?.health?.metrics?.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
       
       { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} visualMonth={visualMonth} visualYear={visualYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onVisualMonthChange={setVisualMonth} onVisualYearChange={setVisualYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
       
