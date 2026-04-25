@@ -5,7 +5,11 @@ import dynamic from 'next/dynamic';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import Link from 'next/link';
-import { Wallet, Calendar, ShieldCheck, Activity, CreditCard, TrendingUp, Info, Table, BarChart2, Layers, Check, Eye, EyeOff, Layout, Settings2 } from 'lucide-react';
+import { 
+  TrendingUp, Activity, CreditCard, ShieldCheck, 
+  Calendar, Layers, Table, BarChart2, Info, ChevronRight,
+  Building2, Target, Wallet, Check, Eye, EyeOff, Layout, Settings2 
+} from 'lucide-react';
 import { 
   BarChart, 
   Bar, 
@@ -93,10 +97,30 @@ export interface Stats {
 
 const DashboardGrid = dynamic(() => import('@/components/DashboardGrid'), { ssr: false });
 
-const MONTHS = [
-  'January', 'February', 'March', 'April', 'May', 'June',
-  'July', 'August', 'September', 'October', 'November', 'December'
+const MONTH_MAP = [
+  { code: 'M01', name: 'January', short: 'Jan' },
+  { code: 'M02', name: 'February', short: 'Feb' },
+  { code: 'M03', name: 'March', short: 'Mar' },
+  { code: 'M04', name: 'April', short: 'Apr' },
+  { code: 'M05', name: 'May', short: 'May' },
+  { code: 'M06', name: 'June', short: 'Jun' },
+  { code: 'M07', name: 'July', short: 'Jul' },
+  { code: 'M08', name: 'August', short: 'Aug' },
+  { code: 'M09', name: 'September', short: 'Sep' },
+  { code: 'M10', name: 'October', short: 'Oct' },
+  { code: 'M11', name: 'November', short: 'Nov' },
+  { code: 'M12', name: 'December', short: 'Dec' }
 ];
+
+const MONTHS = MONTH_MAP.map(m => m.name);
+
+const getMonthCode = (input: any): string => {
+  if (typeof input === 'number') return `M${(input + 1).toString().padStart(2, '0')}`;
+  if (!input) return 'M01';
+  const str = input.toString().substring(0, 3).toLowerCase();
+  const index = MONTH_MAP.findIndex(m => m.short.toLowerCase() === str);
+  return index !== -1 ? MONTH_MAP[index].code : 'M01';
+};
 
 const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 
@@ -125,97 +149,118 @@ const getHealthColor = (score: number) => {
 // ============================================
 
 const WelcomeCard = ({ user, stats, loading }: { user: any; stats: any; loading: boolean }) => (
-  <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 h-full flex flex-col justify-between">
-    <div className="mb-4">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white mb-1">
-          Welcome back, {user?.firstName}
-        </h1>
-        <p className="text-gray-500 dark:text-gray-400 text-xs">Here is your financial status.</p>
+  <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 shadow-xl rounded-2xl p-6 h-full flex flex-col justify-between group">
+    {/* Decorative Background Elements */}
+    <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700" />
+    <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all duration-700" />
+    
+    <div className="relative z-10 mb-6">
+      <h1 className="text-2xl font-black text-white mb-1 tracking-tight">
+        Welcome, {user?.firstName}
+      </h1>
+      <p className="text-slate-400 text-[11px] font-medium uppercase tracking-[0.2em]">Financial Overview</p>
     </div>
     
-    <div className="grid grid-cols-2 gap-4 flex-1">
-      <div className="bg-blue-50/50 dark:bg-blue-900/10 p-4 rounded-2xl border border-blue-100 dark:border-blue-800/30 flex flex-col justify-center">
-         <div className="flex items-center justify-between mb-1">
-           <h3 className="text-[10px] font-bold text-blue-600 dark:text-blue-400 uppercase tracking-wider">Real Assets</h3>
-           <Wallet className="w-3.5 h-3.5 text-blue-500" />
-         </div>
-         <p className="text-xl font-black text-gray-900 dark:text-white truncate">
-           {loading ? '...' : `${stats?.currency || '฿'}${(stats?.summary?.totalAssets || 0).toLocaleString()}`}
-         </p>
-      </div>
-
-      <div className="bg-purple-50/50 dark:bg-purple-900/10 p-4 rounded-2xl border border-purple-100 dark:border-purple-800/30 flex flex-col justify-center">
-         <div className="flex items-center justify-between mb-1">
-           <h3 className="text-[10px] font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">Goal Money</h3>
-           <TrendingUp className="w-3.5 h-3.5 text-purple-500" />
-         </div>
-         <p className="text-xl font-black text-gray-900 dark:text-white truncate">
-           {loading ? '...' : `${stats?.currency || '฿'}${(stats?.summary?.totalGoalAssets || 0).toLocaleString()}`}
-         </p>
-      </div>
-
-      <div className="bg-red-50/50 dark:bg-red-900/10 p-4 rounded-2xl border border-red-100 dark:border-red-800/30 flex flex-col justify-center">
-         <div className="flex items-center justify-between mb-1">
-           <h3 className="text-[10px] font-bold text-red-600 dark:text-red-400 uppercase tracking-wider">Liabilities</h3>
-           <CreditCard className="w-3.5 h-3.5 text-red-500" />
-         </div>
-         <p className="text-xl font-black text-gray-900 dark:text-white truncate">
-           {loading ? '...' : `${stats?.currency || '฿'}${(stats?.summary?.totalLiabilities || 0).toLocaleString()}`}
-         </p>
-      </div>
-
-      <div className="bg-green-50/50 dark:bg-green-900/10 p-4 rounded-2xl border border-green-100 dark:border-green-800/30 flex flex-col justify-center">
-         <div className="flex items-center justify-between mb-1">
-           <h3 className="text-[10px] font-bold text-green-600 dark:text-green-400 uppercase tracking-wider">Net Worth</h3>
-           <ShieldCheck className="w-3.5 h-3.5 text-green-500" />
-         </div>
-         <p className="text-xl font-black text-gray-900 dark:text-white truncate">
-           {loading ? '...' : `${stats?.currency || '฿'}${(stats?.summary?.netWorth || 0).toLocaleString()}`}
-         </p>
-      </div>
-    </div>
-  </div>
-);
-
-const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boolean; healthData: any[] }) => (
-  <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 flex flex-col items-center justify-center relative h-full">
-    <h2 className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-4">Financial Health</h2>
-    
-    <div className="relative h-40 w-40 sm:h-48 sm:w-48">
-      {!loading && stats?.health?.score !== undefined ? (
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={healthData}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={80}
-              startAngle={225}
-              endAngle={-45}
-              paddingAngle={0}
-              dataKey="value"
-              stroke="none"
-            >
-              <Cell fill={getHealthColor(stats.health?.score || 0)} />
-              <Cell fill="transparent" />
-            </Pie>
-          </PieChart>
-        </ResponsiveContainer>
-      ) : (
-        <div className="w-full h-full flex items-center justify-center">
-          <div className="w-10 h-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+    <div className="relative z-10 grid grid-cols-2 gap-3 flex-1">
+      {[
+        { label: 'Real Assets', value: stats?.summary?.totalAssets, icon: Wallet, color: 'from-blue-500/20 to-blue-600/5', text: 'text-blue-400' },
+        { label: 'Goal Money', value: stats?.summary?.totalGoalAssets, icon: TrendingUp, color: 'from-purple-500/20 to-purple-600/5', text: 'text-purple-400' },
+        { label: 'Liabilities', value: stats?.summary?.totalLiabilities, icon: CreditCard, color: 'from-rose-500/20 to-rose-600/5', text: 'text-rose-400' },
+        { label: 'Net Worth', value: stats?.summary?.netWorth, icon: ShieldCheck, color: 'from-emerald-500/20 to-emerald-600/5', text: 'text-emerald-400' }
+      ].map((item, idx) => (
+        <div key={idx} className={`bg-gradient-to-br ${item.color} p-3.5 rounded-xl border border-white/5 flex flex-col justify-between hover:border-white/10 transition-all duration-300`}>
+          <div className="flex items-center justify-between mb-1.5">
+            <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">{item.label}</span>
+            <item.icon className={`w-3.5 h-3.5 ${item.text}`} />
+          </div>
+          <p className="text-lg font-black text-white tabular-nums leading-none">
+            {loading ? '...' : `${stats?.currency || '฿'}${(item.value || 0).toLocaleString()}`}
+          </p>
         </div>
-      )}
-      <div className="absolute inset-0 flex flex-col items-center justify-center">
-        <span className="text-4xl font-extrabold text-gray-900 dark:text-white">{loading ? '--' : stats?.health?.score}</span>
-        <span className="text-[10px] font-bold uppercase tracking-tighter" style={{ color: getHealthColor(stats?.health?.score || 0) }}>
-          {stats?.health?.status}
-        </span>
-      </div>
+      ))}
     </div>
   </div>
 );
+
+const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boolean; healthData: any[] }) => {
+  const score = stats?.health?.score || 0;
+  const color = getHealthColor(score);
+  
+  return (
+    <div className="relative overflow-hidden bg-white dark:bg-slate-900 shadow-xl rounded-2xl p-6 h-full flex flex-col items-center justify-between border border-gray-100 dark:border-slate-800/50 group">
+      {/* Dynamic Background Glow */}
+      <div 
+        className="absolute inset-0 opacity-10 dark:opacity-20 transition-all duration-1000 blur-3xl pointer-events-none"
+        style={{ 
+          background: `radial-gradient(circle at center, ${color} 0%, transparent 70%)` 
+        }} 
+      />
+      
+      <div className="relative z-10 w-full flex items-center justify-between mb-2">
+        <div>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Financial Health</h2>
+        </div>
+        <div className={`p-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700`}>
+          <Activity className="w-5 h-5" style={{ color }} />
+        </div>
+      </div>
+
+      <div className="relative z-10 w-full aspect-square max-w-[200px]">
+        {!loading && stats ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={healthData}
+                cx="50%"
+                cy="50%"
+                innerRadius={72}
+                outerRadius={88}
+                startAngle={210}
+                endAngle={-30}
+                paddingAngle={0}
+                dataKey="value"
+                stroke="none"
+                cornerRadius={20}
+              >
+                <Cell fill={color} />
+                <Cell fill="rgba(0,0,0,0.04)" className="dark:fill-white/5" />
+              </Pie>
+            </PieChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+        
+        {/* Central Score Display */}
+        <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
+          <div className="relative">
+            <span className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
+              {loading ? '--' : score}
+            </span>
+            <span className="absolute -top-1 -right-4 text-xs font-black text-slate-400 opacity-50">%</span>
+          </div>
+          <div className="mt-2 px-3 py-1 rounded-full border shadow-sm transition-all duration-500" style={{ backgroundColor: `${color}10`, borderColor: `${color}30` }}>
+            <span className="text-[10px] font-black uppercase tracking-widest" style={{ color }}>
+              {stats?.health?.status || 'Calculating...'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Mini Insight */}
+      <div className="relative z-10 w-full mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700/50">
+        <div className="flex items-center gap-2">
+          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
+          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
+            {score >= 80 ? 'Portfolio is excellently balanced.' : score >= 50 ? 'Steady progress, keep it up.' : 'Action required on liabilities.'}
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
 const MetricCard = ({ 
   label, 
@@ -231,110 +276,147 @@ const MetricCard = ({
   onMonthChange,
   onYearChange
 }: any) => (
-  <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-5 h-full flex flex-col justify-between">
-    <div className="flex items-center justify-between mb-4">
-      <div className="flex items-center gap-2">
-        <div className={`p-2 rounded-xl ${bg} ${color}`}>
+  <div className="group relative overflow-hidden bg-slate-900/40 dark:bg-slate-950/40 backdrop-blur-xl rounded-3xl p-7 h-full flex flex-col justify-between border border-white/5 hover:border-white/10 transition-all duration-500 hover:translate-y-[-4px] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+    {/* Subtle Glow Accent */}
+    <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl opacity-10 transition-opacity group-hover:opacity-20 pointer-events-none ${bg}`} />
+    
+    <div className="relative z-10 flex items-center justify-between mb-6">
+      <div className="flex items-center gap-4">
+        <div className={`p-3 rounded-2xl ${bg} ${color} shadow-lg shadow-black/20 ring-1 ring-white/10`}>
           <Icon className="w-5 h-5" />
         </div>
-        <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{label}</h3>
+        <div>
+          <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{label}</h3>
+          <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Performance Metric</p>
+        </div>
       </div>
       {hasDateFilter && (
-        <div className="flex items-center gap-1 bg-gray-50 dark:bg-gray-900/50 px-2 py-0.5 rounded-lg border dark:border-gray-700 scale-90 origin-right">
-           <select value={selectedMonth} onChange={(e) => onMonthChange(parseInt(e.target.value))} className="bg-transparent border-none text-[10px] font-bold text-blue-600 dark:text-blue-400 focus:ring-0 cursor-pointer p-0">
-             {MONTHS.map((m, i) => (<option key={i} value={i}>{m.substring(0, 3)}</option>))}
+        <div className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1.5 rounded-xl border border-white/5">
+           <select 
+             value={selectedMonth} 
+             onChange={(e) => onMonthChange(parseInt(e.target.value))} 
+             className="bg-transparent border-none text-[10px] font-black text-blue-400 focus:ring-0 cursor-pointer p-0 appearance-none text-center"
+           >
+             {MONTHS.map((m, i) => (<option key={i} value={i} className="bg-slate-900">{m.substring(0, 3)}</option>))}
            </select>
-           <select value={selectedYear} onChange={(e) => onYearChange(parseInt(e.target.value))} className="bg-transparent border-none text-[10px] font-bold text-gray-500 dark:text-gray-400 focus:ring-0 cursor-pointer p-0 border-l dark:border-gray-700">
-             {YEARS.map(y => (<option key={y} value={y}>{y}</option>))}
+           <div className="w-px h-3 bg-white/10 mx-0.5" />
+           <select 
+             value={selectedYear} 
+             onChange={(e) => onYearChange(parseInt(e.target.value))} 
+             className="bg-transparent border-none text-[10px] font-black text-slate-500 focus:ring-0 cursor-pointer p-0 appearance-none text-center"
+           >
+             {YEARS.map(y => (<option key={y} value={y} className="bg-slate-900">{y}</option>))}
            </select>
         </div>
       )}
     </div>
-    
-    <div className="flex-1 flex flex-col justify-center">
-      <p className="text-4xl font-black text-gray-900 dark:text-white mb-4">
-        {loading ? '...' : value}
-      </p>
-      
-      {score !== undefined && (
-        <div className="space-y-2">
-          <div className="w-full bg-gray-100 dark:bg-gray-700 h-2 rounded-full overflow-hidden">
-            <div className={`h-full transition-all duration-1000 ${color.replace('text-', 'bg-')}`} style={{ width: loading ? '0%' : `${(score / 25) * 100}%` }} />
-          </div>
-          <div className="flex justify-between items-center">
-            <span className="text-[10px] text-gray-400 font-bold uppercase">Performance Score</span>
-            <span className="text-xs font-black text-gray-900 dark:text-white">{loading ? '--' : score}/25</span>
-          </div>
-        </div>
-      )}
+
+    <div className="relative z-10 mb-8">
+      <div className="flex items-baseline gap-1">
+        <span className="text-xl font-black text-white tracking-tighter tabular-nums leading-none">
+          {loading ? '...' : value}
+        </span>
+      </div>
+    </div>
+
+    {/* Modern Metric Score Indicator */}
+    <div className="relative z-10 mt-auto pt-4 border-t border-white/5">
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Metric Score</span>
+        <span className={`text-[10px] font-black tabular-nums ${score >= 20 ? 'text-emerald-400' : score >= 10 ? 'text-amber-400' : 'text-rose-400'}`}>
+          {score}<span className="text-slate-600 ml-0.5">/25</span>
+        </span>
+      </div>
+      <div className="relative w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+        <div 
+          className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(255,255,255,0.1)] ${
+            score >= 20 ? 'bg-emerald-500 shadow-emerald-500/20' : score >= 10 ? 'bg-amber-500 shadow-amber-500/20' : 'bg-rose-500 shadow-rose-500/20'
+          }`}
+          style={{ width: `${(score / 25) * 100}%` }}
+        />
+      </div>
     </div>
   </div>
 );
 
-const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, visualYear, pieData, onModeChange, onVisualMonthChange, onVisualYearChange }: any) => (
-  <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6 h-full flex flex-col">
-    <div className="flex items-center justify-between mb-6">
-      <div className="flex items-center gap-2">
-        <Calendar className="w-6 h-6 text-blue-600" />
-        <h2 className="text-xl font-bold text-gray-900 dark:text-white">Monthly Summary (Aggregated)</h2>
-      </div>
+const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, visualYear, pieData, selectedMonthData, onModeChange, onVisualMonthChange, onVisualYearChange }: any) => (
+  <div className="bg-slate-900/40 dark:bg-slate-950/40 backdrop-blur-xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+    <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
       <div className="flex items-center gap-4">
+        <div className="p-3.5 bg-blue-600 rounded-2xl text-white shadow-xl shadow-blue-600/20 ring-1 ring-white/20">
+          <Calendar className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-white tracking-tight leading-none">Financial Velocity</h2>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">Monthly Performance Flow</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-6">
         {!isLocked && (
-          <div className="flex items-center bg-gray-100 dark:bg-gray-700 p-1 rounded-lg">
-            {['table', 'chart', 'both'].map((m: any) => (
-              <button key={m} onClick={() => onModeChange(m)} className={`p-1.5 rounded-md transition-all ${cashflowMode === m ? 'bg-white dark:bg-gray-600 shadow-sm text-blue-600' : 'text-gray-400 hover:text-gray-600'}`}>
-                {m === 'table' ? <Table className="w-4 h-4" /> : m === 'chart' ? <BarChart2 className="w-4 h-4" /> : <Layers className="w-4 h-4" />}
+          <div className="flex items-center bg-black/40 p-1.5 rounded-2xl border border-white/5 shadow-inner">
+            {[
+              { m: 'table', icon: Table },
+              { m: 'chart', icon: BarChart2 },
+              { m: 'both', icon: Layers }
+            ].map(({ m, icon: Icon }) => (
+              <button
+                key={m}
+                onClick={() => onModeChange(m)}
+                className={`p-2 rounded-xl transition-all duration-300 ${
+                  cashflowMode === m 
+                    ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
+                    : 'text-slate-500 hover:text-slate-300'
+                }`}
+              >
+                <Icon className="w-4 h-4" />
               </button>
             ))}
           </div>
         )}
-        <Link href="/dashboard/monthly" className="inline-flex items-center gap-1 text-sm font-medium text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 transition-colors">Detailed Monthly Report<TrendingUp className="w-4 h-4" /></Link>
       </div>
     </div>
     
-    <div className={`grid gap-8 flex-1 ${cashflowMode === 'both' ? 'grid-cols-1 xl:grid-cols-2' : 'grid-cols-1'}`}>
+    <div className={`flex flex-col gap-8 flex-1 ${cashflowMode === 'both' ? 'xl:flex-row' : ''}`}>
       {(cashflowMode === 'table' || cashflowMode === 'both') && (
-        <div className="overflow-x-auto border dark:border-gray-700 rounded-2xl">
-          <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700 text-[10px] sm:text-xs">
-            <thead className="bg-gray-50 dark:bg-gray-900/50">
-              <tr>
-                <th className="px-4 py-4 text-left font-bold text-gray-500 uppercase tracking-wider">Month</th>
-                <th className="px-4 py-4 text-right font-bold text-green-600 uppercase tracking-wider border-l dark:border-gray-700/50">Income</th>
-                <th className="px-4 py-4 text-right font-bold text-red-600 uppercase tracking-wider">Expense</th>
-                <th className="px-4 py-4 text-right font-bold text-blue-600 uppercase tracking-wider">Savings</th>
-                <th className="px-4 py-4 text-right font-bold text-purple-600 uppercase tracking-wider">Goal Savings</th>
-                <th className="px-4 py-4 text-right font-bold text-cyan-600 uppercase tracking-wider">Investments</th>
-                <th className="px-4 py-4 text-right font-bold text-orange-600 uppercase tracking-wider">Debt Paid</th>
-                <th className="px-4 py-4 text-right font-bold text-blue-800 dark:text-blue-400 uppercase tracking-wider bg-blue-50/30 dark:bg-blue-900/10">Net Balance</th>
-                <th className="px-4 py-4 text-right font-bold text-gray-400 uppercase tracking-wider">Records</th>
+        <div className={`overflow-x-auto bg-slate-900/30 rounded-3xl border border-white/5 custom-scrollbar ${cashflowMode === 'both' ? 'xl:w-3/5' : 'w-full'}`}>
+          <table className="min-w-[800px] w-full text-[11px]">
+            <thead>
+              <tr className="bg-slate-800/40 backdrop-blur-md border-b border-white/5">
+                <th className="sticky left-0 bg-slate-800/80 backdrop-blur-md px-5 py-4 text-left font-black text-slate-500 uppercase tracking-widest z-10">Month</th>
+                <th className="px-5 py-4 text-right font-black text-emerald-400 uppercase tracking-widest">Income</th>
+                <th className="px-5 py-4 text-right font-black text-rose-400 uppercase tracking-widest">Expense</th>
+                <th className="px-5 py-4 text-right font-black text-blue-400 uppercase tracking-widest">Savings</th>
+                <th className="px-5 py-4 text-right font-black text-purple-400 uppercase tracking-widest">Goal</th>
+                <th className="px-5 py-4 text-right font-black text-cyan-400 uppercase tracking-widest">Invest</th>
+                <th className="px-5 py-4 text-right font-black text-amber-400 uppercase tracking-widest">Debt</th>
+                <th className="px-5 py-4 text-right font-black text-white uppercase tracking-widest bg-blue-600/10">Net</th>
               </tr>
             </thead>
-            <tbody className="divide-y dark:divide-gray-700">
+            <tbody className="divide-y divide-white/5">
               {(stats?.monthlyCashflow || []).map((m: any) => (
-                <tr key={m.month} className="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">
-                  <td className="px-4 py-3 font-bold text-gray-700 dark:text-gray-300">{m.month}</td>
-                  <td className="px-4 py-3 text-right text-green-600 font-mono font-medium border-l dark:border-gray-700/50">
+                <tr key={m.month} className="hover:bg-white/5 transition-colors group">
+                  <td className="sticky left-0 bg-slate-900/80 backdrop-blur-md px-5 py-4 font-black text-slate-300 z-10">{m.month}</td>
+                  <td className="px-5 py-4 text-right text-emerald-400/80 group-hover:text-emerald-400 font-bold tabular-nums">
                     {m.income.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
-                  <td className="px-4 py-3 text-right text-red-600 font-mono font-medium">
-                    {m.expense.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <td className="px-5 py-4 text-right text-rose-400/80 group-hover:text-rose-400 font-bold tabular-nums">
+                    {m.expense.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
-                  <td className="px-4 py-3 text-right text-blue-600 font-mono font-medium">
+                  <td className="px-5 py-4 text-right text-blue-400/80 group-hover:text-blue-400 font-bold tabular-nums">
                     {m.saving.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
-                  <td className="px-4 py-3 text-right text-purple-600 font-mono font-medium">
+                  <td className="px-5 py-4 text-right text-purple-400/80 group-hover:text-purple-400 font-bold tabular-nums">
                     {m.goalSaving.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
-                  <td className="px-4 py-3 text-right text-cyan-600 font-mono font-medium">
+                  <td className="px-5 py-4 text-right text-cyan-400/80 group-hover:text-cyan-400 font-bold tabular-nums">
                     {m.invest.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
-                  <td className="px-4 py-3 text-right text-orange-600 font-mono font-medium">
+                  <td className="px-5 py-4 text-right text-amber-400/80 group-hover:text-amber-400 font-bold tabular-nums">
                     {m.debt.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
-                  <td className={`px-4 py-3 text-right font-bold font-mono bg-blue-50/30 dark:bg-blue-900/10 ${m.net >= 0 ? 'text-blue-600' : 'text-red-600'}`}>
-                    {m.net.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                  <td className={`px-5 py-4 text-right font-black tabular-nums bg-blue-600/5 ${m.net >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
+                    {m.net.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
                   </td>
-                  <td className="px-4 py-3 text-right text-[10px] text-gray-400 font-medium">{m.records} txs</td>
                 </tr>
               ))}
             </tbody>
@@ -342,36 +424,71 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
         </div>
       )}
       {(cashflowMode === 'chart' || cashflowMode === 'both') && (
-        <div className="min-h-[400px] flex-1 w-full bg-white dark:bg-gray-800 p-2 rounded-lg border dark:border-gray-700 flex flex-col">
-           <div className="flex items-center justify-between mb-4 px-4">
-              <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider">Monthly Distribution</h3>
-              <div className="flex items-center gap-2 bg-gray-50 dark:bg-gray-900/50 px-2 py-1 rounded-lg border dark:border-gray-700">
-                 <select value={visualMonth} onChange={(e) => onVisualMonthChange(parseInt(e.target.value))} className="bg-transparent border-none text-xs font-bold text-blue-600 dark:text-blue-400 p-0 focus:ring-0">
-                   {MONTHS.map((m, i) => (<option key={i} value={i}>{m.substring(0, 3)}</option>))}
+        <div className={`min-h-[450px] bg-slate-900/30 p-8 rounded-[2rem] border border-white/5 flex flex-col ${cashflowMode === 'both' ? 'xl:w-2/5' : 'w-full'}`}>
+           <div className="flex items-center justify-between mb-8">
+              <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Flow Distribution</h3>
+              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+                 <select value={visualMonth} onChange={(e) => onVisualMonthChange(parseInt(e.target.value))} className="bg-transparent border-none text-[10px] font-black text-blue-400 p-0 focus:ring-0 appearance-none text-center">
+                   {MONTHS.map((m, i) => (<option key={i} value={i} className="bg-slate-900">{m.substring(0, 3)}</option>))}
                  </select>
-                 <select value={visualYear} onChange={(e) => onVisualYearChange(parseInt(e.target.value))} className="bg-transparent border-none text-xs font-bold text-gray-500 dark:text-gray-400 p-0 border-l dark:border-gray-700 pl-2 focus:ring-0">
-                   {YEARS.map(y => (<option key={y} value={y}>{y}</option>))}
+                 <div className="w-px h-3 bg-white/10 mx-1" />
+                 <select value={visualYear} onChange={(e) => onVisualYearChange(parseInt(e.target.value))} className="bg-transparent border-none text-[10px] font-black text-slate-500 p-0 focus:ring-0 appearance-none text-center">
+                   {YEARS.map(y => (<option key={y} value={y} className="bg-slate-900">{y}</option>))}
                  </select>
               </div>
            </div>
            {!loading && pieData.length > 0 ? (
-             <div className="flex-1 flex flex-col md:flex-row items-center justify-around">
-               <div className="h-[250px] w-[250px]">
+             <div className="flex-1 flex flex-col items-center justify-center gap-10">
+               <div className="h-[260px] w-full max-w-[260px] relative shrink-0">
                   <ResponsiveContainer width="100%" height="100%">
-                    <PieChart><Pie data={pieData} cx="50%" cy="50%" innerRadius={60} outerRadius={100} paddingAngle={5} dataKey="value" stroke="none">{pieData.map((entry: any, index: number) => (<Cell key={`cell-${index}`} fill={entry.color} />))}</Pie><Tooltip formatter={(value: any) => `${value.toLocaleString()}`} contentStyle={{ borderRadius: '12px', border: 'none', boxShadow: '0 10px 15px -3px rgb(0 0 0 / 0.1)' }} /></PieChart>
+                    <PieChart>
+                      <Pie 
+                        data={pieData} 
+                        cx="50%" 
+                        cy="50%" 
+                        innerRadius={70} 
+                        outerRadius={105} 
+                        paddingAngle={8} 
+                        dataKey="value" 
+                        stroke="none"
+                        cornerRadius={12}
+                      >
+                        {pieData.map((entry: any, index: number) => (
+                          <Cell key={`cell-${index}`} fill={entry.color} />
+                        ))}
+                      </Pie>
+                      <Tooltip 
+                        formatter={(value: any) => `฿${value.toLocaleString()}`} 
+                        contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)' }} 
+                        itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
+                      />
+                    </PieChart>
                   </ResponsiveContainer>
+                  {/* Central Indicator */}
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                    <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Net Flow</span>
+                    <span className="text-2xl font-black text-white tabular-nums tracking-tighter">
+                      ฿{(selectedMonthData?.net || 0).toLocaleString()}
+                    </span>
+                  </div>
                </div>
-               <div className="space-y-3 min-w-[200px]">
+               <div className="w-full grid grid-cols-1 gap-2">
                   {pieData.map((item: any, idx: number) => (
-                     <div key={idx} className="flex items-center justify-between p-2 rounded-lg bg-gray-50/50 dark:bg-gray-900/30">
-                        <div className="flex items-center gap-2"><div className="w-3 h-3 rounded-full" style={{ backgroundColor: item.color }} /><span className="text-xs font-medium text-gray-600 dark:text-gray-400">{item.name}</span></div>
-                        <span className="text-sm font-bold text-gray-900 dark:text-white">{item.value.toLocaleString()}</span>
+                     <div key={idx} className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all">
+                        <div className="flex items-center gap-3 overflow-hidden">
+                          <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                          <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">{item.name}</span>
+                        </div>
+                        <span className="text-xs font-black text-white tabular-nums tracking-tight shrink-0">฿{item.value.toLocaleString()}</span>
                      </div>
                   ))}
                </div>
              </div>
            ) : (
-             <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 dark:bg-gray-900/50 rounded-lg"><Info className="w-10 h-10 text-gray-300 mb-2" /><p className="text-gray-400 text-sm italic">No data recorded for {MONTHS[visualMonth]} {visualYear}</p></div>
+             <div className="flex-1 flex flex-col items-center justify-center bg-black/20 rounded-3xl border border-dashed border-white/10">
+               <Info className="w-10 h-10 text-slate-700 mb-3" />
+               <p className="text-slate-500 text-xs font-black uppercase tracking-widest">No data for {MONTHS[visualMonth]} {visualYear}</p>
+             </div>
            )}
         </div>
       )}
@@ -380,62 +497,155 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
 );
 
 const GoalTrackingCard = ({ stats }: any) => (
-  <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-5 h-full">
-    <div className="flex items-center gap-2 mb-4"><TrendingUp className="w-5 h-5 text-purple-600" /><h2 className="text-lg font-bold text-gray-900 dark:text-white">Multi-Goal Tracking</h2></div>
+  <div className="bg-slate-900/40 dark:bg-slate-950/40 backdrop-blur-xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+    <div className="flex items-center justify-between mb-10">
+      <div className="flex items-center gap-4">
+        <div className="p-3.5 bg-purple-600 rounded-2xl text-white shadow-xl shadow-purple-600/20 ring-1 ring-white/20">
+          <TrendingUp className="w-6 h-6" />
+        </div>
+        <div>
+          <h2 className="text-2xl font-black text-white tracking-tight leading-none">Milestones</h2>
+          <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">Asset Growth Tracking</p>
+        </div>
+      </div>
+      <div className="px-4 py-2 bg-purple-500/10 rounded-2xl border border-purple-500/20">
+        <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">
+          {stats?.goalTracking?.length || 0} Targets Active
+        </span>
+      </div>
+    </div>
+
     {stats?.goalTracking?.length > 0 ? (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
         {stats.goalTracking.map((goal: any) => (
-          <div key={goal.id} className="p-3 border dark:border-gray-700 rounded-xl bg-gray-50/30 dark:bg-gray-800/50 hover:border-purple-300 dark:hover:border-purple-900 transition-colors flex flex-col justify-between h-full">
-            <div className="flex justify-between items-start gap-2 mb-2">
-              <h3 className="text-xs font-bold text-gray-900 dark:text-white leading-tight">{goal.name}</h3>
-              <span className="text-[8px] font-bold text-purple-600 dark:text-purple-400 bg-purple-50 dark:bg-purple-900/20 px-1.5 py-0.5 rounded uppercase flex-shrink-0">Goal</span>
-            </div>
-            <div>
-              <div className="flex items-baseline justify-between mb-1.5">
-                <span className="text-[10px] text-gray-500 dark:text-gray-400">Saved</span>
-                <span className="text-sm font-bold text-gray-900 dark:text-white">{(stats?.currency || '฿')}{(goal.currentAmount || 0).toLocaleString()}</span>
+          <div key={goal.id} className="group relative p-8 min-h-[240px] rounded-[2.5rem] bg-white/[0.03] border border-white/5 hover:border-purple-500/30 transition-all duration-500 hover:translate-y-[-4px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex flex-col justify-between overflow-hidden">
+            {/* Top Accent Line */}
+            <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
+            
+            <div className="flex justify-between items-start mb-6">
+              <div className="flex flex-col">
+                <h3 className="text-sm font-black text-slate-300 group-hover:text-white transition-colors leading-tight mb-1">{goal.name}</h3>
+                <span className="text-[8px] font-black text-purple-500/80 uppercase tracking-widest">Asset Goal</span>
               </div>
-              <div className="w-full bg-gray-200 dark:bg-gray-700 h-1 rounded-full overflow-hidden">
-                <div className="bg-purple-500 h-full transition-all duration-1000" style={{ width: '100%' }} />
+              <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.6)]" />
+            </div>
+            
+            <div className="space-y-5">
+              <div className="flex flex-col">
+                <span className="text-[10px] font-black text-slate-500 uppercase tracking-widest mb-2">Current Progress</span>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-2xl font-black text-white tabular-nums leading-none tracking-tighter">
+                    {(stats?.currency || '฿')}{(goal.currentAmount || 0).toLocaleString()}
+                  </span>
+                </div>
+              </div>
+              
+              <div className="space-y-2.5">
+                <div className="relative w-full h-2 bg-black/40 rounded-full overflow-hidden shadow-inner">
+                  <div 
+                    className="absolute top-0 left-0 bg-gradient-to-r from-purple-600 via-indigo-500 to-blue-500 h-full rounded-full transition-all duration-1000 group-hover:shadow-[0_0_15px_rgba(139,92,246,0.4)]" 
+                    style={{ width: '100%' }} 
+                  />
+                </div>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <span className="text-[9px] font-black text-slate-600 uppercase">Tracked</span>
+                  </div>
+                  <span className="text-[10px] font-black text-purple-400 uppercase tracking-wider animate-pulse">On Track</span>
+                </div>
               </div>
             </div>
           </div>
         ))}
       </div>
     ) : (
-      <div className="text-center py-6 border-2 border-dashed dark:border-gray-700 rounded-xl"><Info className="w-8 h-8 text-gray-300 mx-auto mb-1" /><p className="text-gray-500 dark:text-gray-400 text-xs">No active goals found.</p></div>
+      <div className="flex-1 flex flex-col items-center justify-center py-16 bg-black/20 rounded-[2.5rem] border border-dashed border-white/10">
+        <div className="p-4 bg-slate-900 rounded-2xl mb-4 border border-white/5">
+          <Info className="w-8 h-8 text-slate-600" />
+        </div>
+        <p className="text-slate-500 text-xs font-black uppercase tracking-[0.2em]">No active milestones detected</p>
+      </div>
     )}
   </div>
 );
 
 const SystemAdminDashboard = ({ stats }: { stats: any }) => (
-  <div className="pb-12 space-y-8 animate-in fade-in duration-700">
-    <div className="bg-gradient-to-r from-blue-600 to-indigo-700 rounded-2xl p-8 shadow-xl text-white">
-      <h1 className="text-3xl font-bold mb-2">System Management Dashboard</h1>
-      <p className="text-blue-100 opacity-90">Welcome back, Super Admin. Here is the global status of Nexworth.</p>
+  <div className="pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    {/* Admin Hero Section */}
+    <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 rounded-[2.5rem] p-10 shadow-2xl group">
+      <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700" />
+      <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+        <div>
+          <h1 className="text-4xl font-black text-white mb-3 tracking-tighter">System Intelligence</h1>
+          <p className="text-blue-100/70 font-medium text-lg max-w-xl leading-relaxed">
+            Global monitoring and organization oversight for the Nexworth network.
+          </p>
+        </div>
+        <div className="flex items-center gap-4">
+          <div className="px-6 py-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10">
+            <p className="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1">Status</p>
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span className="text-sm font-black text-white uppercase">Systems Operational</span>
+            </div>
+          </div>
+        </div>
+      </div>
     </div>
+
+    {/* Metric Overview */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {[
-        { label: 'Total Organizations', value: stats.summary.totalOrganizations, icon: ShieldCheck, color: 'border-blue-500', bg: 'bg-blue-100 dark:bg-blue-900/30', text: 'text-blue-600 dark:text-blue-400' },
-        { label: 'Total Users', value: stats.summary.totalUsers, icon: Activity, color: 'border-green-500', bg: 'bg-green-100 dark:bg-green-900/30', text: 'text-green-600 dark:text-green-400' },
-        { label: 'Total Transactions', value: stats.summary.totalTransactions?.toLocaleString(), icon: TrendingUp, color: 'border-orange-500', bg: 'bg-orange-100 dark:bg-orange-900/30', text: 'text-orange-600 dark:text-orange-400' }
+        { label: 'Total Organizations', value: stats.summary.totalOrganizations, icon: Building2, color: 'from-blue-600/20 to-blue-700/5', text: 'text-blue-400', border: 'border-blue-500/20' },
+        { label: 'Total Users', value: stats.summary.totalUsers, icon: Activity, color: 'from-indigo-600/20 to-indigo-700/5', text: 'text-indigo-400', border: 'border-indigo-500/20' },
+        { label: 'Total Transactions', value: stats.summary.totalTransactions?.toLocaleString(), icon: TrendingUp, color: 'from-emerald-600/20 to-emerald-700/5', text: 'text-emerald-400', border: 'border-emerald-500/20' }
       ].map((card, i) => (
-        <div key={i} className={`bg-white dark:bg-gray-800 p-6 rounded-2xl shadow-lg border-l-4 ${card.color} hover:scale-[1.02] transition-transform`}>
-          <div className="flex items-center gap-4">
-            <div className={`p-3 ${card.bg} rounded-xl ${card.text}`}><card.icon className="w-6 h-6" /></div>
-            <div><p className="text-sm font-medium text-gray-500 dark:text-gray-400">{card.label}</p><p className="text-3xl font-bold text-gray-900 dark:text-white">{card.value}</p></div>
+        <div key={i} className={`bg-gradient-to-br ${card.color} p-8 rounded-3xl border ${card.border} shadow-xl hover:translate-y-[-4px] transition-all duration-300`}>
+          <div className="flex items-center gap-6">
+            <div className={`p-4 bg-slate-900/50 rounded-2xl ${card.text} border border-white/5`}><card.icon className="w-7 h-7" /></div>
+            <div>
+              <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1">{card.label}</p>
+              <p className="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">{card.value}</p>
+            </div>
           </div>
         </div>
       ))}
     </div>
-    <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg overflow-hidden border dark:border-gray-700">
-      <div className="p-6 border-b dark:border-gray-700 flex justify-between items-center"><h2 className="text-xl font-bold text-gray-900 dark:text-white">Recent Organizations</h2><Link href="/dashboard/organizations" className="text-blue-600 hover:underline text-sm font-medium">View All</Link></div>
+
+    {/* Organization Oversight Table */}
+    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800/50">
+      <div className="p-8 border-b dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+        <div>
+          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Organization Oversight</h2>
+          <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Recent network activity</p>
+        </div>
+        <Link href="/dashboard/organizations" className="px-5 py-2.5 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 uppercase tracking-wider">
+          View All Network
+        </Link>
+      </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="bg-gray-50 dark:bg-gray-900/50"><tr><th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Org Name</th><th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Created At</th><th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase">Users</th><th className="px-6 py-4 text-xs font-semibold text-gray-500 uppercase text-right">Status</th></tr></thead>
-          <tbody className="divide-y dark:divide-gray-700">
+          <thead className="bg-slate-50/80 dark:bg-slate-800/50">
+            <tr>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Organization</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Established</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">User Base</th>
+              <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Access Level</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y dark:divide-slate-800">
             {stats.recentOrganizations?.map((org: any) => (
-              <tr key={org.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50"><td className="px-6 py-4 font-medium text-gray-900 dark:text-white">{org.name}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{new Date(org.createdAt).toLocaleDateString()}</td><td className="px-6 py-4 text-gray-500 dark:text-gray-400">{org._count.users} Users</td><td className="px-6 py-4 text-right"><span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">Active</span></td></tr>
+              <tr key={org.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                <td className="px-8 py-5 font-black text-slate-900 dark:text-white">{org.name}</td>
+                <td className="px-8 py-5 text-slate-500 font-medium tabular-nums">{new Date(org.createdAt).toLocaleDateString()}</td>
+                <td className="px-8 py-5 text-slate-500 font-bold tabular-nums">{org._count.users} Active</td>
+                <td className="px-8 py-5 text-right">
+                  <span className="px-3 py-1 rounded-lg text-[9px] font-black bg-emerald-500/10 text-emerald-500 border border-emerald-500/20 uppercase tracking-wider">
+                    Full Access
+                  </span>
+                </td>
+              </tr>
             ))}
           </tbody>
         </table>
@@ -522,19 +732,22 @@ export default function DashboardPage() {
     fetchCashflow();
   }, []);
 
-  const pieData = useMemo(() => {
-    if (!stats?.monthlyCashflow) return [];
-    const monthName = MONTHS[visualMonth].substring(0, 3);
-    const monthData = stats.monthlyCashflow.find((m: any) => m.month === monthName);
-    if (!monthData) return [];
-    return [
-      { name: 'Income', value: monthData.income, color: '#3b82f6' },
-      { name: 'Expense', value: monthData.expense, color: '#ef4444' },
-      { name: 'Saving', value: monthData.saving + monthData.goalSaving, color: '#22c55e' },
-      { name: 'Investment', value: monthData.invest, color: '#06b6d4' },
-      { name: 'Debt Paid', value: monthData.debt, color: '#f59e0b' },
-    ].filter(d => d.value > 0);
+  const selectedMonthData = useMemo(() => {
+    if (!stats?.monthlyCashflow) return null;
+    const targetCode = getMonthCode(visualMonth);
+    return stats.monthlyCashflow.find((m: any) => getMonthCode(m.month) === targetCode);
   }, [stats, visualMonth]);
+
+  const pieData = useMemo(() => {
+    if (!selectedMonthData) return [];
+    return [
+      { name: 'Income', value: selectedMonthData.income, color: '#3b82f6' },
+      { name: 'Expense', value: selectedMonthData.expense, color: '#ef4444' },
+      { name: 'Saving', value: selectedMonthData.saving + selectedMonthData.goalSaving, color: '#22c55e' },
+      { name: 'Investment', value: selectedMonthData.invest, color: '#06b6d4' },
+      { name: 'Debt Paid', value: selectedMonthData.debt, color: '#f59e0b' },
+    ].filter(d => d.value > 0);
+  }, [selectedMonthData]);
 
   const healthData = useMemo(() => [
     { name: 'Score', value: stats?.health?.score || 0 },
@@ -545,9 +758,9 @@ export default function DashboardPage() {
   const getGoalsHeight = useCallback((breakpoint: 'lg' | 'md' | 'sm') => {
     const goals = goalsLength;
     if (goals === 0) return 4;
-    let cols = breakpoint === 'lg' ? 4 : breakpoint === 'md' ? 2 : 1;
+    const cols = breakpoint === 'sm' ? 1 : 2;
     const rows = Math.ceil(goals / cols);
-    return Math.max(4, Math.ceil(1.5 + (rows * 3)));
+    return Math.max(4, Math.ceil(1.5 + (rows * 4.5)));
   }, [goalsLength]);
 
   const toggleWidget = useCallback((key: string) => {
@@ -579,7 +792,7 @@ export default function DashboardPage() {
       
       { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${(stats?.health?.metrics.investmentRatio * 100).toFixed(1)}%`} score={stats?.health?.scores.investment} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
       
-      { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} visualMonth={visualMonth} visualYear={visualYear} pieData={pieData} onModeChange={updateCashflowMode} onVisualMonthChange={setVisualMonth} onVisualYearChange={setVisualYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
+      { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} visualMonth={visualMonth} visualYear={visualYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onVisualMonthChange={setVisualMonth} onVisualYearChange={setVisualYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
       
       { key: 'goals', content: <GoalTrackingCard stats={stats} />, defaultLayout: { lg: { x: 0, y: 25, w: 12, h: getGoalsHeight('lg'), minW: 4, minH: 3 }, md: { x: 0, y: 36, w: 10, h: getGoalsHeight('md') }, sm: { x: 0, y: 52, w: 6, h: getGoalsHeight('sm') } } }
     ];
@@ -597,25 +810,65 @@ export default function DashboardPage() {
   if (stats?.isSystemAdmin) return <SystemAdminDashboard stats={stats} />;
 
   return (
-    <div className="pb-12 space-y-4">
-      {/* CASHFLOW Banner - minimal */}
+    <div className="min-h-screen bg-[#020617] text-slate-200 selection:bg-blue-500/30">
+      {/* Premium Mesh Background */}
+      <div className="fixed inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-blue-900/20 blur-[120px]" />
+        <div className="absolute bottom-[10%] right-[-5%] w-[30%] h-[30%] rounded-full bg-purple-900/10 blur-[120px]" />
+        <div className="absolute top-[20%] right-[10%] w-[25%] h-[25%] rounded-full bg-emerald-900/5 blur-[100px]" />
+      </div>
+
+      <div className="relative z-10 p-4 lg:p-8 space-y-8 max-w-[1600px] mx-auto">
       {cashflowAccounts && cashflowAccounts.length > 0 && (
-        <div className="relative flex items-center gap-4 px-4 py-2 rounded-lg bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm text-sm">
-          <span className="text-[10px] font-bold text-gray-400 uppercase tracking-widest whitespace-nowrap shrink-0">Balance</span>
-          <div className="flex items-center gap-5 flex-wrap flex-1">
+        <div className="relative z-40 flex items-center gap-4 px-5 py-2.5 rounded-2xl bg-white dark:bg-slate-900 border border-gray-100 dark:border-slate-800 shadow-sm text-sm group">
+          {/* Decorative Background Wrapper */}
+          <div className="absolute inset-0 rounded-2xl overflow-hidden pointer-events-none">
+            <div className="absolute top-0 right-0 -mt-8 -mr-8 w-24 h-24 bg-blue-500/5 rounded-full blur-2xl" />
+            <div className="absolute top-0 left-0 w-1 h-full bg-blue-500" />
+            <div className="absolute top-0 right-0 w-1/3 h-full bg-gradient-to-l from-blue-50/50 dark:from-blue-900/10 to-transparent" />
+          </div>
+          
+          <span className="relative z-10 text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] whitespace-nowrap shrink-0">Cashflow Status</span>
+          <div className="relative z-10 flex items-center gap-6 flex-wrap flex-1">
             {cashflowAccounts.map((acc: any) => {
               const balance = acc.balance ?? 0;
               const isLow = balance < thresholds.low;
               const isMid = balance >= thresholds.low && balance < thresholds.mid;
+              
+              // Bank Icon Logic
+              const bankName = acc.bank?.name || acc.name || '';
+              const bankColor = acc.bank?.color || (
+                bankName.includes('กสิกร') ? '#00A950' : 
+                bankName.includes('กรุงเทพ') ? '#1e40af' : 
+                bankName.includes('ไทยพาณิชย์') ? '#4c1d95' : 
+                bankName.includes('กรุงไทย') ? '#00ADEF' : 
+                bankName.includes('กรุงศรี') ? '#FFD100' : 
+                bankName.includes('TTB') ? '#004daa' : '#64748b'
+              );
+              const initial = (acc.bank?.code?.[0] || bankName[0] || 'B').toUpperCase();
+
               return (
-                <div key={acc.id} className="flex items-center gap-2">
-                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    isLow ? 'bg-red-400 animate-pulse' : isMid ? 'bg-amber-400' : 'bg-emerald-400'
-                  }`} />
-                  <span className="text-[11px] text-gray-400 dark:text-gray-500">{acc.name}</span>
-                  <span className={`text-sm font-bold tabular-nums ${
-                    isLow ? 'text-red-500' : isMid ? 'text-amber-500' : 'text-emerald-500'
-                  }`}>฿{balance.toLocaleString()}</span>
+                <div key={acc.id} className="flex items-center gap-3">
+                  {/* Bank Avatar Icon */}
+                  <div className="relative">
+                    <div 
+                      className="w-7 h-7 rounded-lg flex items-center justify-center text-[11px] font-black text-white shadow-sm transition-transform hover:scale-110"
+                      style={{ backgroundColor: bankColor }}
+                    >
+                      {initial}
+                    </div>
+                    {/* Status Indicator Dot */}
+                    <div className={`absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full ring-2 ring-white dark:ring-slate-900 ${
+                      isLow ? 'bg-rose-500 animate-pulse' : isMid ? 'bg-amber-500' : 'bg-emerald-500'
+                    }`} />
+                  </div>
+
+                  <div className="flex flex-col">
+                    <span className="text-[10px] font-bold text-slate-400 dark:text-slate-500 leading-none mb-0.5">{acc.name}</span>
+                    <span className={`text-sm font-black tabular-nums tracking-tight leading-none ${
+                      isLow ? 'text-rose-500' : isMid ? 'text-amber-500' : 'text-emerald-500'
+                    }`}>฿{balance.toLocaleString()}</span>
+                  </div>
                 </div>
               );
             })}
@@ -624,68 +877,96 @@ export default function DashboardPage() {
           {/* Settings Button */}
           <button
             onClick={() => setShowThresholdSettings(p => !p)}
-            className="ml-auto p-1 rounded text-gray-300 hover:text-gray-500 dark:hover:text-gray-300 transition-colors"
+            className="relative z-10 ml-auto p-1.5 rounded-lg text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
             title="ตั้งค่าเกณฑ์สถานะ"
           >
-            <Settings2 className="w-3.5 h-3.5" />
+            <Settings2 className="w-4 h-4" />
           </button>
 
           {/* Threshold Settings Popover */}
           {showThresholdSettings && (
-            <div className="absolute right-0 top-9 z-50 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-xl p-4 w-64 animate-in fade-in slide-in-from-top-2 duration-150">
-              <p className="text-[11px] font-bold text-gray-500 uppercase tracking-wider mb-3">ตั้งค่าเกณฑ์สถานะ</p>
-              <div className="space-y-3">
-                <div className="flex items-center justify-between gap-3">
+            <div className="absolute right-4 top-12 z-50 bg-white dark:bg-slate-900 border border-gray-200 dark:border-slate-800 rounded-2xl shadow-2xl p-5 w-72 animate-in fade-in slide-in-from-top-2 duration-200 ring-1 ring-black/5">
+              <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Threshold Settings</p>
+              <div className="space-y-4">
+                <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-red-400" />
-                    <span className="text-xs text-gray-600 dark:text-gray-400">ต่ำกว่า (แดง)</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.4)]" />
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Low (Red)</span>
                   </div>
-                  <input
+                   <input
                     type="number"
-                    className="w-28 text-right text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-red-400"
+                    className="w-32 text-right text-xs font-black border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                     value={thresholds.low}
                     onChange={e => {
-                      const val = { ...thresholds, low: Number(e.target.value) };
+                      const val = { ...thresholds, low: e.target.value === '' ? 0 : Number(e.target.value) };
                       setThresholds(val);
                       localStorage.setItem('nexworth-cashflow-thresholds', JSON.stringify(val));
                     }}
                   />
                 </div>
-                <div className="flex items-center justify-between gap-3">
+                <div className="flex items-center justify-between gap-4">
                   <div className="flex items-center gap-2">
-                    <div className="w-2 h-2 rounded-full bg-amber-400" />
-                    <span className="text-xs text-gray-600 dark:text-gray-400">ต่ำกว่า (เหลือง)</span>
+                    <div className="w-2.5 h-2.5 rounded-full bg-amber-500 shadow-[0_0_8px_rgba(245,158,11,0.4)]" />
+                    <span className="text-xs font-bold text-slate-600 dark:text-slate-400">Mid (Yellow)</span>
                   </div>
                   <input
                     type="number"
-                    className="w-28 text-right text-xs border border-gray-200 dark:border-gray-600 rounded-lg px-2 py-1.5 bg-gray-50 dark:bg-gray-700 text-gray-800 dark:text-gray-200 focus:outline-none focus:ring-1 focus:ring-amber-400"
+                    className="w-32 text-right text-xs font-black border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     value={thresholds.mid}
                     onChange={e => {
-                      const val = { ...thresholds, mid: Number(e.target.value) };
+                      const val = { ...thresholds, mid: e.target.value === '' ? 0 : Number(e.target.value) };
                       setThresholds(val);
                       localStorage.setItem('nexworth-cashflow-thresholds', JSON.stringify(val));
                     }}
                   />
                 </div>
               </div>
-              <div className="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700 grid grid-cols-3 gap-1 text-[10px] text-gray-400">
-                <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-red-400"/>{'< '}{thresholds.low.toLocaleString()}</span>
-                <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-amber-400"/>{thresholds.low.toLocaleString()}–{thresholds.mid.toLocaleString()}</span>
-                <span className="flex items-center gap-1"><div className="w-1.5 h-1.5 rounded-full bg-emerald-400"/>{'> '}{thresholds.mid.toLocaleString()}</span>
+              <div className="mt-4 pt-4 border-t border-slate-100 dark:border-slate-800 grid grid-cols-3 gap-2 text-[9px] font-black text-slate-400 uppercase tracking-tighter text-center">
+                <div className="bg-rose-50 dark:bg-rose-900/10 py-1.5 rounded-lg border border-rose-100 dark:border-rose-900/30">{'< '}{thresholds.low.toLocaleString()}</div>
+                <div className="bg-amber-50 dark:bg-amber-900/10 py-1.5 rounded-lg border border-amber-100 dark:border-amber-900/30">{thresholds.low.toLocaleString()}–{thresholds.mid.toLocaleString()}</div>
+                <div className="bg-emerald-50 dark:bg-emerald-900/10 py-1.5 rounded-lg border border-emerald-100 dark:border-emerald-900/30">{'> '}{thresholds.mid.toLocaleString()}</div>
               </div>
             </div>
           )}
         </div>
       )}
       {!isLocked && (
-        <div className="bg-white dark:bg-gray-800 p-4 rounded-xl shadow-sm border border-blue-200 dark:border-blue-900/50 animate-in slide-in-from-top-2 duration-300">
-           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-              <div className="flex items-center gap-2"><div className="p-2 bg-blue-100 dark:bg-blue-900/40 rounded-lg text-blue-600 dark:text-blue-400"><Layout className="w-4 h-4" /></div><div><h3 className="text-sm font-bold text-gray-900 dark:text-white">Widget Manager</h3><p className="text-[10px] text-gray-500 dark:text-gray-400">Enable or disable dashboard components</p></div></div>
-              <div className="flex flex-wrap items-center gap-2">{ALL_WIDGETS.map(widget => { const isActive = enabledWidgets.includes(widget.key); return (<button key={widget.key} onClick={() => toggleWidget(widget.key)} className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${isActive ? 'bg-blue-50 dark:bg-blue-900/20 text-blue-600 dark:text-blue-400 ring-1 ring-blue-200 dark:ring-blue-800' : 'bg-gray-50 dark:bg-gray-900/30 text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-900/50 border border-transparent'}`}><widget.icon className="w-3.5 h-3.5" />{widget.label}{isActive ? <Eye className="w-3.5 h-3.5 ml-1" /> : <EyeOff className="w-3.5 h-3.5 ml-1" />}</button>); })}</div>
+        <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl shadow-xl border border-blue-100 dark:border-blue-900/30 animate-in slide-in-from-top-4 duration-500">
+           <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-blue-600 rounded-2xl text-white shadow-lg shadow-blue-500/20">
+                  <Layout className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-slate-900 dark:text-white tracking-tight">Widget Architecture</h3>
+                  <p className="text-[11px] font-medium text-slate-400 dark:text-slate-500 uppercase tracking-widest">Customize your dashboard grid</p>
+                </div>
+              </div>
+              <div className="flex flex-wrap items-center gap-2">
+                {ALL_WIDGETS.map(widget => { 
+                  const isActive = enabledWidgets.includes(widget.key); 
+                  return (
+                    <button 
+                      key={widget.key} 
+                      onClick={() => toggleWidget(widget.key)} 
+                      className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all uppercase tracking-wider ${
+                        isActive 
+                          ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 ring-2 ring-blue-500/20' 
+                          : 'bg-slate-50 dark:bg-slate-800/50 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 border border-transparent'
+                      }`}
+                    >
+                      <widget.icon className="w-3.5 h-3.5" />
+                      {widget.label}
+                      {isActive ? <Eye className="w-3.5 h-3.5 opacity-80" /> : <EyeOff className="w-3.5 h-3.5 opacity-40" />}
+                    </button>
+                  ); 
+                })}
+              </div>
            </div>
         </div>
       )}
       <DashboardGrid items={gridItems} isLocked={isLocked} setIsLocked={setIsLocked} />
     </div>
-  );
+  </div>
+);
 }

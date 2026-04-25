@@ -138,28 +138,31 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
         </div>
       ) : (
         <>
-          {/* Controls */}
-          <div className="flex items-center justify-end gap-2 mb-4 sticky top-0 z-20 py-2 bg-gray-50/80 dark:bg-[#0f172a]/80 backdrop-blur-sm">
-            <button
-              onClick={() => setIsLocked(!isLocked)}
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg transition-all shadow-sm ${
-                isLocked 
-                  ? 'bg-white dark:bg-gray-800 text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 border dark:border-gray-700' 
-                  : 'bg-blue-600 text-white hover:bg-blue-700 ring-2 ring-blue-500/20 shadow-blue-500/20'
-              }`}
-            >
-              {isLocked ? <Lock className="w-3.5 h-3.5" /> : <Unlock className="w-3.5 h-3.5" />}
-              {isLocked ? 'Layout Locked' : 'Editing Mode'}
-            </button>
-            {!isLocked && (
+          {/* Dashboard Controls - Fixed Floating Bottom-Right */}
+          <div className="fixed bottom-8 right-8 z-[100] pointer-events-none group/controls">
+            <div className="flex flex-col-reverse items-center gap-2 p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.3)] pointer-events-auto ring-1 ring-black/5 transition-all duration-500 hover:scale-105">
               <button
-                onClick={handleReset}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-lg bg-amber-500 text-white hover:bg-amber-600 shadow-sm shadow-amber-500/20 transition-all"
+                onClick={() => setIsLocked(!isLocked)}
+                className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 ${
+                  isLocked 
+                    ? 'text-slate-400 hover:text-blue-500 dark:text-slate-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20' 
+                    : 'bg-blue-600 text-white shadow-xl shadow-blue-500/30 ring-4 ring-blue-500/10'
+                }`}
+                title={isLocked ? "Unlock Layout" : "Lock Layout"}
               >
-                <RotateCcw className="w-3.5 h-3.5" />
-                Reset Layout
+                {isLocked ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
               </button>
-            )}
+              
+              {!isLocked && (
+                <button
+                  onClick={handleReset}
+                  className="w-12 h-12 flex items-center justify-center rounded-2xl bg-amber-500 text-white hover:bg-amber-600 shadow-xl shadow-amber-500/30 transition-all duration-300 animate-in zoom-in slide-in-from-bottom-2"
+                  title="Reset Layout"
+                >
+                  <RotateCcw className="w-5 h-5" />
+                </button>
+              )}
+            </div>
           </div>
 
           {width > 0 && (

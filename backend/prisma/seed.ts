@@ -73,6 +73,30 @@ async function main() {
 
   await setupOrganizationDefaults(org.id, admin.id);
 
+  // 4. Create Dedicated TEST Org (for E2E/Regression)
+  let testOrg = await prisma.organization.findFirst({ where: { name: 'Test Environment' } });
+  if (!testOrg) {
+    console.log('Creating Test Environment org...');
+    testOrg = await prisma.organization.create({ data: { name: 'Test Environment' } });
+  }
+
+  let testUser = await prisma.user.findFirst({ where: { email: 'test@nexworth.net' } });
+  if (!testUser) {
+    console.log('Creating test@nexworth.net...');
+    const hashedTestPassword = await bcrypt.hash('TestP@ssw0rd123', 10);
+    testUser = await prisma.user.create({
+      data: {
+        email: 'test@nexworth.net',
+        passwordHash: hashedTestPassword,
+        firstName: 'Test',
+        lastName: 'User',
+        organizationId: testOrg.id
+      },
+    });
+  }
+
+  await setupOrganizationDefaults(testOrg.id, testUser.id);
+
   console.log('--- Seeding Completed Successfully ---');
 }
 

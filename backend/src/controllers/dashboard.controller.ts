@@ -133,34 +133,34 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
       if (txDate.getFullYear() === currentYear) {
         const mIdx = txDate.getMonth();
         const accType = tx.account?.type || tx.asset?.account?.type || tx.liability?.account?.type;
-        if (!accType) continue; 
-
-        const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName === 'โอนเข้าภายใน' || categoryName === 'โอนออกภายใน';
         
-        // --- LOGIC: Prioritize Account Type for Cashflow Categorization ---
-        // This ensures money moving into specific "buckets" is counted correctly regardless of behavior.
-        if (accType === 'GOAL') {
-          monthlyCashflow[mIdx].goalSaving += amount;
-        } else if (INVESTMENT_TYPES.includes(accType)) {
-          monthlyCashflow[mIdx].invest += amount;
-        } else if (accType === 'LIABILITY') {
-          // Only count it as "Debt Paid" if it's decreasing the liability (money flowing into the account)
-          // In Nexworth, transfers INTO liability accounts usually have linkedTransactionId or specific behaviors.
-          // For simplicity, we count transfers/income into liability accounts as repayments.
-          if (isInternalTransfer || behavior === 'INCOME' || behavior === 'DEBT') {
-            monthlyCashflow[mIdx].debt += amount;
+        const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName?.includes('โอน');
+        
+        // 1. Primary Cashflow (Strict Income & Expense)
+        if (!isInternalTransfer) {
+          if (behavior === 'INCOME') {
+            monthlyCashflow[mIdx].income += amount;
+          } else if (behavior === 'EXPENSE') {
+            monthlyCashflow[mIdx].expense += amount;
           }
-        } else if (accType === 'SAVING' || accType === 'EMERGENCY') {
-          // Internal transfers into savings are counted as "Saving"
+        }
+
+        // 2. Loans (Internal Movements)
+        if (behavior === 'LOAN_BORROW' || behavior === 'LOAN_REPAY') {
+          monthlyCashflow[mIdx].internalLoan += amount;
+        }
+
+        // 3. Buckets (Savings, Investment, Debt Repayment, Goals)
+        if (accType === 'GOAL' || behavior === 'GOAL_SAVING') {
+          monthlyCashflow[mIdx].goalSaving += amount;
+        } else if (INVESTMENT_TYPES.includes(accType) || behavior === 'INVESTMENT') {
+          monthlyCashflow[mIdx].invest += amount;
+        } else if (accType === 'LIABILITY' || behavior === 'DEBT') {
+          monthlyCashflow[mIdx].debt += amount;
+        } else if (accType === 'SAVING' || accType === 'EMERGENCY' || behavior === 'SAVING' || behavior === 'EMERGENCY') {
+          // If it's a transfer to these accounts OR specifically marked as saving/emergency
           if (isInternalTransfer || behavior === 'SAVING' || behavior === 'EMERGENCY') {
             monthlyCashflow[mIdx].saving += amount;
-          }
-        } else {
-          // Regular Income/Expense for "CASHFLOW" or "BANK" accounts
-          if (behavior === 'INCOME' || behavior === 'LOAN_BORROW') {
-            monthlyCashflow[mIdx].income += amount;
-          } else if (behavior === 'EXPENSE' || behavior === 'LOAN_REPAY') {
-            monthlyCashflow[mIdx].expense += amount;
           }
         }
         
