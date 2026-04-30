@@ -40,3 +40,5 @@ LOAN_SYNC_LOGIC.md
 Untitled-1776941419265.n8n
 backend/src/generated/
 backend/scratch/
+backend/prisma/*.ts
+!backend/prisma/seed.ts
