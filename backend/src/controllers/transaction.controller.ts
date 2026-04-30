@@ -198,7 +198,7 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
         if (isRequestedExpenseLike) {
             // --- EXPENSE TRANSFER (e.g. Salary for Mother, Debt Repayment) ---
             // The Source (From) is the primary leg that gets the user's category.
-            const sourceTx = await processSingleLeg(fromAccountId as string, body.categoryId, baseTypeId as string, null);
+            const sourceTx = await processSingleLeg(fromAccountId as string, body.categoryId, baseTypeId as string, null, 'FROM');
             
             // The Destination (To) gets a generic "Transfer In" (Income) category.
             let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'INCOME' }});
@@ -209,18 +209,18 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
                 transferInCat = await prisma.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.organizationId, typeId: incomeType!.id, isActive: true } });
             }
             
-            const destTx = await processSingleLeg(toAccountId as string, transferInCat.id, incomeType!.id, sourceTx.id);
+            const destTx = await processSingleLeg(toAccountId as string, transferInCat.id, incomeType!.id, sourceTx.id, 'TO');
             
             await prisma.transaction.update({
                where: { id: sourceTx.id },
                data: { linkedTransactionId: destTx.id }
             });
-
+ 
             return reply.status(201).send({ message: 'Expense transfer created successfully', transaction: sourceTx });
         } else {
             // --- INCOME/INVESTMENT/SAVING TRANSFER ---
             // The Destination (To) is the primary leg that gets the user's category.
-            const destTx = await processSingleLeg(toAccountId as string, body.categoryId, baseTypeId as string, null);
+            const destTx = await processSingleLeg(toAccountId as string, body.categoryId, baseTypeId as string, null, 'TO');
             
             // The Source (From) gets a generic "Transfer Out" (Expense) category.
             let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE' }});
@@ -230,8 +230,8 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
             if (!transferOutCat) {
                 transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.organizationId, typeId: expenseType!.id, isActive: true } });
             }
-
-            const sourceTx = await processSingleLeg(fromAccountId as string, transferOutCat.id, expenseType!.id, destTx.id);
+ 
+            const sourceTx = await processSingleLeg(fromAccountId as string, transferOutCat.id, expenseType!.id, destTx.id, 'FROM');
             
             await prisma.transaction.update({
                where: { id: destTx.id },
