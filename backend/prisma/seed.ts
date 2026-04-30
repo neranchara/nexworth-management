@@ -95,148 +95,167 @@ async function main() {
     });
   }
 
-  await setupOrganizationDefaults(testOrg.id, testUser.id);
-  
-  // --- Seed Test Data for test@nexworth.net ---
-  console.log('Seeding financial data for test@nexworth.net...');
-  
-  // 1. Fetch Types and Categories
-  const types = await prisma.transactionType.findMany({ where: { organizationId: testOrg.id } });
-  const incomeType = types.find(t => t.behavior === 'INCOME');
-  const savingType = types.find(t => t.behavior === 'SAVING');
-  const transferType = types.find(t => t.behavior === 'INTERNAL_TRANSFER');
-  
-  // Ensure a category for internal transfer exists
-  let transferCat = await prisma.transactionCategory.findFirst({
-    where: { organizationId: testOrg.id, name: 'โอนเงิน', typeId: transferType?.id }
-  });
-  if (!transferCat && transferType) {
-    transferCat = await prisma.transactionCategory.create({
-      data: { name: 'โอนเงิน', typeId: transferType.id, organizationId: testOrg.id }
+  // --- NEW: Add test-admin@nexworth.net for Regression Tests ---
+  let testAdmin = await prisma.user.findFirst({ where: { email: 'test-admin@nexworth.net' } });
+  if (!testAdmin) {
+    console.log('Creating test-admin@nexworth.net...');
+    const hashedAdminPassword = await bcrypt.hash('P@ssword123', 10);
+    testAdmin = await prisma.user.create({
+      data: {
+        email: 'test-admin@nexworth.net',
+        passwordHash: hashedAdminPassword,
+        firstName: 'Test',
+        lastName: 'Admin',
+        organizationId: testOrg.id
+      },
     });
   }
 
-  const categories = await prisma.transactionCategory.findMany({ where: { organizationId: testOrg.id } });
-  const salaryCat = categories.find(c => c.name === 'เงินเดือน' && c.typeId === incomeType?.id);
-  const savingCat = categories.find(c => c.name === 'เงินออม' && c.typeId === savingType?.id);
-  const emergencyCat = categories.find(c => c.name === 'เงินฉุกเฉิน' && c.typeId === savingType?.id);
-
-  // 2. Create Accounts
-  const kbank = await prisma.bank.findFirst({ where: { organizationId: testOrg.id, code: 'KBANK' } });
-  const scb = await prisma.bank.findFirst({ where: { organizationId: testOrg.id, code: 'SCB' } });
-
-  // Main Bank Account
-  const mainAccount = await prisma.account.upsert({
-    where: { id: 'test-main-account-id' }, // Stable ID for testing
-    update: {},
-    create: {
-      id: 'test-main-account-id',
-      name: 'Main KBANK',
-      type: 'BANK',
-      bankId: kbank?.id,
-      userId: testUser.id,
-      organizationId: testOrg.id,
-      actualDate: new Date()
+  await setupOrganizationDefaults(testOrg.id, testUser.id);
+  await setupOrganizationDefaults(testOrg.id, testAdmin.id);
+  
+  // --- Seed Test Data for BOTH test users ---
+  for (const currentUser of [testUser, testAdmin]) {
+    console.log(`Seeding financial data for ${currentUser.email}...`);
+    
+    // 1. Fetch Types and Categories
+    const types = await prisma.transactionType.findMany({ where: { organizationId: testOrg.id } });
+    const incomeType = types.find(t => t.behavior === 'INCOME');
+    const savingType = types.find(t => t.behavior === 'SAVING');
+    const transferType = types.find(t => t.behavior === 'INTERNAL_TRANSFER');
+    
+    // Ensure a category for internal transfer exists
+    let transferCat = await prisma.transactionCategory.findFirst({
+      where: { organizationId: testOrg.id, name: 'โอนเงิน', typeId: transferType?.id }
+    });
+    if (!transferCat && transferType) {
+      transferCat = await prisma.transactionCategory.create({
+        data: { name: 'โอนเงิน', typeId: transferType.id, organizationId: testOrg.id }
+      });
     }
-  });
 
-  // Emergency Account
-  const emergencyAccount = await prisma.account.upsert({
-    where: { id: 'test-emergency-account-id' },
-    update: {},
-    create: {
-      id: 'test-emergency-account-id',
-      name: 'Emergency SCB',
-      type: 'EMERGENCY',
-      bankId: scb?.id,
-      userId: testUser.id,
-      organizationId: testOrg.id,
-      actualDate: new Date()
-    }
-  });
+    const categories = await prisma.transactionCategory.findMany({ where: { organizationId: testOrg.id } });
+    const salaryCat = categories.find(c => c.name === 'เงินเดือน' && c.typeId === incomeType?.id);
+    const savingCat = categories.find(c => c.name === 'เงินออม' && c.typeId === savingType?.id);
+    const emergencyCat = categories.find(c => c.name === 'เงินฉุกเฉิน' && c.typeId === savingType?.id);
 
-  // Saving Account
-  const savingAccount = await prisma.account.upsert({
-    where: { id: 'test-saving-account-id' },
-    update: {},
-    create: {
-      id: 'test-saving-account-id',
-      name: 'Saving Fund',
-      type: 'SAVING',
-      userId: testUser.id,
-      organizationId: testOrg.id,
-      actualDate: new Date()
-    }
-  });
+    // 2. Create Accounts
+    const kbank = await prisma.bank.findFirst({ where: { organizationId: testOrg.id, code: 'KBANK' } });
+    const scb = await prisma.bank.findFirst({ where: { organizationId: testOrg.id, code: 'SCB' } });
 
-  // 3. Ensure Assets exist (required by dashboard logic)
-  for (const acc of [mainAccount, emergencyAccount, savingAccount]) {
-    await prisma.asset.upsert({
-      where: { accountId: acc.id },
+    // Main Bank Account
+    const mainAccount = await prisma.account.upsert({
+      where: { id: `main-acc-${currentUser.id}` },
       update: {},
       create: {
-        accountId: acc.id,
-        userId: testUser.id,
+        id: `main-acc-${currentUser.id}`,
+        name: 'Main KBANK',
+        type: 'BANK',
+        bankId: kbank?.id,
+        userId: currentUser.id,
         organizationId: testOrg.id,
-        amount: 0 // Will be updated by transactions or manual entry if needed
+        actualDate: new Date()
       }
     });
+
+    // Emergency Account
+    const emergencyAccount = await prisma.account.upsert({
+      where: { id: `emergency-acc-${currentUser.id}` },
+      update: {},
+      create: {
+        id: `emergency-acc-${currentUser.id}`,
+        name: 'Emergency SCB',
+        type: 'EMERGENCY',
+        bankId: scb?.id,
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        actualDate: new Date()
+      }
+    });
+
+    // Saving Account
+    const savingAccount = await prisma.account.upsert({
+      where: { id: `saving-acc-${currentUser.id}` },
+      update: {},
+      create: {
+        id: `saving-acc-${currentUser.id}`,
+        name: 'Saving Fund',
+        type: 'SAVING',
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        actualDate: new Date()
+      }
+    });
+
+    // 3. Ensure Assets exist
+    for (const acc of [mainAccount, emergencyAccount, savingAccount]) {
+      await prisma.asset.upsert({
+        where: { accountId: acc.id },
+        update: {},
+        create: {
+          accountId: acc.id,
+          userId: currentUser.id,
+          organizationId: testOrg.id,
+          amount: 0
+        }
+      });
+    }
+
+    // 4. Create Transactions for current month
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // Salary Income -> Main Account (100,000)
+    await prisma.transaction.create({
+      data: {
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        accountId: mainAccount.id,
+        categoryId: salaryCat!.id,
+        typeId: incomeType!.id,
+        amount: 100000,
+        description: 'Monthly Salary',
+        date: new Date(currentYear, currentMonth, 1),
+        assetId: (await prisma.asset.findUnique({ where: { accountId: mainAccount.id } }))?.id
+      }
+    });
+
+    // EMERGENCY Income (45,000)
+    await prisma.transaction.create({
+      data: {
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        accountId: emergencyAccount.id,
+        categoryId: emergencyCat!.id,
+        typeId: incomeType!.id,
+        amount: 45000,
+        description: 'Emergency Fund Top-up',
+        date: new Date(currentYear, currentMonth, 5),
+        assetId: (await prisma.asset.findUnique({ where: { accountId: emergencyAccount.id } }))?.id
+      }
+    });
+
+    // INTERNAL TRANSFER -> From Main to Saving (5,000)
+    await prisma.transaction.create({
+      data: {
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        accountId: mainAccount.id,
+        categoryId: transferCat!.id,
+        typeId: transferType!.id,
+        amount: 5000,
+        description: 'Transfer to Savings',
+        date: new Date(currentYear, currentMonth, 10),
+        assetId: (await prisma.asset.findUnique({ where: { accountId: mainAccount.id } }))?.id
+      }
+    });
+
+    // Update Asset amounts
+    await prisma.asset.update({ where: { accountId: mainAccount.id }, data: { amount: 95000 } });
+    await prisma.asset.update({ where: { accountId: emergencyAccount.id }, data: { amount: 45000 } });
+    await prisma.asset.update({ where: { accountId: savingAccount.id }, data: { amount: 5000 } });
   }
-
-  // 4. Create Transactions for current month
-  const today = new Date();
-  const currentMonth = today.getMonth();
-  const currentYear = today.getFullYear();
-
-  // Salary Income -> Main Account (100,000)
-  await prisma.transaction.create({
-    data: {
-      userId: testUser.id,
-      organizationId: testOrg.id,
-      accountId: mainAccount.id,
-      categoryId: salaryCat!.id,
-      typeId: incomeType!.id,
-      amount: 100000,
-      description: 'Monthly Salary',
-      date: new Date(currentYear, currentMonth, 1),
-      assetId: (await prisma.asset.findUnique({ where: { accountId: mainAccount.id } }))?.id
-    }
-  });
-
-  // EMERGENCY Income -> Emergency Account (45,000) - To satisfy regression test
-  await prisma.transaction.create({
-    data: {
-      userId: testUser.id,
-      organizationId: testOrg.id,
-      accountId: emergencyAccount.id,
-      categoryId: emergencyCat!.id,
-      typeId: incomeType!.id, // Using INCOME behavior for this specific test case requirement
-      amount: 45000,
-      description: 'Emergency Fund Top-up',
-      date: new Date(currentYear, currentMonth, 5),
-      assetId: (await prisma.asset.findUnique({ where: { accountId: emergencyAccount.id } }))?.id
-    }
-  });
-
-  // INTERNAL TRANSFER -> From Main to Saving (5,000) - To satisfy regression test (Internal as Saving)
-  await prisma.transaction.create({
-    data: {
-      userId: testUser.id,
-      organizationId: testOrg.id,
-      accountId: mainAccount.id,
-      categoryId: transferCat!.id,
-      typeId: transferType!.id,
-      amount: 5000,
-      description: 'Transfer to Savings',
-      date: new Date(currentYear, currentMonth, 10),
-      assetId: (await prisma.asset.findUnique({ where: { accountId: mainAccount.id } }))?.id
-    }
-  });
-
-  // Update Asset amounts to reflect transactions for dashboard display
-  await prisma.asset.update({ where: { accountId: mainAccount.id }, data: { amount: 95000 } });
-  await prisma.asset.update({ where: { accountId: emergencyAccount.id }, data: { amount: 45000 } });
-  await prisma.asset.update({ where: { accountId: savingAccount.id }, data: { amount: 5000 } });
 
   console.log('--- Seeding Completed Successfully ---');
 }
