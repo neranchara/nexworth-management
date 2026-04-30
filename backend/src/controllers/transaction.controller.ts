@@ -260,19 +260,18 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
     const body = transactionSchema.parse(request.body);
-    const { 
-      accountId, fromAccountId, toAccountId, categoryId, typeId, 
+    let { 
+      accountId: reqAccountId, fromAccountId, toAccountId, categoryId, typeId, 
       amount, description, date, actualDate, note, direction 
     } = body;
 
-    body.amount = Math.abs(body.amount);
+    amount = Math.abs(amount);
 
     const existing = await prisma.transaction.findUnique({ where: { id } });
     if (!existing || existing.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Transaction not found or unauthorized' });
     }
 
-    let categoryId = body.categoryId;
     const category = await prisma.transactionCategory.findFirst({ 
       where: { 
         id: categoryId,
@@ -282,7 +281,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     });
     if (!category) return reply.status(404).send({ error: 'Category not found or unauthorized' });
     
-    let typeId = body.typeId || category.typeId;
+    typeId = typeId || category.typeId;
     const categoryBehavior = category.type.behavior;
 
     // Sync linked transaction
@@ -304,8 +303,8 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     console.log('[DEBUG-UPDATE] isTransferIntent:', isTransferIntent, 'wasTransfer:', wasTransfer);
 
     // --- Category Routing for Transfers ---
-    let primaryCategoryId = categoryId;
-    let primaryTypeId = typeId;
+    let primaryCategoryId: string = categoryId;
+    let primaryTypeId: string = (typeId as string);
     let linkedCategoryId: string | undefined = undefined;
     let linkedTypeId: string | undefined = undefined;
 
@@ -383,7 +382,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       }
     }
 
-    let targetPrimaryAccountId = accountId || (isExistingExpense ? fromAccountId : toAccountId) || toAccountId || fromAccountId || existing.accountId;
+    let targetPrimaryAccountId = reqAccountId || (isExistingExpense ? fromAccountId : toAccountId) || toAccountId || fromAccountId || existing.accountId;
     
     let assetId: string | null = null;
     let liabilityId: string | null = null;
@@ -410,15 +409,15 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         accountId: targetPrimaryAccountId as string,
         categoryId: primaryCategoryId,
         amount: amount,
-        description: description !== undefined ? description : existing.description,
-        note: note !== undefined ? note : existing.note,
+        description: description || undefined,
+        note: note || undefined,
         typeId: primaryTypeId,
-        assetId,
-        liabilityId,
-        date: date ? new Date(date) : existing.date,
+        assetId: assetId || undefined,
+        liabilityId: liabilityId || undefined,
+        date: date ? new Date(date) : (existing.date as Date),
         actualDate: actualDate !== undefined ? (actualDate ? new Date(actualDate) : null) : existing.actualDate,
         linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
-        direction: direction || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_BORROW', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO'))
+        direction: (direction as string) || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_BORROW', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO'))
       },
       include: {
         account: { include: { bank: { select: { name: true, color: true } } } },
