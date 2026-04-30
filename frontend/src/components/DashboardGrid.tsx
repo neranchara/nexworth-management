@@ -188,6 +188,7 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
             <div className="flex flex-col-reverse items-center gap-2 p-2 bg-white/80 dark:bg-slate-900/80 backdrop-blur-2xl rounded-3xl border border-slate-200/50 dark:border-slate-800/50 shadow-[0_20px_50px_rgba(0,0,0,0.3)] pointer-events-auto ring-1 ring-black/5 transition-all duration-500 hover:scale-105">
               <button
                 onClick={() => setIsLocked(!isLocked)}
+                data-testid="dashboard-grid-btn-toggle-lock"
                 className={`w-12 h-12 flex items-center justify-center rounded-2xl transition-all duration-300 ${
                   isLocked 
                     ? 'text-slate-400 hover:text-blue-500 dark:text-slate-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20' 
@@ -201,6 +202,7 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
               {!isLocked && (
                 <button
                   onClick={handleReset}
+                  data-testid="dashboard-grid-btn-reset-layout"
                   className="w-12 h-12 flex items-center justify-center rounded-2xl bg-amber-500 text-white hover:bg-amber-600 shadow-xl shadow-amber-500/30 transition-all duration-300 animate-in zoom-in slide-in-from-bottom-2"
                   title="Reset Layout"
                 >
@@ -233,7 +235,11 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
               useCSSTransforms={mounted}
             >
               {items.map(item => (
-                <div key={item.key} className="grid-item-wrapper bg-white dark:bg-gray-800 rounded-2xl shadow-sm border dark:border-gray-700/50 overflow-hidden group">
+                <div 
+                  key={item.key} 
+                  data-testid={`dashboard-grid-item-${item.key}`}
+                  className="grid-item-wrapper bg-white dark:bg-gray-800 rounded-2xl shadow-sm border dark:border-gray-700/50 overflow-hidden group"
+                >
                   {!isLocked && (
                     <div className="grid-drag-handle absolute top-3 right-3 p-1.5 cursor-grab active:cursor-grabbing text-gray-400 hover:text-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/30 rounded-lg z-20 transition-colors opacity-0 group-hover:opacity-100">
                       <GripVertical className="w-4 h-4" />

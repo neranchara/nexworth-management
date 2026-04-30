@@ -259,6 +259,7 @@ export default function LoanTrackerPage() {
         {hasPermission('loan-tracker', 'canCreate') && (
           <button
             onClick={() => setShowNewLoanModal(true)}
+            data-testid="loans-list-btn-add-loan"
             className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
           >
             <PlusCircle className="w-5 h-5" /> สร้างรายการยืมใหม่
@@ -346,15 +347,16 @@ export default function LoanTrackerPage() {
                   <Wallet className="w-4 h-4 text-gray-400" />
                   {loan.accountName}
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 text-right">{loan.totalBorrowed.toLocaleString()}</td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600 text-right">{loan.totalRepaid.toLocaleString()}</td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 text-right">{loan.balance.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 text-right" data-testid={`loans-list-td-borrowed-${loan.code}`}>{loan.totalBorrowed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600 text-right" data-testid={`loans-list-td-repaid-${loan.code}`}>{loan.totalRepaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 text-right" data-testid={`loans-list-td-balance-${loan.code}`}>{loan.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {hasPermission('loan-tracker', 'canUpdate') && (
                     <div className="flex justify-end gap-2">
                       <button 
                         disabled={loan.balance === 0}
                         onClick={() => { setSelectedLoan(loan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'REPAY' }) }}
+                        data-testid={`loans-list-btn-repay-${loan.code}`}
                         className={`px-3 py-1 rounded ${loan.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-green-600 hover:text-green-900 bg-green-50'}`}
                       >
                         คืนเงิน
@@ -365,12 +367,14 @@ export default function LoanTrackerPage() {
                           setShowRepayModal(true); 
                           setRepayForm({ ...repayForm, type: 'BORROW' });
                         }}
+                        data-testid={`loans-list-btn-borrow-more-${loan.code}`}
                         className="px-3 py-1 rounded text-orange-600 hover:text-orange-900 bg-orange-50"
                       >
                         ยืมเพิ่ม
                       </button>
                       <button 
                         onClick={() => openEditModal(loan)}
+                        data-testid={`loans-list-btn-edit-${loan.code}`}
                         className="px-3 py-1 rounded text-blue-600 hover:text-blue-900 bg-blue-50"
                       >
                         แก้ไข
@@ -392,12 +396,14 @@ export default function LoanTrackerPage() {
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">รายละเอียด / วัตถุประสงค์</label>
                 <input required type="text" className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
-                  value={newLoanForm.name} onChange={e => setNewLoanForm({...newLoanForm, name: e.target.value})} placeholder="เช่น ทำบ้าน, จ่ายภาษี" />
+                  value={newLoanForm.name} onChange={e => setNewLoanForm({...newLoanForm, name: e.target.value})} placeholder="เช่น ทำบ้าน, จ่ายภาษี" 
+                  data-testid="loans-form-input-name" />
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">บัญชีต้นทาง (ยืมจากบัญชีไหน)</label>
                 <select required className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
-                  value={newLoanForm.accountId} onChange={e => setNewLoanForm({...newLoanForm, accountId: e.target.value})}>
+                  value={newLoanForm.accountId} onChange={e => setNewLoanForm({...newLoanForm, accountId: e.target.value})}
+                  data-testid="loans-form-sel-account">
                   <option value="">เลือกบัญชี...</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
@@ -406,7 +412,8 @@ export default function LoanTrackerPage() {
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">จำนวนเงิน {isEditing && <span className="text-[10px] text-gray-400 font-normal ml-1">(ไม่สามารถเปลี่ยนได้ผ่านการแก้ไขนี้)</span>}</label>
                 <input required type="number" step="0.01" className={`w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 ${isEditing ? 'bg-gray-100 opacity-60 cursor-not-allowed' : ''}`}
                   disabled={isEditing}
-                  value={newLoanForm.initialAmount} onChange={e => setNewLoanForm({...newLoanForm, initialAmount: e.target.value})} />
+                  value={newLoanForm.initialAmount} onChange={e => setNewLoanForm({...newLoanForm, initialAmount: e.target.value})} 
+                  data-testid="loans-form-input-amount" />
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
                 <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1 flex items-center gap-2">
@@ -416,12 +423,13 @@ export default function LoanTrackerPage() {
                   type="date" 
                   className="w-full border rounded-lg p-2 bg-white dark:bg-gray-700 border-blue-200 dark:border-blue-800 focus:ring-2 focus:ring-blue-500 outline-none"
                   value={newLoanForm.actualDate} onChange={e => setNewLoanForm({...newLoanForm, actualDate: e.target.value})}
+                  data-testid="loans-form-input-date"
                 />
                 <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">* ระบุวันที่ยืมเงินจริง เพื่อใช้คำนวณในคอลัมน์ Loan Date</p>
               </div>
               <div className="flex justify-end gap-3 mt-6">
                 <button type="button" onClick={() => setShowNewLoanModal(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">ยกเลิก</button>
-                <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">บันทึกรายการ</button>
+                <button type="submit" data-testid="loans-form-btn-save" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">บันทึกรายการ</button>
               </div>
             </form>
           </div>
@@ -440,7 +448,8 @@ export default function LoanTrackerPage() {
                   <span className="text-xs text-gray-500">(Initial: ฿{selectedLoan.totalBorrowed?.toLocaleString()})</span>
                 </label>
                 <input required type="number" step="0.01" className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
-                  value={repayForm.amount} onChange={e => setRepayForm({...repayForm, amount: e.target.value})} />
+                  value={repayForm.amount} onChange={e => setRepayForm({...repayForm, amount: e.target.value})} 
+                  data-testid="loans-repay-form-input-amount" />
               </div>
               <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
                 <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1 flex items-center gap-2">
@@ -450,16 +459,18 @@ export default function LoanTrackerPage() {
                   type="date" 
                   className="w-full border rounded-lg p-2 bg-white dark:bg-gray-700 border-blue-200 dark:border-blue-800 focus:ring-2 focus:ring-blue-500 outline-none"
                   value={repayForm.actualDate} onChange={e => setRepayForm({...repayForm, actualDate: e.target.value})}
+                  data-testid="loans-repay-form-input-date"
                 />
               </div>
                <div>
                 <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">หมายเหตุ (ถ้ามี)</label>
                 <input type="text" className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
-                  value={repayForm.note} onChange={e => setRepayForm({...repayForm, note: e.target.value})} />
+                  value={repayForm.note} onChange={e => setRepayForm({...repayForm, note: e.target.value})} 
+                  data-testid="loans-repay-form-input-note" />
               </div>
               <div className="flex justify-end gap-3 mt-6">
                 <button type="button" onClick={() => setShowRepayModal(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">ยกเลิก</button>
-                <button type="submit" className={`px-4 py-2 text-white rounded-lg ${repayForm.type === 'REPAY' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'}`}>บันทึกรายการ</button>
+                <button type="submit" data-testid="loans-repay-form-btn-save" className={`px-4 py-2 text-white rounded-lg ${repayForm.type === 'REPAY' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'}`}>บันทึกรายการ</button>
               </div>
             </form>
           </div>

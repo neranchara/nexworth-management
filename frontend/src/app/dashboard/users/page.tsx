@@ -249,15 +249,17 @@ export default function UsersManagementPage() {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-[12px] transition-all"
+              data-testid="users-list-input-search"
             />
           </div>
           {hasPermission('users', 'canCreate') && (
             <button
               onClick={openAddModal}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-2 active:scale-95 shadow-sm"
+              data-testid="users-list-btn-add-user"
             >
               <UserPlus className="w-3.5 h-3.5" />
-              New User
+              Add User
             </button>
           )}
         </div>
@@ -305,6 +307,7 @@ export default function UsersManagementPage() {
                   <td className="px-4 py-3 text-center">
                     <button 
                       onClick={() => toggleStatus(person)}
+                      data-testid={`users-list-toggle-status-${person.email}`}
                       disabled={(!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' || person.isSystemAdmin)}
                       className={`inline-block w-3 h-3 rounded-full border-2 transition-all ${person.isActive ? 'bg-green-500 border-green-200' : 'bg-red-500 border-red-200'} ${((!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' || person.isSystemAdmin)) ? 'cursor-default opacity-40' : 'cursor-pointer hover:scale-125'}`}
                       title={person.isActive ? 'Active' : 'Inactive'}
@@ -315,6 +318,7 @@ export default function UsersManagementPage() {
                       {user?.isSystemAdmin && person.organizationId !== user.organizationId && !person.isSystemAdmin && (
                         <button 
                           onClick={() => handleResetPassword(person.id)} 
+                          data-testid={`users-list-btn-reset-pw-${person.email}`}
                           className="p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
                           title="Reset Password"
                         >
@@ -323,11 +327,23 @@ export default function UsersManagementPage() {
                       )}
                       
                       {(person.id === user?.id || (!person.isSystemAdmin && (hasPermission('users', 'canUpdate') || (user?.isSystemAdmin && person.organizationId !== user.organizationId)))) && (
-                        <button onClick={() => openEditModal(person)} className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                        <button 
+                          onClick={() => openEditModal(person)} 
+                          data-testid={`users-list-btn-edit-${person.email}`}
+                          className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
                       )}
                       
                       {hasPermission('users', 'canDelete') && (user?.isSystemAdmin && person.organizationId === user.organizationId) && person.id !== user?.id && !person.isSystemAdmin && (
-                        <button onClick={() => handleDelete(person.id)} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
+                        <button 
+                          onClick={() => handleDelete(person.id)} 
+                          data-testid={`users-list-btn-delete-${person.email}`}
+                          className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
                       )}
                     </div>
                   </td>
@@ -354,12 +370,14 @@ export default function UsersManagementPage() {
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">First Name</label>
                       <input type="text" required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} 
                         className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent" 
+                        data-testid="users-form-input-firstname"
                       />
                     </div>
                     <div>
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Name</label>
                       <input type="text" required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} 
                         className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent" 
+                        data-testid="users-form-input-lastname"
                       />
                     </div>
                   </div>
@@ -368,6 +386,7 @@ export default function UsersManagementPage() {
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Email Address</label>
                     <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} 
                       className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] focus:outline-none focus:border-blue-500 bg-transparent" 
+                      data-testid="users-form-input-email"
                     />
                   </div>
 
@@ -375,6 +394,7 @@ export default function UsersManagementPage() {
                     <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Password {isEditing && <span className="text-[9px] lowercase font-medium opacity-60">(optional)</span>}</label>
                     <input type="password" required={!isEditing} minLength={6} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} placeholder={isEditing ? '••••••••' : ''} 
                       className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] focus:outline-none focus:border-blue-500 bg-transparent" 
+                      data-testid="users-form-input-password"
                     />
                   </div>
 
@@ -383,6 +403,7 @@ export default function UsersManagementPage() {
                       <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Role</label>
                       <select required value={formData.roleId} onChange={(e) => setFormData({...formData, roleId: e.target.value})} 
                         className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
+                        data-testid="users-form-sel-role"
                       >
                         <option value="" disabled>Select...</option>
                         {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
@@ -394,6 +415,7 @@ export default function UsersManagementPage() {
                         <select required value={formData.organizationId} onChange={(e) => setFormData({...formData, organizationId: e.target.value})} 
                           disabled={isEditing && !user?.isSystemAdmin}
                           className={`w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent ${isEditing && !user?.isSystemAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
+                          data-testid="users-form-sel-org"
                         >
                           <option value="" disabled>Select...</option>
                           {organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
@@ -423,8 +445,8 @@ export default function UsersManagementPage() {
                         Reset Password
                       </button>
                     )}
-                    <button type="submit" className="flex-[2] py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all active:scale-95 shadow-sm">
-                      {isEditing ? 'Save Changes' : 'Create User'}
+                    <button type="submit" className="flex-[2] py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all active:scale-95 shadow-sm" data-testid="users-form-btn-save">
+                      Save User
                     </button>
                   </div>
               </form>

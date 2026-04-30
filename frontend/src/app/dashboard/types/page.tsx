@@ -137,7 +137,7 @@ export default function TransactionTypesPage() {
             </p>
           </div>
           <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            <button onClick={openAddModal} className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
+            <button onClick={openAddModal} data-testid="types-list-btn-add-type" className="inline-flex items-center justify-center rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700">
               Add New Type
             </button>
           </div>
@@ -170,8 +170,20 @@ export default function TransactionTypesPage() {
                       </span>
                     </td>
                     <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium flex justify-end gap-3">
-                      <button onClick={() => openEditModal(t)} className="text-blue-600 hover:text-blue-900"><Edit2 className="w-4 h-4" /></button>
-                      <button onClick={() => handleDelete(t.id)} className="text-red-600 hover:text-red-900"><Trash2 className="w-4 h-4" /></button>
+                      <button 
+                        onClick={() => openEditModal(t)} 
+                        data-testid={`types-list-btn-edit-${t.name}`}
+                        className="text-blue-600 hover:text-blue-900"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                      <button 
+                        onClick={() => handleDelete(t.id)} 
+                        data-testid={`types-list-btn-delete-${t.name}`}
+                        className="text-red-600 hover:text-red-900"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </td>
                   </tr>
                 ))}
@@ -191,18 +203,18 @@ export default function TransactionTypesPage() {
               <form onSubmit={handleFormSubmit} className="p-5 space-y-4">
                  <div>
                     <label className="block text-sm font-medium mb-1">Type Name (e.g. รายรับ, รายจ่าย)</label>
-                    <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} className="w-full border rounded-md px-3 py-2 dark:bg-gray-700" />
+                    <input type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})} data-testid="types-form-input-name" className="w-full border rounded-md px-3 py-2 dark:bg-gray-700" />
                  </div>
                  <div>
                     <label className="block text-sm font-medium mb-1">System Behavior</label>
-                    <select required value={formData.behavior} onChange={(e) => setFormData({...formData, behavior: e.target.value})} className="w-full border rounded-md px-3 py-2 dark:bg-gray-700">
+                    <select required value={formData.behavior} onChange={(e) => setFormData({...formData, behavior: e.target.value})} data-testid="types-form-sel-behavior" className="w-full border rounded-md px-3 py-2 dark:bg-gray-700">
                       {BEHAVIORS.map(b => <option key={b.value} value={b.value}>{b.label}</option>)}
                     </select>
                     <p className="mt-1 text-xs text-gray-500 italic">* This controls how the system calculates balances.</p>
                  </div>
                  <div className="flex justify-end gap-3 pt-4">
                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 border rounded-md">Cancel</button>
-                    <button type="submit" className="px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
+                    <button type="submit" data-testid="types-form-btn-save" className="px-4 py-2 bg-blue-600 text-white rounded-md">Save</button>
                  </div>
               </form>
            </div>

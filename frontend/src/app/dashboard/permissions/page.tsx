@@ -147,6 +147,7 @@ export default function RolesListPage() {
           {hasPermission('permissions', 'canCreate') && (
             <button
               onClick={openCreateModal}
+              data-testid="permissions-list-btn-add-role"
               className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
             >
               <Plus className="w-3.5 h-3.5" />
@@ -184,10 +185,22 @@ export default function RolesListPage() {
                 
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {hasPermission('permissions', 'canUpdate') && (
-                    <button onClick={() => openEditModal(role)} className="p-1 text-gray-400 hover:text-blue-600"><Edit2 className="w-3.5 h-3.5" /></button>
+                    <button 
+                      onClick={() => openEditModal(role)} 
+                      data-testid={`permissions-list-btn-edit-${role.name}`}
+                      className="p-1 text-gray-400 hover:text-blue-600"
+                    >
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
                   )}
                   {hasPermission('permissions', 'canDelete') && (role._count?.users || 0) === 0 && (
-                    <button onClick={() => handleDeleteRole(role.id, role.name)} className="p-1 text-gray-400 hover:text-red-600"><Trash2 className="w-3.5 h-3.5" /></button>
+                    <button 
+                      onClick={() => handleDeleteRole(role.id, role.name)} 
+                      data-testid={`permissions-list-btn-delete-${role.name}`}
+                      className="p-1 text-gray-400 hover:text-red-600"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
                   )}
                 </div>
               </div>
@@ -200,6 +213,7 @@ export default function RolesListPage() {
 
                 <button
                   onClick={() => router.push(`/dashboard/permissions/${role.id}${orgId ? `?orgId=${orgId}` : ''}`)}
+                  data-testid={`permissions-list-btn-config-${role.name}`}
                   className="flex items-center gap-1 text-[11px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-wider"
                 >
                   Config
@@ -227,6 +241,7 @@ export default function RolesListPage() {
                 <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Role Name</label>
                 <input 
                   type="text" required value={roleName} onChange={(e) => setRoleName(e.target.value)}
+                  data-testid="permissions-form-input-name"
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent" 
                 />
               </div>
@@ -235,6 +250,7 @@ export default function RolesListPage() {
                 <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Description (Optional)</label>
                 <textarea 
                   value={roleDescription} onChange={(e) => setRoleDescription(e.target.value)}
+                  data-testid="permissions-form-input-description"
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-[13px] focus:outline-none focus:border-blue-500 bg-transparent min-h-[80px]" 
                 />
               </div>
@@ -245,6 +261,7 @@ export default function RolesListPage() {
                   <button 
                     type="button"
                     onClick={() => setIsSystemRole(!isSystemRole)}
+                    data-testid="permissions-form-btn-toggle-system"
                     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-all ${isSystemRole ? 'bg-orange-500' : 'bg-gray-300'}`}
                   >
                     <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isSystemRole ? 'translate-x-5' : 'translate-x-0.5'}`} />
@@ -253,7 +270,7 @@ export default function RolesListPage() {
               )}
 
               <div className="pt-2 flex gap-3">
-                <button type="submit" className="flex-1 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all">Save</button>
+                <button type="submit" data-testid="permissions-form-btn-save" className="flex-1 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all">Save</button>
               </div>
             </form>
           </div>

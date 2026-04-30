@@ -110,11 +110,13 @@ export default function OrganizationsPage() {
               placeholder="Search..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
+              data-testid="orgs-list-input-search"
               className="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-[12px] transition-all"
             />
           </div>
           <button
             onClick={() => setShowCreateModal(true)}
+            data-testid="orgs-list-btn-add-org"
             className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-2 active:scale-95"
           >
             <Plus className="w-3.5 h-3.5" />
@@ -148,6 +150,7 @@ export default function OrganizationsPage() {
               ) : (
                 <button 
                   onClick={() => handleToggleActive(org.id, org.isActive)}
+                  data-testid={`orgs-list-btn-toggle-${org.name}`}
                   className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${org.isActive ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}
                 >
                   <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${org.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -175,6 +178,7 @@ export default function OrganizationsPage() {
  
             <button 
               onClick={() => router.push(`/dashboard/organizations/${org.id}`)}
+              data-testid={`orgs-list-btn-view-${org.name}`}
               className="w-full py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-600 hover:text-white text-gray-600 dark:text-gray-300 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 group-hover:bg-blue-600 group-hover:text-white"
             >
               View Hub
@@ -203,6 +207,7 @@ export default function OrganizationsPage() {
                   required
                   value={newOrg.name}
                   onChange={e => setNewOrg({...newOrg, name: e.target.value})}
+                  data-testid="orgs-form-input-name"
                   className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                   placeholder="e.g. Acme Corp"
                 />
@@ -221,6 +226,7 @@ export default function OrganizationsPage() {
                       type="text" 
                       value={newOrg.adminFirstName}
                       onChange={e => setNewOrg({...newOrg, adminFirstName: e.target.value})}
+                      data-testid="orgs-form-input-admin-firstname"
                       className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     />
                   </div>
@@ -230,6 +236,7 @@ export default function OrganizationsPage() {
                       type="text" 
                       value={newOrg.adminLastName}
                       onChange={e => setNewOrg({...newOrg, adminLastName: e.target.value})}
+                      data-testid="orgs-form-input-admin-lastname"
                       className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     />
                   </div>
@@ -243,6 +250,7 @@ export default function OrganizationsPage() {
                       required
                       value={newOrg.adminEmail}
                       onChange={e => setNewOrg({...newOrg, adminEmail: e.target.value})}
+                      data-testid="orgs-form-input-admin-email"
                       className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                       placeholder="admin@organization.com"
                     />
@@ -254,6 +262,7 @@ export default function OrganizationsPage() {
                       required
                       value={newOrg.adminPassword}
                       onChange={e => setNewOrg({...newOrg, adminPassword: e.target.value})}
+                      data-testid="orgs-form-input-admin-password"
                       className="w-full p-3 bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-xl outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                     />
                   </div>
@@ -271,6 +280,7 @@ export default function OrganizationsPage() {
                 <button 
                   type="submit" 
                   disabled={creating}
+                  data-testid="orgs-form-btn-submit"
                   className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2"
                 >
                   {creating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}

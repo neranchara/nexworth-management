@@ -472,9 +472,10 @@ export default function TransactionsPage() {
             <button 
               onClick={openAddModal}
               className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm ml-2"
+              data-testid="transactions-list-btn-add-tx"
             >
               <Plus className="w-5 h-5 mr-1" />
-              Add
+              Add Transaction
             </button>
           )}
         </div>
@@ -490,12 +491,14 @@ export default function TransactionsPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-900"
+              data-testid="transactions-list-input-search"
             />
          </div>
          <select
             value={filterType}
             onChange={(e) => setFilterType(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-900"
+            data-testid="transactions-list-sel-type"
          >
             <option value="">All Types</option>
             {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -504,6 +507,7 @@ export default function TransactionsPage() {
             value={filterCategory}
             onChange={(e) => setFilterCategory(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-900"
+            data-testid="transactions-list-sel-category"
          >
             <option value="">All Categories</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
@@ -512,6 +516,7 @@ export default function TransactionsPage() {
             value={filterAccount}
             onChange={(e) => setFilterAccount(e.target.value)}
             className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-900"
+            data-testid="transactions-list-sel-account"
          >
             <option value="">All Accounts</option>
             {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
@@ -681,12 +686,20 @@ export default function TransactionsPage() {
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                        {hasPermission('transactions', 'canUpdate') && (
-                         <button onClick={() => openEditModal(tx)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3">
+                         <button 
+                           onClick={() => openEditModal(tx)} 
+                           data-testid={`transactions-list-btn-edit-${tx.id}`}
+                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
+                         >
                            <Edit2 className="w-4 h-4 inline" />
                          </button>
                        )}
                        {hasPermission('transactions', 'canDelete') && (
-                         <button onClick={() => handleDelete(tx.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">
+                         <button 
+                           onClick={() => handleDelete(tx.id)} 
+                           data-testid={`transactions-list-btn-delete-${tx.id}`}
+                           className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
+                         >
                            <Trash2 className="w-4 h-4 inline" />
                          </button>
                        )}
@@ -720,6 +733,7 @@ export default function TransactionsPage() {
                           <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
                           <input 
                             type="date" required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})}
+                            data-testid="transactions-form-input-date"
                             className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                           />
                        </div>
@@ -732,6 +746,7 @@ export default function TransactionsPage() {
                           <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-blue-400" />
                           <input 
                             type="date" value={formData.actualDate} onChange={(e) => setFormData({...formData, actualDate: e.target.value})}
+                            data-testid="transactions-form-input-actual-date"
                             className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                           />
                        </div>
@@ -743,6 +758,7 @@ export default function TransactionsPage() {
                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
                        <select 
                          value={formData.typeId} onChange={(e) => handleTypeChange(e.target.value)}
+                         data-testid="transactions-form-sel-type"
                          className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                        >
                          {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
@@ -752,6 +768,7 @@ export default function TransactionsPage() {
                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
                        <select 
                          required value={formData.categoryId} onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
+                         data-testid="transactions-form-sel-category"
                          className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                        >
                          <option value="">Select Category</option>
@@ -769,6 +786,7 @@ export default function TransactionsPage() {
                            <select 
                              id="from-account-select"
                              value={formData.fromAccountId} onChange={(e) => setFormData({...formData, fromAccountId: e.target.value})}
+                             data-testid="transactions-form-sel-from-account"
                              className="w-full px-3 py-2 text-sm rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 outline-none transition-all"
                            >
                               <option value="">- None -</option>
@@ -780,6 +798,7 @@ export default function TransactionsPage() {
                            <select 
                              id="to-account-select"
                              value={formData.toAccountId} onChange={(e) => setFormData({...formData, toAccountId: e.target.value})}
+                             data-testid="transactions-form-sel-to-account"
                              className="w-full px-3 py-2 text-sm rounded-lg border border-green-200 dark:border-green-900 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
                            >
                               <option value="">- None -</option>
@@ -797,6 +816,7 @@ export default function TransactionsPage() {
                          id="amount-input"
                          type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})}
                          placeholder="0.00"
+                         data-testid="transactions-form-input-amount"
                          className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                        />
                     </div>
@@ -807,13 +827,14 @@ export default function TransactionsPage() {
                     <input 
                       type="text" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}
                       placeholder="e.g. Salary, Grocery shopping"
+                      data-testid="transactions-form-input-description"
                       className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
                     />
                  </div>
 
                  <div className="pt-6 border-t dark:border-gray-700 flex gap-3">
                     <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
-                    <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md transition-colors">
+                    <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md transition-colors" data-testid="transactions-form-btn-save">
                       {isEditing ? 'Update Transaction' : 'Save Transaction'}
                     </button>
                  </div>

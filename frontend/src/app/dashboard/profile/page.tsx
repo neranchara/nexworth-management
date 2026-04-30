@@ -96,6 +96,7 @@ export default function ProfilePage() {
                   type="text" 
                   value={firstName} 
                   onChange={(e) => setFirstName(e.target.value)}
+                  data-testid="profile-form-input-firstname"
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
                 />
               </div>
@@ -105,6 +106,7 @@ export default function ProfilePage() {
                   type="text" 
                   value={lastName} 
                   onChange={(e) => setLastName(e.target.value)}
+                  data-testid="profile-form-input-lastname"
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
                 />
               </div>
@@ -115,6 +117,7 @@ export default function ProfilePage() {
                 type="email" 
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)}
+                data-testid="profile-form-input-email"
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
               />
             </div>
@@ -125,6 +128,7 @@ export default function ProfilePage() {
                 value={password} 
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
+                data-testid="profile-form-input-password"
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
               />
             </div>
@@ -146,6 +150,7 @@ export default function ProfilePage() {
           <button 
             onClick={handleSave}
             disabled={isSaving}
+            data-testid="profile-form-btn-save"
             className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-lg text-[12px] font-bold transition-all active:scale-95 shadow-sm disabled:opacity-50"
           >
             {isSaving ? 'Saving...' : 'Save Changes'}
@@ -166,6 +171,7 @@ export default function ProfilePage() {
           <button 
             onClick={generateCode}
             disabled={isLoading}
+            data-testid="profile-line-btn-generate-code"
             className="flex items-center gap-2 bg-[#06C755] hover:bg-[#05b34c] text-white px-4 py-2 rounded-lg font-medium transition-colors"
           >
             <Link2 className="w-4 h-4" />
@@ -175,7 +181,10 @@ export default function ProfilePage() {
           <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
             <p className="text-sm font-semibold mb-2">Your Pairing Code:</p>
             <div className="flex items-center gap-3 mb-4">
-              <code className="text-2xl font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-4 py-2 rounded border border-gray-200 dark:border-gray-700">
+              <code 
+                data-testid="profile-line-text-pairing-code"
+                className="text-2xl font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-4 py-2 rounded border border-gray-200 dark:border-gray-700"
+              >
                 {pairingCode}
               </code>
               <button 

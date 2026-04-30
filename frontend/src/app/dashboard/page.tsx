@@ -198,7 +198,7 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
       
       <div className="relative z-10 w-full flex items-center justify-between mb-2">
         <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Financial Health</h2>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none" data-testid="dashboard-health-hdr">Financial Health</h2>
         </div>
         <div className={`p-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700`}>
           <Activity className="w-5 h-5" style={{ color }} />
@@ -295,6 +295,7 @@ const MetricCard = ({
            <select 
              value={selectedMonth} 
              onChange={(e) => onMonthChange(parseInt(e.target.value))} 
+             data-testid="dashboard-metric-sel-month"
              className="bg-transparent border-none text-[10px] font-black text-blue-400 focus:ring-0 cursor-pointer p-0 appearance-none text-center"
            >
              {MONTHS.map((m, i) => (<option key={i} value={i} className="bg-slate-900">{m.substring(0, 3)}</option>))}
@@ -303,6 +304,7 @@ const MetricCard = ({
            <select 
              value={selectedYear} 
              onChange={(e) => onYearChange(parseInt(e.target.value))} 
+             data-testid="dashboard-metric-sel-year"
              className="bg-transparent border-none text-[10px] font-black text-slate-500 focus:ring-0 cursor-pointer p-0 appearance-none text-center"
            >
              {YEARS.map(y => (<option key={y} value={y} className="bg-slate-900">{y}</option>))}
@@ -347,7 +349,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
           <Calendar className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-white tracking-tight leading-none">Financial Velocity</h2>
+          <h2 className="text-2xl font-black text-white tracking-tight leading-none" data-testid="dashboard-cashflow-hdr">Financial Velocity</h2>
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">Monthly Performance Flow</p>
         </div>
       </div>
@@ -362,6 +364,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
               <button
                 key={m}
                 onClick={() => onModeChange(m)}
+                data-testid={`dashboard-cashflow-btn-mode-${m}`}
                 className={`p-2 rounded-xl transition-all duration-300 ${
                   cashflowMode === m 
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
@@ -428,11 +431,21 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
            <div className="flex items-center justify-between mb-8">
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Flow Distribution</h3>
               <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
-                 <select value={visualMonth} onChange={(e) => onVisualMonthChange(parseInt(e.target.value))} className="bg-transparent border-none text-[10px] font-black text-blue-400 p-0 focus:ring-0 appearance-none text-center">
+                 <select 
+                   value={visualMonth} 
+                   onChange={(e) => onVisualMonthChange(parseInt(e.target.value))} 
+                   data-testid="dashboard-cashflow-sel-month"
+                   className="bg-transparent border-none text-[10px] font-black text-blue-400 p-0 focus:ring-0 appearance-none text-center"
+                 >
                    {MONTHS.map((m, i) => (<option key={i} value={i} className="bg-slate-900">{m.substring(0, 3)}</option>))}
                  </select>
                  <div className="w-px h-3 bg-white/10 mx-1" />
-                 <select value={visualYear} onChange={(e) => onVisualYearChange(parseInt(e.target.value))} className="bg-transparent border-none text-[10px] font-black text-slate-500 p-0 focus:ring-0 appearance-none text-center">
+                 <select 
+                   value={visualYear} 
+                   onChange={(e) => onVisualYearChange(parseInt(e.target.value))} 
+                   data-testid="dashboard-cashflow-sel-year"
+                   className="bg-transparent border-none text-[10px] font-black text-slate-500 p-0 focus:ring-0 appearance-none text-center"
+                 >
                    {YEARS.map(y => (<option key={y} value={y} className="bg-slate-900">{y}</option>))}
                  </select>
               </div>
@@ -504,7 +517,7 @@ const GoalTrackingCard = ({ stats }: any) => (
           <TrendingUp className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-white tracking-tight leading-none">Milestones</h2>
+          <h2 className="text-2xl font-black text-white tracking-tight leading-none" data-testid="dashboard-milestones-hdr">Milestones</h2>
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">Asset Growth Tracking</p>
         </div>
       </div>
@@ -841,7 +854,7 @@ export default function DashboardPage() {
           <ShieldCheck className="w-16 h-16 text-rose-500 mx-auto mb-6" />
           <h1 className="text-2xl font-black text-white tracking-tight mb-3">Access Denied</h1>
           <p className="text-slate-400 text-sm leading-relaxed mb-6">You don't have the required clearance to view the Nexworth Command Center.</p>
-          <Link href="/login" className="inline-block px-8 py-3 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all uppercase tracking-widest">Return to Login</Link>
+          <Link href="/login" data-testid="dashboard-error-btn-return-login" className="inline-block px-8 py-3 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all uppercase tracking-widest">Return to Login</Link>
         </div>
       </div>
     );
@@ -880,6 +893,7 @@ export default function DashboardPage() {
           </p>
           <button 
             onClick={() => window.location.reload()}
+            data-testid="dashboard-error-btn-retry"
             className="w-full py-4 bg-white text-slate-950 font-black rounded-2xl hover:bg-slate-200 transition-all uppercase tracking-widest text-xs shadow-xl"
           >
             Retry Connection
@@ -961,6 +975,7 @@ export default function DashboardPage() {
           {/* Settings Button */}
           <button
             onClick={() => setShowThresholdSettings(p => !p)}
+            data-testid="dashboard-cashflow-btn-settings"
             className="relative z-10 ml-auto p-1.5 rounded-lg text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
             title="ตั้งค่าเกณฑ์สถานะ"
           >
@@ -979,6 +994,7 @@ export default function DashboardPage() {
                   </div>
                    <input
                     type="number"
+                    data-testid="dashboard-cashflow-input-low-threshold"
                     className="w-32 text-right text-xs font-black border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                     value={thresholds.low}
                     onChange={e => {
@@ -995,6 +1011,7 @@ export default function DashboardPage() {
                   </div>
                   <input
                     type="number"
+                    data-testid="dashboard-cashflow-input-mid-threshold"
                     className="w-32 text-right text-xs font-black border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     value={thresholds.mid}
                     onChange={e => {
@@ -1033,6 +1050,7 @@ export default function DashboardPage() {
                     <button 
                       key={widget.key} 
                       onClick={() => toggleWidget(widget.key)} 
+                      data-testid={`dashboard-widget-btn-toggle-${widget.key}`}
                       className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all uppercase tracking-wider ${
                         isActive 
                           ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 ring-2 ring-blue-500/20' 

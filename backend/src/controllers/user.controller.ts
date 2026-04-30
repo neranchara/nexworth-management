@@ -220,8 +220,11 @@ export const deleteUserHandler = async (request: FastifyRequest<{ Params: { id: 
       return reply.status(403).send({ error: 'Access denied: You can only delete users within your own organization' });
     }
 
-    await prisma.user.delete({ where: { id } });
-    return reply.send({ message: 'User deleted' });
+    await prisma.user.update({ 
+      where: { id },
+      data: { isActive: false }
+    });
+    return reply.send({ message: 'User deactivated (Soft Delete)' });
   } catch (error) {
     request.log.error(error);
     return reply.status(500).send({ error: 'Internal Server Error' });

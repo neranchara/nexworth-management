@@ -119,6 +119,7 @@ export default function ManagePermissionsPage({ params }: { params: Promise<{ ro
           <button
             onClick={handleSave}
             disabled={saving || loading}
+            data-testid="permissions-config-btn-save"
             className="flex items-center gap-2 bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95 disabled:opacity-50"
           >
             {saving ? <Loader2 className="animate-spin w-3.5 h-3.5" /> : <Save className="w-3.5 h-3.5" />}
@@ -170,10 +171,10 @@ export default function ManagePermissionsPage({ params }: { params: Promise<{ ro
                       </span>
                     </div>
                   </td>
-                  <td className="px-4 py-4"><div className="flex justify-center"><CompactToggle checked={p.canView} onChange={() => handleToggle(p.resource, 'canView')} disabled={!hasPermission('permissions', 'canUpdate')} /></div></td>
-                  <td className="px-4 py-4"><div className="flex justify-center"><CompactToggle checked={p.canCreate} onChange={() => handleToggle(p.resource, 'canCreate')} disabled={!hasPermission('permissions', 'canUpdate')} /></div></td>
-                  <td className="px-4 py-4"><div className="flex justify-center"><CompactToggle checked={p.canUpdate} onChange={() => handleToggle(p.resource, 'canUpdate')} disabled={!hasPermission('permissions', 'canUpdate')} /></div></td>
-                  <td className="px-4 py-4"><div className="flex justify-center"><CompactToggle checked={p.canDelete} onChange={() => handleToggle(p.resource, 'canDelete')} disabled={!hasPermission('permissions', 'canUpdate')} /></div></td>
+                   <td className="px-4 py-4"><div className="flex justify-center"><CompactToggle checked={p.canView} onChange={() => handleToggle(p.resource, 'canView')} disabled={!hasPermission('permissions', 'canUpdate')} testId={`permissions-config-toggle-${p.resource}-view`} /></div></td>
+                  <td className="px-4 py-4"><div className="flex justify-center"><CompactToggle checked={p.canCreate} onChange={() => handleToggle(p.resource, 'canCreate')} disabled={!hasPermission('permissions', 'canUpdate')} testId={`permissions-config-toggle-${p.resource}-create`} /></div></td>
+                  <td className="px-4 py-4"><div className="flex justify-center"><CompactToggle checked={p.canUpdate} onChange={() => handleToggle(p.resource, 'canUpdate')} disabled={!hasPermission('permissions', 'canUpdate')} testId={`permissions-config-toggle-${p.resource}-update`} /></div></td>
+                  <td className="px-4 py-4"><div className="flex justify-center"><CompactToggle checked={p.canDelete} onChange={() => handleToggle(p.resource, 'canDelete')} disabled={!hasPermission('permissions', 'canUpdate')} testId={`permissions-config-toggle-${p.resource}-delete`} /></div></td>
                 </tr>
               ))}
             </tbody>
@@ -184,10 +185,11 @@ export default function ManagePermissionsPage({ params }: { params: Promise<{ ro
   );
 }
 
-const CompactToggle = ({ checked, onChange, disabled }: any) => (
+const CompactToggle = ({ checked, onChange, disabled, testId }: any) => (
   <button
     onClick={onChange}
     disabled={disabled}
+    data-testid={testId}
     className={`relative inline-flex h-5 w-9 items-center rounded-full transition-all disabled:opacity-30 ${checked ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}
   >
     <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white shadow-sm transition-transform ${checked ? 'translate-x-5' : 'translate-x-0.5'}`} />

@@ -184,11 +184,12 @@ export const deleteRoleHandler = async (request: FastifyRequest, reply: FastifyR
       return reply.status(400).send({ error: 'Cannot delete role that is assigned to users' });
     }
 
-    await prisma.role.delete({
-      where: { id: roleId }
+    await prisma.role.update({
+      where: { id: roleId },
+      data: { isActive: false }
     });
-
-    return reply.send({ message: 'Role deleted successfully' });
+    
+    return reply.send({ message: 'Role deactivated successfully (Soft Delete)' });
   } catch (error) {
     request.log.error(error);
     return reply.status(500).send({ error: 'Internal Server Error' });
