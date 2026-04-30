@@ -295,7 +295,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     );
     const wasTransfer = !!existing.linkedTransactionId;
     console.log('[DEBUG-UPDATE] id:', existing.id);
-    console.log('[DEBUG-UPDATE] body.fromAccountId:', body.fromAccountId, 'body.toAccountId:', body.toAccountId);
+    console.log('[DEBUG-UPDATE] fromAccountId:', body.fromAccountId, 'toAccountId:', body.toAccountId);
     console.log('[DEBUG-UPDATE] categoryBehavior:', categoryBehavior);
     console.log('[DEBUG-UPDATE] isTransferIntent:', isTransferIntent, 'wasTransfer:', wasTransfer);
 
@@ -379,19 +379,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       }
     }
 
-    let targetPrimaryAccountId = body.accountId;
-    if (!isTransferIntent && !targetPrimaryAccountId) {
-       targetPrimaryAccountId = body.toAccountId || body.fromAccountId || existing.accountId;
-    }
-
-    if (isTransferIntent) {
-      if (wasTransfer) {
-        targetPrimaryAccountId = isExistingExpense ? body.fromAccountId : body.toAccountId;
-      } else {
-        // Converting to transfer. The primary leg is the one that already existed.
-        targetPrimaryAccountId = existing.accountId;
-      }
-    } 
+    let targetPrimaryAccountId = body.accountId || (isExistingExpense ? body.fromAccountId : body.toAccountId) || body.toAccountId || body.fromAccountId || existing.accountId;
     
     let assetId: string | null = null;
     let liabilityId: string | null = null;
@@ -426,7 +414,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         date: body.date ? new Date(body.date) : existing.date,
         actualDate: body.actualDate !== undefined ? (body.actualDate ? new Date(body.actualDate) : null) : existing.actualDate,
         linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
-        direction: !isTransferIntent ? body.direction : (isExistingExpense ? 'FROM' : 'TO')
+        direction: body.direction || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_BORROW', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO'))
       },
       include: {
         account: { include: { bank: { select: { name: true, color: true } } } },
@@ -440,7 +428,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     if (isTransferIntent && !wasTransfer) {
       console.log('[DEBUG-UPDATE] CONVERSION: Single -> Transfer');
       // CONVERSION: Single -> Transfer
-      let targetLinkedAccountId = isExistingExpense ? body.toAccountId : body.fromAccountId;
+      let targetLinkedAccountId = isExistingExpense ? toAccountId : fromAccountId;
       if (!targetLinkedAccountId) throw new Error("Missing linked account ID for transfer conversion");
 
       let linkedAssetId: string | null = null;
@@ -531,8 +519,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
 
     } else if (wasTransfer && isTransferIntent) {
-      // STANDARD: Update Transfer
-      const targetLinkedAccountId = (isExistingExpense ? body.toAccountId : body.fromAccountId) || linked!.accountId;
+      const targetLinkedAccountId = (isExistingExpense ? toAccountId : fromAccountId) || linked!.accountId;
       
       let linkedAssetId: string | null = null;
       let linkedLiabilityId: string | null = null;
