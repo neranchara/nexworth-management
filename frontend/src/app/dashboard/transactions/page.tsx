@@ -131,19 +131,21 @@ export default function TransactionsPage() {
     if (tx.linkedTransactionId) {
       const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
       if (linkedTx) {
-        const isCurrentFrom = ['EXPENSE', 'DEBT', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
-        const isLinkedFrom = ['EXPENSE', 'DEBT', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
+        const isCurrentFrom = ['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
+        const isLinkedFrom = ['EXPENSE', 'DEBT'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
+        const isCurrentTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนเข้าภายใน';
+        const isLinkedTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนเข้าภายใน';
 
-        if (isCurrentFrom && !isLinkedFrom) {
+        if (isCurrentFrom && isLinkedTo) {
            // Current is Source (From), Linked is Destination (To)
            fromAccId = tx.accountId;
            toAccId = linkedTx.accountId;
-        } else if (!isCurrentFrom && isLinkedFrom) {
+        } else if (isCurrentTo && isLinkedFrom) {
            // Current is Destination (To), Linked is Source (From)
            fromAccId = linkedTx.accountId;
            toAccId = tx.accountId;
         } else {
-           // Fallback or Both same behavior: Trust the generic category names if present
+           // Fallback: If behaviors are ambiguous, trust generic category names
            if (tx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน') {
               fromAccId = tx.accountId;
               toAccId = linkedTx.accountId;
@@ -659,16 +661,18 @@ export default function TransactionsPage() {
                         if (tx.linkedTransactionId && !filterAccount) {
                            const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
                            if (linkedTx && linkedTx.account) {
-                              const isCurrentFrom = ['EXPENSE', 'DEBT', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
-                              const isLinkedFrom = ['EXPENSE', 'DEBT', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
+                              const isCurrentFrom = ['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
+                              const isLinkedFrom = ['EXPENSE', 'DEBT'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
+                              const isCurrentTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนเข้าภายใน';
+                              const isLinkedTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนเข้าภายใน';
 
                               let fromAcc = accountInfo;
                               let toAcc = linkedTx.account;
 
-                              if (!isCurrentFrom && isLinkedFrom) {
+                              if (isCurrentTo && isLinkedFrom) {
                                  fromAcc = linkedTx.account;
                                  toAcc = accountInfo;
-                              } else if (isCurrentFrom && !isLinkedFrom) {
+                              } else if (isCurrentFrom && isLinkedTo) {
                                  fromAcc = accountInfo;
                                  toAcc = linkedTx.account;
                               } else {
