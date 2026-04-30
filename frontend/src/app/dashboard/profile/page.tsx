@@ -207,6 +207,10 @@ export default function ProfilePage() {
             </button>
           </div>
         )}
+      <div className="flex justify-center pt-10">
+        <div className="px-4 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700">
+           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Version: 2.1.0-build-V4.0-FINAL</span>
+        </div>
       </div>
     </div>
   );
