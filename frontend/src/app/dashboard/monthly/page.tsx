@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { 
   Wallet, 
   ChevronLeft, ChevronRight, Calendar,
+  CircleChevronLeft, CircleChevronRight,
   TrendingUp, TrendingDown, Minus
 } from 'lucide-react';
 import { format } from 'date-fns';
