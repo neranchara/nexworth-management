@@ -87,8 +87,9 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
     
     if (!containerRef.current) return;
     
-    // Initial width
-    setWidth(containerRef.current.offsetWidth);
+    // Initial width with fallback to prevent 0 width issues
+    const initialWidth = containerRef.current.offsetWidth || 1200;
+    setWidth(initialWidth);
 
     const observer = new ResizeObserver((entries) => {
       if (!entries || !entries.length) return;

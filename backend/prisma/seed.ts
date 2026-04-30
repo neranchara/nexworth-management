@@ -24,13 +24,13 @@ async function main() {
   }
 
   // 2. Create Super Admin (only if not exists)
-  let masterAdmin = await prisma.user.findUnique({ where: { email: 'superadmin@nexworth.net' } });
+  let masterAdmin = await prisma.user.findUnique({ where: { email: 'superadmin@nexworth.online' } });
   if (!masterAdmin) {
-    console.log('Creating superadmin@nexworth.net...');
+    console.log('Creating superadmin@nexworth.online...');
     const hashedMasterPassword = await bcrypt.hash('superpassword123', 10);
     masterAdmin = await prisma.user.create({
       data: {
-        email: 'superadmin@nexworth.net',
+        email: 'superadmin@nexworth.online',
         passwordHash: hashedMasterPassword,
         firstName: 'System',
         lastName: 'Admin',
@@ -46,29 +46,29 @@ async function main() {
   await setupOrganizationDefaults(masterOrg.id, masterAdmin.id);
 
   // 3. Create Default User Org (only if not exists)
-  let org = await prisma.organization.findFirst({ where: { name: 'neranchara' } });
+  let org = await prisma.organization.findFirst({ where: { name: 'Nexworth Business' } });
   if (!org) {
-    console.log('Creating neranchara org...');
-    org = await prisma.organization.create({ data: { name: 'neranchara' } });
+    console.log('Creating Nexworth Business org...');
+    org = await prisma.organization.create({ data: { name: 'Nexworth Business' } });
   } else {
-    console.log(`neranchara org exists: ${org.id}`);
+    console.log(`Nexworth Business org exists: ${org.id}`);
   }
 
-  let admin = await prisma.user.findFirst({ where: { email: 'neranchara.ksr@gmail.com' } });
+  let admin = await prisma.user.findFirst({ where: { email: 'admin@nexworth.test' } });
   if (!admin) {
-    console.log('Creating neranchara admin...');
-    const hashedUserPassword = await bcrypt.hash('w,j,uP@ssw0rd', 10);
+    console.log('Creating Nexworth Business admin...');
+    const hashedUserPassword = await bcrypt.hash('P@ssword123', 10);
     admin = await prisma.user.create({
       data: {
-        email: 'neranchara.ksr@gmail.com',
+        email: 'admin@nexworth.test',
         passwordHash: hashedUserPassword,
-        firstName: 'Nexworth',
+        firstName: 'Business',
         lastName: 'Admin',
         organizationId: org.id
       },
     });
   } else {
-    console.log(`neranchara admin exists: ${admin.id}`);
+    console.log(`Nexworth Business admin exists: ${admin.id}`);
   }
 
   await setupOrganizationDefaults(org.id, admin.id);

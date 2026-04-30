@@ -4,8 +4,6 @@
   "private": true,
   "scripts": {
     "dev": "next dev -H 127.0.0.1",
-    "dev:staging": "cross-env NODE_ENV=staging next dev -H 127.0.0.1",
-    "dev:prod": "cross-env NODE_ENV=production next dev -H 127.0.0.1",
     "build": "next build",
     "start": "next start -H 127.0.0.1",
     "lint": "eslint"

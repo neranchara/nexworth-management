@@ -10,6 +10,7 @@ datasource db {
 model Organization {
   id               String                @id @default(uuid())
   name             String
+  isActive         Boolean               @default(true)
   createdAt        DateTime              @default(now())
   updatedAt        DateTime              @updatedAt
   accounts         Account[]
@@ -56,6 +57,7 @@ model Role {
   description    String?
   createdAt      DateTime      @default(now())
   organizationId String?
+  isSystemRole   Boolean       @default(false)
   permissions    Permission[]
   organization   Organization? @relation(fields: [organizationId], references: [id])
   users          User[]

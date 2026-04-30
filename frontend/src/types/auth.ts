@@ -28,6 +28,8 @@ export interface MeResponse {
   user: {
     sub: string;
     email: string;
+    firstName?: string;
+    lastName?: string;
     role: string;
     permissions: Permission[];
     organizationId: string;

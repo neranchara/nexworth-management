@@ -86,3 +86,43 @@ export const listOrganizationsHandler = async (request: FastifyRequest, reply: F
     return reply.status(500).send({ error: 'Internal Server Error' });
   }
 };
+
+const updateOrgSchema = z.object({
+  name: z.string().min(1).optional(),
+  isActive: z.boolean().optional(),
+});
+
+export const updateOrganizationHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
+  try {
+    const user = request.user as any;
+    if (!user.isSystemAdmin) {
+      return reply.status(403).send({ error: 'Only System Admins can update organizations' });
+    }
+
+    const { id } = request.params;
+    const body = updateOrgSchema.parse(request.body);
+
+    const org = await prisma.organization.findUnique({ where: { id } });
+    if (!org) {
+      return reply.status(404).send({ error: 'Organization not found' });
+    }
+
+    // 1. Lock System Management
+    if (org.name === 'System Management') {
+      return reply.status(403).send({ error: 'System Management organization cannot be modified or disabled.' });
+    }
+
+    const updatedOrg = await prisma.organization.update({
+      where: { id },
+      data: body
+    });
+
+    return reply.send({ message: 'Organization updated successfully', organization: updatedOrg });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return reply.status(400).send({ error: error.format() });
+    }
+    request.log.error(error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
+  }
+};

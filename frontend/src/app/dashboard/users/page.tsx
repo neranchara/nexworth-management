@@ -1,10 +1,15 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+import { 
+  Edit2, Trash2, X, CheckCircle, AlertCircle, 
+  ArrowUpCircle, ArrowDownCircle, MoreHorizontal,
+  Users, Plus, RefreshCw, Loader2, Search, UserPlus, ChevronRight
+} from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { User, Organization } from '@/types/models';
 
@@ -13,26 +18,25 @@ interface Role {
   name: string;
 }
 
-
 export default function UsersManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const { hasPermission } = usePermissions();
   const [roles, setRoles] = useState<Role[]>([]);
   const [organizations, setOrganizations] = useState<Organization[]>([]);
   const [loading, setLoading] = useState(true);
+  const searchParams = useSearchParams();
+  const orgId = searchParams.get('orgId');
+  const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'firstName', direction: 'asc' });
   
-  // Alert state
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Modal / Form state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentUserId, setCurrentUserId] = useState<string | null>(null);
   
-  // Form fields
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -45,26 +49,26 @@ export default function UsersManagementPage() {
 
   const { user } = useAuthStore();
   const router = useRouter();
+
   const fetchUsersAndRoles = useCallback(async () => {
     try {
       setLoading(true);
+      const url = orgId ? `/users?orgId=${orgId}` : '/users';
       const [usersRes, rolesRes] = await Promise.all([
-        api.get('/users'),
+        api.get(url),
         api.get('/roles')
       ]);
       setUsers(usersRes.data.users);
       setRoles(rolesRes.data.roles);
-      console.log('[fetchUsersAndRoles] Organizations:', rolesRes.data.organizations);
       setOrganizations(rolesRes.data.organizations || []);
     } catch {
-      setError('Failed to load users or roles');
+      setError('Failed to load data');
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [orgId]);
 
   useEffect(() => {
-    // RBAC Protection on Client Side
     if (user && !hasPermission('users', 'canView')) {
       router.push('/dashboard');
       return;
@@ -85,7 +89,7 @@ export default function UsersManagementPage() {
       firstName: '',
       lastName: '',
       roleId: roles.length > 0 ? roles[0].id : '',
-      organizationId: user?.organizationId || '',
+      organizationId: orgId || user?.organizationId || '',
       isActive: true
     });
     setIsEditing(false);
@@ -100,7 +104,7 @@ export default function UsersManagementPage() {
   const openEditModal = (u: User) => {
     setFormData({
       email: u.email,
-      password: '', // blank for edit unless they want to change
+      password: '',
       firstName: u.firstName || '',
       lastName: u.lastName || '',
       roleId: roles.find(r => r.name === u.role?.name)?.id || '',
@@ -113,346 +117,316 @@ export default function UsersManagementPage() {
   };
 
   const handleResetPassword = async (id: string) => {
-    if (!window.confirm("คุณต้องการรีเซ็ตรหัสผ่านสำหรับผู้ใช้งานรายนี้ใช่หรือไม่? (รหัสผ่านใหม่จะเป็น orgname@1234)")) return;
+    if (!window.confirm("Generate a new random password and send it to the user's email?")) return;
     try {
       const res = await api.post(`/users/${id}/reset-password`);
       showAlert(res.data.message, 'success');
-    } catch (err: unknown) {
-      const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Reset password failed', 'error');
+    } catch (err: any) {
+      showAlert(err.response?.data?.error || 'Reset failed', 'error');
     }
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this user?")) return;
+    if (!window.confirm("Delete this user?")) return;
     try {
       await api.delete(`/users/${id}`);
-      showAlert('User deleted successfully', 'success');
+      showAlert('Deleted', 'success');
       fetchUsersAndRoles();
-    } catch (err: unknown) {
-      const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
+    } catch (err: any) {
+      showAlert('Delete failed', 'error');
+    }
+  };
+
+  const toggleStatus = async (u: User) => {
+    if (!user?.isSystemAdmin && u.organizationId !== user?.organizationId) return;
+    // Don't disable the main system management org status easily, but follow general rules
+    if (u.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' && u.role?.name === 'Super Admin' && !user?.isSystemAdmin) return;
+    
+    try {
+      await api.put(`/users/${u.id}`, { isActive: !u.isActive });
+      showAlert('Status updated', 'success');
+      fetchUsersAndRoles();
+    } catch (err: any) {
+      showAlert('Update failed', 'error');
+    }
+  };
+
+  const handleRequestReset = async () => {
+    if (!currentUserId) return;
+    try {
+      const res = await api.post(`/users/${currentUserId}/request-reset`);
+      showAlert(res.data.message, 'success');
+    } catch (err: any) {
+      showAlert(err.response?.data?.error || 'Request failed', 'error');
     }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      const payload: Partial<User> & { password?: string } = { ...formData };
-      if (isEditing && !payload.password) {
-        delete payload.password; // Don't send empty password on edit
-      }
+      const payload: any = { ...formData };
+      if (isEditing && !payload.password) delete payload.password;
 
       if (isEditing && currentUserId) {
         await api.put(`/users/${currentUserId}`, payload);
-        showAlert('User updated successfully', 'success');
+        showAlert('Updated', 'success');
       } else {
         await api.post('/users', payload);
-        showAlert('User created successfully', 'success');
+        showAlert('Created', 'success');
       }
       setIsModalOpen(false);
       fetchUsersAndRoles();
-    } catch (err: unknown) {
-      const errorResponse = err as { response?: { data?: { error?: string | { issues?: { message: string }[] } } } };
-      const errorData = errorResponse.response?.data?.error;
-      const message = (typeof errorData === 'object' && errorData?.issues?.[0]?.message)
-        || (typeof errorData === 'string' ? errorData : null)
-        || 'Save failed';
-      showAlert(message, 'error');
+    } catch (err: any) {
+      showAlert(err.response?.data?.error || 'Save failed', 'error');
     }
   };
 
-  // Sorting logic
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
     setSortConfig({ key, direction });
   };
 
-  const getSortedUsers = () => {
-    if (!sortConfig) return users;
+  const sortedUsers = [...users].sort((a, b) => {
+    if (!sortConfig) return 0;
+    let aValue: any, bValue: any;
+    switch (sortConfig.key) {
+      case 'name': aValue = `${a.firstName} ${a.lastName}`.toLowerCase(); bValue = `${b.firstName} ${b.lastName}`.toLowerCase(); break;
+      case 'email': aValue = a.email.toLowerCase(); bValue = b.email.toLowerCase(); break;
+      case 'role': aValue = (a.role?.name || '').toLowerCase(); bValue = (b.role?.name || '').toLowerCase(); break;
+      case 'organization': aValue = (a.organization?.name || '').toLowerCase(); bValue = (b.organization?.name || '').toLowerCase(); break;
+      case 'isActive': aValue = a.isActive ? 1 : 0; bValue = b.isActive ? 1 : 0; break;
+      default: return 0;
+    }
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  });
 
-    return [...users].sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      switch (sortConfig.key) {
-        case 'name':
-          aValue = `${a.firstName} ${a.lastName}`.toLowerCase();
-          bValue = `${b.firstName} ${b.lastName}`.toLowerCase();
-          break;
-        case 'email':
-          aValue = (a.email || '').toLowerCase();
-          bValue = (b.email || '').toLowerCase();
-          break;
-        case 'role':
-          aValue = (a.role?.name || '').toLowerCase();
-          bValue = (b.role?.name || '').toLowerCase();
-          break;
-        case 'organization':
-          aValue = (a.organization?.name || '').toLowerCase();
-          bValue = (b.organization?.name || '').toLowerCase();
-          break;
-        case 'isActive':
-          aValue = a.isActive ? 1 : 0;
-          bValue = b.isActive ? 1 : 0;
-          break;
-        default:
-          return 0;
-      }
-
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
-
-  const sortedUsers = getSortedUsers();
+  const filteredUsers = sortedUsers.filter(u => 
+    `${u.firstName} ${u.lastName}`.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    u.email.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
   const SortIcon = ({ column }: { column: string }) => {
     if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
-    return sortConfig.direction === 'asc' ? 
-      <ArrowUpCircle className="w-3 h-3 ml-1 text-blue-500" /> : 
-      <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
+    return sortConfig.direction === 'asc' ? <ArrowUpCircle className="w-3 h-3 ml-1 text-blue-500" /> : <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
   };
 
-  if (loading && users.length === 0) return <div className="p-6">Loading data...</div>;
-  if (error && users.length === 0) return <div className="p-6 text-red-500">{error}</div>;
-
   return (
-    <div className="relative">
+    <div className="py-6 min-h-screen animate-in fade-in duration-700">
       {/* Alert Pop-up */}
       {alert && (
-        <div className={`fixed top-4 right-4 z-50 max-w-[400px] w-full p-4 rounded-lg shadow-lg flex items-center gap-3 transition-all ${alert.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-          {alert.type === 'success' ? <CheckCircle className="w-5 h-5 flex-shrink-0 text-green-500" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />}
-          <p className="font-medium text-sm break-words">{alert.message}</p>
+        <div className={`fixed top-4 right-4 z-[110] py-2 px-4 rounded-lg shadow-lg flex items-center gap-2 text-xs font-bold animate-in slide-in-from-top-2 border ${alert.type === 'success' ? 'bg-green-50 text-green-700 border-green-100' : 'bg-red-50 text-red-700 border-red-100'}`}>
+          {alert.type === 'success' ? <CheckCircle className="w-3.5 h-3.5" /> : <AlertCircle className="w-3.5 h-3.5" />}
+          {alert.message}
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <div className="sm:flex sm:items-center">
-          <div className="sm:flex-auto">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Users Directory</h1>
-            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-              A list of all users in the system including their name, email, role, and status.
-            </p>
-          </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            {hasPermission('users', 'canCreate') && (
-              <button 
-                onClick={openAddModal}
-                className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
-              >
-                Add user
-              </button>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 border-b dark:border-gray-800 pb-6">
+        <div>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Users className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            Users
+            {orgId && (
+              <span className="flex items-center gap-2 text-gray-300 ml-1">
+                <ChevronRight className="w-4 h-4" />
+                <span className="text-gray-500 dark:text-gray-400 font-medium">{organizations.find(o => o.id === orgId)?.name || users[0]?.organization?.name || 'Org Directory'}</span>
+              </span>
             )}
-          </div>
+          </h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-[13px]">
+            {orgId ? `Managing all users under ${(organizations.find(o => o.id === orgId)?.name || users[0]?.organization?.name || 'this organization')}.` : 'Manage access and roles for your organization.'}
+          </p>
         </div>
         
-        <div className="mt-8 flex flex-col">
-          <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th 
-                        scope="col" 
-                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('name')}
-                      >
-                        <div className="flex items-center">Name <SortIcon column="name" /></div>
-                      </th>
-                      <th 
-                        scope="col" 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('email')}
-                      >
-                        <div className="flex items-center">Email <SortIcon column="email" /></div>
-                      </th>
-                      <th 
-                        scope="col" 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('role')}
-                      >
-                        <div className="flex items-center">Role <SortIcon column="role" /></div>
-                      </th>
-                      <th 
-                        scope="col" 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('organization')}
-                      >
-                        <div className="flex items-center">Organization <SortIcon column="organization" /></div>
-                      </th>
-                      <th 
-                        scope="col" 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('isActive')}
-                      >
-                        <div className="flex items-center">Status <SortIcon column="isActive" /></div>
-                      </th>
-                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6 whitespace-nowrap text-right text-sm font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                    {sortedUsers.map((person) => (
-                      <tr key={person.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
-                          {person.firstName} {person.lastName}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">{person.email}</td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
-                          <span className="inline-flex rounded-full bg-blue-100 px-2 text-xs font-semibold leading-5 text-blue-800">
-                            {person.role?.name || 'Unknown'}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
-                          {person.organization?.name || 'No Organization'}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500">
-                          {person.isActive ? (
-                             <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">Active</span>
-                          ) : (
-                             <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">Inactive</span>
-                          )}
-                        </td>
-                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          {user?.isSystemAdmin && person.organizationId !== user.organizationId ? (
-                             <button 
-                              onClick={() => handleResetPassword(person.id)} 
-                              className="text-amber-600 hover:text-amber-900 bg-amber-50 px-2 py-1 rounded text-xs"
-                              title="Reset Password"
-                            >
-                              Reset Password
-                            </button>
-                          ) : (
-                            <>
-                              {hasPermission('users', 'canUpdate') && (
-                                <button onClick={() => openEditModal(person)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
-                                  <Edit2 className="w-4 h-4 inline" />
-                                </button>
-                              )}
-                              {hasPermission('users', 'canDelete') && (
-                                <button onClick={() => handleDelete(person.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
-                                  <Trash2 className="w-4 h-4 inline" />
-                                </button>
-                              )}
-                            </>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
+        <div className="flex items-center gap-3">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input 
+              type="text" 
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-[12px] transition-all"
+            />
           </div>
+          {hasPermission('users', 'canCreate') && (
+            <button
+              onClick={openAddModal}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-2 active:scale-95 shadow-sm"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+              New User
+            </button>
+          )}
         </div>
       </div>
 
-      {/* Modal for Create/Edit */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-              <div className="flex justify-between items-center p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                   {isEditing ? 'Edit User' : 'Create New User'}
-                 </h2>
-                 <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                   <X className="w-5 h-5" />
-                 </button>
-              </div>
-              <form onSubmit={handleFormSubmit} className="p-5 space-y-5 overflow-y-auto max-h-[80vh]">
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Email</label>
-                   <input 
-                     type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})}
-                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                   />
-                 </div>
-                 
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                     Password {isEditing && <span className="text-xs text-gray-500 font-normal">(Leave blank to keep current)</span>}
-                   </label>
-                   <input 
-                     type="password" required={!isEditing} minLength={6} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})}
-                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                   />
-                 </div>
-                 
-                 <div className="flex gap-4">
-                   <div className="flex-1">
-                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">First Name</label>
-                     <input 
-                       type="text" required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})}
-                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                     />
-                   </div>
-                   <div className="flex-1">
-                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Last Name</label>
-                     <input 
-                       type="text" required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})}
-                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                     />
-                   </div>
-                 </div>
-
-                 <div className="flex gap-4">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Role</label>
-                      <select 
-                        required value={formData.roleId} onChange={(e) => setFormData({...formData, roleId: e.target.value})}
-                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                      >
-                        <option value="" disabled>Select a role...</option>
-                        {roles.map(r => (
-                          <option key={r.id} value={r.id}>{r.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Organization</label>
-                      {user?.isSystemAdmin ? (
-                        <select 
-                          required 
-                          value={formData.organizationId} 
-                          onChange={(e) => setFormData({...formData, organizationId: e.target.value})}
-                          className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+      {/* Table Section - Compact & Professional */}
+      <div className="bg-white dark:bg-gray-800 rounded-xl border border-gray-100 dark:border-gray-700 overflow-hidden shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-left">
+            <thead>
+              <tr className="bg-gray-50/50 dark:bg-gray-900/50 border-b border-gray-100 dark:border-gray-700">
+                <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest cursor-pointer group" onClick={() => handleSort('name')}>
+                  <div className="flex items-center">Name <SortIcon column="name" /></div>
+                </th>
+                <th className="px-4 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest cursor-pointer group" onClick={() => handleSort('email')}>
+                  <div className="flex items-center">Email <SortIcon column="email" /></div>
+                </th>
+                <th className="px-4 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Role</th>
+                <th className="px-4 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest">Organization</th>
+                <th className="px-4 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-center">Status</th>
+                <th className="px-6 py-4 text-[11px] font-black text-gray-400 uppercase tracking-widest text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody className="divide-y divide-gray-50 dark:divide-gray-700">
+              {loading ? (
+                <tr><td colSpan={6} className="p-12 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-blue-500" /></td></tr>
+              ) : filteredUsers.length === 0 ? (
+                <tr><td colSpan={6} className="p-12 text-center text-xs font-bold text-gray-400">No users found.</td></tr>
+              ) : filteredUsers.map((person) => (
+                <tr key={person.id} className="hover:bg-gray-50/50 dark:hover:bg-gray-700/30 transition-colors group">
+                  <td className="px-6 py-3">
+                    <span className="text-[13px] font-bold text-gray-900 dark:text-white">{person.firstName} {person.lastName}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-xs text-gray-500 dark:text-gray-400">{person.email}</span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <span className={`inline-block px-2 py-0.5 rounded text-[10px] font-black uppercase tracking-wider ${person.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' ? 'bg-orange-50 text-orange-600 border border-orange-100' : 'bg-blue-50 text-blue-600 border border-blue-100'}`}>
+                      {person.role?.name || 'User'}
+                    </span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-xs font-bold text-gray-600 dark:text-gray-400">{person.organization?.name || '---'}</span>
+                  </td>
+                  <td className="px-4 py-3 text-center">
+                    <button 
+                      onClick={() => toggleStatus(person)}
+                      disabled={(!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' || person.isSystemAdmin)}
+                      className={`inline-block w-3 h-3 rounded-full border-2 transition-all ${person.isActive ? 'bg-green-500 border-green-200' : 'bg-red-500 border-red-200'} ${((!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' || person.isSystemAdmin)) ? 'cursor-default opacity-40' : 'cursor-pointer hover:scale-125'}`}
+                      title={person.isActive ? 'Active' : 'Inactive'}
+                    />
+                  </td>
+                  <td className="px-6 py-3 text-right">
+                    <div className="flex items-center justify-end gap-2">
+                      {user?.isSystemAdmin && person.organizationId !== user.organizationId && !person.isSystemAdmin && (
+                        <button 
+                          onClick={() => handleResetPassword(person.id)} 
+                          className="p-1.5 text-amber-500 hover:text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-900/20 rounded-lg transition-colors"
+                          title="Reset Password"
                         >
-                          <option value="" disabled>Select an organization...</option>
-                          {organizations.map(o => (
-                            <option key={o.id} value={o.id}>{o.name}</option>
-                          ))}
-                        </select>
-                      ) : (
-                        <div className="w-full rounded-md border border-gray-200 dark:border-gray-700 px-3 py-2 bg-gray-50 dark:bg-gray-800/50 text-gray-600 dark:text-gray-400 font-medium">
-                          {user?.orgName || 'Unknown Organization'}
-                        </div>
+                          <RefreshCw className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      
+                      {(person.id === user?.id || (!person.isSystemAdmin && (hasPermission('users', 'canUpdate') || (user?.isSystemAdmin && person.organizationId !== user.organizationId)))) && (
+                        <button onClick={() => openEditModal(person)} className="p-1.5 text-gray-400 hover:text-blue-600 transition-colors"><Edit2 className="w-3.5 h-3.5" /></button>
+                      )}
+                      
+                      {hasPermission('users', 'canDelete') && (user?.isSystemAdmin && person.organizationId === user.organizationId) && person.id !== user?.id && !person.isSystemAdmin && (
+                        <button onClick={() => handleDelete(person.id)} className="p-1.5 text-gray-400 hover:text-red-600 transition-colors"><Trash2 className="w-3.5 h-3.5" /></button>
                       )}
                     </div>
-                 </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      </div>
 
-                 <div className="flex items-center justify-between pt-2 pb-2">
-                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex flex-col">
-                     <span>Account Status</span>
-                     <span className="text-xs text-gray-500 font-normal">Active accounts can login to the system.</span>
-                   </label>
-                   <button 
-                     type="button"
-                     onClick={() => setFormData({...formData, isActive: !formData.isActive})}
-                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.isActive ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                   >
-                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
-                   </button>
-                 </div>
+      {/* Compact Modal */}
+      {isModalOpen && (
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 backdrop-blur-sm px-4 animate-in fade-in duration-200">
+           <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-gray-100 dark:border-gray-700">
+              <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
+                 <h2 className="text-sm font-bold text-gray-900 dark:text-white">
+                   {currentUserId === user?.id ? 'My Account Details' : (isEditing && formData.organizationId !== '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' ? 'View User Details' : (isEditing ? 'Edit Profile' : 'New User'))}
+                 </h2>
+                 <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+              </div>
+              <form onSubmit={handleFormSubmit} className="p-4 space-y-4">
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">First Name</label>
+                      <input type="text" required value={formData.firstName} onChange={(e) => setFormData({...formData, firstName: e.target.value})} 
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent" 
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Name</label>
+                      <input type="text" required value={formData.lastName} onChange={(e) => setFormData({...formData, lastName: e.target.value})} 
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent" 
+                      />
+                    </div>
+                  </div>
 
-                 <div className="pt-4 border-t dark:border-gray-700 flex justify-end gap-3">
-                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 hover:dark:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">Cancel</button>
-                   <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">Save User</button>
-                 </div>
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Email Address</label>
+                    <input type="email" required value={formData.email} onChange={(e) => setFormData({...formData, email: e.target.value})} 
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] focus:outline-none focus:border-blue-500 bg-transparent" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Password {isEditing && <span className="text-[9px] lowercase font-medium opacity-60">(optional)</span>}</label>
+                    <input type="password" required={!isEditing} minLength={6} value={formData.password} onChange={(e) => setFormData({...formData, password: e.target.value})} placeholder={isEditing ? '••••••••' : ''} 
+                      className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] focus:outline-none focus:border-blue-500 bg-transparent" 
+                    />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Role</label>
+                      <select required value={formData.roleId} onChange={(e) => setFormData({...formData, roleId: e.target.value})} 
+                        className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
+                      >
+                        <option value="" disabled>Select...</option>
+                        {roles.map(r => <option key={r.id} value={r.id}>{r.name}</option>)}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Org</label>
+                      {user?.isSystemAdmin ? (
+                        <select required value={formData.organizationId} onChange={(e) => setFormData({...formData, organizationId: e.target.value})} 
+                          disabled={isEditing && !user?.isSystemAdmin}
+                          className={`w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent ${isEditing && !user?.isSystemAdmin ? 'opacity-50 cursor-not-allowed' : ''}`}
+                        >
+                          <option value="" disabled>Select...</option>
+                          {organizations.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
+                        </select>
+                      ) : <div className="w-full rounded-lg border border-gray-100 bg-gray-50 px-3 py-1.5 text-[11px] font-bold text-gray-500 truncate">{user?.orgName}</div>}
+                    </div>
+                  </div>
+
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50">
+                    <span className="text-[11px] font-bold text-gray-500">Active Account</span>
+                    <button 
+                      type="button"
+                      onClick={() => setFormData({...formData, isActive: !formData.isActive})}
+                      className={`relative inline-flex h-5 w-9 items-center rounded-full transition-all ${formData.isActive ? 'bg-green-500' : 'bg-gray-300'}`}
+                    >
+                      <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${formData.isActive ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    </button>
+                  </div>
+
+                  <div className="flex gap-2">
+                    {isEditing && (
+                      <button 
+                        type="button" 
+                        onClick={handleRequestReset}
+                        className="flex-1 py-2 bg-amber-50 text-amber-600 text-xs font-bold rounded-lg border border-amber-100 hover:bg-amber-100 transition-all active:scale-95"
+                      >
+                        Reset Password
+                      </button>
+                    )}
+                    <button type="submit" className="flex-[2] py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all active:scale-95 shadow-sm">
+                      {isEditing ? 'Save Changes' : 'Create User'}
+                    </button>
+                  </div>
               </form>
            </div>
         </div>

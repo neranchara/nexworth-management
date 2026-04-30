@@ -29,6 +29,7 @@ export interface User {
   isActive: boolean;
   role?: { id: string; name: string };
   organization?: { id: string; name: string };
+  isSystemAdmin?: boolean;
 }
 
 export interface Organization {

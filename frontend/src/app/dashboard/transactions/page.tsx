@@ -765,8 +765,9 @@ export default function TransactionsPage() {
                      <p className="text-xs text-center text-gray-500 font-medium pb-2 border-b border-gray-200 dark:border-gray-700">Account Selection (Pick exactly one, or both to do a Transfer)</p>
                      <div className="grid grid-cols-2 gap-4">
                         <div>
-                           <label className="block text-sm font-semibold text-red-600 dark:text-red-400 mb-1">บัญชีต้นทาง (From)</label>
+                           <label htmlFor="from-account-select" className="block text-sm font-semibold text-red-600 dark:text-red-400 mb-1">บัญชีต้นทาง (From)</label>
                            <select 
+                             id="from-account-select"
                              value={formData.fromAccountId} onChange={(e) => setFormData({...formData, fromAccountId: e.target.value})}
                              className="w-full px-3 py-2 text-sm rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 outline-none transition-all"
                            >
@@ -775,8 +776,9 @@ export default function TransactionsPage() {
                            </select>
                         </div>
                         <div>
-                           <label className="block text-sm font-semibold text-green-600 dark:text-green-400 mb-1">บัญชีปลายทาง (To)</label>
+                           <label htmlFor="to-account-select" className="block text-sm font-semibold text-green-600 dark:text-green-400 mb-1">บัญชีปลายทาง (To)</label>
                            <select 
+                             id="to-account-select"
                              value={formData.toAccountId} onChange={(e) => setFormData({...formData, toAccountId: e.target.value})}
                              className="w-full px-3 py-2 text-sm rounded-lg border border-green-200 dark:border-green-900 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
                            >
@@ -788,10 +790,11 @@ export default function TransactionsPage() {
                  </div>
 
                  <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
+                    <label htmlFor="amount-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
                     <div className="relative">
                        <span className="absolute left-4 top-2 text-gray-400 font-bold text-lg">฿</span>
                        <input 
+                         id="amount-input"
                          type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})}
                          placeholder="0.00"
                          className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"

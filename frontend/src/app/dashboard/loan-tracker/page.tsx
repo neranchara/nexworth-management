@@ -18,6 +18,7 @@ interface Loan {
   actualDate?: string;
   code?: string;
   latestRepaymentDate?: string;
+  transactions: any[];
 }
 
 
@@ -330,49 +331,47 @@ export default function LoanTrackerPage() {
             </tr>
           </thead>
           <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {sortedLots.map((lot) => (
-              <tr key={lot.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+            {loans.map((loan) => (
+              <tr key={loan.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
                 <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-blue-600 dark:text-blue-400">
-                  {lot.displayCode}
+                  {loan.code}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {format(new Date(lot.actualDate || lot.date), 'dd/MM/yyyy')}
+                  {format(new Date(loan.actualDate || loan.date), 'dd/MM/yyyy')}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 font-medium">
-                  {lot.name}
+                  {loan.name}
                 </td>
                 <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
                   <Wallet className="w-4 h-4 text-gray-400" />
-                  {lot.accountName}
+                  {loan.accountName}
                 </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 text-right">{lot.borrowed.toLocaleString()}</td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600 text-right">{lot.repaid.toLocaleString()}</td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 text-right">{lot.balance.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 text-right">{loan.totalBorrowed.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600 text-right">{loan.totalRepaid.toLocaleString()}</td>
+                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 text-right">{loan.balance.toLocaleString()}</td>
                 <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
                   {hasPermission('loan-tracker', 'canUpdate') && (
                     <div className="flex justify-end gap-2">
                       <button 
-                        disabled={lot.balance === 0}
-                        onClick={() => { setSelectedLoan(lot.fullLoan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'REPAY' }) }}
-                        className={`px-3 py-1 rounded ${lot.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-green-600 hover:text-green-900 bg-green-50'}`}
+                        disabled={loan.balance === 0}
+                        onClick={() => { setSelectedLoan(loan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'REPAY' }) }}
+                        className={`px-3 py-1 rounded ${loan.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-green-600 hover:text-green-900 bg-green-50'}`}
                       >
                         คืนเงิน
                       </button>
                       <button 
-                        disabled={lot.balance === 0}
                         onClick={() => { 
-                          setNewLoanForm({ name: lot.name, accountId: lot.accountId, initialAmount: '', actualDate: '' });
-                          setIsEditing(false);
-                          setShowNewLoanModal(true);
+                          setSelectedLoan(loan); 
+                          setShowRepayModal(true); 
+                          setRepayForm({ ...repayForm, type: 'BORROW' });
                         }}
-                        className={`px-3 py-1 rounded ${lot.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-orange-600 hover:text-orange-900 bg-orange-50'}`}
+                        className="px-3 py-1 rounded text-orange-600 hover:text-orange-900 bg-orange-50"
                       >
                         ยืมเพิ่ม
                       </button>
                       <button 
-                        disabled={lot.balance === 0}
-                        onClick={() => openEditModal(lot.fullLoan)}
-                        className={`px-3 py-1 rounded ${lot.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-blue-600 hover:text-blue-900 bg-blue-50'}`}
+                        onClick={() => openEditModal(loan)}
+                        className="px-3 py-1 rounded text-blue-600 hover:text-blue-900 bg-blue-50"
                       >
                         แก้ไข
                       </button>

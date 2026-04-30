@@ -156,7 +156,7 @@ const WelcomeCard = ({ user, stats, loading }: { user: any; stats: any; loading:
     
     <div className="relative z-10 mb-6">
       <h1 className="text-2xl font-black text-white mb-1 tracking-tight">
-        Welcome, {user?.firstName}
+        Welcome, {[user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'User'}
       </h1>
       <p className="text-slate-400 text-[11px] font-medium uppercase tracking-[0.2em]">Financial Overview</p>
     </div>
@@ -701,7 +701,12 @@ export default function DashboardPage() {
         setError(null);
         const res = await api.get(`/dashboard/stats?year=${selectedYear}&month=${selectedMonth}`);
         if (res.data) {
-          setStats(res.data);
+          // Double check properties exist to prevent nested property access errors
+          const data = res.data;
+          if (!data.summary) data.summary = { totalAssets: 0, totalLiabilities: 0, netWorth: 0 };
+          if (!data.health) data.health = { score: 0, status: 'Initializing', metrics: {}, scores: {} };
+          if (!data.monthlyCashflow) data.monthlyCashflow = [];
+          setStats(data);
         } else {
           throw new Error('API returned empty data');
         }
@@ -749,13 +754,16 @@ export default function DashboardPage() {
 
   const pieData = useMemo(() => {
     if (!selectedMonthData) return [];
-    return [
-      { name: 'Income', value: selectedMonthData.income, color: '#3b82f6' },
-      { name: 'Expense', value: selectedMonthData.expense, color: '#ef4444' },
-      { name: 'Saving', value: selectedMonthData.saving + selectedMonthData.goalSaving, color: '#22c55e' },
-      { name: 'Investment', value: selectedMonthData.invest, color: '#06b6d4' },
-      { name: 'Debt Paid', value: selectedMonthData.debt, color: '#f59e0b' },
-    ].filter(d => d.value > 0);
+    const data = [
+      { name: 'Income', value: selectedMonthData.income || 0, color: '#3b82f6' },
+      { name: 'Expense', value: selectedMonthData.expense || 0, color: '#ef4444' },
+      { name: 'Saving', value: (selectedMonthData.saving || 0) + (selectedMonthData.goalSaving || 0), color: '#22c55e' },
+      { name: 'Investment', value: selectedMonthData.invest || 0, color: '#06b6d4' },
+      { name: 'Debt Paid', value: selectedMonthData.debt || 0, color: '#f59e0b' },
+    ];
+    const filtered = data.filter(d => d.value > 0);
+    // If no data > 0, return a placeholder to prevent chart crash
+    return filtered.length > 0 ? filtered : [{ name: 'No Data', value: 1, color: '#cbd5e1' }];
   }, [selectedMonthData]);
 
   const healthData = useMemo(() => [
@@ -786,20 +794,30 @@ export default function DashboardPage() {
   }, []);
 
   const gridItems = useMemo(() => {
-    if (!stats) return [];
+    // Ensure stats exists, but if it doesn't, we still return a loading state or default widgets
+    // to prevent the dashboard from being completely blank.
+    const currentStats = stats || { 
+      summary: { totalAssets: 0, totalGoalAssets: 0, totalLiabilities: 0, netWorth: 0 },
+      health: { score: 0, status: 'Initializing', metrics: { savingRate: 0, goalRate: 0, emergencyMonths: 0, debtRatio: 0, investmentRatio: 0 }, scores: {} },
+      goalTracking: [],
+      monthlyCashflow: []
+    };
+
+    const healthMetrics = currentStats?.health?.metrics || {};
+
     const items: GridItemConfig[] = [
       { key: 'welcome', content: <WelcomeCard user={user} stats={stats} loading={loading} />, defaultLayout: { lg: { x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 4 }, md: { x: 0, y: 0, w: 10, h: 6 }, sm: { x: 0, y: 0, w: 6, h: 7 } } },
       { key: 'health', content: <HealthCard stats={stats} loading={loading} healthData={healthData} />, defaultLayout: { lg: { x: 6, y: 0, w: 3, h: 6, minW: 3, minH: 4 }, md: { x: 0, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 7, w: 6, h: 5 } } },
       
-      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${((stats?.health?.metrics?.savingRate ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.saving ?? 0} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
+      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${((healthMetrics.savingRate ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.saving ?? 0} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
       
-      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${((stats?.health?.metrics?.goalRate ?? 0) * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
+      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${((healthMetrics.goalRate ?? 0) * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
       
-      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${stats?.health?.metrics?.emergencyMonths ?? 0} Mo`} score={stats?.health?.scores?.emergency ?? 0} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
+      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${healthMetrics.emergencyMonths ?? 0} Mo`} score={currentStats?.health?.scores?.emergency ?? 0} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
       
-      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${((stats?.health?.metrics?.debtRatio ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.debt ?? 0} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
+      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${((healthMetrics.debtRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.debt ?? 0} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
       
-      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((stats?.health?.metrics?.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
+      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((healthMetrics.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
       
       { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} visualMonth={visualMonth} visualYear={visualYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onVisualMonthChange={setVisualMonth} onVisualYearChange={setVisualYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
       

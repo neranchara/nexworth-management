@@ -9,12 +9,19 @@ interface AuthState {
   login: (token: string, userData: User) => void;
   logout: () => void;
   checkAuth: () => Promise<void>;
+  updateUser: (userData: Partial<User>) => void;
 }
 
 export const useAuthStore = create<AuthState>((set) => ({
   user: null,
   isAuthenticated: false,
   isLoading: true,
+  
+  updateUser: (userData) => {
+    set((state) => ({
+      user: state.user ? { ...state.user, ...userData } : null
+    }));
+  },
   
   login: (token, userData) => {
     localStorage.setItem('token', token);
@@ -46,6 +53,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         user: { 
           id: response.data.user.sub, 
           email: response.data.user.email,
+          firstName: response.data.user.firstName,
+          lastName: response.data.user.lastName,
           role: response.data.user.role,
           permissions: response.data.user.permissions || [],
           organizationId: response.data.user.organizationId,

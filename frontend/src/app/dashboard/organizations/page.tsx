@@ -4,11 +4,12 @@ import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-import { Building2, Plus, Users, Receipt, Wallet, ArrowRight, ShieldCheck, Search, Loader2 } from 'lucide-react';
+import { Building2, Plus, Users, Receipt, Wallet, ArrowRight, ShieldCheck, Search, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
 
 interface Organization {
   id: string;
   name: string;
+  isActive: boolean;
   createdAt: string;
   _count: {
     users: number;
@@ -54,6 +55,15 @@ export default function OrganizationsPage() {
     }
   };
 
+  const handleToggleActive = async (orgId: string, currentStatus: boolean) => {
+    try {
+      await api.put(`/organizations/${orgId}`, { isActive: !currentStatus });
+      fetchOrganizations();
+    } catch (err: any) {
+      alert(err.response?.data?.error || 'Failed to update organization status');
+    }
+  };
+
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -82,75 +92,94 @@ export default function OrganizationsPage() {
   }
 
   return (
-    <div className="p-6">
-      <div className="flex flex-col md:flex-row md:items-center justify-between mb-8 gap-4">
+    <div>
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-8 gap-4 border-b dark:border-gray-800 pb-6">
         <div>
-          <h1 className="text-3xl font-extrabold text-gray-900 dark:text-white flex items-center gap-3">
-            <Building2 className="w-8 h-8 text-blue-600" />
-            Organizations Management
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
+            <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            Organizations
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1">Manage tenants and system organizations.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-[13px]">Manage and monitor all system organizations.</p>
         </div>
         
-        <button
-          onClick={() => setShowCreateModal(true)}
-          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-xl font-bold shadow-lg shadow-blue-200 dark:shadow-none transition-all flex items-center gap-2"
-        >
-          <Plus className="w-5 h-5" />
-          Create New Org
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="relative w-full sm:w-64">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
+            <input 
+              type="text" 
+              placeholder="Search..."
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="w-full pl-9 pr-4 py-1.5 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg focus:ring-1 focus:ring-blue-500 outline-none text-[12px] transition-all"
+            />
+          </div>
+          <button
+            onClick={() => setShowCreateModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-2 active:scale-95"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            Create Org
+          </button>
+        </div>
       </div>
 
-      <div className="mb-6 relative max-w-md">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-5 h-5" />
-        <input 
-          type="text" 
-          placeholder="Search organizations..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="w-full pl-10 pr-4 py-3 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all text-gray-900 dark:text-white"
-        />
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
         {filteredOrgs.map((org) => (
-          <div key={org.id} className="bg-white dark:bg-gray-800 rounded-2xl shadow-sm border border-gray-100 dark:border-gray-700 p-6 hover:shadow-md transition-all group relative overflow-hidden">
-            <div className="absolute top-0 right-0 p-4 opacity-5 group-hover:opacity-10 transition-opacity">
-              <Building2 className="w-20 h-20 -mr-4 -mt-4" />
+          <div key={org.id} className={`bg-white dark:bg-gray-800 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700 p-5 hover:shadow-md transition-all group relative overflow-hidden ${!org.isActive ? 'opacity-60 grayscale-[0.5]' : ''}`}>
+            <div className="absolute top-0 right-0 p-3 opacity-5 group-hover:opacity-10 transition-opacity">
+              <Building2 className="w-16 h-16 -mr-3 -mt-3" />
             </div>
             
-            <div className="flex items-center gap-4 mb-6">
-              <div className="w-12 h-12 bg-blue-50 dark:bg-blue-900/20 rounded-xl flex items-center justify-center text-blue-600">
-                <Building2 className="w-6 h-6" />
+            <div className="flex items-center justify-between mb-5">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-blue-50 dark:bg-blue-900/20 rounded-lg flex items-center justify-center text-blue-600">
+                  <Building2 className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="text-md font-bold text-gray-900 dark:text-white leading-tight">{org.name}</h3>
+                  <p className="text-[10px] text-gray-400">Since {new Date(org.createdAt).toLocaleDateString()}</p>
+                </div>
               </div>
-              <div>
-                <h3 className="text-lg font-bold text-gray-900 dark:text-white">{org.name}</h3>
-                <p className="text-xs text-gray-400">Created {new Date(org.createdAt).toLocaleDateString()}</p>
+              
+              {org.name === 'System Management' ? (
+                <div className="p-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-400" title="Locked">
+                  <ShieldCheck className="w-4 h-4" />
+                </div>
+              ) : (
+                <button 
+                  onClick={() => handleToggleActive(org.id, org.isActive)}
+                  className={`relative inline-flex h-5 w-10 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${org.isActive ? 'bg-blue-600' : 'bg-gray-200 dark:bg-gray-700'}`}
+                >
+                  <span className={`pointer-events-none inline-block h-4 w-4 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${org.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
+                </button>
+              )}
+            </div>
+ 
+            <div className="grid grid-cols-3 gap-3 mb-5">
+              <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                <Users className="w-3.5 h-3.5 text-blue-500 mx-auto mb-1" />
+                <p className="text-[12px] font-bold text-gray-900 dark:text-white">{org._count.users}</p>
+                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">Users</p>
+              </div>
+              <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                <Wallet className="w-3.5 h-3.5 text-purple-500 mx-auto mb-1" />
+                <p className="text-[12px] font-bold text-gray-900 dark:text-white">{org._count.accounts}</p>
+                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">Accounts</p>
+              </div>
+              <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                <Receipt className="w-3.5 h-3.5 text-green-500 mx-auto mb-1" />
+                <p className="text-[12px] font-bold text-gray-900 dark:text-white">{org._count.transactions}</p>
+                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">TXs</p>
               </div>
             </div>
-
-            <div className="grid grid-cols-3 gap-4 mb-6">
-              <div className="text-center p-3 bg-gray-50 dark:bg-gray-900/40 rounded-xl">
-                <Users className="w-4 h-4 text-blue-500 mx-auto mb-1" />
-                <p className="text-sm font-bold text-gray-900 dark:text-white">{org._count.users}</p>
-                <p className="text-[10px] text-gray-400 uppercase font-bold">Users</p>
-              </div>
-              <div className="text-center p-3 bg-gray-50 dark:bg-gray-900/40 rounded-xl">
-                <Wallet className="w-4 h-4 text-purple-500 mx-auto mb-1" />
-                <p className="text-sm font-bold text-gray-900 dark:text-white">{org._count.accounts}</p>
-                <p className="text-[10px] text-gray-400 uppercase font-bold">Accounts</p>
-              </div>
-              <div className="text-center p-3 bg-gray-50 dark:bg-gray-900/40 rounded-xl">
-                <Receipt className="w-4 h-4 text-green-500 mx-auto mb-1" />
-                <p className="text-sm font-bold text-gray-900 dark:text-white">{org._count.transactions}</p>
-                <p className="text-[10px] text-gray-400 uppercase font-bold">TXs</p>
-              </div>
-            </div>
-
-            <div className="w-full py-3 bg-gray-100 dark:bg-gray-700 hover:bg-blue-600 hover:text-white text-gray-600 dark:text-gray-300 rounded-xl font-bold transition-all flex items-center justify-center gap-2 group-hover:bg-blue-600 group-hover:text-white">
-              View Organization
-              <ArrowRight className="w-4 h-4" />
-            </div>
+ 
+            <button 
+              onClick={() => router.push(`/dashboard/organizations/${org.id}`)}
+              className="w-full py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-600 hover:text-white text-gray-600 dark:text-gray-300 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 group-hover:bg-blue-600 group-hover:text-white"
+            >
+              View Hub
+              <ChevronRight className="w-3 h-3" />
+            </button>
           </div>
         ))}
       </div>

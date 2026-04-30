@@ -73,8 +73,10 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     { name: 'ธนาคารยูโอบี', code: 'UOB' },
   ];
   for (const bank of initialBanks) {
-    await prisma.bank.create({
-      data: { name: bank.name, code: bank.code, organizationId: orgId }
+    await prisma.bank.upsert({
+      where: { organizationId_code: { organizationId: orgId, code: bank.code } },
+      update: { name: bank.name },
+      create: { name: bank.name, code: bank.code, organizationId: orgId }
     });
   }
 
@@ -90,8 +92,10 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     { name: 'เงินมีเป้าหมาย', behavior: 'GOAL_SAVING' },
   ];
   for (const t of typeData) {
-    await prisma.transactionType.create({
-      data: { name: t.name, behavior: t.behavior as any, organizationId: orgId }
+    await prisma.transactionType.upsert({
+      where: { organizationId_name: { organizationId: orgId, name: t.name } },
+      update: { behavior: t.behavior as any },
+      create: { name: t.name, behavior: t.behavior as any, organizationId: orgId }
     });
   }
 
@@ -123,8 +127,10 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
   for (const cat of categoryData) {
     const typeId = cat.typeName ? getTypeId(cat.typeName) : getTypeByBehavior(cat.typeBehavior!);
     if (typeId) {
-      await prisma.transactionCategory.create({
-        data: { name: cat.name, typeId, organizationId: orgId }
+      await prisma.transactionCategory.upsert({
+        where: { organizationId_name_typeId: { organizationId: orgId, name: cat.name, typeId } },
+        update: {},
+        create: { name: cat.name, typeId, organizationId: orgId }
       });
     }
   }

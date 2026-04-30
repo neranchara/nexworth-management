@@ -27,12 +27,24 @@ const updateUserSchema = z.object({
 export const listUsersHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
     
-    // Isolation logic: 
-    // - System Admins can see all users.
-    // - Org users can only see users within their own organization.
-    const whereClause = isSystemAdmin ? {} : { organizationId: user.organizationId };
+    const { orgId } = request.query as { orgId?: string };
+    const targetOrgId = (isSystemAdmin && orgId) ? orgId : user.organizationId;
+    const isSuperAdmin = user.role === 'Super Admin' || user.email === 'superadmin@nexworth.online';
+
+    // Standard view: only show users of the target organization
+    const whereClause: any = {
+      organizationId: targetOrgId
+    };
+
+    // Visibility Logic for System Management:
+    // If Login User is NOT Super Admin, they cannot see Super Admins of the same organization
+    if (!isSuperAdmin && targetOrgId === user.organizationId && user.orgName === 'System Management') {
+      whereClause.role = {
+        name: { not: 'Super Admin' }
+      };
+    }
 
     const users = await prisma.user.findMany({
       where: whereClause,
@@ -62,7 +74,7 @@ export const listUsersHandler = async (request: FastifyRequest, reply: FastifyRe
 export const createUserHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
     const body = createUserSchema.parse(request.body);
 
     // Isolation: Non-SystemAdmin can only create users in their own organization
@@ -117,7 +129,7 @@ export const createUserHandler = async (request: FastifyRequest, reply: FastifyR
 export const updateUserHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
     const id = request.params.id;
     const body = updateUserSchema.parse(request.body);
 
@@ -127,17 +139,27 @@ export const updateUserHandler = async (request: FastifyRequest<{ Params: { id: 
       return reply.status(404).send({ error: 'User not found' });
     }
 
+    const isSelfUpdate = targetUser.id === user.sub;
+
     // Isolation Check
-    if (isSystemAdmin && targetUser.organizationId !== user.organizationId) {
-      // System Admin can only reset password for other orgs
-      // We'll check if only password is being updated? 
-      // But we have resetPasswordHandler for that.
-      // So block full edit.
-      return reply.status(403).send({ error: 'Access denied: System Admins can only RESET passwords for users in other organizations, not edit their profile.' });
+    if (isSystemAdmin) {
+      if (!isSelfUpdate && targetUser.organizationId !== user.organizationId) {
+        // System Admin can only reset password or toggle active status for other orgs
+        const allowedFields = ['password', 'isActive'];
+        const attemptFields = Object.keys(request.body as object);
+        const isTryingForbidden = attemptFields.some(f => !allowedFields.includes(f));
+        
+        if (isTryingForbidden) {
+          return reply.status(403).send({ error: 'Access denied: System Admins can only RESET passwords or toggle ACTIVE status for users in other organizations, not edit other profile details.' });
+        }
+      } else if (!isSelfUpdate && targetUser.isSystemAdmin && targetUser.id !== user.sub && (request.body as any).isActive !== undefined) {
+        // Prevent System Admin from deactivating OTHER System Admins in the same Master Org
+        return reply.status(403).send({ error: 'Access denied: You cannot change the status of other System Administrators.' });
+      }
     }
 
-    if (!isSystemAdmin && targetUser.organizationId !== user.organizationId) {
-      return reply.status(403).send({ error: 'Access denied: You can only update users within your own organization' });
+    if (!isSystemAdmin && !isSelfUpdate && targetUser.organizationId !== user.organizationId) {
+      return reply.status(403).send({ error: 'Access denied: You can only update users within your own organization or your own profile' });
     }
     
     // If updating organizationId, must be SystemAdmin
@@ -150,6 +172,8 @@ export const updateUserHandler = async (request: FastifyRequest<{ Params: { id: 
       dataToUpdate.passwordHash = await bcrypt.hash(body.password, 10);
       delete dataToUpdate.password;
     }
+
+    console.log(`[DEBUG] Updating user ${id}:`, dataToUpdate);
 
     const updatedUser = await prisma.user.update({
       where: { id },
@@ -178,7 +202,7 @@ export const updateUserHandler = async (request: FastifyRequest<{ Params: { id: 
 export const deleteUserHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
     const id = request.params.id;
 
     // 1. Fetch user to check organization
@@ -207,7 +231,7 @@ export const deleteUserHandler = async (request: FastifyRequest<{ Params: { id: 
 export const resetPasswordHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
     const id = request.params.id;
 
     // 1. Check if the requester is a System Admin
@@ -231,10 +255,13 @@ export const resetPasswordHandler = async (request: FastifyRequest<{ Params: { i
        return reply.status(400).send({ error: 'Cannot use this function for users within the same organization' });
     }
 
-    // 4. Generate default password: {orgName}@1234
-    const orgName = targetUser.organization?.name || 'nexworth';
-    const defaultPassword = `${orgName}@1234`;
-    const passwordHash = await bcrypt.hash(defaultPassword, 10);
+    // 4. Generate random password
+    const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*";
+    let randomPassword = "";
+    for (let i = 0; i < 12; i++) {
+      randomPassword += charset.charAt(Math.floor(Math.random() * charset.length));
+    }
+    const passwordHash = await bcrypt.hash(randomPassword, 10);
 
     // 5. Update user password
     await prisma.user.update({
@@ -242,12 +269,32 @@ export const resetPasswordHandler = async (request: FastifyRequest<{ Params: { i
       data: { passwordHash }
     });
 
+    // 6. Mock sending email
+    console.log(`[MOCK EMAIL] Sending NEW password to ${targetUser.email}: ${randomPassword}`);
+
     return reply.send({ 
-      message: `Password reset successfully for ${targetUser.email}`,
-      newPassword: defaultPassword 
+      message: `A new random password has been generated and sent to ${targetUser.email}.`
     });
   } catch (error) {
     request.log.error(error);
     return reply.status(500).send({ error: 'Internal Server Error' });
+  }
+};
+
+export const requestResetPasswordHandler = async (request: any, reply: any) => {
+  try {
+    const user = request.user;
+    const id = request.params.id;
+
+    const targetUser = await prisma.user.findUnique({ where: { id } });
+    if (!targetUser) return reply.status(404).send({ error: "User not found" });
+
+    const isSystemAdmin = user.isSystemAdmin || user.email === "superadmin@nexworth.online" || user.organizationId === "7f4b8f80-dfb7-4492-9a06-28dad5691dd7";
+    if (!isSystemAdmin && targetUser.id !== user.sub) return reply.status(403).send({ error: "Access denied" });
+
+    console.log("[MOCK EMAIL] Sending reset password link to: " + targetUser.email);
+    return reply.send({ message: "Reset link has been sent to " + targetUser.email + ". Please check your inbox." });
+  } catch (error) {
+    return reply.status(500).send({ error: "Internal Server Error" });
   }
 };
