@@ -16,7 +16,7 @@ const transactionSchema = z.object({
   direction: z.string().optional().nullable(),
 });
 
-export const adjustAccountBalance = async (accountId: string, amount: number, typeId: string, isRemoval: boolean = false) => {
+export const adjustAccountBalance = async (accountId: string, amount: number, typeId: string, direction: string | null = null, isRemoval: boolean = false) => {
   const [account, type] = await Promise.all([
     prisma.account.findUnique({ where: { id: accountId } }),
     prisma.transactionType.findUnique({ where: { id: typeId } })
@@ -28,21 +28,25 @@ export const adjustAccountBalance = async (accountId: string, amount: number, ty
   const isLiability = account.type === 'LIABILITY';
   let multiplier = 0;
 
-  if (isLiability) {
-    // For Liabilities: Expense/Debt/Borrowing increases the debt magnitude.
-    // Income/Repayment/Transfer-In decreases the debt magnitude.
-    if (['EXPENSE', 'DEBT', 'LOAN_BORROW'].includes(behavior)) {
-      multiplier = 1;
-    } else if (['INCOME', 'LOAN_REPAY', 'INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT'].includes(behavior)) {
-      multiplier = -1;
-    }
+  // NEW LOGIC: Priority to Direction
+  if (direction === 'TO') {
+    multiplier = isLiability ? -1 : 1; // TO Liability = Decrease Debt, TO Asset = Increase Balance
+  } else if (direction === 'FROM') {
+    multiplier = isLiability ? 1 : -1; // FROM Liability = Increase Debt, FROM Asset = Decrease Balance
   } else {
-    // For Assets: Income/Borrowing increases cash.
-    // Expense/Debt/Repayment decreases cash.
-    if (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'INTERNAL_TRANSFER', 'LOAN_BORROW'].includes(behavior)) {
-      multiplier = 1;
-    } else if (['EXPENSE', 'DEBT', 'LOAN_REPAY'].includes(behavior)) {
-      multiplier = -1;
+    // FALLBACK: Old behavior-based logic for legacy transactions without direction
+    if (isLiability) {
+      if (['EXPENSE', 'DEBT', 'LOAN_BORROW'].includes(behavior)) {
+        multiplier = 1;
+      } else if (['INCOME', 'LOAN_REPAY', 'INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT'].includes(behavior)) {
+        multiplier = -1;
+      }
+    } else {
+      if (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'INTERNAL_TRANSFER', 'LOAN_BORROW'].includes(behavior)) {
+        multiplier = 1;
+      } else if (['EXPENSE', 'DEBT', 'LOAN_REPAY'].includes(behavior)) {
+        multiplier = -1;
+      }
     }
   }
 
@@ -201,7 +205,7 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
           }
         });
 
-        await adjustAccountBalance(transaction.accountId, transaction.amount, transaction.typeId);
+        await adjustAccountBalance(transaction.accountId, transaction.amount, transaction.typeId, transaction.direction);
         return transaction;
     };
 
@@ -425,9 +429,9 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     }
 
     // Reverse old balances
-    await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, true);
+    await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, existing.direction, true);
     if (linked) {
-      await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, true);
+      await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, linked.direction, true);
     }
 
     const updatedPrimary = await prisma.transaction.update({
@@ -540,13 +544,13 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         data: { linkedTransactionId: newLeg.id }
       });
 
-      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
-      await adjustAccountBalance(newLeg.accountId, newLeg.amount, newLeg.typeId);
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId, updatedPrimary.direction);
+      await adjustAccountBalance(newLeg.accountId, newLeg.amount, newLeg.typeId, newLeg.direction);
 
     } else if (wasTransfer && !isTransferIntent) {
       // CONVERSION: Transfer -> Single
       await prisma.transaction.delete({ where: { id: linked!.id } });
-      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId, updatedPrimary.direction);
 
     } else if (wasTransfer && isTransferIntent) {
       const targetLinkedAccountId = (isExistingExpense ? toAccountId : fromAccountId) || linked!.accountId;
@@ -580,11 +584,11 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         }
       });
       
-      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
-      await adjustAccountBalance(targetLinkedAccountId, updatedPrimary.amount, linked!.typeId);
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId, updatedPrimary.direction);
+      await adjustAccountBalance(targetLinkedAccountId, updatedPrimary.amount, linked!.typeId, isExistingExpense ? 'TO' : 'FROM');
     } else {
       // STANDARD: Update Single
-      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId);
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId, updatedPrimary.direction);
     }
 
     return reply.send({ message: 'Transaction updated (v2)', transaction: updatedPrimary });
@@ -606,13 +610,13 @@ export const deleteTransactionHandler = async (request: FastifyRequest, reply: F
     }
 
     await prisma.transaction.delete({ where: { id } });
-    await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, true);
-
+    await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, existing.direction, true);
+ 
     if (existing.linkedTransactionId) {
       const linked = await prisma.transaction.findUnique({ where: { id: existing.linkedTransactionId } });
       if (linked) {
          await prisma.transaction.delete({ where: { id: linked.id } });
-         await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, true);
+         await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, linked.direction, true);
       }
     }
 
@@ -675,7 +679,7 @@ export const bulkCreateTransactionHandler = async (request: FastifyRequest, repl
           }
         });
 
-        await adjustAccountBalance(transaction.accountId, transaction.amount, transaction.typeId);
+        await adjustAccountBalance(transaction.accountId, transaction.amount, transaction.typeId, transaction.direction);
         createdTransactions.push(transaction);
     }
 
