@@ -48,7 +48,6 @@ export const useAuthStore = create<AuthState>((set) => ({
 
     try {
       const response = await api.get<MeResponse>('/auth/me');
-      // Set minimal user data from token verification
       set({ 
         user: { 
           id: response.data.user.sub, 
@@ -64,7 +63,8 @@ export const useAuthStore = create<AuthState>((set) => ({
         isAuthenticated: true, 
         isLoading: false 
       });
-    } catch {
+    } catch (err: any) {
+      console.error('checkAuth failed:', err.response?.status, err.message, err);
       localStorage.removeItem('token');
       set({ user: null, isAuthenticated: false, isLoading: false });
     }

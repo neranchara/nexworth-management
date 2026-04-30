@@ -662,19 +662,27 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const { hasPermission } = usePermissions();
   const [stats, setStats] = useState<any>(null);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(0);
+  const [selectedYear, setSelectedYear] = useState<number>(2024);
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [cashflowMode, setCashflowMode] = useState<'table' | 'chart' | 'both'>('chart');
   const [cashflowAccounts, setCashflowAccounts] = useState<any[]>([]);
   const [showThresholdSettings, setShowThresholdSettings] = useState(false);
   const [thresholds, setThresholds] = useState<{ low: number; mid: number }>({ low: 5000, mid: 15000 });
   const [enabledWidgets, setEnabledWidgets] = useState<string[]>(ALL_WIDGETS.map(w => w.key));
-  const [visualMonth, setVisualMonth] = useState(new Date().getMonth());
-  const [visualYear, setVisualYear] = useState(new Date().getFullYear());
+  const [visualMonth, setVisualMonth] = useState<number>(0);
+  const [visualYear, setVisualYear] = useState<number>(2024);
 
   useEffect(() => {
+    const now = new Date();
+    setSelectedMonth(now.getMonth());
+    setSelectedYear(now.getFullYear());
+    setVisualMonth(now.getMonth());
+    setVisualYear(now.getFullYear());
+    setIsHydrated(true);
+
     const savedMode = localStorage.getItem('nexworth-cashflow-mode');
     if (savedMode === 'table' || savedMode === 'chart' || savedMode === 'both') setCashflowMode(savedMode as any);
     const savedWidgets = localStorage.getItem('nexworth-enabled-widgets');
@@ -839,7 +847,7 @@ export default function DashboardPage() {
     );
   }
 
-  if (loading && !stats) {
+  if ((loading && !stats) || !isHydrated) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6">
         <div className="relative">

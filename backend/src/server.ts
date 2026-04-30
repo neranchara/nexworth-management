@@ -33,8 +33,9 @@ const buildServer = async (): Promise<FastifyInstance> => {
   const isStaging = process.env.NODE_ENV === 'staging';
   
   await server.register(fastifyRateLimit, {
-    max: isStaging ? 1000 : 100, // Higher limit for tests
-    timeWindow: '1 minute'
+    max: isStaging ? 10000 : 100, // Higher limit for tests
+    timeWindow: '1 minute',
+    allowList: isStaging ? ['127.0.0.1', 'localhost'] : []
   });
 
   // Health Check Route
