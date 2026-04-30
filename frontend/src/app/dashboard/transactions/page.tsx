@@ -184,15 +184,18 @@ export default function TransactionsPage() {
                             categoryName.includes('เข้า') || typeName.includes('เข้า') || 
                             categoryName.includes('ยืม') || typeName.includes('ยืม') || 
                             categoryName.includes('กู้') || typeName.includes('กู้');
+          
           const isOutbound = ['EXPENSE', 'DEBT', 'LOAN_REPAY', 'SAVING', 'INVESTMENT', 'INTERNAL_TRANSFER'].includes(behaviorUpper) || 
                              categoryName.includes('ออก') || typeName.includes('ออก') || 
                              categoryName.includes('คืน') || typeName.includes('คืน');
 
+          // Correct mapping for single account transactions:
+          // Inbound (Income/Borrow) -> To box (Green)
+          // Outbound (Expense/Repay) -> From box (Red)
           if (isInbound && !isOutbound) {
-             isFromBox = false;
+             isFromBox = false; // Put in To box
           } else {
-             // Default to From box for everything else (Expenses, Repayments, etc.)
-             isFromBox = true;
+             isFromBox = true;  // Put in From box
           }
       }
 
@@ -258,7 +261,7 @@ export default function TransactionsPage() {
     if (!payload.toAccountId) delete payload.toAccountId;
 
     try {
-      console.log('[DEBUG-V3.1] Submitting Payload:', payload);
+      console.log('[DEBUG-V4.0-FINAL] Submitting Payload:', payload);
       if (isEditing && currentTxId) {
         await api.put(`/transactions/${currentTxId}`, payload);
         showAlert('Transaction updated successfully (v2)', 'success');
@@ -851,7 +854,8 @@ export default function TransactionsPage() {
                            <label htmlFor="from-account-select" className="block text-sm font-semibold text-red-600 dark:text-red-400 mb-1">บัญชีต้นทาง (From)</label>
                            <select 
                              id="from-account-select"
-                             value={formData.fromAccountId} onChange={(e) => setFormData({...formData, fromAccountId: e.target.value})}
+                             value={formData.fromAccountId} 
+                             onChange={(e) => setFormData({...formData, fromAccountId: e.target.value})}
                              data-testid="transactions-form-sel-from-account"
                              className="w-full px-3 py-2 text-sm rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 outline-none transition-all"
                            >
@@ -863,7 +867,8 @@ export default function TransactionsPage() {
                            <label htmlFor="to-account-select" className="block text-sm font-semibold text-green-600 dark:text-green-400 mb-1">บัญชีปลายทาง (To)</label>
                            <select 
                              id="to-account-select"
-                             value={formData.toAccountId} onChange={(e) => setFormData({...formData, toAccountId: e.target.value})}
+                             value={formData.toAccountId} 
+                             onChange={(e) => setFormData({...formData, toAccountId: e.target.value})}
                              data-testid="transactions-form-sel-to-account"
                              className="w-full px-3 py-2 text-sm rounded-lg border border-green-200 dark:border-green-900 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
                            >

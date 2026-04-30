@@ -16,7 +16,7 @@ async function main() {
         ]
     },
     include: {
-        category: true,
+        category: { include: { type: true } },
         type: true
     }
   });
@@ -25,14 +25,25 @@ async function main() {
   let count = 0;
 
   for (const tx of transactions) {
-    // Force direction to 'FROM' for these specific cases
-    if (tx.direction !== 'FROM') {
+    const behavior = (tx.type?.behavior || tx.category?.type?.behavior || '').toUpperCase();
+    const catName = (tx.category?.name || '').toLowerCase();
+    
+    let targetDirection = 'FROM'; // Default
+    
+    // Logic: Borrowing = Money IN (TO), Repaying/Transfer Out = Money OUT (FROM)
+    if (behavior === 'LOAN_BORROW' || catName.includes('ยืมเงินเข้า') || catName.includes('ยืม')) {
+        targetDirection = 'TO';
+    } else if (behavior === 'LOAN_REPAY' || catName.includes('คืน') || catName.includes('โอนออก')) {
+        targetDirection = 'FROM';
+    }
+
+    if (tx.direction !== targetDirection) {
         await prisma.transaction.update({
             where: { id: tx.id },
-            data: { direction: 'FROM' }
+            data: { direction: targetDirection }
         });
         count++;
-        console.log(`Updated Tx ID ${tx.id}: Category "${tx.category.name}" -> direction: FROM`);
+        console.log(`Updated Tx ID ${tx.id}: "${catName}" [${behavior}] -> direction: ${targetDirection}`);
     }
   }
 
