@@ -222,13 +222,14 @@ model Transaction {
   account             Account             @relation(fields: [accountId], references: [id])
   asset               Asset?              @relation(fields: [assetId], references: [id])
   category            TransactionCategory @relation(fields: [categoryId], references: [id])
-  liability           Liability?          @relation(fields: [liabilityId], references: [id])
+  liability            Liability?          @relation(fields: [liabilityId], references: [id])
   linkedTransaction   Transaction?        @relation("LinkedTransactions", fields: [linkedTransactionId], references: [id])
   linkedFrom          Transaction[]       @relation("LinkedTransactions")
   loan                Loan?               @relation(fields: [loanId], references: [id])
   organization        Organization?       @relation(fields: [organizationId], references: [id])
   type                TransactionType     @relation(fields: [typeId], references: [id])
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
+  direction           String?             // 'FROM' or 'TO' for single transactions
 }
 
 model Loan {

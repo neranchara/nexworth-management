@@ -13,6 +13,7 @@ const transactionSchema = z.object({
   date: z.string().optional().nullable(),
   actualDate: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
+  direction: z.string().optional().nullable(),
 });
 
 export const adjustAccountBalance = async (accountId: string, amount: number, typeId: string, isRemoval: boolean = false) => {
@@ -127,8 +128,9 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
     
     const transferBehaviors = ['INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL_SAVING', 'DEBT', 'EXPENSE', 'INCOME'];
     const isTransfer = (fromAccountId && toAccountId) && transferBehaviors.includes(category.type.behavior);
+    const direction = body.direction;
 
-    const processSingleLeg = async (accId: string, catId: string, tId: string, linkedId: string | null) => {
+    const processSingleLeg = async (accId: string, catId: string, tId: string, linkedId: string | null, legDirection: string | null = null) => {
         const account = await prisma.account.findFirst({ 
           where: { 
             id: accId,
@@ -159,6 +161,7 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
             assetId,
             liabilityId,
             linkedTransactionId: linkedId,
+            direction: legDirection,
             date: commonData.date ? new Date(commonData.date) : new Date(),
             actualDate: commonData.actualDate ? new Date(commonData.actualDate) : null,
           },
@@ -241,7 +244,7 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
         const targetAccId = accountId || fromAccountId || toAccountId;
         if (!targetAccId) return reply.status(400).send({ error: 'No account selected' });
 
-        const tx = await processSingleLeg(targetAccId, body.categoryId, baseTypeId as string, null);
+        const tx = await processSingleLeg(targetAccId, body.categoryId, baseTypeId as string, null, direction);
         return reply.status(201).send({ message: 'Transaction created', transaction: tx });
     }
 
@@ -422,7 +425,8 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         liabilityId,
         date: body.date ? new Date(body.date) : existing.date,
         actualDate: body.actualDate !== undefined ? (body.actualDate ? new Date(body.actualDate) : null) : existing.actualDate,
-        linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId
+        linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
+        direction: !isTransferIntent ? body.direction : null
       },
       include: {
         account: { include: { bank: { select: { name: true, color: true } } } },

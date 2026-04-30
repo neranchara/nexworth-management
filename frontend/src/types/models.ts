@@ -91,6 +91,7 @@ export interface Transaction {
   category?: TransactionCategory;
   type?: TransactionType;
   linkedTransactionId?: string | null;
+  direction?: string | null;
   asset?: FinancialRecord;
   liability?: FinancialRecord;
 }
