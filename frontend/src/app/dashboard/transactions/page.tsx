@@ -131,6 +131,7 @@ export default function TransactionsPage() {
     if (tx.linkedTransactionId) {
       const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
       if (linkedTx) {
+        const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
         const isCurrentFrom = ['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
         const isLinkedFrom = ['EXPENSE', 'DEBT'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
         const isCurrentTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนเข้าภายใน';
@@ -167,9 +168,10 @@ export default function TransactionsPage() {
         }
       }
     } else {
-      // Single transaction
-      fromAccId = isExpense ? tx.accountId : '';
-      toAccId = !isExpense ? tx.accountId : '';
+      // Single transaction: Prioritize putting in 'From' box for expense/transfer/loan types
+      const isFromBox = ['EXPENSE', 'DEBT', 'INTERNAL_TRANSFER', 'LOAN_REPAY', 'LOAN_BORROW'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
+      fromAccId = isFromBox ? tx.accountId : '';
+      toAccId = !isFromBox ? tx.accountId : '';
     }
 
     setFormData({
