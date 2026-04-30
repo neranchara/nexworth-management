@@ -168,8 +168,27 @@ export default function TransactionsPage() {
         }
       }
     } else {
-      // Single transaction: Prioritize putting in 'From' box for expense/transfer/loan types
-      const isFromBox = ['EXPENSE', 'DEBT', 'INTERNAL_TRANSFER', 'LOAN_REPAY', 'LOAN_BORROW'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
+      // Single transaction: Decide placement strictly based on income vs expense
+      const behaviorUpper = (tx.type?.behavior || tx.category?.type?.behavior || '').toUpperCase();
+      const typeName = tx.type?.name || '';
+      const categoryName = tx.category?.name || '';
+      
+      let isFromBox = false;
+
+      if (behaviorUpper === 'INCOME' || categoryName.includes('เข้า') || typeName.includes('เข้า')) {
+         // Explicit Income or "Inbound" keywords go to 'To'
+         isFromBox = false;
+      } else if (['EXPENSE', 'DEBT', 'INTERNAL_TRANSFER', 'LOAN_REPAY', 'LOAN_BORROW', 'SAVING', 'INVESTMENT'].includes(behaviorUpper)) {
+         // These are typically Outflows or "From" sources for the user
+         isFromBox = true;
+      } else if (categoryName.includes('ออก') || typeName.includes('ออก') || categoryName.includes('ยืม') || typeName.includes('ยืม')) {
+         // Generic keywords that imply "From"
+         isFromBox = true;
+      } else {
+         // Default for single transactions (mostly expenses)
+         isFromBox = true;
+      }
+
       fromAccId = isFromBox ? tx.accountId : '';
       toAccId = !isFromBox ? tx.accountId : '';
     }
