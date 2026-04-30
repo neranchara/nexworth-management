@@ -180,17 +180,20 @@ export default function TransactionsPage() {
          const typeName = (tx.type?.name || '').toLowerCase();
          const categoryName = (tx.category?.name || '').toLowerCase();
          
-         const isInbound = behaviorUpper === 'INCOME' || categoryName.includes('เข้า') || typeName.includes('เข้า');
-         const isOutbound = ['EXPENSE', 'DEBT', 'INTERNAL_TRANSFER', 'LOAN_REPAY', 'LOAN_BORROW', 'SAVING', 'INVESTMENT'].includes(behaviorUpper) || 
-                            categoryName.includes('ออก') || typeName.includes('ออก') || 
+          const isInbound = ['INCOME', 'LOAN_BORROW'].includes(behaviorUpper) || 
+                            categoryName.includes('เข้า') || typeName.includes('เข้า') || 
                             categoryName.includes('ยืม') || typeName.includes('ยืม') || 
                             categoryName.includes('กู้') || typeName.includes('กู้');
+          const isOutbound = ['EXPENSE', 'DEBT', 'LOAN_REPAY', 'SAVING', 'INVESTMENT', 'INTERNAL_TRANSFER'].includes(behaviorUpper) || 
+                             categoryName.includes('ออก') || typeName.includes('ออก') || 
+                             categoryName.includes('คืน') || typeName.includes('คืน');
 
-         if (isInbound && !isOutbound) {
-            isFromBox = false;
-         } else {
-            isFromBox = true;
-         }
+          if (isInbound && !isOutbound) {
+             isFromBox = false;
+          } else {
+             // Default to From box for everything else (Expenses, Repayments, etc.)
+             isFromBox = true;
+          }
       }
 
       fromAccId = isFromBox ? tx.accountId : '';
@@ -689,10 +692,10 @@ export default function TransactionsPage() {
                            const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
                            if (linkedTx && linkedTx.account) {
                               const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
-                              const isCurrentFrom = tx.direction === 'FROM' || (tx.direction !== 'TO' && (['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน'));
-                              const isLinkedFrom = linkedTx.direction === 'FROM' || (linkedTx.direction !== 'TO' && (['EXPENSE', 'DEBT'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน'));
-                              const isCurrentTo = tx.direction === 'TO' || (tx.direction !== 'FROM' && (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนเข้าภายใน'));
-                              const isLinkedTo = linkedTx.direction === 'TO' || (linkedTx.direction !== 'FROM' && (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนเข้าภายใน'));
+                              const isCurrentFrom = tx.direction === 'FROM' || (tx.direction !== 'TO' && (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(behavior) || tx.category?.name?.includes('ออก') || tx.category?.name?.includes('คืน')));
+                              const isLinkedFrom = linkedTx.direction === 'FROM' || (linkedTx.direction !== 'TO' && (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(linkedBehavior) || linkedTx.category?.name?.includes('ออก') || linkedTx.category?.name?.includes('คืน')));
+                              const isCurrentTo = tx.direction === 'TO' || (tx.direction !== 'FROM' && (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY', 'LOAN_BORROW'].includes(behavior) || tx.category?.name?.includes('เข้า') || tx.category?.name?.includes('ยืม') || tx.category?.name?.includes('กู้')));
+                              const isLinkedTo = linkedTx.direction === 'TO' || (linkedTx.direction !== 'FROM' && (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY', 'LOAN_BORROW'].includes(linkedBehavior) || linkedTx.category?.name?.includes('เข้า') || linkedTx.category?.name?.includes('ยืม') || linkedTx.category?.name?.includes('กู้')));
 
                               let fromAcc = accountInfo;
                               let toAcc = linkedTx.account;

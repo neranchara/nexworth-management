@@ -29,15 +29,19 @@ export const adjustAccountBalance = async (accountId: string, amount: number, ty
   let multiplier = 0;
 
   if (isLiability) {
-    if (['INCOME', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(behavior)) {
+    // For Liabilities: Expense/Debt/Borrowing increases the debt magnitude.
+    // Income/Repayment/Transfer-In decreases the debt magnitude.
+    if (['EXPENSE', 'DEBT', 'LOAN_BORROW'].includes(behavior)) {
       multiplier = 1;
-    } else if (['EXPENSE', 'LOAN_BORROW', 'SAVING', 'INVESTMENT', 'GOAL', 'EMERGENCY', 'GOAL_SAVING'].includes(behavior)) {
+    } else if (['INCOME', 'LOAN_REPAY', 'INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT'].includes(behavior)) {
       multiplier = -1;
     }
   } else {
-    if (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL', 'EMERGENCY', 'GOAL_SAVING', 'INTERNAL_TRANSFER', 'LOAN_REPAY', 'LOAN_BORROW'].includes(behavior)) {
+    // For Assets: Income/Borrowing increases cash.
+    // Expense/Debt/Repayment decreases cash.
+    if (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'INTERNAL_TRANSFER', 'LOAN_BORROW'].includes(behavior)) {
       multiplier = 1;
-    } else if (['EXPENSE', 'DEBT'].includes(behavior)) {
+    } else if (['EXPENSE', 'DEBT', 'LOAN_REPAY'].includes(behavior)) {
       multiplier = -1;
     }
   }
@@ -135,9 +139,13 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
         const behavior = category.type.behavior;
         const catName = category.name.toLowerCase();
         
-        const isOutbound = ['EXPENSE', 'DEBT', 'LOAN_BORROW', 'LOAN_REPAY', 'SAVING', 'INVESTMENT'].includes(behavior) || 
-                          catName.includes('ออก') || catName.includes('ยืม') || catName.includes('กู้');
-        const isInbound = behavior === 'INCOME' || catName.includes('เข้า');
+        // Correct Logic:
+        // Outbound (From): Expense, Debt, Loan Repay, Saving, Investment
+        // Inbound (To): Income, Loan Borrow
+        const isOutbound = ['EXPENSE', 'DEBT', 'LOAN_REPAY', 'SAVING', 'INVESTMENT'].includes(behavior) || 
+                          catName.includes('ออก') || catName.includes('คืน');
+        const isInbound = ['INCOME', 'LOAN_BORROW'].includes(behavior) || 
+                          catName.includes('เข้า') || catName.includes('ยืม') || catName.includes('กู้');
         
         if (isOutbound && !isInbound) {
             direction = 'FROM';
@@ -436,7 +444,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         date: date ? new Date(date) : (existing.date as Date),
         actualDate: actualDate !== undefined ? (actualDate ? new Date(actualDate) : null) : existing.actualDate,
         linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
-        direction: (direction as string) || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_BORROW', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO'))
+        direction: (direction as string) || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO'))
       },
       include: {
         account: { include: { bank: { select: { name: true, color: true } } } },
