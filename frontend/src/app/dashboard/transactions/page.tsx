@@ -258,7 +258,7 @@ export default function TransactionsPage() {
     if (!payload.toAccountId) delete payload.toAccountId;
 
     try {
-      console.log('[DEBUG] Submitting Payload:', payload);
+      console.log('[DEBUG-V3.1] Submitting Payload:', payload);
       if (isEditing && currentTxId) {
         await api.put(`/transactions/${currentTxId}`, payload);
         showAlert('Transaction updated successfully (v2)', 'success');
