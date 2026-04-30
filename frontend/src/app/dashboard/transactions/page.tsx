@@ -180,13 +180,16 @@ export default function TransactionsPage() {
          const typeName = tx.type?.name || '';
          const categoryName = tx.category?.name || '';
          
-         if (behaviorUpper === 'INCOME' || categoryName.includes('เข้า') || typeName.includes('เข้า')) {
+         const isInbound = behaviorUpper === 'INCOME' || categoryName.includes('เข้า') || typeName.includes('เข้า');
+         const isOutbound = ['EXPENSE', 'DEBT', 'INTERNAL_TRANSFER', 'LOAN_REPAY', 'LOAN_BORROW', 'SAVING', 'INVESTMENT'].includes(behaviorUpper) || 
+                            categoryName.includes('ออก') || typeName.includes('ออก') || 
+                            categoryName.includes('ยืม') || typeName.includes('ยืม') || 
+                            categoryName.includes('กู้') || typeName.includes('กู้');
+
+         if (isInbound && !isOutbound) {
             isFromBox = false;
-         } else if (['EXPENSE', 'DEBT', 'INTERNAL_TRANSFER', 'LOAN_REPAY', 'LOAN_BORROW', 'SAVING', 'INVESTMENT'].includes(behaviorUpper)) {
-            isFromBox = true;
-         } else if (categoryName.includes('ออก') || typeName.includes('ออก') || categoryName.includes('ยืม') || typeName.includes('ยืม')) {
-            isFromBox = true;
          } else {
+            // Default to From box for everything else, especially loans/transfers
             isFromBox = true;
          }
       }
