@@ -177,8 +177,8 @@ export default function TransactionsPage() {
       } else {
          // Fallback to heuristic logic for old data
          const behaviorUpper = (tx.type?.behavior || tx.category?.type?.behavior || '').toUpperCase();
-         const typeName = tx.type?.name || '';
-         const categoryName = tx.category?.name || '';
+         const typeName = (tx.type?.name || '').toLowerCase();
+         const categoryName = (tx.category?.name || '').toLowerCase();
          
          const isInbound = behaviorUpper === 'INCOME' || categoryName.includes('เข้า') || typeName.includes('เข้า');
          const isOutbound = ['EXPENSE', 'DEBT', 'INTERNAL_TRANSFER', 'LOAN_REPAY', 'LOAN_BORROW', 'SAVING', 'INVESTMENT'].includes(behaviorUpper) || 
@@ -189,7 +189,6 @@ export default function TransactionsPage() {
          if (isInbound && !isOutbound) {
             isFromBox = false;
          } else {
-            // Default to From box for everything else, especially loans/transfers
             isFromBox = true;
          }
       }
@@ -689,10 +688,11 @@ export default function TransactionsPage() {
                         if (tx.linkedTransactionId && !filterAccount) {
                            const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
                            if (linkedTx && linkedTx.account) {
-                              const isCurrentFrom = ['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
-                              const isLinkedFrom = ['EXPENSE', 'DEBT'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
-                              const isCurrentTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนเข้าภายใน';
-                              const isLinkedTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนเข้าภายใน';
+                              const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
+                              const isCurrentFrom = tx.direction === 'FROM' || (tx.direction !== 'TO' && (['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน'));
+                              const isLinkedFrom = linkedTx.direction === 'FROM' || (linkedTx.direction !== 'TO' && (['EXPENSE', 'DEBT'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน'));
+                              const isCurrentTo = tx.direction === 'TO' || (tx.direction !== 'FROM' && (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนเข้าภายใน'));
+                              const isLinkedTo = linkedTx.direction === 'TO' || (linkedTx.direction !== 'FROM' && (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนเข้าภายใน'));
 
                               let fromAcc = accountInfo;
                               let toAcc = linkedTx.account;
@@ -719,6 +719,26 @@ export default function TransactionsPage() {
                                 </div>
                               );
                            }
+                        }
+
+                        // Single transaction with explicit direction
+                        if (tx.direction === 'TO') {
+                           return (
+                              <div className="flex items-center gap-2">
+                                 <div className="w-4 h-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-[8px] text-gray-400">?</div>
+                                 <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                                 {renderAccount(accountInfo)}
+                              </div>
+                           );
+                        }
+                        if (tx.direction === 'FROM') {
+                           return (
+                              <div className="flex items-center gap-2">
+                                 {renderAccount(accountInfo)}
+                                 <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
+                                 <div className="w-4 h-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-[8px] text-gray-400">?</div>
+                              </div>
+                           );
                         }
 
                         return renderAccount(accountInfo);
