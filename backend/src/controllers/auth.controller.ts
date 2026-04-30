@@ -20,8 +20,8 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
       }
     });
 
-    if (!user || !user.isActive) {
-      return reply.status(401).send({ error: 'Invalid credentials or inactive user' });
+    if (!user || !user.isActive || (user.organization && !user.organization.isActive)) {
+      return reply.status(401).send({ error: 'Invalid credentials or inactive account/organization' });
     }
 
     const isValid = await bcrypt.compare(password, user.passwordHash);
@@ -32,11 +32,13 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // 1 day expiry
 
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.organization?.name === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.organization?.name === 'System Management';
 
     const tokenPayload = {
       sub: user.id,
       email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
       role: user.role?.name || 'Guest',
       isSystemAdmin: isSystemAdmin,
       organizationId: user.organizationId,
@@ -83,7 +85,31 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
 export const meHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const decoded = request.user as any;
-    return reply.send({ user: decoded });
+    const user = await prisma.user.findUnique({
+      where: { id: decoded.sub },
+      include: { 
+        role: { include: { permissions: true } }, 
+        organization: true 
+      }
+    });
+
+    if (!user) return reply.status(404).send({ error: 'User not found' });
+
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.organization?.name === 'System Management';
+
+    return reply.send({ 
+      user: {
+        sub: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        role: user.role?.name,
+        isSystemAdmin: isSystemAdmin,
+        permissions: user.role?.permissions || [],
+        organizationId: user.organizationId,
+        orgName: user.organization?.name
+      } 
+    });
   } catch (err) {
     return reply.status(401).send({ error: 'Unauthorized' });
   }

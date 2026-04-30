@@ -23,7 +23,12 @@ export default function LoginPage() {
     try {
       const { data } = await api.post('/auth/login', { email, password });
       login(data.token, data.user);
-      router.push('/dashboard');
+      
+      if (data.user.isSystemAdmin) {
+        router.push('/dashboard/organizations');
+      } else {
+        router.push('/dashboard');
+      }
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
       setError(errorResponse.response?.data?.error || 'An error occurred during login');

@@ -239,6 +239,7 @@ export default function AccountsManagementPage() {
             {hasPermission('accounts', 'canCreate') && (
               <button 
                 onClick={openAddModal}
+                data-testid="accounts-list-btn-add-account"
                 className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
               >
                 Add Account
@@ -340,12 +341,22 @@ export default function AccountsManagementPage() {
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                           {hasPermission('accounts', 'canUpdate') && (
-                            <button onClick={() => openEditModal(account)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
+                            <button 
+                              onClick={() => openEditModal(account)} 
+                              data-testid={`accounts-list-btn-edit-${account.name}`}
+                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" 
+                              title="Edit"
+                            >
                               <Edit2 className="w-4 h-4 inline" />
                             </button>
                           )}
                           {hasPermission('accounts', 'canDelete') && (
-                            <button onClick={() => handleDelete(account.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                            <button 
+                              onClick={() => handleDelete(account.id)} 
+                              data-testid={`accounts-list-btn-delete-${account.name}`}
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" 
+                              title="Delete"
+                            >
                               <Trash2 className="w-4 h-4 inline" />
                             </button>
                           )}
@@ -378,6 +389,7 @@ export default function AccountsManagementPage() {
                    <input 
                      type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                      placeholder="e.g. My SCB Savings, Dime Gold"
+                     data-testid="accounts-form-input-name"
                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
                    />
                  </div>
@@ -387,6 +399,7 @@ export default function AccountsManagementPage() {
                     <input 
                       type="text" value={formData.accountNumber} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
                       placeholder="e.g. 000-0-00000-0 (Optional)"
+                      data-testid="accounts-form-input-number"
                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
                     />
                   </div>
@@ -394,8 +407,9 @@ export default function AccountsManagementPage() {
                  <div className="flex gap-4">
                     <div className="flex-1">
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Type</label>
-                      <select 
+                       <select 
                         required value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
+                        data-testid="accounts-form-sel-type"
                         className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                       >
                          <option value="CASHFLOW">Cashflow</option>
@@ -417,6 +431,7 @@ export default function AccountsManagementPage() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institution (Bank)</label>
                     <select 
                       required value={formData.bankId} onChange={(e) => setFormData({...formData, bankId: e.target.value})}
+                      data-testid="accounts-form-sel-bank"
                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="">None</option>
@@ -434,6 +449,7 @@ export default function AccountsManagementPage() {
                     <button 
                       type="button"
                       onClick={() => setFormData({...formData, isPersonal: !formData.isPersonal})}
+                      data-testid="accounts-form-btn-toggle-personal"
                       className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.isPersonal ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
                     >
                       <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.isPersonal ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -448,6 +464,7 @@ export default function AccountsManagementPage() {
                    <button 
                      type="button"
                      onClick={() => setFormData({...formData, isActive: !formData.isActive})}
+                     data-testid="accounts-form-btn-toggle-status"
                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.isActive ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
                    >
                      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
@@ -456,7 +473,7 @@ export default function AccountsManagementPage() {
 
                  <div className="pt-4 border-t dark:border-gray-700 flex justify-end gap-3">
                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 hover:dark:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">Cancel</button>
-                   <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">Save Account</button>
+                   <button type="submit" data-testid="accounts-form-btn-save" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">Save Account</button>
                  </div>
               </form>
            </div>

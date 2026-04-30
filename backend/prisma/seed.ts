@@ -24,13 +24,13 @@ async function main() {
   }
 
   // 2. Create Super Admin (only if not exists)
-  let masterAdmin = await prisma.user.findUnique({ where: { email: 'superadmin@nexworth.net' } });
+  let masterAdmin = await prisma.user.findUnique({ where: { email: 'superadmin@nexworth.online' } });
   if (!masterAdmin) {
-    console.log('Creating superadmin@nexworth.net...');
+    console.log('Creating superadmin@nexworth.online...');
     const hashedMasterPassword = await bcrypt.hash('superpassword123', 10);
     masterAdmin = await prisma.user.create({
       data: {
-        email: 'superadmin@nexworth.net',
+        email: 'superadmin@nexworth.online',
         passwordHash: hashedMasterPassword,
         firstName: 'System',
         lastName: 'Admin',
@@ -46,29 +46,29 @@ async function main() {
   await setupOrganizationDefaults(masterOrg.id, masterAdmin.id);
 
   // 3. Create Default User Org (only if not exists)
-  let org = await prisma.organization.findFirst({ where: { name: 'neranchara' } });
+  let org = await prisma.organization.findFirst({ where: { name: 'Nexworth Business' } });
   if (!org) {
-    console.log('Creating neranchara org...');
-    org = await prisma.organization.create({ data: { name: 'neranchara' } });
+    console.log('Creating Nexworth Business org...');
+    org = await prisma.organization.create({ data: { name: 'Nexworth Business' } });
   } else {
-    console.log(`neranchara org exists: ${org.id}`);
+    console.log(`Nexworth Business org exists: ${org.id}`);
   }
 
-  let admin = await prisma.user.findFirst({ where: { email: 'neranchara.ksr@gmail.com' } });
+  let admin = await prisma.user.findFirst({ where: { email: 'admin@nexworth.test' } });
   if (!admin) {
-    console.log('Creating neranchara admin...');
-    const hashedUserPassword = await bcrypt.hash('w,j,uP@ssw0rd', 10);
+    console.log('Creating Nexworth Business admin...');
+    const hashedUserPassword = await bcrypt.hash('P@ssword123', 10);
     admin = await prisma.user.create({
       data: {
-        email: 'neranchara.ksr@gmail.com',
+        email: 'admin@nexworth.test',
         passwordHash: hashedUserPassword,
-        firstName: 'Nexworth',
+        firstName: 'Business',
         lastName: 'Admin',
         organizationId: org.id
       },
     });
   } else {
-    console.log(`neranchara admin exists: ${admin.id}`);
+    console.log(`Nexworth Business admin exists: ${admin.id}`);
   }
 
   await setupOrganizationDefaults(org.id, admin.id);
@@ -95,7 +95,167 @@ async function main() {
     });
   }
 
+  // --- NEW: Add test-admin@nexworth.net for Regression Tests ---
+  let testAdmin = await prisma.user.findFirst({ where: { email: 'test-admin@nexworth.net' } });
+  if (!testAdmin) {
+    console.log('Creating test-admin@nexworth.net...');
+    const hashedAdminPassword = await bcrypt.hash('P@ssword123', 10);
+    testAdmin = await prisma.user.create({
+      data: {
+        email: 'test-admin@nexworth.net',
+        passwordHash: hashedAdminPassword,
+        firstName: 'Test',
+        lastName: 'Admin',
+        organizationId: testOrg.id
+      },
+    });
+  }
+
   await setupOrganizationDefaults(testOrg.id, testUser.id);
+  await setupOrganizationDefaults(testOrg.id, testAdmin.id);
+  
+  // --- Seed Test Data for BOTH test users ---
+  for (const currentUser of [testUser, testAdmin]) {
+    console.log(`Seeding financial data for ${currentUser.email}...`);
+    
+    // 1. Fetch Types and Categories
+    const types = await prisma.transactionType.findMany({ where: { organizationId: testOrg.id } });
+    const incomeType = types.find(t => t.behavior === 'INCOME');
+    const savingType = types.find(t => t.behavior === 'SAVING');
+    const transferType = types.find(t => t.behavior === 'INTERNAL_TRANSFER');
+    
+    // Ensure a category for internal transfer exists
+    let transferCat = await prisma.transactionCategory.findFirst({
+      where: { organizationId: testOrg.id, name: 'โอนเงิน', typeId: transferType?.id }
+    });
+    if (!transferCat && transferType) {
+      transferCat = await prisma.transactionCategory.create({
+        data: { name: 'โอนเงิน', typeId: transferType.id, organizationId: testOrg.id }
+      });
+    }
+
+    const categories = await prisma.transactionCategory.findMany({ where: { organizationId: testOrg.id } });
+    const salaryCat = categories.find(c => c.name === 'เงินเดือน' && c.typeId === incomeType?.id);
+    const savingCat = categories.find(c => c.name === 'เงินออม' && c.typeId === savingType?.id);
+    const emergencyCat = categories.find(c => c.name === 'เงินฉุกเฉิน' && c.typeId === savingType?.id);
+
+    // 2. Create Accounts
+    const kbank = await prisma.bank.findFirst({ where: { organizationId: testOrg.id, code: 'KBANK' } });
+    const scb = await prisma.bank.findFirst({ where: { organizationId: testOrg.id, code: 'SCB' } });
+
+    // Main Bank Account
+    const mainAccount = await prisma.account.upsert({
+      where: { id: `main-acc-${currentUser.id}` },
+      update: {},
+      create: {
+        id: `main-acc-${currentUser.id}`,
+        name: 'Main KBANK',
+        type: 'BANK',
+        bankId: kbank?.id,
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        actualDate: new Date()
+      }
+    });
+
+    // Emergency Account
+    const emergencyAccount = await prisma.account.upsert({
+      where: { id: `emergency-acc-${currentUser.id}` },
+      update: {},
+      create: {
+        id: `emergency-acc-${currentUser.id}`,
+        name: 'Emergency SCB',
+        type: 'EMERGENCY',
+        bankId: scb?.id,
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        actualDate: new Date()
+      }
+    });
+
+    // Saving Account
+    const savingAccount = await prisma.account.upsert({
+      where: { id: `saving-acc-${currentUser.id}` },
+      update: {},
+      create: {
+        id: `saving-acc-${currentUser.id}`,
+        name: 'Saving Fund',
+        type: 'SAVING',
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        actualDate: new Date()
+      }
+    });
+
+    // 3. Ensure Assets exist
+    for (const acc of [mainAccount, emergencyAccount, savingAccount]) {
+      await prisma.asset.upsert({
+        where: { accountId: acc.id },
+        update: {},
+        create: {
+          accountId: acc.id,
+          userId: currentUser.id,
+          organizationId: testOrg.id,
+          amount: 0
+        }
+      });
+    }
+
+    // 4. Create Transactions for current month
+    const today = new Date();
+    const currentMonth = today.getMonth();
+    const currentYear = today.getFullYear();
+
+    // Salary Income -> Main Account (100,000)
+    await prisma.transaction.create({
+      data: {
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        accountId: mainAccount.id,
+        categoryId: salaryCat!.id,
+        typeId: incomeType!.id,
+        amount: 100000,
+        description: 'Monthly Salary',
+        date: new Date(currentYear, currentMonth, 1),
+        assetId: (await prisma.asset.findUnique({ where: { accountId: mainAccount.id } }))?.id
+      }
+    });
+
+    // EMERGENCY Income (45,000)
+    await prisma.transaction.create({
+      data: {
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        accountId: emergencyAccount.id,
+        categoryId: emergencyCat!.id,
+        typeId: incomeType!.id,
+        amount: 45000,
+        description: 'Emergency Fund Top-up',
+        date: new Date(currentYear, currentMonth, 5),
+        assetId: (await prisma.asset.findUnique({ where: { accountId: emergencyAccount.id } }))?.id
+      }
+    });
+
+    // INTERNAL TRANSFER -> From Main to Saving (5,000)
+    await prisma.transaction.create({
+      data: {
+        userId: currentUser.id,
+        organizationId: testOrg.id,
+        accountId: mainAccount.id,
+        categoryId: transferCat!.id,
+        typeId: transferType!.id,
+        amount: 5000,
+        description: 'Transfer to Savings',
+        date: new Date(currentYear, currentMonth, 10),
+        assetId: (await prisma.asset.findUnique({ where: { accountId: mainAccount.id } }))?.id
+      }
+    });
+
+    // Update Asset amounts
+    await prisma.asset.update({ where: { accountId: mainAccount.id }, data: { amount: 95000 } });
+    await prisma.asset.update({ where: { accountId: emergencyAccount.id }, data: { amount: 45000 } });
+    await prisma.asset.update({ where: { accountId: savingAccount.id }, data: { amount: 5000 } });
+  }
 
   // 5. Populate specific regression test data for test@nexworth.net
   console.log('Populating regression test data for test@nexworth.net...');

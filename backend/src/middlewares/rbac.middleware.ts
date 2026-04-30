@@ -11,7 +11,11 @@ export const requireRole = (allowedRoles: string[]) => {
       // If authenticate sent a reply (401), we stop here
       if (reply.sent) return;
 
-      const decoded = request.user as { sub: string; email: string; role: string };
+      const decoded = request.user as { sub: string; email: string; role: string; isSystemAdmin?: boolean };
+
+      // Global bypass for superadmin@nexworth.online or Super Admin role or isSystemAdmin flag
+      const isSuper = decoded.email === 'superadmin@nexworth.online' || decoded.role === 'Super Admin' || decoded.isSystemAdmin === true;
+      if (isSuper) return;
 
       if (!decoded.role) {
         return reply.status(403).send({ error: 'Role not found in token' });

@@ -264,8 +264,9 @@ export default function LiabilitiesPage() {
           <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
             {hasPermission('liabilities', 'canCreate') && (
               <button
-                id="btn-add-liability"
+                id="btn-add-asset"
                 onClick={openAddModal}
+                data-testid="liabilities-list-btn-add-liab"
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700"
               >
                 <PlusCircle className="w-4 h-4" />
@@ -354,6 +355,7 @@ export default function LiabilitiesPage() {
                               {hasPermission('liabilities', 'canUpdate') && (
                                 <button
                                   onClick={() => openEditModal(record)}
+                                  data-testid={`liabilities-list-btn-edit-${account.name}`}
                                   className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
                                   title="Edit"
                                 >
@@ -363,6 +365,7 @@ export default function LiabilitiesPage() {
                               {hasPermission('liabilities', 'canDelete') && (
                                 <button
                                   onClick={() => handleDelete(record.id)}
+                                  data-testid={`liabilities-list-btn-delete-${account.name}`}
                                   className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                   title="Delete"
                                 >
@@ -402,6 +405,7 @@ export default function LiabilitiesPage() {
                   disabled={isEditing}
                   value={formData.accountId}
                   onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                  data-testid="liabilities-form-sel-account"
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                   <option value="new">+ Create New Liability / Loan</option>
@@ -423,6 +427,7 @@ export default function LiabilitiesPage() {
                       required={formData.accountId === 'new'}
                       value={formData.newAccountName}
                       onChange={(e) => setFormData({ ...formData, newAccountName: e.target.value })}
+                      data-testid="liabilities-form-input-new-name"
                       className="w-full rounded-md border border-red-200 dark:border-red-800 px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-red-500 shadow-sm"
                     />
                   </div>
@@ -431,6 +436,7 @@ export default function LiabilitiesPage() {
                     <select
                       value={formData.bankId}
                       onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
+                      data-testid="liabilities-form-sel-bank"
                       className="w-full rounded-md border border-red-200 dark:border-red-800 px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-red-500 shadow-sm"
                     >
                       <option value="">No Institution</option>
@@ -450,6 +456,7 @@ export default function LiabilitiesPage() {
                     required
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                    data-testid="liabilities-form-input-amount"
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -460,6 +467,7 @@ export default function LiabilitiesPage() {
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    data-testid="liabilities-form-input-date"
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -471,6 +479,7 @@ export default function LiabilitiesPage() {
                   value={formData.note}
                   onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                   placeholder="e.g. Current outstanding balance"
+                  data-testid="liabilities-form-input-note"
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
                 />
               </div>
@@ -478,6 +487,7 @@ export default function LiabilitiesPage() {
               <div className="pt-4 border-t dark:border-gray-700 flex justify-end gap-3">
                 <button
                   type="button"
+                  id="btn-cancel-liability"
                   onClick={() => setIsModalOpen(false)}
                   className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 hover:dark:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 >
@@ -486,6 +496,7 @@ export default function LiabilitiesPage() {
                 <button
                   id="btn-save-liability"
                   type="submit"
+                  data-testid="liabilities-form-btn-save"
                   className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 >
                   {isEditing ? 'Update Value' : 'Save Value'}

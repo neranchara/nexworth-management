@@ -121,26 +121,28 @@ export default function MonthlySummaryPage() {
         <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1 shadow-sm">
           <button 
             onClick={prevYear}
+            data-testid="monthly-summary-btn-year-prev"
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
           >
-            <ChevronLeft className="w-5 h-5" />
+            <CircleChevronLeft className="w-5 h-5" />
           </button>
-          <div className="px-4 flex items-center gap-2 font-bold min-w-[100px] justify-center">
+          <div className="px-4 flex items-center gap-2 font-bold min-w-[100px] justify-center" data-testid="monthly-summary-text-year-display">
             <Calendar className="w-4 h-4 text-blue-500" />
             {selectedYear}
           </div>
           <button 
             onClick={nextYear}
+            data-testid="monthly-summary-btn-year-next"
             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
           >
-            <ChevronRight className="w-5 h-5" />
+            <CircleChevronRight className="w-5 h-5" />
           </button>
         </div>
       </div>
 
       {/* Summary Cards (Annual Totals) */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm" data-testid="monthly-summary-card-annual-income">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Annual Income</span>
             <div className="bg-green-100 p-1.5 rounded-lg"><TrendingUp className="w-4 h-4 text-green-600" /></div>
@@ -148,7 +150,7 @@ export default function MonthlySummaryPage() {
           <p className="text-2xl font-bold text-green-600">฿{totalYearStats.income.toLocaleString()}</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm" data-testid="monthly-summary-card-annual-expense">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Annual Expense</span>
             <div className="bg-red-100 p-1.5 rounded-lg"><TrendingDown className="w-4 h-4 text-red-600" /></div>
@@ -156,7 +158,7 @@ export default function MonthlySummaryPage() {
           <p className="text-2xl font-bold text-red-600">฿{totalYearStats.expense.toLocaleString()}</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm" data-testid="monthly-summary-card-annual-savings">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Annual Savings</span>
             <div className="bg-blue-100 p-1.5 rounded-lg"><Wallet className="w-4 h-4 text-blue-600" /></div>
@@ -164,7 +166,7 @@ export default function MonthlySummaryPage() {
           <p className="text-2xl font-bold text-blue-600">฿{totalYearStats.savings.toLocaleString()}</p>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
+        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm" data-testid="monthly-summary-card-annual-net">
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Annual Net</span>
             <div className={`p-1.5 rounded-lg ${totalYearStats.net >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
@@ -207,7 +209,11 @@ export default function MonthlySummaryPage() {
                 const isFuture = selectedYear === new Date().getFullYear() && s.month > new Date().getMonth();
 
                 return (
-                  <tr key={s.month} className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${isFuture ? 'opacity-40' : ''}`}>
+                  <tr 
+                    key={s.month} 
+                    data-testid={`monthly-summary-list-row-${monthName.toLowerCase()}`}
+                    className={`hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors ${isFuture ? 'opacity-40' : ''}`}
+                  >
                     <td className="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
                       {monthName}
                     </td>

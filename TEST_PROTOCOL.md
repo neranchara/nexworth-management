@@ -32,8 +32,8 @@ This document outlines the mandatory steps for performing automated and manual t
 
 ## 4. Post-Test Cleanup
 - Once tests pass, confirm stability on Staging.
-- Switch back to Production environment (`npm run dev:prod`) only after all tests are green.
-- **NEVER** leave the production server pointing to staging or vice versa in long-running processes.
+- **NEVER** leave the server pointing to an inconsistent state in long-running processes.
+- All development and testing are now strictly confined to the Staging environment.
 
 ---
 *Last Updated: 2026-04-25 by Antigravity AI*

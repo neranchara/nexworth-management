@@ -65,11 +65,22 @@ export const updateRolePermissionsHandler = async (request: FastifyRequest, repl
 export const listAllRolesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     try {
         const user = request.user as any;
-        const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.net' || user.orgName === 'System Management';
+        const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+        const isSuperAdmin = user.role === 'Super Admin' || user.email === 'superadmin@nexworth.online';
+
+        const { orgId } = request.query as { orgId?: string };
+        const targetOrgId = (isSystemAdmin && orgId) ? orgId : user.organizationId;
 
         // 1. Fetch Roles
+        const roleWhereClause: any = { organizationId: targetOrgId };
+        
+        // Hide Super Admin role from non-Super Admins
+        if (!isSuperAdmin) {
+            roleWhereClause.name = { not: 'Super Admin' };
+        }
+
         const roles = await prisma.role.findMany({
-            where: { organizationId: user.organizationId },
+            where: roleWhereClause,
             include: { _count: { select: { users: true } } },
             orderBy: { name: 'asc' }
         });
@@ -95,20 +106,25 @@ const roleSchema = z.object({
 
 export const createRoleHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const decoded = request.user as any;
-    const { name, description } = roleSchema.parse(request.body);
+    const user = request.user as any;
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    
+    const { name, description, organizationId } = request.body as any;
+    
+    // Determine which organization this role belongs to
+    const targetOrgId = (isSystemAdmin && organizationId) ? organizationId : user.organizationId;
 
     const role = await prisma.role.create({
       data: {
         name,
         description,
-        organizationId: decoded.organizationId
+        organizationId: targetOrgId,
+        isSystemRole: isSystemAdmin && targetOrgId === user.organizationId // Only roles in System Management can be system roles
       }
     });
 
     return reply.status(201).send({ role });
   } catch (error) {
-    if (error instanceof z.ZodError) return reply.status(400).send({ error: error.format() });
     request.log.error(error);
     return reply.status(500).send({ error: 'Internal Server Error' });
   }
@@ -116,13 +132,20 @@ export const createRoleHandler = async (request: FastifyRequest, reply: FastifyR
 
 export const updateRoleHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const decoded = request.user as any;
+    const user = request.user as any;
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    
     const { roleId } = request.params as { roleId: string };
-    const { name, description } = roleSchema.parse(request.body);
+    const { name, description } = request.body as any;
 
-    // Ensure the role belongs to the user's org
+    // For system admins, we skip the organization ownership check
+    const whereClause: any = { id: roleId };
+    if (!isSystemAdmin) {
+      whereClause.organizationId = user.organizationId;
+    }
+
     const role = await prisma.role.findFirst({
-      where: { id: roleId, organizationId: decoded.organizationId }
+      where: whereClause
     });
 
     if (!role) {
@@ -161,11 +184,12 @@ export const deleteRoleHandler = async (request: FastifyRequest, reply: FastifyR
       return reply.status(400).send({ error: 'Cannot delete role that is assigned to users' });
     }
 
-    await prisma.role.delete({
-      where: { id: roleId }
+    await prisma.role.update({
+      where: { id: roleId },
+      data: { isActive: false }
     });
-
-    return reply.send({ message: 'Role deleted successfully' });
+    
+    return reply.send({ message: 'Role deactivated successfully (Soft Delete)' });
   } catch (error) {
     request.log.error(error);
     return reply.status(500).send({ error: 'Internal Server Error' });

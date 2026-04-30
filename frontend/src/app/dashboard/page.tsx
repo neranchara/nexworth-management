@@ -156,7 +156,7 @@ const WelcomeCard = ({ user, stats, loading }: { user: any; stats: any; loading:
     
     <div className="relative z-10 mb-6">
       <h1 className="text-2xl font-black text-white mb-1 tracking-tight">
-        Welcome, {user?.firstName}
+        Welcome, {[user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'User'}
       </h1>
       <p className="text-slate-400 text-[11px] font-medium uppercase tracking-[0.2em]">Financial Overview</p>
     </div>
@@ -198,7 +198,7 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
       
       <div className="relative z-10 w-full flex items-center justify-between mb-2">
         <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none">Financial Health</h2>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none" data-testid="dashboard-health-hdr">Financial Health</h2>
         </div>
         <div className={`p-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700`}>
           <Activity className="w-5 h-5" style={{ color }} />
@@ -295,6 +295,7 @@ const MetricCard = ({
            <select 
              value={selectedMonth} 
              onChange={(e) => onMonthChange(parseInt(e.target.value))} 
+             data-testid="dashboard-metric-sel-month"
              className="bg-transparent border-none text-[10px] font-black text-blue-400 focus:ring-0 cursor-pointer p-0 appearance-none text-center"
            >
              {MONTHS.map((m, i) => (<option key={i} value={i} className="bg-slate-900">{m.substring(0, 3)}</option>))}
@@ -303,6 +304,7 @@ const MetricCard = ({
            <select 
              value={selectedYear} 
              onChange={(e) => onYearChange(parseInt(e.target.value))} 
+             data-testid="dashboard-metric-sel-year"
              className="bg-transparent border-none text-[10px] font-black text-slate-500 focus:ring-0 cursor-pointer p-0 appearance-none text-center"
            >
              {YEARS.map(y => (<option key={y} value={y} className="bg-slate-900">{y}</option>))}
@@ -347,7 +349,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
           <Calendar className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-white tracking-tight leading-none">Financial Velocity</h2>
+          <h2 className="text-2xl font-black text-white tracking-tight leading-none" data-testid="dashboard-cashflow-hdr">Financial Velocity</h2>
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">Monthly Performance Flow</p>
         </div>
       </div>
@@ -362,6 +364,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
               <button
                 key={m}
                 onClick={() => onModeChange(m)}
+                data-testid={`dashboard-cashflow-btn-mode-${m}`}
                 className={`p-2 rounded-xl transition-all duration-300 ${
                   cashflowMode === m 
                     ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/20' 
@@ -428,11 +431,21 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
            <div className="flex items-center justify-between mb-8">
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Flow Distribution</h3>
               <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
-                 <select value={visualMonth} onChange={(e) => onVisualMonthChange(parseInt(e.target.value))} className="bg-transparent border-none text-[10px] font-black text-blue-400 p-0 focus:ring-0 appearance-none text-center">
+                 <select 
+                   value={visualMonth} 
+                   onChange={(e) => onVisualMonthChange(parseInt(e.target.value))} 
+                   data-testid="dashboard-cashflow-sel-month"
+                   className="bg-transparent border-none text-[10px] font-black text-blue-400 p-0 focus:ring-0 appearance-none text-center"
+                 >
                    {MONTHS.map((m, i) => (<option key={i} value={i} className="bg-slate-900">{m.substring(0, 3)}</option>))}
                  </select>
                  <div className="w-px h-3 bg-white/10 mx-1" />
-                 <select value={visualYear} onChange={(e) => onVisualYearChange(parseInt(e.target.value))} className="bg-transparent border-none text-[10px] font-black text-slate-500 p-0 focus:ring-0 appearance-none text-center">
+                 <select 
+                   value={visualYear} 
+                   onChange={(e) => onVisualYearChange(parseInt(e.target.value))} 
+                   data-testid="dashboard-cashflow-sel-year"
+                   className="bg-transparent border-none text-[10px] font-black text-slate-500 p-0 focus:ring-0 appearance-none text-center"
+                 >
                    {YEARS.map(y => (<option key={y} value={y} className="bg-slate-900">{y}</option>))}
                  </select>
               </div>
@@ -504,7 +517,7 @@ const GoalTrackingCard = ({ stats }: any) => (
           <TrendingUp className="w-6 h-6" />
         </div>
         <div>
-          <h2 className="text-2xl font-black text-white tracking-tight leading-none">Milestones</h2>
+          <h2 className="text-2xl font-black text-white tracking-tight leading-none" data-testid="dashboard-milestones-hdr">Milestones</h2>
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">Asset Growth Tracking</p>
         </div>
       </div>
@@ -662,19 +675,27 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const { hasPermission } = usePermissions();
   const [stats, setStats] = useState<any>(null);
-  const [selectedMonth, setSelectedMonth] = useState(new Date().getMonth());
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedMonth, setSelectedMonth] = useState<number>(0);
+  const [selectedYear, setSelectedYear] = useState<number>(2024);
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(true);
+  const [isHydrated, setIsHydrated] = useState(false);
   const [cashflowMode, setCashflowMode] = useState<'table' | 'chart' | 'both'>('chart');
   const [cashflowAccounts, setCashflowAccounts] = useState<any[]>([]);
   const [showThresholdSettings, setShowThresholdSettings] = useState(false);
   const [thresholds, setThresholds] = useState<{ low: number; mid: number }>({ low: 5000, mid: 15000 });
   const [enabledWidgets, setEnabledWidgets] = useState<string[]>(ALL_WIDGETS.map(w => w.key));
-  const [visualMonth, setVisualMonth] = useState(new Date().getMonth());
-  const [visualYear, setVisualYear] = useState(new Date().getFullYear());
+  const [visualMonth, setVisualMonth] = useState<number>(0);
+  const [visualYear, setVisualYear] = useState<number>(2024);
 
   useEffect(() => {
+    const now = new Date();
+    setSelectedMonth(now.getMonth());
+    setSelectedYear(now.getFullYear());
+    setVisualMonth(now.getMonth());
+    setVisualYear(now.getFullYear());
+    setIsHydrated(true);
+
     const savedMode = localStorage.getItem('nexworth-cashflow-mode');
     if (savedMode === 'table' || savedMode === 'chart' || savedMode === 'both') setCashflowMode(savedMode as any);
     const savedWidgets = localStorage.getItem('nexworth-enabled-widgets');
@@ -701,7 +722,12 @@ export default function DashboardPage() {
         setError(null);
         const res = await api.get(`/dashboard/stats?year=${selectedYear}&month=${selectedMonth}`);
         if (res.data) {
-          setStats(res.data);
+          // Double check properties exist to prevent nested property access errors
+          const data = res.data;
+          if (!data.summary) data.summary = { totalAssets: 0, totalLiabilities: 0, netWorth: 0 };
+          if (!data.health) data.health = { score: 0, status: 'Initializing', metrics: {}, scores: {} };
+          if (!data.monthlyCashflow) data.monthlyCashflow = [];
+          setStats(data);
         } else {
           throw new Error('API returned empty data');
         }
@@ -749,13 +775,16 @@ export default function DashboardPage() {
 
   const pieData = useMemo(() => {
     if (!selectedMonthData) return [];
-    return [
+    const data = [
       { name: 'Income', value: selectedMonthData.income ?? 0, color: '#3b82f6' },
       { name: 'Expense', value: selectedMonthData.expense ?? 0, color: '#ef4444' },
       { name: 'Saving', value: (selectedMonthData.saving ?? 0) + (selectedMonthData.goalSaving ?? 0), color: '#22c55e' },
       { name: 'Investment', value: selectedMonthData.invest ?? 0, color: '#06b6d4' },
       { name: 'Debt Paid', value: selectedMonthData.debt ?? 0, color: '#f59e0b' },
-    ].filter(d => d.value > 0);
+    ];
+    const filtered = data.filter(d => d.value > 0);
+    // If no data > 0, return a placeholder to prevent chart crash
+    return filtered.length > 0 ? filtered : [{ name: 'No Data', value: 1, color: '#cbd5e1' }];
   }, [selectedMonthData]);
 
   const healthData = useMemo(() => [
@@ -786,20 +815,30 @@ export default function DashboardPage() {
   }, []);
 
   const gridItems = useMemo(() => {
-    if (!stats) return [];
+    // Ensure stats exists, but if it doesn't, we still return a loading state or default widgets
+    // to prevent the dashboard from being completely blank.
+    const currentStats = stats || { 
+      summary: { totalAssets: 0, totalGoalAssets: 0, totalLiabilities: 0, netWorth: 0 },
+      health: { score: 0, status: 'Initializing', metrics: { savingRate: 0, goalRate: 0, emergencyMonths: 0, debtRatio: 0, investmentRatio: 0 }, scores: {} },
+      goalTracking: [],
+      monthlyCashflow: []
+    };
+
+    const healthMetrics = currentStats?.health?.metrics || {};
+
     const items: GridItemConfig[] = [
       { key: 'welcome', content: <WelcomeCard user={user} stats={stats} loading={loading} />, defaultLayout: { lg: { x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 4 }, md: { x: 0, y: 0, w: 10, h: 6 }, sm: { x: 0, y: 0, w: 6, h: 7 } } },
       { key: 'health', content: <HealthCard stats={stats} loading={loading} healthData={healthData} />, defaultLayout: { lg: { x: 6, y: 0, w: 3, h: 6, minW: 3, minH: 4 }, md: { x: 0, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 7, w: 6, h: 5 } } },
       
-      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${((stats?.health?.metrics?.savingRate ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.saving ?? 0} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
+      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${((healthMetrics.savingRate ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.saving ?? 0} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
       
-      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${((stats?.health?.metrics?.goalRate ?? 0) * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
+      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${((healthMetrics.goalRate ?? 0) * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
       
-      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${stats?.health?.metrics?.emergencyMonths ?? 0} Mo`} score={stats?.health?.scores?.emergency ?? 0} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
+      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${healthMetrics.emergencyMonths ?? 0} Mo`} score={currentStats?.health?.scores?.emergency ?? 0} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
       
-      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${((stats?.health?.metrics?.debtRatio ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.debt ?? 0} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
+      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${((healthMetrics.debtRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.debt ?? 0} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
       
-      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((stats?.health?.metrics?.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={stats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
+      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((healthMetrics.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
       
       { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} visualMonth={visualMonth} visualYear={visualYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onVisualMonthChange={setVisualMonth} onVisualYearChange={setVisualYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
       
@@ -815,13 +854,13 @@ export default function DashboardPage() {
           <ShieldCheck className="w-16 h-16 text-rose-500 mx-auto mb-6" />
           <h1 className="text-2xl font-black text-white tracking-tight mb-3">Access Denied</h1>
           <p className="text-slate-400 text-sm leading-relaxed mb-6">You don't have the required clearance to view the Nexworth Command Center.</p>
-          <Link href="/login" className="inline-block px-8 py-3 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all uppercase tracking-widest">Return to Login</Link>
+          <Link href="/login" data-testid="dashboard-error-btn-return-login" className="inline-block px-8 py-3 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all uppercase tracking-widest">Return to Login</Link>
         </div>
       </div>
     );
   }
 
-  if (loading && !stats) {
+  if ((loading && !stats) || !isHydrated) {
     return (
       <div className="min-h-screen bg-slate-950 flex flex-col items-center justify-center gap-6">
         <div className="relative">
@@ -854,6 +893,7 @@ export default function DashboardPage() {
           </p>
           <button 
             onClick={() => window.location.reload()}
+            data-testid="dashboard-error-btn-retry"
             className="w-full py-4 bg-white text-slate-950 font-black rounded-2xl hover:bg-slate-200 transition-all uppercase tracking-widest text-xs shadow-xl"
           >
             Retry Connection
@@ -935,6 +975,7 @@ export default function DashboardPage() {
           {/* Settings Button */}
           <button
             onClick={() => setShowThresholdSettings(p => !p)}
+            data-testid="dashboard-cashflow-btn-settings"
             className="relative z-10 ml-auto p-1.5 rounded-lg text-slate-300 hover:text-slate-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-all"
             title="ตั้งค่าเกณฑ์สถานะ"
           >
@@ -953,6 +994,7 @@ export default function DashboardPage() {
                   </div>
                    <input
                     type="number"
+                    data-testid="dashboard-cashflow-input-low-threshold"
                     className="w-32 text-right text-xs font-black border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-rose-500/20"
                     value={thresholds.low}
                     onChange={e => {
@@ -969,6 +1011,7 @@ export default function DashboardPage() {
                   </div>
                   <input
                     type="number"
+                    data-testid="dashboard-cashflow-input-mid-threshold"
                     className="w-32 text-right text-xs font-black border border-slate-200 dark:border-slate-700 rounded-xl px-3 py-2 bg-slate-50 dark:bg-slate-800/50 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-2 focus:ring-amber-500/20"
                     value={thresholds.mid}
                     onChange={e => {
@@ -1007,6 +1050,7 @@ export default function DashboardPage() {
                     <button 
                       key={widget.key} 
                       onClick={() => toggleWidget(widget.key)} 
+                      data-testid={`dashboard-widget-btn-toggle-${widget.key}`}
                       className={`inline-flex items-center gap-2.5 px-4 py-2 rounded-xl text-[11px] font-black transition-all uppercase tracking-wider ${
                         isActive 
                           ? 'bg-blue-600 text-white shadow-md shadow-blue-500/10 ring-2 ring-blue-500/20' 

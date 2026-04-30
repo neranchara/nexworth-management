@@ -197,6 +197,7 @@ export default function BanksManagementPage() {
             {hasPermission('banks', 'canCreate') && (
               <button 
                 onClick={openAddModal}
+                data-testid="banks-list-btn-add-bank"
                 className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Add New Bank
@@ -262,12 +263,22 @@ export default function BanksManagementPage() {
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                           {hasPermission('banks', 'canUpdate') && (
-                            <button onClick={() => openEditModal(bank)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" title="Edit">
+                            <button 
+                              onClick={() => openEditModal(bank)} 
+                              data-testid={`banks-list-btn-edit-${bank.code}`}
+                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" 
+                              title="Edit"
+                            >
                               <Edit2 className="w-4 h-4 inline" />
                             </button>
                           )}
                           {hasPermission('banks', 'canDelete') && (
-                            <button onClick={() => handleDelete(bank.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" title="Delete">
+                            <button 
+                              onClick={() => handleDelete(bank.id)} 
+                              data-testid={`banks-list-btn-delete-${bank.code}`}
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" 
+                              title="Delete"
+                            >
                               <Trash2 className="w-4 h-4 inline" />
                             </button>
                           )}
@@ -300,6 +311,7 @@ export default function BanksManagementPage() {
                     <input 
                       type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                       placeholder="e.g. Kasikornbank"
+                      data-testid="banks-form-input-name"
                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
                     />
                  </div>
@@ -309,6 +321,7 @@ export default function BanksManagementPage() {
                     <input 
                       type="text" required value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
                       placeholder="e.g. KBANK"
+                      data-testid="banks-form-input-code"
                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono" 
                     />
                  </div>
@@ -350,7 +363,7 @@ export default function BanksManagementPage() {
 
                  <div className="pt-4 border-t dark:border-gray-700 flex justify-end gap-3">
                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 flex-1">Cancel</button>
-                    <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 flex-1 shadow-sm">Save Bank</button>
+                    <button type="submit" data-testid="banks-form-btn-save" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 flex-1 shadow-sm">Save Bank</button>
                  </div>
               </form>
            </div>

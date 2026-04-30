@@ -214,6 +214,7 @@ export default function CategoriesManagementPage() {
             {hasPermission('categories', 'canCreate') && (
               <button 
                 onClick={openAddModal}
+                data-testid="categories-list-btn-add-cat"
                 className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
               >
                 Add New Category
@@ -278,12 +279,20 @@ export default function CategoriesManagementPage() {
                         </td>
                         <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
                           {hasPermission('categories', 'canUpdate') && (
-                            <button onClick={() => openEditModal(cat)} className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4">
+                            <button 
+                              onClick={() => openEditModal(cat)} 
+                              data-testid={`categories-list-btn-edit-${cat.name}`}
+                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
+                            >
                               <Edit2 className="w-4 h-4 inline" />
                             </button>
                           )}
                           {hasPermission('categories', 'canDelete') && (
-                            <button onClick={() => handleDelete(cat.id)} className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-blue-300">
+                            <button 
+                              onClick={() => handleDelete(cat.id)} 
+                              data-testid={`categories-list-btn-delete-${cat.name}`}
+                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-blue-300"
+                            >
                               <Trash2 className="w-4 h-4 inline" />
                             </button>
                           )}
@@ -316,6 +325,7 @@ export default function CategoriesManagementPage() {
                     <input 
                       type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                       placeholder="e.g. อาหาร, เงินเดือน"
+                      data-testid="categories-form-input-name"
                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
                     />
                  </div>
@@ -324,6 +334,7 @@ export default function CategoriesManagementPage() {
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Transaction Type</label>
                     <select 
                       required value={formData.typeId} onChange={(e) => setFormData({...formData, typeId: e.target.value})}
+                      data-testid="categories-form-sel-type"
                       className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
                       <option value="" disabled>Select Type</option>
@@ -349,7 +360,7 @@ export default function CategoriesManagementPage() {
 
                  <div className="pt-4 border-t dark:border-gray-700 flex justify-end gap-3">
                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 flex-1">Cancel</button>
-                    <button type="submit" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 flex-1 shadow-sm">Save Category</button>
+                    <button type="submit" data-testid="categories-form-btn-save" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 flex-1 shadow-sm">Save Category</button>
                  </div>
               </form>
            </div>

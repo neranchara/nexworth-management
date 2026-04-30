@@ -337,6 +337,7 @@ export default function AssetsPage() {
             <button
               id="btn-toggle-non-counted"
               onClick={() => setShowNonCounted(prev => !prev)}
+              data-testid="assets-list-btn-toggle-non-counted"
               className={`inline-flex items-center justify-center gap-2 rounded-md border px-4 py-2 text-sm font-medium shadow-sm transition-colors ${
                 showNonCounted
                   ? 'bg-amber-50 border-amber-300 text-amber-700 hover:bg-amber-100 dark:bg-amber-900/20 dark:border-amber-700 dark:text-amber-400'
@@ -351,6 +352,7 @@ export default function AssetsPage() {
               <button
                 id="btn-add-asset"
                 onClick={openAddModal}
+                data-testid="assets-list-btn-add-asset"
                 className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
               >
                 <PlusCircle className="w-4 h-4" />
@@ -458,6 +460,7 @@ export default function AssetsPage() {
                               {hasPermission('assets', 'canUpdate') && (
                                 <button
                                   onClick={() => openEditModal(record)}
+                                  data-testid={`assets-list-btn-edit-${account.name}`}
                                   className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
                                   title="Edit"
                                 >
@@ -467,6 +470,7 @@ export default function AssetsPage() {
                               {hasPermission('assets', 'canDelete') && (
                                 <button
                                   onClick={() => handleDelete(record.id)}
+                                  data-testid={`assets-list-btn-delete-${account.name}`}
                                   className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
                                   title="Delete"
                                 >
@@ -506,6 +510,7 @@ export default function AssetsPage() {
                   disabled={isEditing}
                   value={formData.accountId}
                   onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+                  data-testid="assets-form-sel-account"
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
                 >
                   <option value="new">+ Create New Account</option>
@@ -527,6 +532,7 @@ export default function AssetsPage() {
                       required={formData.accountId === 'new'}
                       value={formData.newAccountName}
                       onChange={(e) => setFormData({ ...formData, newAccountName: e.target.value })}
+                      data-testid="assets-form-input-new-name"
                       className="w-full rounded-md border border-blue-200 dark:border-blue-800 px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 shadow-sm"
                     />
                   </div>
@@ -536,6 +542,7 @@ export default function AssetsPage() {
                       <select
                         value={formData.newAccountType}
                         onChange={(e) => setFormData({ ...formData, newAccountType: e.target.value })}
+                        data-testid="assets-form-sel-new-type"
                         className="w-full rounded-md border border-blue-200 dark:border-blue-800 px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 shadow-sm"
                       >
                         {ASSET_TYPES.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
@@ -546,6 +553,7 @@ export default function AssetsPage() {
                       <select
                         value={formData.bankId}
                         onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
+                        data-testid="assets-form-sel-new-bank"
                         className="w-full rounded-md border border-blue-200 dark:border-blue-800 px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-blue-500 shadow-sm"
                       >
                         <option value="">No Institution</option>
@@ -566,6 +574,7 @@ export default function AssetsPage() {
                     required
                     value={formData.amount}
                     onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                    data-testid="assets-form-input-amount"
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -576,6 +585,7 @@ export default function AssetsPage() {
                     required
                     value={formData.date}
                     onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                    data-testid="assets-form-input-date"
                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
                   />
                 </div>
@@ -587,6 +597,7 @@ export default function AssetsPage() {
                   value={formData.note}
                   onChange={(e) => setFormData({ ...formData, note: e.target.value })}
                   placeholder="e.g. Current balance after monthly update"
+                  data-testid="assets-form-input-note"
                   className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
                 />
               </div>
@@ -602,6 +613,7 @@ export default function AssetsPage() {
                 <button
                   id="btn-save-asset"
                   type="submit"
+                  data-testid="assets-form-btn-save"
                   className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
                 >
                   {isEditing ? 'Update Value' : 'Save Value'}
