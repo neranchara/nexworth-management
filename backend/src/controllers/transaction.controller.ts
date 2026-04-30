@@ -260,6 +260,10 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     const user = request.user as { sub: string, organizationId: string };
     const { id } = request.params as { id: string };
     const body = transactionSchema.parse(request.body);
+    const { 
+      accountId, fromAccountId, toAccountId, categoryId, typeId, 
+      amount, description, date, actualDate, note, direction 
+    } = body;
 
     body.amount = Math.abs(body.amount);
 
@@ -290,12 +294,12 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
     const behavior = existingType?.behavior;
     const isExistingExpense = behavior === 'EXPENSE' || behavior === 'DEBT';
     
-    const isTransferIntent = !!(body.fromAccountId && body.toAccountId) && (
+    const isTransferIntent = !!(fromAccountId && toAccountId) && (
       ['INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL_SAVING', 'DEBT', 'EXPENSE', 'INCOME'].includes(categoryBehavior)
     );
     const wasTransfer = !!existing.linkedTransactionId;
     console.log('[DEBUG-UPDATE] id:', existing.id);
-    console.log('[DEBUG-UPDATE] fromAccountId:', body.fromAccountId, 'toAccountId:', body.toAccountId);
+    console.log('[DEBUG-UPDATE] fromAccountId:', fromAccountId, 'toAccountId:', toAccountId);
     console.log('[DEBUG-UPDATE] categoryBehavior:', categoryBehavior);
     console.log('[DEBUG-UPDATE] isTransferIntent:', isTransferIntent, 'wasTransfer:', wasTransfer);
 
@@ -307,7 +311,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
 
     if (wasTransfer && isTransferIntent) {
       let behaviorToUse = categoryBehavior;
-      const targetToAccountId = body.toAccountId || (isExistingExpense ? linked!.accountId : existing.accountId);
+      const targetToAccountId = toAccountId || (isExistingExpense ? linked!.accountId : existing.accountId);
       
       const toAccount = await prisma.account.findUnique({ where: { id: targetToAccountId } });
       if (toAccount && !toAccount.isPersonal && behaviorToUse !== 'INVESTMENT') {
@@ -379,7 +383,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       }
     }
 
-    let targetPrimaryAccountId = body.accountId || (isExistingExpense ? body.fromAccountId : body.toAccountId) || body.toAccountId || body.fromAccountId || existing.accountId;
+    let targetPrimaryAccountId = accountId || (isExistingExpense ? fromAccountId : toAccountId) || toAccountId || fromAccountId || existing.accountId;
     
     let assetId: string | null = null;
     let liabilityId: string | null = null;
@@ -405,16 +409,16 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       data: {
         accountId: targetPrimaryAccountId as string,
         categoryId: primaryCategoryId,
-        amount: body.amount,
-        description: body.description !== undefined ? body.description : existing.description,
-        note: body.note !== undefined ? body.note : existing.note,
+        amount: amount,
+        description: description !== undefined ? description : existing.description,
+        note: note !== undefined ? note : existing.note,
         typeId: primaryTypeId,
         assetId,
         liabilityId,
-        date: body.date ? new Date(body.date) : existing.date,
-        actualDate: body.actualDate !== undefined ? (body.actualDate ? new Date(body.actualDate) : null) : existing.actualDate,
+        date: date ? new Date(date) : existing.date,
+        actualDate: actualDate !== undefined ? (actualDate ? new Date(actualDate) : null) : existing.actualDate,
         linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
-        direction: body.direction || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_BORROW', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO'))
+        direction: direction || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_BORROW', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO'))
       },
       include: {
         account: { include: { bank: { select: { name: true, color: true } } } },
