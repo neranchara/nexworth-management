@@ -426,7 +426,7 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         date: body.date ? new Date(body.date) : existing.date,
         actualDate: body.actualDate !== undefined ? (body.actualDate ? new Date(body.actualDate) : null) : existing.actualDate,
         linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
-        direction: !isTransferIntent ? body.direction : null
+        direction: !isTransferIntent ? body.direction : (isExistingExpense ? 'FROM' : 'TO')
       },
       include: {
         account: { include: { bank: { select: { name: true, color: true } } } },
@@ -512,7 +512,8 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
           actualDate: updatedPrimary.actualDate,
           assetId: linkedAssetId,
           liabilityId: linkedLiabilityId,
-          linkedTransactionId: updatedPrimary.id
+          linkedTransactionId: updatedPrimary.id,
+          direction: isExistingExpense ? 'TO' : 'FROM'
         }
       });
 
@@ -557,7 +558,8 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
           assetId: linkedAssetId,
           liabilityId: linkedLiabilityId,
           categoryId: linkedCategoryId !== undefined ? linkedCategoryId : linked!.categoryId,
-          typeId: linkedTypeId !== undefined ? linkedTypeId : linked!.typeId
+          typeId: linkedTypeId !== undefined ? linkedTypeId : linked!.typeId,
+          direction: isExistingExpense ? 'TO' : 'FROM'
         }
       });
       
