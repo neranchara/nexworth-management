@@ -1,0 +1,2558 @@
+{
+  "exportedAt": "2026-04-30T17:27:31.258Z",
+  "source": "Neon Production",
+  "warning": "CRITICAL DATA - DO NOT DELETE - DO NOT USE WITHOUT PERMISSION",
+  "recordCount": 150,
+  "data": [
+    {
+      "RECORD DATE": "2026-04-30T17:05:33.703Z",
+      "Actual Date": "2026-05-01T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26 (ตาม Rate ไม่กำไร)",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนกองทุน",
+      "From Account": "N/A",
+      "To Account": "K-US500X-A(A)",
+      "Amount": 14533.02,
+      "Status": "TO",
+      "Metadata": {
+        "id": "83a02337-3908-4325-a079-93482674bf13",
+        "linkedId": null,
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนกองทุน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T17:04:02.596Z",
+      "Actual Date": "2026-05-01T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26 (Rate เงิน)",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนหุ้น",
+      "From Account": "N/A",
+      "To Account": "Dime",
+      "Amount": 3516.56,
+      "Status": "TO",
+      "Metadata": {
+        "id": "24ad4c51-381d-4f78-8835-0ef419b33c49",
+        "linkedId": null,
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนหุ้น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T17:02:03.772Z",
+      "Actual Date": "2026-05-01T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนหุ้น",
+      "From Account": "N/A",
+      "To Account": "6163032",
+      "Amount": 24206.47,
+      "Status": "TO",
+      "Metadata": {
+        "id": "2b811bc7-4bcf-4642-a1e1-430698b29093",
+        "linkedId": null,
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนหุ้น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T17:01:07.898Z",
+      "Actual Date": "2026-05-01T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนกองทุน",
+      "From Account": "N/A",
+      "To Account": "Cloud Pocket กองทุนกสิกร",
+      "Amount": 200,
+      "Status": "TO",
+      "Metadata": {
+        "id": "ecde7e7a-766c-494d-b3db-86a0622504fc",
+        "linkedId": null,
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนกองทุน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T17:00:35.343Z",
+      "Actual Date": "2026-05-01T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "ท่องเที่ยว",
+      "From Account": "N/A",
+      "To Account": "Cloud Pocket เที่ยว",
+      "Amount": 900,
+      "Status": "TO",
+      "Metadata": {
+        "id": "d7f86205-f151-42e9-b079-0d6f2eb8c7c7",
+        "linkedId": null,
+        "behavior": "GOAL_SAVING",
+        "categoryName": "ท่องเที่ยว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T16:59:37.526Z",
+      "Actual Date": "2026-04-30T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "บริจาครายปี",
+      "From Account": "N/A",
+      "To Account": "Cloud Pocket ทำบุญ",
+      "Amount": 200,
+      "Status": "TO",
+      "Metadata": {
+        "id": "4a5e3903-6845-48fd-b970-345733e47233",
+        "linkedId": null,
+        "behavior": "GOAL_SAVING",
+        "categoryName": "บริจาครายปี"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T16:58:57.210Z",
+      "Actual Date": "2026-04-30T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "ค่าใช้จ่ายรถ",
+      "From Account": "N/A",
+      "To Account": "Cloud Pocket ค่าใช้จ่ายรถ",
+      "Amount": 2000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "1da9ba6a-67a1-4c9a-b23c-6e3950406b31",
+        "linkedId": null,
+        "behavior": "GOAL_SAVING",
+        "categoryName": "ค่าใช้จ่ายรถ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T16:58:13.299Z",
+      "Actual Date": "2026-04-30T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26",
+      "Type": "เงินออม",
+      "Category": "เงินออม",
+      "From Account": "N/A",
+      "To Account": "Cloud Pocket ออมทอง",
+      "Amount": 3000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "55928815-d0db-44ec-8c22-eafc08c8fb85",
+        "linkedId": null,
+        "behavior": "SAVING",
+        "categoryName": "เงินออม"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T16:57:11.638Z",
+      "Actual Date": "2026-04-30T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26",
+      "Type": "เงินออม",
+      "Category": "เงินออม",
+      "From Account": "N/A",
+      "To Account": "Cloud Pocket ฉุกเฉิน",
+      "Amount": 34876,
+      "Status": "TO",
+      "Metadata": {
+        "id": "a86d29e4-9c97-475f-8857-6e744985013b",
+        "linkedId": null,
+        "behavior": "SAVING",
+        "categoryName": "เงินออม"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T16:56:18.474Z",
+      "Actual Date": "2026-04-30T00:00:00.000Z",
+      "Description": "ปรับยอดจากปัจจุบัน 30-Apr-26",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนธุรกิจ",
+      "From Account": "N/A",
+      "To Account": "Cloud Pocket เมล็ดกาแฟ",
+      "Amount": 1771.25,
+      "Status": "TO",
+      "Metadata": {
+        "id": "1cec6674-7aac-4379-88f5-9f62a8b14d00",
+        "linkedId": null,
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนธุรกิจ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T16:51:57.884Z",
+      "Actual Date": "2026-04-29T00:00:00.000Z",
+      "Description": "ซื้อหุ้น Microsoft + ",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "Dime",
+      "Amount": 10000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "0c7b04e1-e018-4875-ac3b-98b112e2378b",
+        "linkedId": "aa066b3c-ebb3-49d2-9edd-9d58ff507bc4",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T16:51:57.811Z",
+      "Actual Date": "2026-04-29T00:00:00.000Z",
+      "Description": "ซื้อหุ้น Microsoft + ",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนหุ้น",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "Dime",
+      "Amount": 10000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "aa066b3c-ebb3-49d2-9edd-9d58ff507bc4",
+        "linkedId": "0c7b04e1-e018-4875-ac3b-98b112e2378b",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนหุ้น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T16:43:24.215Z",
+      "Actual Date": "2026-03-06T00:00:00.000Z",
+      "Description": "ประกันแม่",
+      "Type": "รายรับ",
+      "Category": "รายได้อื่น",
+      "From Account": "N/A",
+      "To Account": "ไทยพาณิชย์",
+      "Amount": 38000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "92d5c1ba-54cc-406f-ac0a-37bb35560044",
+        "linkedId": null,
+        "behavior": "INCOME",
+        "categoryName": "รายได้อื่น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-30T15:57:22.246Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ยืมทำบ้านยอด 20000 + 30000",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "To Account": "N/A",
+      "Amount": 50000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "ea81a425-3cd5-4cf0-8087-70f768a4d5df",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:58:40.224Z",
+      "Actual Date": "2025-04-01T00:00:00.000Z",
+      "Description": "มดสร้างบ้าน",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 100000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "349bd4a4-f1a7-4c4e-aed1-58fe38017843",
+        "linkedId": "99f90c28-22ac-4caa-9e67-406739403c06",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:55:03.740Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "จ่าย Shopee Pay",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "ไทยพาณิชย์",
+      "To Account": "N/A",
+      "Amount": 6296,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "c8459a1e-ed4d-4ae1-b18f-850be6595c24",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:54:00.312Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "จ่าย Shopee Pay",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "ไทยพาณิชย์",
+      "To Account": "N/A",
+      "Amount": 5123.44,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "02a0f189-e8f6-4576-834f-4ffc76ec3715",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:41:21.690Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "จ่าย Shopee Pay",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 4591,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "b785e107-1f9f-4f54-85a4-4029339d7692",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:32:42.615Z",
+      "Actual Date": "2025-12-31T00:00:00.000Z",
+      "Description": "ปรับยอดบัตรเครดิตจากปี 2025",
+      "Type": "หนี้",
+      "Category": "ชำระหนี้",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 15836.73,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "ab13c60f-1ae3-485c-89b2-ab996fca7667",
+        "linkedId": "641714ca-678e-4bfb-88f5-c08c25de4cc2",
+        "behavior": "DEBT",
+        "categoryName": "ชำระหนี้"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:32:42.599Z",
+      "Actual Date": "2025-12-31T00:00:00.000Z",
+      "Description": "ปรับยอดบัตรเครดิตจากปี 2025",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 15836.73,
+      "Status": "TO",
+      "Metadata": {
+        "id": "641714ca-678e-4bfb-88f5-c08c25de4cc2",
+        "linkedId": "ab13c60f-1ae3-485c-89b2-ab996fca7667",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:27:44.547Z",
+      "Actual Date": "2026-04-22T00:00:00.000Z",
+      "Description": "รายการตั้งต้น: ชุดทำงาน",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "กสิกร",
+      "To Account": "N/A",
+      "Amount": 4850,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "46647661-5318-4657-b816-98fcd100ca4f",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:21:54.781Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "กองทุนสำรองเลี้ยงชีพ",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ธนาคารอาคารสงเคราะห์",
+      "Amount": 1759,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "0a8a7234-119c-4ba6-8871-9b72297b30a8",
+        "linkedId": "cc2c2b6c-d162-4e98-b04a-452d70a527e5",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:10:45.821Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "กองทุนสำรองเลี้ยงชีพ",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ธนาคารอาคารสงเคราะห์",
+      "Amount": 1759,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "959b056b-8a4d-44fd-996d-8c663fe1ee44",
+        "linkedId": "435260aa-c57b-4ddf-a684-401921b86206",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:06:59.643Z",
+      "Actual Date": "2026-03-06T00:00:00.000Z",
+      "Description": "ออม จากประกันแม่",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "ไทยพาณิชย์",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 38000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "6c8aeb28-8e9e-41b0-a059-a21dcbe86149",
+        "linkedId": "2c2a63c2-1561-4c78-a137-17c0545df2ee",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:06:37.403Z",
+      "Actual Date": "2026-03-26T00:00:00.000Z",
+      "Description": "ค่าใช้จ่ายทั่วไป",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ไทยพาณิชย์",
+      "Amount": 6000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "1f58ac87-c824-4ab1-ac64-7781420a4415",
+        "linkedId": "ed324a5a-1108-4727-8e1b-e6ad24401587",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:06:26.493Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ออมสิน เงินออมแม่",
+      "Type": "เงินออม",
+      "Category": "ออมครอบครัว",
+      "From Account": "ออมสิน เงินออมแม่",
+      "To Account": "กรุงเทพ",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "c4d67177-4a80-4089-9745-b3e07529e5cd",
+        "linkedId": "45f67371-f127-4f18-94ed-6a1d73dd727d",
+        "behavior": "SAVING",
+        "categoryName": "ออมครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:06:12.896Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "กรุงไทย รายเดือนแม่",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงไทย รายเดือนแม่",
+      "Amount": 1000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "badece96-297d-49d0-bc76-24d95170df48",
+        "linkedId": "4e6eb575-b62a-4063-a25c-5558992cf53c",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:04:12.990Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าใช้จ่ายรายเดือน 3",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ไทยพาณิชย์",
+      "Amount": 10000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "f97106ec-e35e-479c-8fdd-992c81be7690",
+        "linkedId": "a4ebbba4-54bd-4cba-9dcd-c7e1971e8e8f",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:02:46.448Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ออมกสิกร",
+      "Type": "เงินออม",
+      "Category": "เงินฉุกเฉิน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กสิกร",
+      "Amount": 46418,
+      "Status": "TO",
+      "Metadata": {
+        "id": "66f2e571-6c01-4b0d-9204-2ded1d369dc2",
+        "linkedId": "ec4b8cbe-42c2-401f-8d93-223ef452a907",
+        "behavior": "SAVING",
+        "categoryName": "เงินฉุกเฉิน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:02:20.502Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าเช่าบ้าน+ค่าน้ำ+ค่าไฟ",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 3000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "9cca4843-0144-44b0-b6ef-ff7602568b90",
+        "linkedId": "552f0ba3-7f5a-4b8b-a1a4-695f4b70972e",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:02:12.805Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ออมสิน รายเดือนแม่",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน รายเดือนแม่",
+      "Amount": 7000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "579490ff-0b12-432b-b017-182cec152a61",
+        "linkedId": "261b6fe1-5589-4d0d-a665-63d829d99d54",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:01:19.146Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าซื้อของรายเดือน",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 1000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "ceaa3572-aa2f-4090-a26e-9797be55e09a",
+        "linkedId": "0cffe834-581a-4492-a8dd-415ad347236f",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T18:01:07.218Z",
+      "Actual Date": "2026-03-30T00:00:00.000Z",
+      "Description": "ออม จากเงินชดเชย",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 20000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "8307a546-be18-4d07-a69c-b9137255676a",
+        "linkedId": "2f5172c8-9bab-4a28-a668-7eeeba2e2a4f",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:58:57.984Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "คืนเงินบัญชีครอบครัว (ออมสิน 020125686467)",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 47300,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "20da3baf-9f5e-4961-a31c-fde74222799e",
+        "linkedId": "601bc975-e9e5-4d24-818a-a70c73faff24",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:58:44.646Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ค่าเช่าบ้าน+ค่าน้ำ+ค่าไฟ",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 3000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "a3b94f14-eee1-4fca-b588-51f4815d8bb4",
+        "linkedId": "e2a56674-5818-4efd-b4e1-7a62644069ae",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:58:36.793Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ค่าซื้อของรายเดือน",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 1000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "3222a44f-2092-4453-9d14-5ccc45f13214",
+        "linkedId": "42fbd423-0a38-4a3a-b012-d12747b2b498",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:58:14.569Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "UOB",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 4000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "701be571-886b-468e-9c7c-f883f6a7fbd4",
+        "linkedId": "11522427-5ff0-4e63-af26-3da6f16c9a51",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:57:42.542Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่บัญชีกรุงไทย",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงไทย รายเดือนแม่",
+      "Amount": 5000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "16c64de9-5005-469a-98c5-d3d68978e9f6",
+        "linkedId": "6911659e-1060-4404-af37-bc388d19ae2a",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:57:33.826Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่บัญชีออมสิน",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน รายเดือนแม่",
+      "Amount": 7000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "2f0c857b-8396-49e6-a872-34454970a3a2",
+        "linkedId": "da93df72-143e-4782-b383-d08aec587210",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:54:57.539Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "บัญชีเงินซื้อรถ (ออมสิน)",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "Amount": 15000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "77188af0-710d-4782-8407-958b3f6b8200",
+        "linkedId": "d5870f36-4114-4961-b0ed-bbc322afe8e6",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:54:48.805Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "บัญชีออมสินแม่ (ออมสิน)",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน เงินออมแม่",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "54e5b063-f469-42f8-bd7c-b839b56f7174",
+        "linkedId": "895b5ca3-079c-4ed0-8e24-858c9695d580",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:53:44.226Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่ กรุงไทย",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงไทย รายเดือนแม่",
+      "Amount": 5000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "4ea4f622-aee7-4f6f-8e4d-3870173d0ca6",
+        "linkedId": "81417741-8645-4be0-a688-e65b4f5e9d03",
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:53:44.209Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่ กรุงไทย",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงไทย รายเดือนแม่",
+      "Amount": 5000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "81417741-8645-4be0-a688-e65b4f5e9d03",
+        "linkedId": "4ea4f622-aee7-4f6f-8e4d-3870173d0ca6",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:52:06.867Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่บัญชีกรุงไทย",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงไทย รายเดือนแม่",
+      "Amount": 5000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "a4bb1d66-c399-4161-af95-8fe14d07670a",
+        "linkedId": "0f83b2d9-aa9c-44d9-87d4-f442a319432d",
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:52:06.801Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่บัญชีกรุงไทย",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงไทย รายเดือนแม่",
+      "Amount": 5000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "0f83b2d9-aa9c-44d9-87d4-f442a319432d",
+        "linkedId": "a4bb1d66-c399-4161-af95-8fe14d07670a",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:50:48.310Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "บัญชีออมสินแม่ (ออมสิน)",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน เงินออมแม่",
+      "Amount": 1000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "3e9d4d60-51a5-406a-a643-098334e54f9a",
+        "linkedId": "34b78e30-14d8-46a2-83c4-4b63d9842411",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:50:13.730Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ค่าเช่าบ้าน+ค่าน้ำ+ค่าไฟ",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 3000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "aae46675-a8fb-4258-9cfe-089f0c6e7c4e",
+        "linkedId": "78027a66-55f0-45a1-a7d8-870713c5bda5",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:49:57.907Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่บัญชีออมสิน",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน รายเดือนแม่",
+      "Amount": 7000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "fab7d9e1-5ed3-4691-9dd0-32104fee8549",
+        "linkedId": "8641799d-aeb5-48e8-bf42-5f605321f6d5",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:33:40.217Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "บัญชีเงินซื้อรถ (ออมสิน)",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "เงินซื้อรถ",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "Amount": 15000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "510d7540-0abe-4b9a-86d1-f6b43ea07336",
+        "linkedId": "2c15fc2a-0b00-414a-8003-d9316dd1dca2",
+        "behavior": "GOAL_SAVING",
+        "categoryName": "เงินซื้อรถ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:31:38.855Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ออมเงินสด (ออมสิน 020125686467)",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "6492207b-7dba-45ef-8b65-59d77b39c073",
+        "linkedId": "4596ec39-cf78-4274-901a-f8441b25b733",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:30:59.458Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "คืนเงินบัญชีครอบครัว (ออมสิน 020125686467)",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 2000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "1b849d83-98bf-4750-ae8a-50b715813a69",
+        "linkedId": "b28fe561-85a5-4186-9851-1d3de4d0db5e",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.906Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ออมสิน บัญชีเงินซื้อรถ",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "เงินซื้อรถ",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "Amount": 210000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "93bf313d-97b0-4a4d-abd2-bbe932630b50",
+        "linkedId": "20a953d4-d04a-4b69-bdd1-748da98d1fa4",
+        "behavior": "GOAL_SAVING",
+        "categoryName": "เงินซื้อรถ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.903Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket ค่าใช้จ่ายรถ",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "ค่าใช้จ่ายรถ",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket ค่าใช้จ่ายรถ",
+      "Amount": 1000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "9553ab62-6279-454a-99a6-b1916a6c8082",
+        "linkedId": "52c8ad1c-c3fd-4595-8c91-2a4bde748879",
+        "behavior": "GOAL_SAVING",
+        "categoryName": "ค่าใช้จ่ายรถ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.900Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket กองทุนกสิกร",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนกองทุน",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket กองทุนกสิกร",
+      "Amount": 500,
+      "Status": "TO",
+      "Metadata": {
+        "id": "8610f4b3-d030-4d74-a631-dd2d1682ff8d",
+        "linkedId": "e5d12194-925a-4775-a055-9eaafb8c7fc9",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนกองทุน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.898Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket ออมทอง",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนทอง",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket ออมทอง",
+      "Amount": 1000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "6be48a0a-9388-4cb1-bfd9-d8bcb0e22d87",
+        "linkedId": "b4150d78-f25c-457a-a290-0fdd3f75bdcf",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนทอง"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.895Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket ASML",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนหุ้น",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket ASML",
+      "Amount": 2000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "b2999fa5-004c-4076-8081-8487dd4b7ad4",
+        "linkedId": "b70d2ae4-828b-46a3-915d-a9422076d5de",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนหุ้น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.892Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket เที่ยว",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "ท่องเที่ยว",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket เที่ยว",
+      "Amount": 500,
+      "Status": "TO",
+      "Metadata": {
+        "id": "0fbec5d5-977f-4e97-b128-dbca53a29d95",
+        "linkedId": "7fb62902-868b-483f-b2e2-af10455ced09",
+        "behavior": "GOAL_SAVING",
+        "categoryName": "ท่องเที่ยว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.889Z",
+      "Actual Date": "2026-04-11T00:00:00.000Z",
+      "Description": "ย้ายไป DIME",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนหุ้น",
+      "From Account": "Cloud Pocket TSMC",
+      "To Account": "Dime",
+      "Amount": 3000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "f570358f-fbba-414e-aab8-3b3790ca2ac1",
+        "linkedId": "1d399ae3-a586-4fde-b0e0-52dd482b5b38",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนหุ้น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.886Z",
+      "Actual Date": "2026-04-11T00:00:00.000Z",
+      "Description": "ย้ายไป DIME",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนหุ้น",
+      "From Account": "Cloud Pocket ASML",
+      "To Account": "Dime",
+      "Amount": 3000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "3533656b-a991-4979-9aa7-de814ac74d57",
+        "linkedId": "32c1fc59-75da-4c59-a2a7-4c30774bad3d",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนหุ้น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.883Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket ทำบุญ",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "บริจาครายปี",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket ทำบุญ",
+      "Amount": 1400,
+      "Status": "TO",
+      "Metadata": {
+        "id": "5c6e7651-53a5-41d0-bd5c-caf8eac2ba31",
+        "linkedId": "5106c960-a4c8-4e56-b99b-7c68ab9336ad",
+        "behavior": "GOAL_SAVING",
+        "categoryName": "บริจาครายปี"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:24:55.866Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket TSMC",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนหุ้น",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket TSMC",
+      "Amount": 3000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "b96372bd-324e-448e-898c-d134fd90d362",
+        "linkedId": "d3d7fd73-d1f5-48e1-a874-2106eb3de842",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนหุ้น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:12:55.054Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ออมเงินสด (ออมสิน 020125686467)",
+      "Type": "เงินออม",
+      "Category": "เงินออม",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 1000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "4596ec39-cf78-4274-901a-f8441b25b733",
+        "linkedId": "6492207b-7dba-45ef-8b65-59d77b39c073",
+        "behavior": "SAVING",
+        "categoryName": "เงินออม"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:12:01.144Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "บัญชีออมสินแม่ (ออมสิน)",
+      "Type": "เงินออม",
+      "Category": "ออมครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน เงินออมแม่",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "34b78e30-14d8-46a2-83c4-4b63d9842411",
+        "linkedId": "3e9d4d60-51a5-406a-a643-098334e54f9a",
+        "behavior": "SAVING",
+        "categoryName": "ออมครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:11:32.378Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "คืนเงินบัญชีครอบครัว (ออมสิน 020125686467)",
+      "Type": "เงินออม",
+      "Category": "เงินออม",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 2000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "b28fe561-85a5-4186-9851-1d3de4d0db5e",
+        "linkedId": "1b849d83-98bf-4750-ae8a-50b715813a69",
+        "behavior": "SAVING",
+        "categoryName": "เงินออม"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:11:08.163Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "UOB",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 4300,
+      "Status": "TO",
+      "Metadata": {
+        "id": "bd7ba956-0e68-4bdc-8213-865506638898",
+        "linkedId": "bcb3a4a9-efc3-409d-9156-45736e22e770",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:07:53.781Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ออมสิน บัญชีเงินซื้อรถ",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "Amount": 210000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "20a953d4-d04a-4b69-bdd1-748da98d1fa4",
+        "linkedId": "93bf313d-97b0-4a4d-abd2-bbe932630b50",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:07:30.031Z",
+      "Actual Date": "2026-03-30T00:00:00.000Z",
+      "Description": "ออม จากเงินชดเชย",
+      "Type": "เงินออม",
+      "Category": "เงินออม",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 20000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "2f5172c8-9bab-4a28-a668-7eeeba2e2a4f",
+        "linkedId": "8307a546-be18-4d07-a69c-b9137255676a",
+        "behavior": "SAVING",
+        "categoryName": "เงินออม"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:05:57.689Z",
+      "Actual Date": "2026-03-06T00:00:00.000Z",
+      "Description": "ออม จากประกันแม่",
+      "Type": "เงินออม",
+      "Category": "เงินออม",
+      "From Account": "ไทยพาณิชย์",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 38000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "2c2a63c2-1561-4c78-a137-17c0545df2ee",
+        "linkedId": "6c8aeb28-8e9e-41b0-a059-a21dcbe86149",
+        "behavior": "SAVING",
+        "categoryName": "เงินออม"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T17:02:37.050Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "จ่ายบัตร UOB",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 40122,
+      "Status": "TO",
+      "Metadata": {
+        "id": "b8095931-00be-431e-8b69-e228b934a0e2",
+        "linkedId": "c1fff409-f6f1-4c7b-9d52-fd9381333a3e",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:58:35.088Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket เที่ยว",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket เที่ยว",
+      "Amount": 500,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "7fb62902-868b-483f-b2e2-af10455ced09",
+        "linkedId": "0fbec5d5-977f-4e97-b128-dbca53a29d95",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:58:21.564Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket ทำบุญ",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket ทำบุญ",
+      "Amount": 1400,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "5106c960-a4c8-4e56-b99b-7c68ab9336ad",
+        "linkedId": "5c6e7651-53a5-41d0-bd5c-caf8eac2ba31",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:58:12.124Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket ค่าใช้จ่ายรถ",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket ค่าใช้จ่ายรถ",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "52c8ad1c-c3fd-4595-8c91-2a4bde748879",
+        "linkedId": "9553ab62-6279-454a-99a6-b1916a6c8082",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:50:15.595Z",
+      "Actual Date": "2026-04-22T00:00:00.000Z",
+      "Description": "คืนเงิน: ชุดทำงาน",
+      "Type": "คืนเงินภายใน",
+      "Category": "คืนเงินภายใน",
+      "From Account": "กสิกร",
+      "To Account": "N/A",
+      "Amount": 1980,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "2133efc5-b099-4c8b-9ac2-b4eadddfa068",
+        "linkedId": null,
+        "behavior": "LOAN_REPAY",
+        "categoryName": "คืนเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:37:15.704Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket ASML",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket ASML",
+      "Amount": 2000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "b70d2ae4-828b-46a3-915d-a9422076d5de",
+        "linkedId": "b2999fa5-004c-4076-8081-8487dd4b7ad4",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:35:06.825Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ออมกสิกร",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "กสิกร",
+      "Amount": 46418,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "ec4b8cbe-42c2-401f-8d93-223ef452a907",
+        "linkedId": "66f2e571-6c01-4b0d-9204-2ded1d369dc2",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:34:25.606Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ออมสิน เงินออมแม่",
+      "Type": "เงินออม",
+      "Category": "ออมครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน เงินออมแม่",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "45f67371-f127-4f18-94ed-6a1d73dd727d",
+        "linkedId": "c4d67177-4a80-4089-9745-b3e07529e5cd",
+        "behavior": "SAVING",
+        "categoryName": "ออมครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:33:32.285Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket TSMC",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket TSMC",
+      "Amount": 3000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "d3d7fd73-d1f5-48e1-a874-2106eb3de842",
+        "linkedId": "b96372bd-324e-448e-898c-d134fd90d362",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:33:22.634Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket กองทุนกสิกร",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket กองทุนกสิกร",
+      "Amount": 500,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "e5d12194-925a-4775-a055-9eaafb8c7fc9",
+        "linkedId": "8610f4b3-d030-4d74-a631-dd2d1682ff8d",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:33:11.243Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "Cloud Pocket ออมทอง",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "Cloud Pocket ออมทอง",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "b4150d78-f25c-457a-a290-0fdd3f75bdcf",
+        "linkedId": "6be48a0a-9388-4cb1-bfd9-d8bcb0e22d87",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:31:07.057Z",
+      "Actual Date": "2026-04-07T00:00:00.000Z",
+      "Description": "จ่ายบัตร UOB",
+      "Type": "รายรับ",
+      "Category": "โอนเข้าภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 6414.73,
+      "Status": "TO",
+      "Metadata": {
+        "id": "d97176aa-c79c-41ca-beec-3ba744c2f6b7",
+        "linkedId": "ddb11c28-3cf8-4fe4-9b6b-c2ebb2781773",
+        "behavior": "INCOME",
+        "categoryName": "โอนเข้าภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-22T16:15:08.209Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "บัญชีเงินซื้อรถ (ออมสิน)",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "Amount": 15000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "2c15fc2a-0b00-414a-8003-d9316dd1dca2",
+        "linkedId": "510d7540-0abe-4b9a-86d1-f6b43ea07336",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-11T11:45:48.413Z",
+      "Actual Date": "2026-04-11T00:00:00.000Z",
+      "Description": "ย้ายไป DIME",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "Cloud Pocket TSMC",
+      "To Account": "Dime",
+      "Amount": 3000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "1d399ae3-a586-4fde-b0e0-52dd482b5b38",
+        "linkedId": "f570358f-fbba-414e-aab8-3b3790ca2ac1",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-11T11:44:40.626Z",
+      "Actual Date": "2026-04-11T00:00:00.000Z",
+      "Description": "ย้ายไป DIME",
+      "Type": "รายจ่าย",
+      "Category": "โอนออกภายใน",
+      "From Account": "Cloud Pocket ASML",
+      "To Account": "Dime",
+      "Amount": 3000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "32c1fc59-75da-4c59-a2a7-4c30774bad3d",
+        "linkedId": "3533656b-a991-4979-9aa7-de814ac74d57",
+        "behavior": "EXPENSE",
+        "categoryName": "โอนออกภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-11T10:22:56.947Z",
+      "Actual Date": "2026-04-06T00:00:00.000Z",
+      "Description": "มัดจำรถ",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "To Account": "N/A",
+      "Amount": 5000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "1192c15c-c6c3-42fa-890b-c380a12b2eb1",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-11T10:05:55.283Z",
+      "Actual Date": "2026-04-11T00:00:00.000Z",
+      "Description": "ค่าใช้จ่ายเพิ่มช่วงแม่มา",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "กสิกร",
+      "To Account": "N/A",
+      "Amount": 5000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "18564749-8090-479a-946d-003d7ad163c1",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-11T10:05:22.062Z",
+      "Actual Date": "2026-04-11T00:00:00.000Z",
+      "Description": "กุญแจบ้าน",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กสิกร",
+      "To Account": "N/A",
+      "Amount": 1698,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "febb4c8c-91fb-4e86-9940-c9ed0a0a84d6",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-11T10:04:21.182Z",
+      "Actual Date": "2026-04-11T00:00:00.000Z",
+      "Description": "ค่าทำฟันแม่",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กสิกร",
+      "To Account": "N/A",
+      "Amount": 3200,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "5aa4909c-f280-4a69-86d7-e67eefc69e50",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-07T10:04:51.914Z",
+      "Actual Date": "2026-04-07T00:00:00.000Z",
+      "Description": "จ่ายบัตร UOB",
+      "Type": "หนี้",
+      "Category": "ชำระหนี้",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 6414.73,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "ddb11c28-3cf8-4fe4-9b6b-c2ebb2781773",
+        "linkedId": "d97176aa-c79c-41ca-beec-3ba744c2f6b7",
+        "behavior": "DEBT",
+        "categoryName": "ชำระหนี้"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-07T09:56:21.154Z",
+      "Actual Date": "2026-04-07T00:00:00.000Z",
+      "Description": "ใช้จ่ายส่วนตัวเพิ่มเติม",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 7500,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "62552e7b-3d2e-488e-9f15-ec7433bf0cb7",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-04-07T09:54:51.218Z",
+      "Actual Date": "2026-04-07T00:00:00.000Z",
+      "Description": "มัดจำม่าน",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 15000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "171279ea-9228-4ee6-860f-d11c8565c046",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:49:38.211Z",
+      "Actual Date": "2026-03-28T12:49:38.209Z",
+      "Description": "คืนเงิน: ซ่อมจานดาวเทียม",
+      "Type": "คืนเงินภายใน",
+      "Category": "คืนเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 500,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "bae02319-3616-4144-af13-689c74d065a6",
+        "linkedId": null,
+        "behavior": "LOAN_REPAY",
+        "categoryName": "คืนเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:37:09.775Z",
+      "Actual Date": "2026-03-28T12:37:09.774Z",
+      "Description": "คืนเงิน: ยืม",
+      "Type": "คืนเงินภายใน",
+      "Category": "คืนเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "a5eaac98-0da5-4b46-8e1f-be72ba3a589d",
+        "linkedId": null,
+        "behavior": "LOAN_REPAY",
+        "categoryName": "คืนเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:37:04.991Z",
+      "Actual Date": "2026-03-28T12:37:04.990Z",
+      "Description": "คืนเงิน: ซ่อมจานดาวเทียม",
+      "Type": "คืนเงินภายใน",
+      "Category": "คืนเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "fe7f2747-d371-42b2-97c1-89176f312b3f",
+        "linkedId": null,
+        "behavior": "LOAN_REPAY",
+        "categoryName": "คืนเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:37:00.382Z",
+      "Actual Date": "2026-03-28T12:37:00.381Z",
+      "Description": "คืนเงิน: ยืม",
+      "Type": "คืนเงินภายใน",
+      "Category": "คืนเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "6d0a955c-3773-401e-9727-447e0684b30c",
+        "linkedId": null,
+        "behavior": "LOAN_REPAY",
+        "categoryName": "คืนเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:36:54.015Z",
+      "Actual Date": "2026-03-28T12:36:54.014Z",
+      "Description": "คืนเงิน: ยืม",
+      "Type": "คืนเงินภายใน",
+      "Category": "คืนเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "94a135f1-b248-491c-815d-ccf6d3dae45a",
+        "linkedId": null,
+        "behavior": "LOAN_REPAY",
+        "categoryName": "คืนเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:36:41.904Z",
+      "Actual Date": "2026-03-28T12:36:41.903Z",
+      "Description": "คืนเงิน: ยืม",
+      "Type": "คืนเงินภายใน",
+      "Category": "คืนเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 3000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "10bb5569-74db-4556-95bf-155b6fd3c067",
+        "linkedId": null,
+        "behavior": "LOAN_REPAY",
+        "categoryName": "คืนเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.274Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าใช้จ่ายรายเดือน 3",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "ไทยพาณิชย์",
+      "Amount": 10000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "a4ebbba4-54bd-4cba-9dcd-c7e1971e8e8f",
+        "linkedId": "f97106ec-e35e-479c-8fdd-992c81be7690",
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.271Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "มูลนิธิ บุ๋ม ปนัดดา",
+      "Type": "รายจ่าย",
+      "Category": "บริจาค",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 100,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "c8d4fbd1-b083-4c41-923c-b9c95fd24bfb",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "บริจาค"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.267Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าไฟวัดกุดขอนแก่น",
+      "Type": "รายจ่าย",
+      "Category": "บริจาค",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 500,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "8938e9ac-fc7e-46c4-9a44-fc3fd11de221",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "บริจาค"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.262Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าน้ำดื่ม",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 650,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "e14fdecb-2e4e-4589-9a30-4fe3d712df1c",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.257Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าซื้อของรายเดือน",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "0cffe834-581a-4492-a8dd-415ad347236f",
+        "linkedId": "ceaa3572-aa2f-4090-a26e-9797be55e09a",
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.252Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าเช่าบ้าน+ค่าน้ำ+ค่าไฟ",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 3000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "552f0ba3-7f5a-4b8b-a1a4-695f4b70972e",
+        "linkedId": "9cca4843-0144-44b0-b6ef-ff7602568b90",
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.249Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ค่าโทรศัพท์ + ค่า Internet บ้าน",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 2676.07,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "e2a3e0eb-249a-4a17-8d4b-55c135505d83",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.246Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "จ่ายบัตร UOB",
+      "Type": "หนี้",
+      "Category": "ชำระหนี้",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 40122,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "c1fff409-f6f1-4c7b-9d52-fd9381333a3e",
+        "linkedId": "b8095931-00be-431e-8b69-e228b934a0e2",
+        "behavior": "DEBT",
+        "categoryName": "ชำระหนี้"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.242Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ออมสิน รายเดือนแม่",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน รายเดือนแม่",
+      "Amount": 7000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "261b6fe1-5589-4d0d-a665-63d829d99d54",
+        "linkedId": "579490ff-0b12-432b-b017-182cec152a61",
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.238Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "กรุงไทย รายเดือนแม่",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงไทย รายเดือนแม่",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "4e6eb575-b62a-4063-a25c-5558992cf53c",
+        "linkedId": "badece96-297d-49d0-bc76-24d95170df48",
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.188Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "เงินชดเชย",
+      "Type": "รายรับ",
+      "Category": "รายได้อื่น",
+      "From Account": "N/A",
+      "To Account": "กรุงเทพ",
+      "Amount": 351798,
+      "Status": "TO",
+      "Metadata": {
+        "id": "a5308b38-e4f4-408e-8a27-58895cbac0f0",
+        "linkedId": null,
+        "behavior": "INCOME",
+        "categoryName": "รายได้อื่น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.185Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ภาษี",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 1683,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "d5fb9f9e-56de-4610-bea3-faeb6eda8ddd",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.182Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "ประกันสังคม",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 875,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "c3e492b3-bd12-4fea-acc5-0bf16446849f",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-28T12:21:41.170Z",
+      "Actual Date": "2026-03-28T00:00:00.000Z",
+      "Description": "เงินเดือน",
+      "Type": "รายรับ",
+      "Category": "เงินเดือน",
+      "From Account": "N/A",
+      "To Account": "กรุงเทพ",
+      "Amount": 58633,
+      "Status": "TO",
+      "Metadata": {
+        "id": "25d3b7a5-e3aa-4fe4-b1f7-daca9f8455cf",
+        "linkedId": null,
+        "behavior": "INCOME",
+        "categoryName": "เงินเดือน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T17:44:57.978Z",
+      "Actual Date": "2026-03-26T00:00:00.000Z",
+      "Description": "ขายทองแม่",
+      "Type": "รายรับ",
+      "Category": "รายได้อื่น",
+      "From Account": "N/A",
+      "To Account": "ออมสิน สำรองครอบครัว",
+      "Amount": 9000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "1e08b61f-36ed-4161-913f-de3589321fff",
+        "linkedId": null,
+        "behavior": "INCOME",
+        "categoryName": "รายได้อื่น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T17:43:31.768Z",
+      "Actual Date": "2026-03-26T00:00:00.000Z",
+      "Description": "ค่าใช้จ่ายทั่วไป",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายส่วนตัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "ไทยพาณิชย์",
+      "Amount": 6000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "ed324a5a-1108-4727-8e1b-e6ad24401587",
+        "linkedId": "1f58ac87-c824-4ab1-ac64-7781420a4415",
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายส่วนตัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T14:01:14.643Z",
+      "Actual Date": "2026-03-24T00:00:00.000Z",
+      "Description": "ยืมเงิน: ยืม",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "189d588b-558f-4385-af73-bbf029889397",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T14:01:14.641Z",
+      "Actual Date": "2026-03-23T00:00:00.000Z",
+      "Description": "ยืมเงิน: ซ่อมจานดาวเทียม",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 1500,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "7ba0d30b-4fbe-4bc1-93b4-2cb64193b8be",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T14:01:14.639Z",
+      "Actual Date": "2026-03-20T00:00:00.000Z",
+      "Description": "ยืมเงิน: ยืม",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "b73ea4a9-868d-461f-afc4-0e212f5caf23",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T14:01:14.636Z",
+      "Actual Date": "2026-03-19T00:00:00.000Z",
+      "Description": "ยืมเงิน: ยืม",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "4589e223-d640-477e-be8d-e5ddadc1b492",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T14:01:14.634Z",
+      "Actual Date": "2026-03-15T00:00:00.000Z",
+      "Description": "ยืมเงิน: ยืม",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 3000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "0d5c4ab1-8a36-4547-9e13-e720d17eede2",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T14:01:14.632Z",
+      "Actual Date": "2026-02-03T00:00:00.000Z",
+      "Description": "ยืมเงิน: ซื้อของแม่",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 12700,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "262eb92a-78f6-43cb-815b-df5ea4777595",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T14:01:14.630Z",
+      "Actual Date": "2026-02-04T00:00:00.000Z",
+      "Description": "ยืมเงิน: วันเกิดแม่",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 2000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "7030f4e1-ba62-4891-8d39-ef27ff3c0cac",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T14:01:14.627Z",
+      "Actual Date": "2026-02-21T00:00:00.000Z",
+      "Description": "ยืมเงิน: ภาษี",
+      "Type": "ยืมเงินภายใน",
+      "Category": "ยืมเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 2224,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "aac726e7-6263-4971-a2be-d1d2fd124beb",
+        "linkedId": null,
+        "behavior": "LOAN_BORROW",
+        "categoryName": "ยืมเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.745Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "มูลนิธิ บุ๋ม ปนัดดา",
+      "Type": "รายจ่าย",
+      "Category": "บริจาค",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 100,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "274bb634-cc3c-4f42-842b-ff5c908c8769",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "บริจาค"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.742Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ค่าไฟวัดกุดขอนแก่น",
+      "Type": "รายจ่าย",
+      "Category": "บริจาค",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 500,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "17d52fdf-78a4-4084-ae2c-6d1f2fc1aae2",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "บริจาค"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.739Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ค่าน้ำดื่ม",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 650,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "2b76fdae-e933-46b4-91e1-ae7800faf16b",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.733Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ค่าซื้อของรายเดือน",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "42fbd423-0a38-4a3a-b012-d12747b2b498",
+        "linkedId": "3222a44f-2092-4453-9d14-5ccc45f13214",
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.729Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ค่าเช่าบ้าน+ค่าน้ำ+ค่าไฟ",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 3000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "e2a56674-5818-4efd-b4e1-7a62644069ae",
+        "linkedId": "a3b94f14-eee1-4fca-b588-51f4815d8bb4",
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.726Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ค่าโทรศัพท์ + ค่า Internet บ้าน",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 2670.72,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "7ef70b51-0c1b-46db-9f94-2024ef8d2d5d",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.723Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "UOB",
+      "Type": "หนี้",
+      "Category": "ชำระหนี้",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 4000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "11522427-5ff0-4e63-af26-3da6f16c9a51",
+        "linkedId": "701be571-886b-468e-9c7c-f883f6a7fbd4",
+        "behavior": "DEBT",
+        "categoryName": "ชำระหนี้"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.719Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ซื้อของเข้าบ้านให้แม่",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "N/A",
+      "Amount": 12700,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "f5538e4d-7879-4a89-8e0a-87c948ddc8e7",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.716Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่บัญชีออมสิน",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน รายเดือนแม่",
+      "Amount": 7000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "da93df72-143e-4782-b383-d08aec587210",
+        "linkedId": "2f0c857b-8396-49e6-a872-34454970a3a2",
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.713Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่บัญชีกรุงไทย",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงไทย รายเดือนแม่",
+      "Amount": 5000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "6911659e-1060-4404-af37-bc388d19ae2a",
+        "linkedId": "16c64de9-5005-469a-98c5-d3d68978e9f6",
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.710Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "บัญชีออมสินแม่ (ออมสิน)",
+      "Type": "เงินออม",
+      "Category": "ออมครอบครัว",
+      "From Account": "ออมสิน เงินออมแม่",
+      "To Account": "กรุงเทพ",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "895b5ca3-079c-4ed0-8e24-858c9695d580",
+        "linkedId": "54e5b063-f469-42f8-bd7c-b839b56f7174",
+        "behavior": "SAVING",
+        "categoryName": "ออมครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.696Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "บัญชีเงินซื้อรถ (ออมสิน)",
+      "Type": "เงินมีเป้าหมาย",
+      "Category": "เงินซื้อรถ",
+      "From Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "To Account": "กรุงเทพ",
+      "Amount": 15000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "d5870f36-4114-4961-b0ed-bbc322afe8e6",
+        "linkedId": "77188af0-710d-4782-8407-958b3f6b8200",
+        "behavior": "GOAL_SAVING",
+        "categoryName": "เงินซื้อรถ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.688Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "คืนเงินบัญชีครอบครัว (ออมสิน 020125686467)",
+      "Type": "คืนเงินภายใน",
+      "Category": "คืนเงินภายใน",
+      "From Account": "ออมสิน สำรองครอบครัว",
+      "To Account": "กรุงเทพ",
+      "Amount": 47300,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "601bc975-e9e5-4d24-818a-a70c73faff24",
+        "linkedId": "20da3baf-9f5e-4961-a31c-fde74222799e",
+        "behavior": "LOAN_REPAY",
+        "categoryName": "คืนเงินภายใน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.685Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "กองทุนสำรองเลี้ยงชีพ",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนกองทุน",
+      "From Account": "กรุงเทพ",
+      "To Account": "ธนาคารอาคารสงเคราะห์",
+      "Amount": 1759,
+      "Status": "TO",
+      "Metadata": {
+        "id": "cc2c2b6c-d162-4e98-b04a-452d70a527e5",
+        "linkedId": "0a8a7234-119c-4ba6-8871-9b72297b30a8",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนกองทุน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.682Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ภาษี",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 1683,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "09f04f16-e1bd-42f5-a847-0561b24bfd81",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.679Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "ประกันสังคม",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 875,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "ecdc3e35-ce1f-4392-a58b-e7042d6fc572",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T12:18:45.674Z",
+      "Actual Date": "2026-02-28T00:00:00.000Z",
+      "Description": "เงินเดือน",
+      "Type": "รายรับ",
+      "Category": "เงินเดือน",
+      "From Account": "N/A",
+      "To Account": "กรุงเทพ",
+      "Amount": 58633,
+      "Status": "TO",
+      "Metadata": {
+        "id": "90facc53-544e-4466-9fec-83ec08f7a702",
+        "linkedId": null,
+        "behavior": "INCOME",
+        "categoryName": "เงินเดือน"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:22:57.537Z",
+      "Actual Date": "2025-04-01T00:00:00.000Z",
+      "Description": "มดสร้างบ้าน",
+      "Type": "ลงทุน",
+      "Category": "ปล่อยกู้",
+      "From Account": "ออมสิน บัญชีเงินซื้อรถ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 100000,
+      "Status": "TO",
+      "Metadata": {
+        "id": "99f90c28-22ac-4caa-9e67-406739403c06",
+        "linkedId": "349bd4a4-f1a7-4c4e-aed1-58fe38017843",
+        "behavior": "INVESTMENT",
+        "categoryName": "ปล่อยกู้"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.997Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "มูลนิธิ บุ๋ม ปนัดดา",
+      "Type": "รายจ่าย",
+      "Category": "บริจาค",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 100,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "e229654e-6ba5-4bb0-8179-b8516cacbc57",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "บริจาค"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.994Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ค่าไฟวัดกุดขอนแก่น",
+      "Type": "รายจ่าย",
+      "Category": "บริจาค",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 500,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "c3e4b737-5e14-4ce2-aadc-9b8a8e1323ec",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "บริจาค"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.990Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ค่าน้ำดื่ม",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 650,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "feed66ef-07c5-4528-bd62-7b9bc15e9c56",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.986Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ค่าซื้อของรายเดือน",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 1000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "1a800942-3461-48e4-8427-7005b76a74e8",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.983Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ค่าเช่าบ้าน+ค่าน้ำ+ค่าไฟ",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "กรุงเทพ มด",
+      "Amount": 3000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "78027a66-55f0-45a1-a7d8-870713c5bda5",
+        "linkedId": "aae46675-a8fb-4258-9cfe-089f0c6e7c4e",
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.980Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ค่าโทรศัพท์ + ค่า Internet บ้าน",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 2670.72,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "769b1987-ba74-486e-a9be-f69d03a83ee0",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.976Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "UOB",
+      "Type": "หนี้",
+      "Category": "ชำระหนี้",
+      "From Account": "กรุงเทพ",
+      "To Account": "บัตรเครดิต UOB",
+      "Amount": 4300,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "bcb3a4a9-efc3-409d-9156-45736e22e770",
+        "linkedId": "bd7ba956-0e68-4bdc-8213-865506638898",
+        "behavior": "DEBT",
+        "categoryName": "ชำระหนี้"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.973Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "เงินเดือนแม่บัญชีออมสิน",
+      "Type": "รายจ่าย",
+      "Category": "รายจ่ายครอบครัว",
+      "From Account": "กรุงเทพ",
+      "To Account": "ออมสิน รายเดือนแม่",
+      "Amount": 7000,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "8641799d-aeb5-48e8-bf42-5f605321f6d5",
+        "linkedId": "fab7d9e1-5ed3-4691-9dd0-32104fee8549",
+        "behavior": "EXPENSE",
+        "categoryName": "รายจ่ายครอบครัว"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.947Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "กองทุนสำรองเลี้ยงชีพ",
+      "Type": "ลงทุน",
+      "Category": "ลงทุนหุ้น",
+      "From Account": "กรุงเทพ",
+      "To Account": "ธนาคารอาคารสงเคราะห์",
+      "Amount": 1759,
+      "Status": "TO",
+      "Metadata": {
+        "id": "435260aa-c57b-4ddf-a684-401921b86206",
+        "linkedId": "959b056b-8a4d-44fd-996d-8c663fe1ee44",
+        "behavior": "INVESTMENT",
+        "categoryName": "ลงทุนหุ้น"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.943Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ภาษี",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 1683,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "ff2484ba-543c-40ad-9559-5506a3ec7ef9",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.940Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "ประกันสังคม",
+      "Type": "รายจ่าย",
+      "Category": "ค่าใช้จ่ายประจำ",
+      "From Account": "กรุงเทพ",
+      "To Account": "N/A",
+      "Amount": 875,
+      "Status": "FROM",
+      "Metadata": {
+        "id": "a23ff250-01ea-43e0-bd08-1ae8552156ac",
+        "linkedId": null,
+        "behavior": "EXPENSE",
+        "categoryName": "ค่าใช้จ่ายประจำ"
+      }
+    },
+    {
+      "RECORD DATE": "2026-03-25T11:13:26.926Z",
+      "Actual Date": "2026-01-28T00:00:00.000Z",
+      "Description": "เงินเดือน",
+      "Type": "รายรับ",
+      "Category": "เงินเดือน",
+      "From Account": "N/A",
+      "To Account": "กรุงเทพ",
+      "Amount": 58633,
+      "Status": "TO",
+      "Metadata": {
+        "id": "cf1ade7a-9d68-47be-8211-ad3a9850f551",
+        "linkedId": null,
+        "behavior": "INCOME",
+        "categoryName": "เงินเดือน"
+      }
+    }
+  ]
+}
