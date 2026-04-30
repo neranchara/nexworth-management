@@ -131,22 +131,26 @@ export default function TransactionsPage() {
     if (tx.linkedTransactionId) {
       const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
       if (linkedTx) {
-        // Correctly identify From/To based on behavior of the legs
-        const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
-        const isLinkedExpense = ['EXPENSE', 'DEBT'].includes(linkedBehavior);
+        const isCurrentFrom = ['EXPENSE', 'DEBT', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
+        const isLinkedFrom = ['EXPENSE', 'DEBT', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
 
-        if (isExpense && !isLinkedExpense) {
-           // Current is Expense (From), Linked is Income (To)
+        if (isCurrentFrom && !isLinkedFrom) {
+           // Current is Source (From), Linked is Destination (To)
            fromAccId = tx.accountId;
            toAccId = linkedTx.accountId;
-        } else if (!isExpense && isLinkedExpense) {
-           // Current is Income (To), Linked is Expense (From)
+        } else if (!isCurrentFrom && isLinkedFrom) {
+           // Current is Destination (To), Linked is Source (From)
            fromAccId = linkedTx.accountId;
            toAccId = tx.accountId;
         } else {
-           // Fallback if behaviors are same (shouldn't happen with fixed logic)
-           fromAccId = isExpense ? tx.accountId : linkedTx.accountId;
-           toAccId = isExpense ? linkedTx.accountId : tx.accountId;
+           // Fallback or Both same behavior: Trust the generic category names if present
+           if (tx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน') {
+              fromAccId = tx.accountId;
+              toAccId = linkedTx.accountId;
+           } else {
+              fromAccId = linkedTx.accountId;
+              toAccId = tx.accountId;
+           }
         }
 
         // Logic to show the "Real" category instead of "Transfer In/Out"
@@ -655,17 +659,24 @@ export default function TransactionsPage() {
                         if (tx.linkedTransactionId && !filterAccount) {
                            const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
                            if (linkedTx && linkedTx.account) {
-                              const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
-                              const isCurrentExpense = ['EXPENSE', 'DEBT'].includes(behavior);
-                              const isLinkedExpense = ['EXPENSE', 'DEBT'].includes(linkedBehavior);
+                              const isCurrentFrom = ['EXPENSE', 'DEBT', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
+                              const isLinkedFrom = ['EXPENSE', 'DEBT', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
 
                               let fromAcc = accountInfo;
                               let toAcc = linkedTx.account;
 
-                              // If current leg is not an expense but the linked one is, then current is "To"
-                              if (!isCurrentExpense && isLinkedExpense) {
+                              if (!isCurrentFrom && isLinkedFrom) {
                                  fromAcc = linkedTx.account;
                                  toAcc = accountInfo;
+                              } else if (isCurrentFrom && !isLinkedFrom) {
+                                 fromAcc = accountInfo;
+                                 toAcc = linkedTx.account;
+                              } else {
+                                 // Fallback: Check generic names explicitly
+                                 if (tx.category?.name === 'โอนเข้าภายใน' || linkedTx.category?.name === 'โอนออกภายใน') {
+                                    fromAcc = linkedTx.account;
+                                    toAcc = accountInfo;
+                                 }
                               }
 
                               return (
