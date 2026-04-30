@@ -55,70 +55,70 @@ export default function DashboardLayout({
   const isMasterOrg = user?.organizationId === 'ee81df9d-bb14-419b-bd49-d4c77b4d4214' || user?.orgName === 'System Management';
 
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 transition-colors">
-      <nav className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-md sticky top-0 z-[100] border-b border-gray-100 dark:border-gray-700/50">
-        <div className="max-w-6xl mx-auto px-4 sm:px-6">
-          <div className="flex justify-between h-14">
+    <div className="min-h-screen bg-slate-950 transition-colors text-slate-300 font-sans">
+      <nav className="bg-slate-900/50 backdrop-blur-xl sticky top-0 z-[100] border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex justify-between h-16">
             <div className="flex items-center flex-1">
-              <div className="flex-shrink-0 flex items-center mr-12 gap-3">
-                <span className="text-xl font-bold text-blue-600 dark:text-blue-400 tracking-tight">Nexworth</span>
+              <div className="flex-shrink-0 flex items-center mr-10 gap-3">
+                <span className="text-xl font-black text-blue-500 tracking-tight">Nexworth</span>
                 {user?.orgName && (
-                  <span className="text-[10px] font-bold bg-blue-50 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 px-2 py-0.5 rounded-md border border-blue-100 dark:border-blue-800/50 uppercase tracking-tight">
+                  <span className="text-[10px] font-black bg-blue-500/10 text-blue-400 px-2.5 py-1 rounded-lg border border-blue-500/20 uppercase tracking-widest">
                     {user.orgName}
                   </span>
                 )}
               </div>
-                <div className="hidden sm:-my-px sm:flex sm:space-x-5">
+              <div className="hidden sm:-my-px sm:flex sm:space-x-1">
                  {!isMasterOrg && hasPermission('dashboard') && (
-                  <Link href="/dashboard" data-testid="layout-nav-link-dashboard" className="border-transparent text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center px-1 pt-1 border-b-2 text-[13px] font-medium transition-colors">
+                  <Link href="/dashboard" data-testid="layout-nav-link-dashboard" className="text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all">
                     Dashboard
                   </Link>
                 )}
                  {!isMasterOrg && hasPermission('monthly') && (
-                  <Link href="/dashboard/monthly" data-testid="layout-nav-link-summary" className="border-transparent text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center px-1 pt-1 border-b-2 text-[13px] font-medium transition-colors">
+                  <Link href="/dashboard/monthly" data-testid="layout-nav-link-summary" className="text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all">
                     Summary
                   </Link>
                 )}
                  {!isMasterOrg && hasPermission('transactions') && (
-                  <Link href="/dashboard/transactions" data-testid="layout-nav-link-transactions" className="border-transparent text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center px-1 pt-1 border-b-2 text-[13px] font-medium transition-colors">
+                  <Link href="/dashboard/transactions" data-testid="layout-nav-link-transactions" className="text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all">
                     Transactions
                   </Link>
                 )}
                  {!isMasterOrg && hasPermission('assets') && (
-                  <Link href="/dashboard/assets" data-testid="layout-nav-link-assets" className="border-transparent text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center px-1 pt-1 border-b-2 text-[13px] font-medium transition-colors">
+                  <Link href="/dashboard/assets" data-testid="layout-nav-link-assets" className="text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all">
                     Assets
                   </Link>
                 )}
                  {!isMasterOrg && hasPermission('liabilities') && (
-                  <Link href="/dashboard/liabilities" data-testid="layout-nav-link-liabilities" className="border-transparent text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center px-1 pt-1 border-b-2 text-[13px] font-medium transition-colors">
+                  <Link href="/dashboard/liabilities" data-testid="layout-nav-link-liabilities" className="text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all">
                     Liabilities
                   </Link>
                 )}
                  {!isMasterOrg && hasPermission('loan-tracker') && (
-                  <Link href="/dashboard/loan-tracker" data-testid="layout-nav-link-loan-tracker" className="border-transparent text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center px-1 pt-1 border-b-2 text-[13px] font-medium transition-colors">
+                  <Link href="/dashboard/loan-tracker" data-testid="layout-nav-link-loan-tracker" className="text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all">
                     Loan Tracker
                   </Link>
                 )}
 
                  {user.isSystemAdmin && (
-                  <Link href="/dashboard/organizations" data-testid="layout-nav-link-organizations" className="border-transparent text-orange-600 dark:text-orange-400 font-bold hover:text-orange-700 hover:border-orange-300 inline-flex items-center px-1 pt-1 border-b-2 text-[13px]">
+                  <Link href="/dashboard/organizations" data-testid="layout-nav-link-organizations" className="text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 px-4 py-2 rounded-xl text-[13px] font-black transition-all">
                     Organizations
                   </Link>
                 )}
                 
                 {(hasPermission('accounts') || hasPermission('users') || hasPermission('banks') || hasPermission('types') || hasPermission('categories') || hasPermission('permissions')) && (
-                  <div className="relative group flex items-center h-full">
-                    <button data-testid="layout-nav-btn-setup" className="border-transparent text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 inline-flex items-center px-1 pt-1 border-b-2 text-[13px] font-medium gap-1 focus:outline-none h-full transition-colors">
-                      Setup <ChevronDown className="w-3.5 h-3.5"/>
+                  <div className="relative group flex items-center h-full ml-2">
+                    <button data-testid="layout-nav-btn-setup" className="text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[13px] font-bold gap-1 focus:outline-none flex items-center transition-all">
+                      Setup <ChevronDown className="w-3.5 h-3.5 ml-1"/>
                     </button>
-                    <div className="absolute top-full left-0 w-48 bg-white dark:bg-gray-800 shadow-xl rounded-b-lg border-x border-b border-gray-100 dark:border-gray-700 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-150 z-50 overflow-hidden">
-                       <div className="py-1 flex flex-col">
-                        {!isMasterOrg && hasPermission('accounts') && <Link href="/dashboard/accounts" data-testid="layout-nav-link-setup-accounts" className="block px-4 py-2.5 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">Accounts</Link>}
-                        {(user.isSystemAdmin || hasPermission('users')) && <Link href="/dashboard/users" data-testid="layout-nav-link-setup-users" className="block px-4 py-2.5 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">Users Management</Link>}
-                        {!isMasterOrg && hasPermission('banks') && <Link href="/dashboard/banks" data-testid="layout-nav-link-setup-banks" className="block px-4 py-2.5 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">Banks Management</Link>}
-                        {!isMasterOrg && hasPermission('types') && <Link href="/dashboard/types" data-testid="layout-nav-link-setup-types" className="block px-4 py-2.5 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">Transaction Types</Link>}
-                        {!isMasterOrg && hasPermission('categories') && <Link href="/dashboard/categories" data-testid="layout-nav-link-setup-categories" className="block px-4 py-2.5 text-[13px] text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors">Categories</Link>}
-                        {(user.isSystemAdmin || hasPermission('permissions')) && <Link href="/dashboard/permissions" data-testid="layout-nav-link-setup-permissions" className="block px-4 py-2.5 text-[13px] text-orange-600 dark:text-orange-400 font-bold hover:bg-gray-50 dark:hover:bg-gray-700/50 border-t border-gray-100 dark:border-gray-700 transition-colors">Role Permissions</Link>}
+                    <div className="absolute top-full left-0 w-56 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-200 z-50">
+                      <div className="bg-slate-800/95 backdrop-blur-xl shadow-2xl rounded-2xl border border-white/10 overflow-hidden py-2">
+                        {!isMasterOrg && hasPermission('accounts') && <Link href="/dashboard/accounts" data-testid="layout-nav-link-setup-accounts" className="block px-5 py-2.5 text-[13px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">Accounts</Link>}
+                        {(user.isSystemAdmin || hasPermission('users')) && <Link href="/dashboard/users" data-testid="layout-nav-link-setup-users" className="block px-5 py-2.5 text-[13px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">Users Management</Link>}
+                        {!isMasterOrg && hasPermission('banks') && <Link href="/dashboard/banks" data-testid="layout-nav-link-setup-banks" className="block px-5 py-2.5 text-[13px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">Banks Management</Link>}
+                        {!isMasterOrg && hasPermission('types') && <Link href="/dashboard/types" data-testid="layout-nav-link-setup-types" className="block px-5 py-2.5 text-[13px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">Transaction Types</Link>}
+                        {!isMasterOrg && hasPermission('categories') && <Link href="/dashboard/categories" data-testid="layout-nav-link-setup-categories" className="block px-5 py-2.5 text-[13px] font-medium text-slate-300 hover:text-white hover:bg-white/5 transition-colors">Categories</Link>}
+                        {(user.isSystemAdmin || hasPermission('permissions')) && <Link href="/dashboard/permissions" data-testid="layout-nav-link-setup-permissions" className="block px-5 py-2.5 text-[13px] font-black text-orange-400 hover:text-orange-300 hover:bg-orange-400/10 border-t border-white/5 mt-1 pt-3 transition-colors">Role Permissions</Link>}
                       </div>
                     </div>
                   </div>
@@ -126,21 +126,24 @@ export default function DashboardLayout({
               </div>
             </div>
             <div className="flex items-center gap-6">
-              <div className="hidden lg:flex items-center gap-4">
-                <div className="flex items-center space-x-1.5 text-[11px] text-gray-500 dark:text-gray-400 bg-gray-50 dark:bg-gray-800/50 px-2.5 py-1 rounded-md border border-gray-100 dark:border-gray-700">
+              <div className="hidden lg:flex items-center gap-5">
+                {/* Sleek Admin Pill */}
+                <div className="flex items-center space-x-2 bg-slate-800/80 px-3 py-1.5 rounded-full border border-white/5 shadow-inner">
                   <ShieldAlert className="w-3.5 h-3.5 text-orange-500" />
-                  <span className="font-semibold uppercase tracking-wider">{user.role}</span>
+                  <span className="text-[11px] font-black text-slate-300 capitalize tracking-wide">
+                    {user.role.toLowerCase() === 'admin' ? 'Admin' : user.role}
+                  </span>
                 </div>
                 
                  <Link 
                   href="/dashboard/profile" 
                   data-testid="layout-nav-link-profile"
-                  className="flex items-center space-x-2 text-sm text-gray-600 dark:text-gray-300 hover:text-blue-600 dark:hover:text-blue-400 transition-colors group"
+                  className="flex items-center space-x-2.5 text-sm text-slate-400 hover:text-white transition-colors group"
                 >
-                  <div className="p-1.5 rounded-full bg-gray-100 dark:bg-gray-700 group-hover:bg-blue-50 dark:group-hover:bg-blue-900/30 transition-colors">
-                    <UserIcon className="w-4 h-4" />
+                  <div className="p-1.5 rounded-full bg-slate-800 group-hover:bg-blue-600 transition-colors border border-white/5">
+                    <UserIcon className="w-4 h-4 group-hover:text-white transition-colors" />
                   </div>
-                  <span className="max-w-[150px] truncate">
+                  <span className="max-w-[150px] truncate font-medium text-[13px]">
                     {user.firstName && user.lastName ? `${user.firstName} ${user.lastName}` : user.email}
                   </span>
                 </Link>
@@ -149,17 +152,17 @@ export default function DashboardLayout({
                <button
                 onClick={handleLogout}
                 data-testid="layout-nav-btn-logout"
-                className="p-2 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 transition-all focus:outline-none border border-transparent hover:border-red-100 dark:hover:border-red-900/50"
+                className="p-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 transition-all focus:outline-none border border-transparent"
                 title="Logout"
               >
-                <LogOut className="w-5 h-5" />
+                <LogOut className="w-4 h-4" />
               </button>
             </div>
           </div>
         </div>
       </nav>
 
-      <main className="max-w-6xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
+      <main className="max-w-7xl mx-auto py-8 px-4 sm:px-6 lg:px-8">
         {children}
       </main>
     </div>
