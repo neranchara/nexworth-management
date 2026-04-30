@@ -128,7 +128,26 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
     
     const transferBehaviors = ['INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL_SAVING', 'DEBT', 'EXPENSE', 'INCOME'];
     const isTransfer = (fromAccountId && toAccountId) && transferBehaviors.includes(category.type.behavior);
-    const direction = body.direction;
+    
+    // Explicit direction from body or determined by behavior for single-leg transactions
+    let direction = body.direction;
+    if (!isTransfer && !direction) {
+        const behavior = category.type.behavior;
+        const catName = category.name.toLowerCase();
+        
+        const isOutbound = ['EXPENSE', 'DEBT', 'LOAN_BORROW', 'LOAN_REPAY', 'SAVING', 'INVESTMENT'].includes(behavior) || 
+                          catName.includes('ออก') || catName.includes('ยืม') || catName.includes('กู้');
+        const isInbound = behavior === 'INCOME' || catName.includes('เข้า');
+        
+        if (isOutbound && !isInbound) {
+            direction = 'FROM';
+        } else if (isInbound && !isOutbound) {
+            direction = 'TO';
+        } else {
+            // Default to FROM for single account if still ambiguous (most common)
+            direction = 'FROM';
+        }
+    }
 
     const processSingleLeg = async (accId: string, catId: string, tId: string, linkedId: string | null, legDirection: string | null = null) => {
         const account = await prisma.account.findFirst({ 
