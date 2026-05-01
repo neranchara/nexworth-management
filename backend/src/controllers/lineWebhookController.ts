@@ -175,8 +175,8 @@ const processEvent = async (event: webhook.Event) => {
           text: `⚙️ ตั้งค่าบัญชี Nexworth\n\nบัญชีปัจจุบัน: ${user.email}\nLINE ID: ${lineUserId.slice(0, 5)}...`,
           quickReply: {
             items: [
-              { type: 'action', action: { type: 'message', label: '🔗 เชื่อมต่อใหม่', text: 'อยากเชื่อมต่อบัญชีใหม่' } },
-              { type: 'action', action: { type: 'postback', label: '🚫 เลิกเชื่อมต่อ', data: 'action=unlink', displayText: 'ขอยกเลิกการเชื่อมต่อ LINE ครับ' } }
+              { type: 'action', action: { type: 'message', label: '🔗 เชื่อมต่อใหม่', text: 'อยากเชื่อมต่อบัญชีใหม่' } as any },
+              { type: 'action', action: { type: 'postback', label: '🚫 เลิกเชื่อมต่อ', data: 'action=unlink', displayText: 'ขอยกเลิกการเชื่อมต่อ LINE ครับ' } as any }
             ]
           }
         }]
@@ -273,10 +273,10 @@ const processEvent = async (event: webhook.Event) => {
         type: 'action',
         action: {
           type: 'postback',
-          label: acc.name.slice(0, 20),
+          label: (acc.name as string).slice(0, 20),
           data: `action=record&amt=${extracted.amount}&desc=${encodeURIComponent(extracted.description || '')}&cat=${encodeURIComponent(extracted.categoryName || '')}&exp=${extracted.isExpense}&accId=${acc.id}`,
           displayText: `เลือกบัญชี: ${acc.name}`
-        }
+        } as any
       }));
 
       await client.replyMessage({
@@ -315,10 +315,10 @@ const processEvent = async (event: webhook.Event) => {
             type: 'action',
             action: {
               type: 'postback',
-              label: acc.name.slice(0, 20),
+              label: (acc.name as string).slice(0, 20),
               data: `action=record&amt=${extracted.amount}&desc=${encodeURIComponent(extracted.description || '')}&cat=${encodeURIComponent(extracted.categoryName || '')}&exp=${extracted.isExpense}&date=${extracted.date || ''}&accId=${acc.id}`,
               displayText: `ลงบัญชี: ${acc.name}`
-            }
+            } as any
           }))
         }
       }]
