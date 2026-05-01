@@ -11,6 +11,7 @@
     "dev:staging": "npm run dev:stg",
     "migrate:stg": "cross-env DATABASE_URL=postgresql://postgres:nop@ssw0rd@localhost:5432/stg_nexworth_db?schema=public npx prisma db push --force-reset && npx prisma db seed",
     "reset:stg": "cross-env NODE_ENV=staging npx prisma db push --force-reset && cross-env NODE_ENV=staging npx prisma db seed",
+    "backup:prod": "tsx scripts/backup-neon.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },

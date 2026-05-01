@@ -11,9 +11,10 @@ const loginSchema = z.object({
 export const loginHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const { email, password } = loginSchema.parse(request.body);
+    const normalizedEmail = email.toLowerCase().trim();
 
     const user = await prisma.user.findUnique({
-      where: { email },
+      where: { email: normalizedEmail },
       include: { 
         role: { include: { permissions: true } }, 
         organization: true 

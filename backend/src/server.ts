@@ -16,8 +16,10 @@ const buildServer = async (): Promise<FastifyInstance> => {
 
   // Plugins
   await server.register(cors, {
-    origin: '*',
+    origin: true, // Dynamically allow the origin that made the request
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
   });
   await server.register(fastifyJwt, {
     secret: process.env.JWT_SECRET || 'supersecret'
