@@ -1,42 +1,52 @@
 # Dependencies
 node_modules/
+**/node_modules/
 
-# Environment files
-.env
-.env.*
-!.env.example
-
-# Next.js & Build outputs
+# Build outputs
+dist/
+**/dist/
 .next/
-/backend/dist/
-/frontend/out/
-/frontend/build/
-
-# Logs
-*.log
-npm-debug.log*
+out/
+build/
 
 # IDE & OS
 .vscode/
 .idea/
 .DS_Store
 Thumbs.db
-nul
+*.swp
 
-# Project specific (Non-system code)
-.agents/
-docs/
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Backups & Temp
+Legacy_Restructure_Backup/
 backups/
+scratch/
+**/scratch/
+tmp/
+
+# Environment files (Strict)
+.env
+**/.env
+.env.*
+!.env.example
+
+# Project Specific
+.agents/
+.workflow/
+docs/
+*.n8n
+
+# Prisma
+**/prisma/*.ts
+!**/prisma/seed.ts
+
+# Markdown except core docs
 *.md
 !README.md
 !CONFIG_POLICY.md
 !PROD_CONFIG_GUIDE.md
-*.n8n
-nul
-
-# Backend specific
-backend/src/generated/
-backend/scratch/
-backend/prisma/*.ts
-!backend/prisma/seed.ts
-.workflow/
