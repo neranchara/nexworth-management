@@ -22,7 +22,9 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const { data } = await api.post('/auth/login', { email, password });
+      const payload = { email, password };
+      alert(JSON.stringify(payload));
+      const { data } = await api.post('/auth/login', payload);
       login(data.token, data.user);
       
       if (data.user.isSystemAdmin) {
