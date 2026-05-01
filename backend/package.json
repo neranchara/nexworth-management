@@ -4,17 +4,22 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
-    "dev": "tsx watch src/server.ts",
+    "dev": "cross-env NODE_ENV=local tsx watch src/server.ts",
     "dev:stg": "cross-env NODE_ENV=staging tsx watch src/server.ts",
     "dev:staging": "npm run dev:stg",
-    "migrate:stg": "cross-env DATABASE_URL=postgresql://postgres:nop@ssw0rd@localhost:5432/stg_nexworth_db?schema=public npx prisma db push --force-reset && npx prisma db seed",
-    "reset:stg": "cross-env NODE_ENV=staging npx prisma db push --force-reset && cross-env NODE_ENV=staging npx prisma db seed",
+    "dev:prod": "cross-env NODE_ENV=production tsx watch src/server.ts",
+    "test": "cross-env NODE_ENV=staging vitest run",
+    "test:coverage": "cross-env NODE_ENV=staging vitest run --coverage",
+    "seed:local": "cross-env NODE_ENV=local tsx prisma/seed.ts",
+    "seed:stg": "cross-env NODE_ENV=staging tsx prisma/seed.ts",
+    "db:push:local": "cross-env NODE_ENV=local npx prisma db push",
+    "db:push:stg": "cross-env NODE_ENV=staging npx prisma db push",
+    "reset:stg": "cross-env NODE_ENV=staging npx prisma db push --force-reset & cross-env NODE_ENV=staging tsx prisma/seed.ts",
     "backup:prod": "tsx scripts/backup-neon.ts",
     "build": "tsc",
     "start": "node dist/server.js"
   },
+
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },

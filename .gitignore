@@ -36,8 +36,10 @@ nul
 .agents/
 docs/
 backups/
-scripts/
 *.md
+!README.md
+!CONFIG_POLICY.md
+!PROD_CONFIG_GUIDE.md
 *.n8n
 nul
 
