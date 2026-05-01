@@ -1,4 +1,4 @@
-import { config } from './config/index.js';
+import { config } from './config/index.js'; // MUST BE FIRST
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
@@ -52,9 +52,6 @@ const buildServer = async (): Promise<FastifyInstance> => {
   const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes.js')).default;
   server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
   
-  const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes.js')).default;
-  server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
-
   const aiRoutes = (await import('./routes/ai.routes.js')).default;
   server.register(aiRoutes, { prefix: '/api/v1/ai' });
 

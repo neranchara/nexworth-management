@@ -19,7 +19,7 @@ const isProduction = nodeEnv === 'production';
 export const config = {
   // --- Core ---
   nodeEnv,
-  port: process.env.PORT ? parseInt(process.env.PORT) : 3001,
+  port: process.env.PORT ? parseInt(process.env.PORT) : 3002,
   jwtSecret: process.env.JWT_SECRET || 'local_dev_secret_key_123',
   databaseUrl: process.env.DATABASE_URL,
 

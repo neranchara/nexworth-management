@@ -1,18 +1,19 @@
 {
-  "name": "@nexworth/database",
+  "name": "@nexworth/ai-engine",
   "version": "1.0.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "private": true,
+  "type": "module",
   "scripts": {
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
     "build": "tsc"
   },
   "dependencies": {
-    "@prisma/client": "^5.22.0"
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.15.2",
+    "zod": "^4.3.6"
   },
   "devDependencies": {
-    "prisma": "^5.22.0",
     "typescript": "^5.9.3"
   }
 }

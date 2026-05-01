@@ -9,6 +9,7 @@
     "start": "node dist/server.js"
   },
   "dependencies": {
+    "@nexworth/ai-engine": "file:../../packages/ai-engine",
     "@nexworth/database": "file:../../packages/database",
     "@fastify/cors": "^11.2.0",
     "@fastify/jwt": "^10.0.0",

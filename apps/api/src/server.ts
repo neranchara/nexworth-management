@@ -1,4 +1,4 @@
-import { config } from './config/index.js';
+import { config } from './config/index.js'; // MUST BE FIRST
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';

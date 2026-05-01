@@ -342,7 +342,7 @@ const MetricCard = ({
   </div>
 );
 
-const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, visualYear, pieData, selectedMonthData, onModeChange, onVisualMonthChange, onVisualYearChange }: any) => (
+const CashflowCard = ({ stats, loading, isLocked, cashflowMode, selectedMonth, selectedYear, pieData, selectedMonthData, onModeChange, onSelectedMonthChange, onSelectedYearChange }: any) => (
   <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
       <div className="flex items-center gap-4">
@@ -433,16 +433,16 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Flow Distribution</h3>
               <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 shadow-inner">
                  <select 
-                   value={visualMonth} 
-                   onChange={(e) => onVisualMonthChange(parseInt(e.target.value))} 
+                   value={selectedMonth} 
+                   onChange={(e) => onSelectedMonthChange(parseInt(e.target.value))} 
                    className="bg-transparent border-none text-[10px] font-black text-blue-400 p-0 focus:ring-0 appearance-none text-center"
                  >
                    {MONTHS.map((m, i) => (<option key={i} value={i} className="bg-slate-900">{m.substring(0, 3)}</option>))}
                  </select>
                  <div className="w-px h-3 bg-white/10 mx-1" />
                  <select 
-                   value={visualYear} 
-                   onChange={(e) => onVisualYearChange(parseInt(e.target.value))} 
+                   value={selectedYear} 
+                   onChange={(e) => onSelectedYearChange(parseInt(e.target.value))} 
                    className="bg-transparent border-none text-[10px] font-black text-slate-500 p-0 focus:ring-0 appearance-none text-center"
                  >
                    {YEARS.map(y => (<option key={y} value={y} className="bg-slate-900">{y}</option>))}
@@ -672,8 +672,8 @@ export default function DashboardPage() {
   const { user } = useAuthStore();
   const { hasPermission } = usePermissions();
   const [stats, setStats] = useState<any>(null);
-  const [selectedMonth, setSelectedMonth] = useState<number>(0);
-  const [selectedYear, setSelectedYear] = useState<number>(2024);
+  const [selectedMonth, setSelectedMonth] = useState<number>(new Date().getMonth());
+  const [selectedYear, setSelectedYear] = useState<number>(new Date().getFullYear());
   const [loading, setLoading] = useState(true);
   const [isLocked, setIsLocked] = useState(true);
   const [isHydrated, setIsHydrated] = useState(false);
@@ -682,15 +682,11 @@ export default function DashboardPage() {
   const [showThresholdSettings, setShowThresholdSettings] = useState(false);
   const [thresholds, setThresholds] = useState<{ low: number; mid: number }>({ low: 5000, mid: 15000 });
   const [enabledWidgets, setEnabledWidgets] = useState<string[]>(ALL_WIDGETS.map(w => w.key));
-  const [visualMonth, setVisualMonth] = useState<number>(0);
-  const [visualYear, setVisualYear] = useState<number>(2024);
 
   useEffect(() => {
     const now = new Date();
     setSelectedMonth(now.getMonth());
     setSelectedYear(now.getFullYear());
-    setVisualMonth(now.getMonth());
-    setVisualYear(now.getFullYear());
     setIsHydrated(true);
 
     const savedMode = localStorage.getItem('nexworth-cashflow-mode');
@@ -766,9 +762,9 @@ export default function DashboardPage() {
 
   const selectedMonthData = useMemo(() => {
     if (!stats?.monthlyCashflow) return null;
-    const targetCode = getMonthCode(visualMonth);
+    const targetCode = getMonthCode(selectedMonth);
     return stats.monthlyCashflow.find((m: any) => getMonthCode(m.month) === targetCode);
-  }, [stats, visualMonth]);
+  }, [stats, selectedMonth]);
 
   const pieData = useMemo(() => {
     if (!selectedMonthData) return [];
@@ -837,12 +833,12 @@ export default function DashboardPage() {
       
       { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((healthMetrics.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
       
-      { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} visualMonth={visualMonth} visualYear={visualYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onVisualMonthChange={setVisualMonth} onVisualYearChange={setVisualYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
+      { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} selectedMonth={selectedMonth} selectedYear={selectedYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onSelectedMonthChange={setSelectedMonth} onSelectedYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
       
       { key: 'goals', content: <GoalTrackingCard stats={stats} />, defaultLayout: { lg: { x: 0, y: 25, w: 12, h: getGoalsHeight('lg'), minW: 4, minH: 3 }, md: { x: 0, y: 36, w: 10, h: getGoalsHeight('md') }, sm: { x: 0, y: 52, w: 6, h: getGoalsHeight('sm') } } }
     ];
     return items.filter(item => enabledWidgets.includes(item.key));
-  }, [user, stats, loading, isLocked, cashflowMode, enabledWidgets, visualMonth, visualYear, pieData, healthData, getGoalsHeight, updateCashflowMode, setSelectedMonth, setSelectedYear, selectedMonth, selectedYear]);
+  }, [user, stats, loading, isLocked, cashflowMode, enabledWidgets, selectedMonth, selectedYear, pieData, healthData, getGoalsHeight, updateCashflowMode, setSelectedMonth, setSelectedYear]);
 
   if (!hasPermission('dashboard', 'canView')) {
     return (
