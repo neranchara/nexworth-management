@@ -32,13 +32,18 @@ npm-debug.log*
 Thumbs.db
 nul
 
-# Project specific
+# Project specific (Non-system code)
 .agents/
-AGENT_INSTRUCTIONS.md
-DEPLOY_STEPS.md
-LOAN_SYNC_LOGIC.md
-Untitled-1776941419265.n8n
+docs/
+backups/
+scripts/
+*.md
+*.n8n
+nul
+
+# Backend specific
 backend/src/generated/
 backend/scratch/
 backend/prisma/*.ts
 !backend/prisma/seed.ts
+.workflow/
