@@ -36,6 +36,14 @@ const buildServer = async (): Promise<FastifyInstance> => {
   });
 
   // Health Check Route
+  server.get('/', async () => {
+    return { 
+      message: 'Nexworth API is online!',
+      status: 'stable',
+      version: '2.6.0-PRO'
+    };
+  });
+
   server.get('/health', async () => {
     return { status: 'ok' };
   });
