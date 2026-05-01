@@ -135,9 +135,27 @@ async function main() {
     }
 
     const categories = await prisma.transactionCategory.findMany({ where: { organizationId: testOrg.id } });
-    const salaryCat = categories.find(c => c.name === 'เงินเดือน' && c.typeId === incomeType?.id);
-    const savingCat = categories.find(c => c.name === 'เงินออม' && c.typeId === savingType?.id);
-    const emergencyCat = categories.find(c => c.name === 'เงินฉุกเฉิน' && c.typeId === savingType?.id);
+    
+    let salaryCat = categories.find(c => c.name === 'เงินเดือน' && c.typeId === incomeType?.id);
+    if (!salaryCat && incomeType) {
+      salaryCat = await prisma.transactionCategory.create({
+        data: { name: 'เงินเดือน', typeId: incomeType.id, organizationId: testOrg.id }
+      });
+    }
+
+    let savingCat = categories.find(c => c.name === 'เงินออม' && c.typeId === savingType?.id);
+    if (!savingCat && savingType) {
+      savingCat = await prisma.transactionCategory.create({
+        data: { name: 'เงินออม', typeId: savingType.id, organizationId: testOrg.id }
+      });
+    }
+
+    let emergencyCat = categories.find(c => c.name === 'เงินฉุกเฉิน' && c.typeId === savingType?.id);
+    if (!emergencyCat && savingType) {
+      emergencyCat = await prisma.transactionCategory.create({
+        data: { name: 'เงินฉุกเฉิน', typeId: savingType.id, organizationId: testOrg.id }
+      });
+    }
 
     // 2. Create Accounts
     const kbank = await prisma.bank.findFirst({ where: { organizationId: testOrg.id, code: 'KBANK' } });
@@ -213,7 +231,7 @@ async function main() {
         organizationId: testOrg.id,
         accountId: mainAccount.id,
         categoryId: salaryCat!.id,
-        typeId: incomeType!.id,
+        typeId: incomeType?.id || '',
         amount: 100000,
         description: 'Monthly Salary',
         date: new Date(currentYear, currentMonth, 1),
@@ -228,7 +246,7 @@ async function main() {
         organizationId: testOrg.id,
         accountId: emergencyAccount.id,
         categoryId: emergencyCat!.id,
-        typeId: incomeType!.id,
+        typeId: incomeType?.id || '',
         amount: 45000,
         description: 'Emergency Fund Top-up',
         date: new Date(currentYear, currentMonth, 5),
@@ -243,7 +261,7 @@ async function main() {
         organizationId: testOrg.id,
         accountId: mainAccount.id,
         categoryId: transferCat!.id,
-        typeId: transferType!.id,
+        typeId: transferType?.id || '',
         amount: 5000,
         description: 'Transfer to Savings',
         date: new Date(currentYear, currentMonth, 10),

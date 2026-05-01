@@ -16,10 +16,10 @@
     "db:push:stg": "cross-env NODE_ENV=staging npx prisma db push",
     "reset:stg": "cross-env NODE_ENV=staging npx prisma db push --force-reset & cross-env NODE_ENV=staging tsx prisma/seed.ts",
     "backup:prod": "tsx scripts/backup-neon.ts",
-    "build": "tsc",
+    "bot:discord": "cross-env NODE_ENV=local tsx ../scripts/discord-agent-bot.ts",
+    "build": "npx prisma generate && tsc",
     "start": "node dist/server.js"
   },
-
   "prisma": {
     "seed": "tsx prisma/seed.ts"
   },
@@ -35,6 +35,7 @@
     "@line/bot-sdk": "^11.0.0",
     "@prisma/client": "^5.22.0",
     "bcrypt": "^6.0.0",
+    "discord.js": "^14.26.4",
     "dotenv": "^17.3.1",
     "fastify": "^5.8.2",
     "fastify-raw-body": "^5.0.0",

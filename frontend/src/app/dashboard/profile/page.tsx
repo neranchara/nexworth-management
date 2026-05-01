@@ -2,7 +2,8 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Link2, Copy, CheckCircle, AlertCircle, User, Loader2, Eye, EyeOff } from 'lucide-react';
+import { Link2, Copy, CheckCircle, AlertCircle, User, Loader2, Eye, EyeOff, QrCode } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore();
@@ -205,33 +206,74 @@ export default function ProfilePage() {
             {isLoading ? 'Generating...' : 'Generate LINE Pairing Code'}
           </button>
         ) : (
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg p-5">
-            <p className="text-sm font-semibold mb-2">Your Pairing Code:</p>
-            <div className="flex items-center gap-3 mb-4">
-              <code 
-                data-testid="profile-line-text-pairing-code"
-                className="text-2xl font-bold text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-4 py-2 rounded border border-gray-200 dark:border-gray-700"
-              >
-                {pairingCode}
-              </code>
-              <button 
-                onClick={copyToClipboard}
-                className="p-2 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 bg-white dark:bg-gray-800 border rounded transition-colors flex items-center gap-1"
-              >
-                {copied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                <span className="text-xs">{copied ? 'Copied' : 'Copy'}</span>
+          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
+            <div className="flex flex-col md:flex-row gap-8 items-start">
+              {/* QR Code Section */}
+              <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
+                <QRCodeSVG 
+                  value={`https://line.me/R/oaMessage/@072ywdwj/?${pairingCode}`}
+                  size={140}
+                  level="H"
+                  includeMargin={false}
+                  imageSettings={{
+                    src: "https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg",
+                    x: undefined,
+                    y: undefined,
+                    height: 24,
+                    width: 24,
+                    excavate: true,
+                  }}
+                />
+                <span className="text-[10px] font-black text-[#06C755] uppercase tracking-widest">Scan to Pair</span>
+              </div>
+
+              {/* Steps and Code Section */}
+              <div className="flex-1 space-y-6">
+                <div>
+                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Your Pairing Code:</p>
+                  <div className="flex items-center gap-3">
+                    <code 
+                      data-testid="profile-line-text-pairing-code"
+                      className="text-2xl font-black text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
+                    >
+                      {pairingCode}
+                    </code>
+                    <button 
+                      onClick={copyToClipboard}
+                      className="p-2.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
+                    >
+                      {copied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
+                      <span className="text-xs font-bold">{copied ? 'Copied' : 'Copy'}</span>
+                    </button>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">1</div>
+                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Scan the QR code or add Line ID: <span className="text-blue-500">@072ywdwj</span></p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">2</div>
+                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">The code above will be pre-filled, just click <span className="text-blue-500">Send</span>.</p>
+                  </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">3</div>
+                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Once connected, you can start recording transactions immediately!</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-8 pt-4 border-t dark:border-gray-700 flex justify-between items-center">
+              <button onClick={() => setPairingCode(null)} className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline">
+                Generate a new code
               </button>
+              <div className="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
+                <AlertCircle className="w-3 h-3" />
+                Code expires in 10 minutes
+              </div>
             </div>
-            
-            <div className="text-sm text-gray-600 dark:text-gray-400 space-y-2">
-              <p><strong>Step 1:</strong> Add the Nexworth Bot on LINE (Line ID: @nexworth_bot).</p>
-              <p><strong>Step 2:</strong> Send the code above to the bot in the chat.</p>
-              <p><strong>Step 3:</strong> Once connected, you can start sending slips or messages like &quot;ข้าว 50 บาท&quot; to record expenses.</p>
-            </div>
-            
-            <button onClick={() => setPairingCode(null)} className="mt-4 text-xs text-blue-500 hover:underline">
-              Generate a new code
-            </button>
           </div>
         )}
       </div>
