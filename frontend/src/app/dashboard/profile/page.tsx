@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Link2, Copy, CheckCircle, AlertCircle, User, Loader2 } from 'lucide-react';
+import { Link2, Copy, CheckCircle, AlertCircle, User, Loader2, Eye, EyeOff } from 'lucide-react';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore();
@@ -11,6 +11,7 @@ export default function ProfilePage() {
   const [email, setEmail] = useState(user?.email || '');
   const [password, setPassword] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   // Sync state when user data is loaded
   useEffect(() => {
@@ -123,14 +124,27 @@ export default function ProfilePage() {
             </div>
             <div>
               <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">New Password</label>
-              <input 
-                type="password" 
-                value={password} 
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="••••••••"
-                data-testid="profile-form-input-password"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
-              />
+              <div className="relative">
+                <input 
+                  type={showPassword ? "text" : "password"} 
+                  value={password} 
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="••••••••"
+                  data-testid="profile-form-input-password"
+                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent pr-10"
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? (
+                    <EyeOff className="h-4 w-4" aria-hidden="true" />
+                  ) : (
+                    <Eye className="h-4 w-4" aria-hidden="true" />
+                  )}
+                </button>
+              </div>
             </div>
           </div>
           
