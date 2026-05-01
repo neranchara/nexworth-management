@@ -98,6 +98,9 @@ export default function ProfilePage() {
                   value={firstName} 
                   onChange={(e) => setFirstName(e.target.value)}
                   data-testid="profile-form-input-firstname"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
                 />
               </div>
@@ -108,6 +111,9 @@ export default function ProfilePage() {
                   value={lastName} 
                   onChange={(e) => setLastName(e.target.value)}
                   data-testid="profile-form-input-lastname"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
                 />
               </div>
@@ -119,6 +125,9 @@ export default function ProfilePage() {
                 value={email} 
                 onChange={(e) => setEmail(e.target.value)}
                 data-testid="profile-form-input-email"
+                autoCapitalize="none"
+                autoCorrect="off"
+                spellCheck="false"
                 className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
               />
             </div>
@@ -131,6 +140,9 @@ export default function ProfilePage() {
                   onChange={(e) => setPassword(e.target.value)}
                   placeholder="••••••••"
                   data-testid="profile-form-input-password"
+                  autoCapitalize="none"
+                  autoCorrect="off"
+                  spellCheck="false"
                   className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent pr-10"
                 />
                 <button
