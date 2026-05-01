@@ -62,7 +62,7 @@ export default function DashboardError({
         </div>
         
         <p className="mt-8 text-[9px] font-black text-slate-600 uppercase tracking-[0.3em]">
-          Nexworth Management Engine v2.1.2
+          Nexworth Management Engine v3.0.0
         </p>
       </div>
     </div>
