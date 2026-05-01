@@ -9,7 +9,7 @@
     "prod": "npx tsx scripts/prod-guard.ts \"start PRODUCTION servers\" && concurrently -n BE,FE,BOT -c red,green,magenta \"npm run dev:prod --prefix backend\" \"npm run dev --prefix frontend\" \"npx tsx scripts/discord-agent-bot.ts\"",
     "db:setup": "npm run db:push:local --prefix backend && npm run seed:local --prefix backend",
     "db:setup:stg": "npm run db:push:stg --prefix backend && npm run seed:stg --prefix backend",
-    "start": "npm run dev",
+    "start": "echo \"Please specify --prefix backend or --prefix frontend to start a specific service.\"",
     "start:stg": "npm run dev:stg",
     "test": "npm run test --prefix backend"
   },
