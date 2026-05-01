@@ -2,8 +2,15 @@
   "name": "nexworth-workspace",
   "version": "1.0.0",
   "scripts": {
-    "dev": "npm run dev:staging",
-    "dev:staging": "npx cross-env NODE_ENV=staging concurrently \"npm run dev --prefix frontend\" \"npm run dev --prefix backend\""
+    "dev": "concurrently -n BE,FE -c blue,green \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev:stg": "concurrently -n BE,FE -c yellow,green \"npm run dev:stg --prefix backend\" \"npm run dev --prefix frontend\"",
+    "qa": "npm run dev:stg",
+    "prod": "npx tsx scripts/prod-guard.ts \"start PRODUCTION servers\" && concurrently -n BE,FE -c red,green \"npm run dev:prod --prefix backend\" \"npm run dev --prefix frontend\"",
+    "db:setup": "npm run db:push:local --prefix backend && npm run seed:local --prefix backend",
+    "db:setup:stg": "npm run db:push:stg --prefix backend && npm run seed:stg --prefix backend",
+    "start": "npm run db:setup && npm run dev",
+    "start:stg": "npm run db:setup:stg && npm run dev:stg",
+    "test": "npm run test --prefix backend"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",

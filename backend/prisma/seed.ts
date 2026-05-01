@@ -4,8 +4,8 @@ import dotenv from 'dotenv';
 import path from 'path';
 import { setupOrganizationDefaults } from '../src/services/organization.service.js';
 
-const envFile = process.env.NODE_ENV === 'production' ? '.env.production' : 
-               process.env.NODE_ENV === 'staging' ? '.env.staging' : '.env';
+const nodeEnv = process.env.NODE_ENV || 'local';
+const envFile = `.env.${nodeEnv}`;
 
 dotenv.config({ path: path.resolve(process.cwd(), envFile), override: true });
 

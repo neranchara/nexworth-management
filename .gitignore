@@ -36,7 +36,6 @@ nul
 .agents/
 docs/
 backups/
-scripts/
 *.md
 *.n8n
 nul

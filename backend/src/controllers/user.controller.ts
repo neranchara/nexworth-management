@@ -82,7 +82,8 @@ export const createUserHandler = async (request: FastifyRequest, reply: FastifyR
       return reply.status(403).send({ error: 'Access denied: You can only create users within your own organization' });
     }
 
-    const existingUser = await prisma.user.findUnique({ where: { email: body.email } });
+    const normalizedEmail = body.email.toLowerCase().trim();
+    const existingUser = await prisma.user.findUnique({ where: { email: normalizedEmail } });
     if (existingUser) {
       return reply.status(409).send({ error: 'User with this email already exists' });
     }
@@ -91,7 +92,7 @@ export const createUserHandler = async (request: FastifyRequest, reply: FastifyR
 
     const newUser = await prisma.user.create({
       data: {
-        email: body.email,
+        email: normalizedEmail,
         passwordHash,
         firstName: body.firstName,
         lastName: body.lastName,
@@ -168,6 +169,9 @@ export const updateUserHandler = async (request: FastifyRequest<{ Params: { id: 
     }
 
     const dataToUpdate: any = { ...body };
+    if (body.email) {
+      dataToUpdate.email = body.email.toLowerCase().trim();
+    }
     if (body.password) {
       dataToUpdate.passwordHash = await bcrypt.hash(body.password, 10);
       delete dataToUpdate.password;

@@ -1,8 +1,4 @@
-import * as dotenv from 'dotenv';
-const envFile = process.env.NODE_ENV ? `.env.${process.env.NODE_ENV}` : '.env';
-dotenv.config({ path: envFile, override: true });
-console.log(`Loading environment from: ${envFile}`);
-
+import { config } from './config/index.js';
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
@@ -16,13 +12,13 @@ const buildServer = async (): Promise<FastifyInstance> => {
 
   // Plugins
   await server.register(cors, {
-    origin: true, // Dynamically allow the origin that made the request
+    origin: config.cors.origin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    credentials: config.cors.credentials
   });
   await server.register(fastifyJwt, {
-    secret: process.env.JWT_SECRET || 'supersecret'
+    secret: config.jwtSecret
   });
   await server.register(fastifyRawBody, {
     field: 'rawBody',
@@ -32,12 +28,11 @@ const buildServer = async (): Promise<FastifyInstance> => {
   });
 
   const fastifyRateLimit = (await import('@fastify/rate-limit')).default;
-  const isStaging = process.env.NODE_ENV === 'staging';
   
   await server.register(fastifyRateLimit, {
-    max: isStaging ? 10000 : 100, // Higher limit for tests
-    timeWindow: '1 minute',
-    allowList: isStaging ? ['127.0.0.1', 'localhost'] : []
+    max: config.rateLimit.max,
+    timeWindow: config.rateLimit.timeWindow,
+    allowList: config.isStaging ? ['127.0.0.1', 'localhost'] : []
   });
 
   // Health Check Route
@@ -81,10 +76,10 @@ const buildServer = async (): Promise<FastifyInstance> => {
 
 const start = async () => {
   const server = await buildServer();
-  const port = process.env.PORT ? parseInt(process.env.PORT) : 3001;
+  const port = config.port;
   try {
     await server.listen({ port, host: '0.0.0.0' });
-    console.log(`Server listening on http://localhost:${port}`);
+    console.log(`Server listening on port ${port}`);
   } catch (err) {
     server.log.error(err);
     process.exit(1);

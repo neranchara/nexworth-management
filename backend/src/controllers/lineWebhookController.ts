@@ -4,9 +4,10 @@ import { prisma } from '../lib/prisma.js';
 import * as aiExtractionService from '../services/aiExtractionService.js';
 import { adjustAccountBalance } from './transaction.controller.js';
 import * as crypto from 'crypto';
+import { config } from '../config/index.js';
 
-const channelAccessToken = process.env.LINE_CHANNEL_ACCESS_TOKEN || '';
-const channelSecret = process.env.LINE_CHANNEL_SECRET || '';
+const channelAccessToken = config.line.channelAccessToken;
+const channelSecret = config.line.channelSecret;
 
 const client = new messagingApi.MessagingApiClient({
   channelAccessToken,
