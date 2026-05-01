@@ -85,7 +85,7 @@ client.on('messageCreate', async (message: Message) => {
     if (!model) return message.reply('❌ My AI brain is not configured yet.');
     
     try {
-      message.channel.sendTyping();
+      (message.channel as any).sendTyping();
       
       const prompt = `
       You are a financial assistant. Extract transaction details from this: "${message.content}"
