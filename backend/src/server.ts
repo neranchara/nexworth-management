@@ -93,8 +93,8 @@ const start = async () => {
     console.log(`Server listening on port ${port}`);
 
     // Start Discord Bot in parallel (don't await so server can finish starting)
-    if (!config.isStaging) {
-      console.log('--- Starting Discord Agent Bot ---');
+    if (config.isLocal) {
+      console.log('--- Starting Discord Agent Bot (Local Monitoring Mode) ---');
       import('./services/discordBot.js').catch(err => {
         console.error('Failed to start Discord Bot:', err);
       });
