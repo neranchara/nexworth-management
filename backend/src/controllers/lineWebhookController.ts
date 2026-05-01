@@ -54,7 +54,7 @@ export const handleWebhook = async (request: FastifyRequest, reply: FastifyReply
 };
 
 const handlePostback = async (event: webhook.PostbackEvent) => {
-  const lineUserId = event.source.userId;
+  const lineUserId = event.source?.userId;
   if (!lineUserId) return;
 
   const data = new URLSearchParams(event.postback.data);
@@ -258,9 +258,10 @@ const processEvent = async (event: webhook.Event) => {
     // Check for Account Match
     let matchedAccountId = null;
     if (extracted.accountName && user.accounts.length > 0) {
+      const searchName = extracted.accountName.toLowerCase();
       const match = user.accounts.find((a: any) => 
-        a.name.toLowerCase().includes(extracted.accountName.toLowerCase()) ||
-        (a.bank?.name && a.bank.name.toLowerCase().includes(extracted.accountName.toLowerCase()))
+        a.name.toLowerCase().includes(searchName) ||
+        (a.bank?.name && a.bank.name.toLowerCase().includes(searchName))
       );
       if (match) matchedAccountId = match.id;
     }
