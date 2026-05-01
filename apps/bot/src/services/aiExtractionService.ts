@@ -1,4 +1,5 @@
 import { NexworthAIEngine } from '@nexworth/ai-engine';
+export type { ExtractedTransaction } from '@nexworth/ai-engine';
 import { config } from '../config/index.js';
 
 const aiEngine = new NexworthAIEngine(config.geminiApiKey || '');

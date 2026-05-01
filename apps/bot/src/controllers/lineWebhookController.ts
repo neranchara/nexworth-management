@@ -403,7 +403,10 @@ const recordTransactionAndNotify = async (lineUserId: string, user: any, extract
           userId: user.id,
           organizationId: user.organizationId,
           assetId,
-          liabilityId
+          liabilityId,
+          taxAmount: extracted.taxAmount || 0,
+          taxType: extracted.taxType || 'NONE',
+          transactionType: extracted.transactionType || (extracted.isExpense ? 'EXPENSE' : 'INCOME')
         }
       });
       return transaction;

@@ -8,6 +8,9 @@ export interface ExtractedTransaction {
   description?: string;
   date?: string;
   isExpense?: boolean;
+  taxAmount?: number;
+  taxType?: 'VAT' | 'WHT' | 'NONE';
+  transactionType?: 'INCOME' | 'EXPENSE' | 'TRANSFER' | 'LOAN' | 'DEBT_REPAY';
 }
 
 export class NexworthAIEngine {
@@ -35,11 +38,20 @@ export class NexworthAIEngine {
         Required JSON format:
         {
           "amount": number,
-          "categoryName": string (best guess of category, e.g., "อาหาร", "เดินทาง", "ช้อปปิ้ง", "รายได้", etc.),
-          "accountName": string (if specified, e.g., "กระเป๋า", "KBank", "ไทยพาณิชย์"),
-          "description": string (the specific item bought or income source),
-          "isExpense": boolean (true if it's spending, false if it's income)
+          "categoryName": string (best guess of category, e.g., "Food", "Travel", "Salary"),
+          "accountName": string (if specified, e.g., "KBank", "Cash"),
+          "description": string (the specific item or source),
+          "isExpense": boolean,
+          "taxAmount": number (extracted VAT or WHT if mentioned, otherwise 0),
+          "taxType": "VAT" | "WHT" | "NONE",
+          "transactionType": "INCOME" | "EXPENSE" | "TRANSFER" | "LOAN" | "DEBT_REPAY"
         }
+        
+        Logic for transactionType:
+        - TRANSFER: If moving money between user accounts.
+        - LOAN: If lending money or borrowing.
+        - DEBT_REPAY: If paying back a loan or credit card.
+        - INCOME/EXPENSE: Standard daily flow.
         
         Return ONLY valid JSON. No markdown formatting or extra text.
       `;
@@ -78,11 +90,14 @@ export class NexworthAIEngine {
         Required JSON format:
         {
           "amount": number (the transfer amount),
-          "bankName": string (the bank of the sender or receiver, depending on context),
+          "bankName": string (the bank of the sender or receiver),
           "accountName": string (if you can guess which of the user's accounts this is for),
           "date": string (ISO format YYYY-MM-DDTHH:mm:ss if possible, or leave null),
           "description": string (name of the receiver or note on the slip),
-          "isExpense": boolean (typically true for outbound transfer slips)
+          "isExpense": boolean (typically true for outbound transfer slips),
+          "taxAmount": number (if any tax is mentioned on the slip, e.g. service fee with tax),
+          "taxType": "VAT" | "WHT" | "NONE",
+          "transactionType": "INCOME" | "EXPENSE" | "TRANSFER" | "LOAN" | "DEBT_REPAY"
         }
         
         Return ONLY valid JSON. No markdown formatting or extra text.

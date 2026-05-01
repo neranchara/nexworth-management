@@ -14,6 +14,9 @@ const transactionSchema = z.object({
   actualDate: z.string().optional().nullable(),
   note: z.string().optional().nullable(),
   direction: z.string().optional().nullable(),
+  taxAmount: z.number().optional().nullable(),
+  taxType: z.string().optional().nullable(),
+  transactionType: z.string().optional().nullable(),
 });
 
 export const adjustAccountBalance = async (accountId: string, amount: number, typeId: string, direction: string | null = null, isRemoval: boolean = false) => {
@@ -195,6 +198,9 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
             direction: legDirection,
             date: commonData.date ? new Date(commonData.date) : new Date(),
             actualDate: commonData.actualDate ? new Date(commonData.actualDate) : null,
+            taxAmount: commonData.taxAmount || 0,
+            taxType: commonData.taxType || 'NONE',
+            transactionType: commonData.transactionType || (legDirection === 'FROM' ? 'EXPENSE' : 'INCOME'),
           },
           include: {
             account: { include: { bank: { select: { name: true, color: true } } } },
@@ -509,7 +515,10 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         date: date ? new Date(date) : (existing.date as Date),
         actualDate: actualDate !== undefined ? (actualDate ? new Date(actualDate) : null) : existing.actualDate,
         linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
-        direction: (direction as string) || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO'))
+        direction: (direction as string) || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO')),
+        taxAmount: body.taxAmount !== undefined ? body.taxAmount : existing.taxAmount,
+        taxType: body.taxType !== undefined ? body.taxType : existing.taxType,
+        transactionType: body.transactionType !== undefined ? body.transactionType : existing.transactionType,
       },
       include: {
         account: { include: { bank: { select: { name: true, color: true } } } },

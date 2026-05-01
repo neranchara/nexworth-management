@@ -230,6 +230,9 @@ model Transaction {
   type                TransactionType     @relation(fields: [typeId], references: [id])
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
   direction           String?             // 'FROM' or 'TO' for single transactions
+  taxAmount           Float?              @default(0)
+  taxType             String?             // 'VAT', 'WHT', 'NONE'
+  transactionType     String?             // 'INCOME', 'EXPENSE', 'TRANSFER', 'LOAN', 'DEBT_REPAY'
 }
 
 model Loan {

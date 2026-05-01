@@ -40,7 +40,7 @@ const buildServer = async (): Promise<FastifyInstance> => {
     return { 
       message: 'Nexworth API is online!',
       status: 'stable',
-      version: '2.6.0-PRO'
+      version: '3.0.0'
     };
   });
 
