@@ -81,7 +81,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="relative">
-              <label htmlFor="password" name="password" className="sr-only">
+              <label htmlFor="password" className="sr-only">
                 Password
               </label>
               <input
