@@ -45,7 +45,7 @@ export default function LoginPage() {
       <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
         <div>
           <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Nexworth Sign In
+            Nexworth Sign In <span className="text-blue-500 text-sm font-bold">(vDebug)</span>
           </h2>
           <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
             Personal Finance & Asset Management
