@@ -12,6 +12,8 @@
     "dev:bot": "npm run dev --workspace=@nexworth/bot",
     "dev:web": "npm run dev --workspace=frontend",
     "build": "npm run db:generate && npm run build --workspaces",
+    "build:api": "npm run db:generate && npm run build --workspace=@nexworth/database && npm run build --workspace=@nexworth/ai-engine && npm run build --workspace=@nexworth/api",
+    "build:bot": "npm run db:generate && npm run build --workspace=@nexworth/database && npm run build --workspace=@nexworth/ai-engine && npm run build --workspace=@nexworth/bot",
     "db:generate": "npm run db:generate --workspace=@nexworth/database",
     "db:push": "npm run db:push --workspace=@nexworth/database",
     "start:api": "npm run start --workspace=@nexworth/api",
