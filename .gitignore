@@ -12,15 +12,6 @@ node_modules/
 /frontend/out/
 /frontend/build/
 
-# Testing (Playwright)
-tests/
-test-results/
-playwright-report/
-blob-report/
-/playwright/.cache/
-/playwright/.auth/
-/test-results-base/
-
 # Logs
 *.log
 npm-debug.log*
