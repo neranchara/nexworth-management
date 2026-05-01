@@ -80,6 +80,7 @@ export default function LoginPage() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck="false"
+                data-testid="login-input-email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
               />
@@ -98,6 +99,7 @@ export default function LoginPage() {
                 autoCapitalize="none"
                 autoCorrect="off"
                 spellCheck="false"
+                data-testid="login-input-password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
@@ -105,6 +107,7 @@ export default function LoginPage() {
                 type="button"
                 className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
                 onClick={() => setShowPassword(!showPassword)}
+                data-testid="login-password-toggle"
               >
                 {showPassword ? (
                   <EyeOff className="h-5 w-5" aria-hidden="true" />
