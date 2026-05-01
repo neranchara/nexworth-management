@@ -211,7 +211,7 @@ export default function ProfilePage() {
               {/* QR Code Section */}
               <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
                 <QRCodeSVG 
-                  value={`https://line.me/R/oaMessage/@072ywdwj/?${pairingCode}`}
+                  value={`https://line.me/R/oaMessage/${process.env.NEXT_PUBLIC_LINE_BOT_ID || '@072ywdwj'}/?${pairingCode}`}
                   size={140}
                   level="H"
                   includeMargin={false}
@@ -251,7 +251,7 @@ export default function ProfilePage() {
                 <div className="space-y-3">
                   <div className="flex items-start gap-3">
                     <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">1</div>
-                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Scan the QR code or add Line ID: <span className="text-blue-500">@072ywdwj</span></p>
+                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Scan the QR code or add Line ID: <span className="text-blue-500">{process.env.NEXT_PUBLIC_LINE_BOT_ID || '@072ywdwj'}</span></p>
                   </div>
                   <div className="flex items-start gap-3">
                     <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">2</div>
