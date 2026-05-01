@@ -1,17 +1,21 @@
 {
   "name": "nexworth-workspace",
   "version": "1.0.0",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
   "scripts": {
-    "dev": "concurrently -n BE,FE,BOT -c blue,green,magenta \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\" \"npm run bot:discord --prefix backend\"",
-    "dev:stg": "concurrently -n BE,FE,BOT -c yellow,green,magenta \"npm run dev:stg --prefix backend\" \"npm run dev --prefix frontend\" \"npx tsx --cwd backend ../scripts/discord-agent-bot.ts\"",
-    "db:init": "npm run db:setup",
-    "qa": "npm run dev:stg",
-    "prod": "npx tsx scripts/prod-guard.ts \"start PRODUCTION servers\" && concurrently -n BE,FE,BOT -c red,green,magenta \"npm run dev:prod --prefix backend\" \"npm run dev --prefix frontend\" \"npx tsx scripts/discord-agent-bot.ts\"",
-    "db:setup": "npm run db:push:local --prefix backend && npm run seed:local --prefix backend",
-    "db:setup:stg": "npm run db:push:stg --prefix backend && npm run seed:stg --prefix backend",
-    "start": "echo \"Please specify --prefix backend or --prefix frontend to start a specific service.\"",
-    "start:stg": "npm run dev:stg",
-    "test": "npm run test --prefix backend"
+    "dev:api": "npm run dev --workspace=@nexworth/api",
+    "dev:bot": "npm run dev --workspace=@nexworth/bot",
+    "dev:web": "npm run dev --workspace=frontend",
+    "build": "npm run build --workspaces",
+    "db:generate": "npm run db:generate --workspace=@nexworth/database",
+    "db:push": "npm run db:push --workspace=@nexworth/database",
+    "start:api": "npm run start --workspace=@nexworth/api",
+    "start:bot": "npm run start --workspace=@nexworth/bot",
+    "start:web": "npm run start --workspace=frontend"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
