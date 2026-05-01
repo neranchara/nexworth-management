@@ -2,19 +2,26 @@
   "name": "nexworth-workspace",
   "version": "1.0.0",
   "scripts": {
-    "dev": "concurrently -n BE,FE -c blue,green \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\"",
-    "dev:stg": "concurrently -n BE,FE -c yellow,green \"npm run dev:stg --prefix backend\" \"npm run dev --prefix frontend\"",
+    "dev": "concurrently -n BE,FE,BOT -c blue,green,magenta \"npm run dev --prefix backend\" \"npm run dev --prefix frontend\" \"npm run bot:discord --prefix backend\"",
+    "dev:stg": "concurrently -n BE,FE,BOT -c yellow,green,magenta \"npm run dev:stg --prefix backend\" \"npm run dev --prefix frontend\" \"npx tsx --cwd backend ../scripts/discord-agent-bot.ts\"",
+    "db:init": "npm run db:setup",
     "qa": "npm run dev:stg",
-    "prod": "npx tsx scripts/prod-guard.ts \"start PRODUCTION servers\" && concurrently -n BE,FE -c red,green \"npm run dev:prod --prefix backend\" \"npm run dev --prefix frontend\"",
+    "prod": "npx tsx scripts/prod-guard.ts \"start PRODUCTION servers\" && concurrently -n BE,FE,BOT -c red,green,magenta \"npm run dev:prod --prefix backend\" \"npm run dev --prefix frontend\" \"npx tsx scripts/discord-agent-bot.ts\"",
     "db:setup": "npm run db:push:local --prefix backend && npm run seed:local --prefix backend",
     "db:setup:stg": "npm run db:push:stg --prefix backend && npm run seed:stg --prefix backend",
-    "start": "npm run db:setup && npm run dev",
-    "start:stg": "npm run db:setup:stg && npm run dev:stg",
+    "start": "npm run dev",
+    "start:stg": "npm run dev:stg",
     "test": "npm run test --prefix backend"
   },
   "devDependencies": {
     "@types/node": "^20.11.0",
     "concurrently": "^8.2.2",
     "cross-env": "^7.0.3"
+  },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "axios": "^1.15.2",
+    "discord.js": "^14.26.3",
+    "dotenv": "^17.4.2"
   }
 }

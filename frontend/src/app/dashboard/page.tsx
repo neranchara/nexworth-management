@@ -149,31 +149,31 @@ const getHealthColor = (score: number) => {
 // ============================================
 
 const WelcomeCard = ({ user, stats, loading }: { user: any; stats: any; loading: boolean }) => (
-  <div className="relative overflow-hidden bg-gradient-to-br from-slate-900 to-slate-800 dark:from-slate-950 dark:to-slate-900 shadow-xl rounded-2xl p-6 h-full flex flex-col justify-between group">
-    {/* Decorative Background Elements */}
-    <div className="absolute top-0 right-0 -mt-8 -mr-8 w-32 h-32 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700" />
-    <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl group-hover:bg-purple-500/20 transition-all duration-700" />
+  <div className="relative overflow-hidden bg-slate-900/40 backdrop-blur-3xl shadow-2xl rounded-[2.5rem] p-8 h-full flex flex-col justify-between border border-white/5 group">
+    {/* Animated Glows */}
+    <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] group-hover:bg-blue-600/30 transition-all duration-1000" />
+    <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-600/20 rounded-full blur-[100px] group-hover:bg-indigo-600/30 transition-all duration-1000" />
     
-    <div className="relative z-10 mb-6">
-      <h1 className="text-2xl font-black text-white mb-1 tracking-tight">
-        Welcome, {[user?.firstName, user?.lastName].filter(Boolean).join(' ') || 'User'}
+    <div className="relative z-10 mb-8">
+      <h1 className="text-3xl font-black text-white mb-2 tracking-tighter leading-tight">
+        สวัสดี, {[user?.firstName].filter(Boolean).join(' ') || 'User'} ✨
       </h1>
-      <p className="text-slate-400 text-[11px] font-medium uppercase tracking-[0.2em]">Financial Overview</p>
+      <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Institutional Grade Overview</p>
     </div>
     
-    <div className="relative z-10 grid grid-cols-2 gap-3 flex-1">
+    <div className="relative z-10 grid grid-cols-2 gap-4 flex-1">
       {[
-        { label: 'Real Assets', value: stats?.summary?.totalAssets, icon: Wallet, color: 'from-blue-500/20 to-blue-600/5', text: 'text-blue-400' },
-        { label: 'Goal Money', value: stats?.summary?.totalGoalAssets, icon: TrendingUp, color: 'from-purple-500/20 to-purple-600/5', text: 'text-purple-400' },
-        { label: 'Liabilities', value: stats?.summary?.totalLiabilities, icon: CreditCard, color: 'from-rose-500/20 to-rose-600/5', text: 'text-rose-400' },
-        { label: 'Net Worth', value: stats?.summary?.netWorth, icon: ShieldCheck, color: 'from-emerald-500/20 to-emerald-600/5', text: 'text-emerald-400' }
+        { label: 'Real Assets', value: stats?.summary?.totalAssets, icon: Wallet, color: 'from-blue-500/10 to-blue-600/5', text: 'text-blue-400', border: 'border-blue-500/20' },
+        { label: 'Goal Money', value: stats?.summary?.totalGoalAssets, icon: Target, color: 'from-purple-500/10 to-purple-600/5', text: 'text-purple-400', border: 'border-purple-500/20' },
+        { label: 'Liabilities', value: stats?.summary?.totalLiabilities, icon: CreditCard, color: 'from-rose-500/10 to-rose-600/5', text: 'text-rose-400', border: 'border-rose-500/20' },
+        { label: 'Net Worth', value: stats?.summary?.netWorth, icon: ShieldCheck, color: 'from-emerald-500/10 to-emerald-600/5', text: 'text-emerald-400', border: 'border-emerald-500/20' }
       ].map((item, idx) => (
-        <div key={idx} className={`bg-gradient-to-br ${item.color} p-3.5 rounded-xl border border-white/5 flex flex-col justify-between hover:border-white/10 transition-all duration-300`}>
-          <div className="flex items-center justify-between mb-1.5">
-            <span className="text-[9px] font-black uppercase tracking-wider text-slate-500">{item.label}</span>
-            <item.icon className={`w-3.5 h-3.5 ${item.text}`} />
+        <div key={idx} className={`bg-gradient-to-br ${item.color} p-5 rounded-3xl border ${item.border} flex flex-col justify-between hover:scale-[1.02] transition-all duration-500 shadow-xl shadow-black/20`}>
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>
+            <div className={`p-1.5 rounded-lg bg-black/40 ${item.text}`}><item.icon className="w-3.5 h-3.5" /></div>
           </div>
-          <p className="text-lg font-black text-white tabular-nums leading-none">
+          <p className="text-xl font-black text-white tabular-nums leading-none tracking-tighter">
             {loading ? '...' : `${stats?.currency || '฿'}${(item.value ?? 0).toLocaleString()}`}
           </p>
         </div>
@@ -187,25 +187,26 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
   const color = getHealthColor(score);
   
   return (
-    <div className="relative overflow-hidden bg-white dark:bg-slate-900 shadow-xl rounded-2xl p-6 h-full flex flex-col items-center justify-between border border-gray-100 dark:border-slate-800/50 group">
+    <div className="relative overflow-hidden bg-slate-900/40 backdrop-blur-3xl shadow-2xl rounded-[2.5rem] p-8 h-full flex flex-col items-center justify-between border border-white/5 group">
       {/* Dynamic Background Glow */}
       <div 
-        className="absolute inset-0 opacity-10 dark:opacity-20 transition-all duration-1000 blur-3xl pointer-events-none"
+        className="absolute inset-0 opacity-20 transition-all duration-1000 blur-[80px] pointer-events-none"
         style={{ 
-          background: `radial-gradient(circle at center, ${color} 0%, transparent 70%)` 
+          background: `radial-gradient(circle at center, ${color}44 0%, transparent 70%)` 
         }} 
       />
       
-      <div className="relative z-10 w-full flex items-center justify-between mb-2">
+      <div className="relative z-10 w-full flex items-center justify-between mb-6">
         <div>
-          <h2 className="text-xl font-black text-slate-900 dark:text-white tracking-tight leading-none" data-testid="dashboard-health-hdr">Financial Health</h2>
+          <h2 className="text-xl font-black text-white tracking-tight leading-none" data-testid="dashboard-health-hdr">Capital Health</h2>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1.5">AI Risk Assessment</p>
         </div>
-        <div className={`p-2 rounded-xl bg-white dark:bg-slate-800 shadow-sm border border-slate-100 dark:border-slate-700`}>
-          <Activity className="w-5 h-5" style={{ color }} />
+        <div className="p-3 rounded-2xl bg-black/40 border border-white/10 shadow-xl" style={{ color }}>
+          <Activity className="w-5 h-5" />
         </div>
       </div>
 
-      <div className="relative z-10 w-full aspect-square max-w-[200px]">
+      <div className="relative z-10 w-full aspect-square max-w-[200px] flex items-center justify-center">
         {!loading && stats ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -223,7 +224,7 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
                 cornerRadius={20}
               >
                 <Cell fill={color} />
-                <Cell fill="rgba(0,0,0,0.04)" className="dark:fill-white/5" />
+                <Cell fill="rgba(255,255,255,0.05)" />
               </Pie>
             </PieChart>
           </ResponsiveContainer>
@@ -236,25 +237,25 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
         {/* Central Score Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
           <div className="relative">
-            <span className="text-6xl font-black text-slate-900 dark:text-white tracking-tighter leading-none">
+            <span className="text-6xl font-black text-white tracking-tighter leading-none">
               {loading ? '--' : score}
             </span>
-            <span className="absolute -top-1 -right-4 text-xs font-black text-slate-400 opacity-50">%</span>
+            <span className="absolute -top-1 -right-4 text-xs font-black text-slate-500">pts</span>
           </div>
-          <div className="mt-2 px-3 py-1 rounded-full border shadow-sm transition-all duration-500" style={{ backgroundColor: `${color}10`, borderColor: `${color}30` }}>
+          <div className="mt-3 px-4 py-1.5 rounded-full border shadow-2xl transition-all duration-700" style={{ backgroundColor: `${color}20`, borderColor: `${color}40` }}>
             <span className="text-[10px] font-black uppercase tracking-widest" style={{ color }}>
-              {stats?.health?.status || 'Calculating...'}
+              {stats?.health?.status || 'Analyzing...'}
             </span>
           </div>
         </div>
       </div>
 
       {/* Mini Insight */}
-      <div className="relative z-10 w-full mt-2 p-3 bg-slate-50 dark:bg-slate-800/50 rounded-xl border border-slate-100 dark:border-slate-700/50">
-        <div className="flex items-center gap-2">
-          <div className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: color }} />
-          <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400">
-            {score >= 80 ? 'Portfolio is excellently balanced.' : score >= 50 ? 'Steady progress, keep it up.' : 'Action required on liabilities.'}
+      <div className="relative z-10 w-full mt-8 p-4 bg-black/30 rounded-3xl border border-white/5 shadow-inner">
+        <div className="flex items-center gap-3">
+          <div className="w-2 h-2 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)] animate-pulse" style={{ backgroundColor: color }} />
+          <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide leading-relaxed">
+            {score >= 80 ? 'System Integrity: Optimal Balance' : score >= 50 ? 'Status: Steady Progress' : 'Warning: High Debt Exposure'}
           </p>
         </div>
       </div>
@@ -276,22 +277,22 @@ const MetricCard = ({
   onMonthChange,
   onYearChange
 }: any) => (
-  <div className="group relative overflow-hidden bg-slate-900/40 dark:bg-slate-950/40 backdrop-blur-xl rounded-3xl p-7 h-full flex flex-col justify-between border border-white/5 hover:border-white/10 transition-all duration-500 hover:translate-y-[-4px] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+  <div className="group relative overflow-hidden bg-slate-900/40 backdrop-blur-3xl rounded-[2rem] p-7 h-full flex flex-col justify-between border border-white/5 hover:border-white/10 transition-all duration-500 hover:translate-y-[-4px] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
     {/* Subtle Glow Accent */}
-    <div className={`absolute top-0 right-0 w-32 h-32 blur-3xl opacity-10 transition-opacity group-hover:opacity-20 pointer-events-none ${bg}`} />
+    <div className={`absolute top-0 right-0 w-32 h-32 blur-[80px] opacity-10 transition-opacity group-hover:opacity-20 pointer-events-none ${bg}`} />
     
     <div className="relative z-10 flex items-center justify-between mb-6">
       <div className="flex items-center gap-4">
-        <div className={`p-3 rounded-2xl ${bg} ${color} shadow-lg shadow-black/20 ring-1 ring-white/10`}>
+        <div className={`p-3 rounded-2xl ${bg} ${color} shadow-xl shadow-black/20 ring-1 ring-white/10`}>
           <Icon className="w-5 h-5" />
         </div>
         <div>
           <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">{label}</h3>
-          <p className="text-[9px] font-bold text-slate-600 uppercase tracking-widest mt-0.5">Performance Metric</p>
+          <p className="text-[8px] font-black text-slate-600 uppercase tracking-widest mt-1">Institutional Metric</p>
         </div>
       </div>
       {hasDateFilter && (
-        <div className="flex items-center gap-1.5 bg-black/20 px-2.5 py-1.5 rounded-xl border border-white/5">
+        <div className="flex items-center gap-1.5 bg-black/40 px-2.5 py-1.5 rounded-xl border border-white/5 shadow-inner">
            <select 
              value={selectedMonth} 
              onChange={(e) => onMonthChange(parseInt(e.target.value))} 
@@ -315,7 +316,7 @@ const MetricCard = ({
 
     <div className="relative z-10 mb-8">
       <div className="flex items-baseline gap-1">
-        <span className="text-xl font-black text-white tracking-tighter tabular-nums leading-none">
+        <span className="text-2xl font-black text-white tracking-tighter tabular-nums leading-none">
           {loading ? '...' : value}
         </span>
       </div>
@@ -323,13 +324,13 @@ const MetricCard = ({
 
     {/* Modern Metric Score Indicator */}
     <div className="relative z-10 mt-auto pt-4 border-t border-white/5">
-      <div className="flex items-center justify-between mb-2">
-        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Metric Score</span>
+      <div className="flex items-center justify-between mb-2.5">
+        <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest">Efficiency</span>
         <span className={`text-[10px] font-black tabular-nums ${score >= 20 ? 'text-emerald-400' : score >= 10 ? 'text-amber-400' : 'text-rose-400'}`}>
           {score}<span className="text-slate-600 ml-0.5">/25</span>
         </span>
       </div>
-      <div className="relative w-full h-1.5 bg-black/40 rounded-full overflow-hidden">
+      <div className="relative w-full h-1.5 bg-black/40 rounded-full overflow-hidden shadow-inner">
         <div 
           className={`absolute top-0 left-0 h-full rounded-full transition-all duration-1000 shadow-[0_0_10px_rgba(255,255,255,0.1)] ${
             score >= 20 ? 'bg-emerald-500 shadow-emerald-500/20' : score >= 10 ? 'bg-amber-500 shadow-amber-500/20' : 'bg-rose-500 shadow-rose-500/20'
@@ -342,7 +343,7 @@ const MetricCard = ({
 );
 
 const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, visualYear, pieData, selectedMonthData, onModeChange, onVisualMonthChange, onVisualYearChange }: any) => (
-  <div className="bg-slate-900/40 dark:bg-slate-950/40 backdrop-blur-xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+  <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
       <div className="flex items-center gap-4">
         <div className="p-3.5 bg-blue-600 rounded-2xl text-white shadow-xl shadow-blue-600/20 ring-1 ring-white/20">
@@ -381,11 +382,11 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
     
     <div className={`flex flex-col gap-8 flex-1 ${cashflowMode === 'both' ? 'xl:flex-row' : ''}`}>
       {(cashflowMode === 'table' || cashflowMode === 'both') && (
-        <div className={`overflow-x-auto bg-slate-900/30 rounded-3xl border border-white/5 custom-scrollbar ${cashflowMode === 'both' ? 'xl:w-3/5' : 'w-full'}`}>
+        <div className={`overflow-x-auto bg-black/20 rounded-3xl border border-white/5 custom-scrollbar ${cashflowMode === 'both' ? 'xl:w-3/5' : 'w-full'}`}>
           <table className="min-w-[800px] w-full text-[11px]">
             <thead>
-              <tr className="bg-slate-800/40 backdrop-blur-md border-b border-white/5">
-                <th className="sticky left-0 bg-slate-800/80 backdrop-blur-md px-5 py-4 text-left font-black text-slate-500 uppercase tracking-widest z-10">Month</th>
+              <tr className="bg-white/5 border-b border-white/5">
+                <th className="sticky left-0 bg-slate-900/90 backdrop-blur-md px-5 py-4 text-left font-black text-slate-500 uppercase tracking-widest z-10">Month</th>
                 <th className="px-5 py-4 text-right font-black text-emerald-400 uppercase tracking-widest">Income</th>
                 <th className="px-5 py-4 text-right font-black text-rose-400 uppercase tracking-widest">Expense</th>
                 <th className="px-5 py-4 text-right font-black text-blue-400 uppercase tracking-widest">Savings</th>
@@ -398,27 +399,27 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
             <tbody className="divide-y divide-white/5">
               {(stats?.monthlyCashflow || []).map((m: any) => (
                 <tr key={m.month} className="hover:bg-white/5 transition-colors group">
-                  <td className="sticky left-0 bg-slate-900/80 backdrop-blur-md px-5 py-4 font-black text-slate-300 z-10">{m.month}</td>
+                  <td className="sticky left-0 bg-slate-900/90 backdrop-blur-md px-5 py-4 font-black text-slate-300 z-10">{m.month}</td>
                   <td className="px-5 py-4 text-right text-emerald-400/80 group-hover:text-emerald-400 font-bold tabular-nums">
-                    {(m.income ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.income ?? 0).toLocaleString()}
                   </td>
                   <td className="px-5 py-4 text-right text-rose-400/80 group-hover:text-rose-400 font-bold tabular-nums">
-                    {(m.expense ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.expense ?? 0).toLocaleString()}
                   </td>
                   <td className="px-5 py-4 text-right text-blue-400/80 group-hover:text-blue-400 font-bold tabular-nums">
-                    {(m.saving ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.saving ?? 0).toLocaleString()}
                   </td>
                   <td className="px-5 py-4 text-right text-purple-400/80 group-hover:text-purple-400 font-bold tabular-nums">
-                    {(m.goalSaving ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.goalSaving ?? 0).toLocaleString()}
                   </td>
                   <td className="px-5 py-4 text-right text-cyan-400/80 group-hover:text-cyan-400 font-bold tabular-nums">
-                    {(m.invest ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.invest ?? 0).toLocaleString()}
                   </td>
                   <td className="px-5 py-4 text-right text-amber-400/80 group-hover:text-amber-400 font-bold tabular-nums">
-                    {(m.debt ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.debt ?? 0).toLocaleString()}
                   </td>
                   <td className={`px-5 py-4 text-right font-black tabular-nums bg-blue-600/5 ${(m.net ?? 0) >= 0 ? 'text-blue-400' : 'text-rose-400'}`}>
-                    {(m.net ?? 0).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}
+                    {(m.net ?? 0).toLocaleString()}
                   </td>
                 </tr>
               ))}
@@ -427,14 +428,13 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
         </div>
       )}
       {(cashflowMode === 'chart' || cashflowMode === 'both') && (
-        <div className={`min-h-[450px] bg-slate-900/30 p-8 rounded-[2rem] border border-white/5 flex flex-col ${cashflowMode === 'both' ? 'xl:w-2/5' : 'w-full'}`}>
+        <div className={`min-h-[450px] bg-black/20 p-8 rounded-[2rem] border border-white/5 flex flex-col ${cashflowMode === 'both' ? 'xl:w-2/5' : 'w-full'}`}>
            <div className="flex items-center justify-between mb-8">
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Flow Distribution</h3>
-              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5">
+              <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 shadow-inner">
                  <select 
                    value={visualMonth} 
                    onChange={(e) => onVisualMonthChange(parseInt(e.target.value))} 
-                   data-testid="dashboard-cashflow-sel-month"
                    className="bg-transparent border-none text-[10px] font-black text-blue-400 p-0 focus:ring-0 appearance-none text-center"
                  >
                    {MONTHS.map((m, i) => (<option key={i} value={i} className="bg-slate-900">{m.substring(0, 3)}</option>))}
@@ -443,7 +443,6 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
                  <select 
                    value={visualYear} 
                    onChange={(e) => onVisualYearChange(parseInt(e.target.value))} 
-                   data-testid="dashboard-cashflow-sel-year"
                    className="bg-transparent border-none text-[10px] font-black text-slate-500 p-0 focus:ring-0 appearance-none text-center"
                  >
                    {YEARS.map(y => (<option key={y} value={y} className="bg-slate-900">{y}</option>))}
@@ -472,12 +471,11 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
                       </Pie>
                       <Tooltip 
                         formatter={(value: any) => `฿${value.toLocaleString()}`} 
-                        contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)', boxShadow: '0 20px 25px -5px rgb(0 0 0 / 0.5)' }} 
+                        contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }} 
                         itemStyle={{ color: '#fff', fontSize: '12px', fontWeight: 'bold' }}
                       />
                     </PieChart>
                   </ResponsiveContainer>
-                  {/* Central Indicator */}
                   <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
                     <span className="text-[9px] font-black text-slate-500 uppercase tracking-widest mb-1">Net Flow</span>
                     <span className="text-2xl font-black text-white tabular-nums tracking-tighter">
@@ -487,7 +485,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
                </div>
                <div className="w-full grid grid-cols-1 gap-2">
                   {pieData.map((item: any, idx: number) => (
-                     <div key={idx} className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all">
+                     <div key={idx} className="flex items-center justify-between gap-4 p-3.5 rounded-2xl bg-white/5 border border-white/5 hover:border-white/10 transition-all shadow-lg">
                         <div className="flex items-center gap-3 overflow-hidden">
                           <div className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
                           <span className="text-[10px] font-black text-slate-400 uppercase tracking-wider truncate">{item.name}</span>
@@ -500,7 +498,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
            ) : (
              <div className="flex-1 flex flex-col items-center justify-center bg-black/20 rounded-3xl border border-dashed border-white/10">
                <Info className="w-10 h-10 text-slate-700 mb-3" />
-               <p className="text-slate-500 text-xs font-black uppercase tracking-widest">No data for {MONTHS[visualMonth]} {visualYear}</p>
+               <p className="text-slate-500 text-xs font-black uppercase tracking-widest">No data detected</p>
              </div>
            )}
         </div>
@@ -510,7 +508,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, visualMonth, vis
 );
 
 const GoalTrackingCard = ({ stats }: any) => (
-  <div className="bg-slate-900/40 dark:bg-slate-950/40 backdrop-blur-xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+  <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
     <div className="flex items-center justify-between mb-10">
       <div className="flex items-center gap-4">
         <div className="p-3.5 bg-purple-600 rounded-2xl text-white shadow-xl shadow-purple-600/20 ring-1 ring-white/20">
@@ -521,7 +519,7 @@ const GoalTrackingCard = ({ stats }: any) => (
           <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] mt-1.5">Asset Growth Tracking</p>
         </div>
       </div>
-      <div className="px-4 py-2 bg-purple-500/10 rounded-2xl border border-purple-500/20">
+      <div className="px-4 py-2 bg-purple-500/10 rounded-2xl border border-purple-500/20 shadow-inner">
         <span className="text-[10px] font-black text-purple-400 uppercase tracking-widest">
           {stats?.goalTracking?.length || 0} Targets Active
         </span>
@@ -529,10 +527,9 @@ const GoalTrackingCard = ({ stats }: any) => (
     </div>
 
     {stats?.goalTracking?.length > 0 ? (
-      <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
         {stats.goalTracking.map((goal: any) => (
           <div key={goal.id} className="group relative p-8 min-h-[240px] rounded-[2.5rem] bg-white/[0.03] border border-white/5 hover:border-purple-500/30 transition-all duration-500 hover:translate-y-[-4px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex flex-col justify-between overflow-hidden">
-            {/* Top Accent Line */}
             <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <div className="flex justify-between items-start mb-6">
@@ -540,7 +537,7 @@ const GoalTrackingCard = ({ stats }: any) => (
                 <h3 className="text-sm font-black text-slate-300 group-hover:text-white transition-colors leading-tight mb-1">{goal.name}</h3>
                 <span className="text-[8px] font-black text-purple-500/80 uppercase tracking-widest">Asset Goal</span>
               </div>
-              <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.6)]" />
+              <div className="w-2.5 h-2.5 rounded-full bg-purple-500 shadow-[0_0_12px_rgba(168,85,247,0.6)] animate-pulse" />
             </div>
             
             <div className="space-y-5">
@@ -562,10 +559,10 @@ const GoalTrackingCard = ({ stats }: any) => (
                 </div>
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-1.5">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 shadow-lg shadow-emerald-500/20" />
                     <span className="text-[9px] font-black text-slate-600 uppercase">Tracked</span>
                   </div>
-                  <span className="text-[10px] font-black text-purple-400 uppercase tracking-wider animate-pulse">On Track</span>
+                  <span className="text-[10px] font-black text-purple-400 uppercase tracking-wider">Active</span>
                 </div>
               </div>
             </div>
@@ -574,7 +571,7 @@ const GoalTrackingCard = ({ stats }: any) => (
       </div>
     ) : (
       <div className="flex-1 flex flex-col items-center justify-center py-16 bg-black/20 rounded-[2.5rem] border border-dashed border-white/10">
-        <div className="p-4 bg-slate-900 rounded-2xl mb-4 border border-white/5">
+        <div className="p-4 bg-slate-900 rounded-2xl mb-4 border border-white/5 shadow-inner">
           <Info className="w-8 h-8 text-slate-600" />
         </div>
         <p className="text-slate-500 text-xs font-black uppercase tracking-[0.2em]">No active milestones detected</p>

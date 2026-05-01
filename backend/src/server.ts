@@ -36,6 +36,14 @@ const buildServer = async (): Promise<FastifyInstance> => {
   });
 
   // Health Check Route
+  server.get('/', async () => {
+    return { 
+      message: 'Nexworth API is online!',
+      status: 'stable',
+      version: '2.6.0-PRO'
+    };
+  });
+
   server.get('/health', async () => {
     return { status: 'ok' };
   });
@@ -68,6 +76,9 @@ const buildServer = async (): Promise<FastifyInstance> => {
   const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes.js')).default;
   server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
 
+  const aiRoutes = (await import('./routes/ai.routes.js')).default;
+  server.register(aiRoutes, { prefix: '/api/v1/ai' });
+
   const organizationRoutes = (await import('./routes/organization.routes.js')).default;
   server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
 
@@ -80,6 +91,14 @@ const start = async () => {
   try {
     await server.listen({ port, host: '0.0.0.0' });
     console.log(`Server listening on port ${port}`);
+
+    // Start Discord Bot in parallel (don't await so server can finish starting)
+    if (!config.isStaging) {
+      console.log('--- Starting Discord Agent Bot ---');
+      import('./services/discordBot.js').catch(err => {
+        console.error('Failed to start Discord Bot:', err);
+      });
+    }
   } catch (err) {
     server.log.error(err);
     process.exit(1);
