@@ -163,17 +163,17 @@ const WelcomeCard = ({ user, stats, loading }: { user: any; stats: any; loading:
     
     <div className="relative z-10 grid grid-cols-2 gap-4 flex-1">
       {[
-        { label: 'Real Assets', value: stats?.summary?.totalAssets, icon: Wallet, color: 'from-blue-500/10 to-blue-600/5', text: 'text-blue-400', border: 'border-blue-500/20' },
-        { label: 'Goal Money', value: stats?.summary?.totalGoalAssets, icon: Target, color: 'from-purple-500/10 to-purple-600/5', text: 'text-purple-400', border: 'border-purple-500/20' },
-        { label: 'Liabilities', value: stats?.summary?.totalLiabilities, icon: CreditCard, color: 'from-rose-500/10 to-rose-600/5', text: 'text-rose-400', border: 'border-rose-500/20' },
-        { label: 'Net Worth', value: stats?.summary?.netWorth, icon: ShieldCheck, color: 'from-emerald-500/10 to-emerald-600/5', text: 'text-emerald-400', border: 'border-emerald-500/20' }
+        { key: 'assets', label: 'Real Assets', value: stats?.summary?.totalAssets, icon: Wallet, color: 'from-blue-500/10 to-blue-600/5', text: 'text-blue-400', border: 'border-blue-500/20' },
+        { key: 'goal-assets', label: 'Goal Money', value: stats?.summary?.totalGoalAssets, icon: Target, color: 'from-purple-500/10 to-purple-600/5', text: 'text-purple-400', border: 'border-purple-500/20' },
+        { key: 'liabilities', label: 'Liabilities', value: stats?.summary?.totalLiabilities, icon: CreditCard, color: 'from-rose-500/10 to-rose-600/5', text: 'text-rose-400', border: 'border-rose-500/20' },
+        { key: 'net-worth', label: 'Net Worth', value: stats?.summary?.netWorth, icon: ShieldCheck, color: 'from-emerald-500/10 to-emerald-600/5', text: 'text-emerald-400', border: 'border-emerald-500/20' }
       ].map((item, idx) => (
-        <div key={idx} className={`bg-gradient-to-br ${item.color} p-5 rounded-3xl border ${item.border} flex flex-col justify-between hover:scale-[1.02] transition-all duration-500 shadow-xl shadow-black/20`}>
+        <div key={idx} className={`bg-gradient-to-br ${item.color} p-5 rounded-3xl border ${item.border} flex flex-col justify-between hover:scale-[1.02] transition-all duration-500 shadow-xl shadow-black/20`} data-testid={`dashboard-summary-card-${item.key}`}>
           <div className="flex items-center justify-between mb-2">
             <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>
             <div className={`p-1.5 rounded-lg bg-black/40 ${item.text}`}><item.icon className="w-3.5 h-3.5" /></div>
           </div>
-          <p className="text-xl font-black text-white tabular-nums leading-none tracking-tighter">
+          <p className="text-xl font-black text-white tabular-nums leading-none tracking-tighter" data-testid={`dashboard-summary-val-${item.key}`}>
             {loading ? '...' : `${stats?.currency || '฿'}${(item.value ?? 0).toLocaleString()}`}
           </p>
         </div>
@@ -316,7 +316,7 @@ const MetricCard = ({
 
     <div className="relative z-10 mb-8">
       <div className="flex items-baseline gap-1">
-        <span className="text-2xl font-black text-white tracking-tighter tabular-nums leading-none">
+        <span className="text-2xl font-black text-white tracking-tighter tabular-nums leading-none" data-testid={`dashboard-metric-val-${label.toLowerCase().replace(/\s+/g, '-')}`}>
           {loading ? '...' : value}
         </span>
       </div>
