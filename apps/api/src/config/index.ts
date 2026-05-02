@@ -9,14 +9,16 @@ import * as dotenv from 'dotenv';
 // ============================================================
 const nodeEnv = process.env.NODE_ENV || 'local';
 const envFile = `.env.${nodeEnv}`;
-// Try loading from current dir and parent dir (monorepo root fallback)
-dotenv.config({ path: envFile, override: true });
-dotenv.config({ path: `../../${envFile}`, override: true });
-console.log(`[Config] Environment: ${nodeEnv} | Checked: ${envFile} and ../../${envFile}`);
+// Only load dotenv if not on Render (Render uses Dashboard env vars)
+if (!process.env.RENDER) {
+  dotenv.config({ path: envFile });
+  dotenv.config({ path: `../../${envFile}` });
+}
+console.log(`[Config] Environment: ${nodeEnv} | RENDER: ${!!process.env.RENDER}`);
 
-const isLocal = nodeEnv === 'local';
+const isLocal = nodeEnv === 'local' && !process.env.RENDER;
 const isStaging = nodeEnv === 'staging';
-const isProduction = nodeEnv === 'production';
+const isProduction = nodeEnv === 'production' || !!process.env.RENDER;
 
 export const config = {
   // --- Core ---

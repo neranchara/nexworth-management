@@ -14,7 +14,7 @@ const buildServer = async (): Promise<FastifyInstance> => {
   await server.register(cors, {
     origin: config.cors.origin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
     credentials: config.cors.credentials
   });
   await server.register(fastifyJwt, {
