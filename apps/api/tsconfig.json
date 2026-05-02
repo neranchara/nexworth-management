@@ -8,5 +8,14 @@
     "ignoreDeprecations": "6.0"
   },
   "include": ["src/**/*.ts", "../../packages/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/tests", "../../packages/**/node_modules"]
+  "exclude": [
+    "node_modules",
+    "dist",
+    "src/tests",
+    "../../packages/**/node_modules",
+    "**/*.test.ts",
+    "**/*.spec.ts",
+    "../../packages/**/*.test.ts",
+    "../../packages/**/*.spec.ts"
+  ]
 }
