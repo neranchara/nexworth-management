@@ -1,11 +1,11 @@
-import { config } from './config/index.js'; // MUST BE FIRST
+import { config } from './config/index'; // MUST BE FIRST
 import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRawBody from 'fastify-raw-body';
-import authRoutes from './routes/auth.routes.js';
-import userRoutes from './routes/user.routes.js';
-import transactionRoutes from './routes/transaction.routes.js';
+import authRoutes from './routes/auth.routes';
+import userRoutes from './routes/user.routes';
+import transactionRoutes from './routes/transaction.routes';
 
 const buildServer = async (): Promise<FastifyInstance> => {
   const server = Fastify({ logger: true });
@@ -40,51 +40,51 @@ const buildServer = async (): Promise<FastifyInstance> => {
   });
 
   // Health Check Route
-  server.get('/', async () => {
-    return { 
-      message: 'Nexworth API is online!',
-      status: 'stable',
-      version: '3.0.0'
-    };
-  });
+    server.get('/', async () => {
+      return { 
+        message: 'Nexworth API is online!',
+        status: 'stable',
+        version: '3.0.1'
+      };
+    });
 
   server.get('/health', async () => {
     return { status: 'ok' };
   });
 
-  // API Routes
-  server.register(authRoutes, { prefix: '/api/v1/auth' });
-  server.register(userRoutes, { prefix: '/api/v1' });
+    // API Routes
+    await server.register(authRoutes, { prefix: '/api/v1/auth' });
+    await server.register(userRoutes, { prefix: '/api/v1' });
+    
+    const bankRoutes = (await import('./routes/bank.routes')).default;
+    const accountRoutes = (await import('./routes/account.routes')).default;
+    const categoryRoutes = (await import('./routes/category.routes')).default;
+    
+    const dashboardRoutes = (await import('./routes/dashboard.routes')).default;
+    const { loanRoutes } = await import('./routes/loan.routes');
+    const typeRoutes = (await import('./routes/type.routes')).default;
+    const permissionRoutes = (await import('./routes/permission.routes')).default;
   
-  const bankRoutes = (await import('./routes/bank.routes.js')).default;
-  const accountRoutes = (await import('./routes/account.routes.js')).default;
-  const categoryRoutes = (await import('./routes/category.routes.js')).default;
+    const financialRecordRoutes = (await import('./routes/financial-record.routes')).default;
   
-  const dashboardRoutes = (await import('./routes/dashboard.routes.js')).default;
-  const { loanRoutes } = await import('./routes/loan.routes.js');
-  const typeRoutes = (await import('./routes/type.routes.js')).default;
-  const permissionRoutes = (await import('./routes/permission.routes.js')).default;
-
-  const financialRecordRoutes = (await import('./routes/financial-record.routes.js')).default;
-
-  server.register(bankRoutes, { prefix: '/api/v1' });
-  server.register(accountRoutes, { prefix: '/api/v1' });
-  server.register(typeRoutes, { prefix: '/api/v1' });
-  server.register(categoryRoutes, { prefix: '/api/v1' });
-  server.register(transactionRoutes, { prefix: '/api/v1' });
-  server.register(permissionRoutes, { prefix: '/api/v1' });
-  server.register(financialRecordRoutes, { prefix: '/api/v1' });
-  server.register(dashboardRoutes, { prefix: '/api/v1/dashboard' });
-  server.register(loanRoutes, { prefix: '/api/v1/loans' });
+    await server.register(bankRoutes, { prefix: '/api/v1' });
+    await server.register(accountRoutes, { prefix: '/api/v1' });
+    await server.register(typeRoutes, { prefix: '/api/v1' });
+    await server.register(categoryRoutes, { prefix: '/api/v1' });
+    await server.register(transactionRoutes, { prefix: '/api/v1' });
+    await server.register(permissionRoutes, { prefix: '/api/v1' });
+    await server.register(financialRecordRoutes, { prefix: '/api/v1' });
+    await server.register(dashboardRoutes, { prefix: '/api/v1/dashboard' });
+    await server.register(loanRoutes, { prefix: '/api/v1/loans' });
+    
+    const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes')).default;
+    await server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
   
-  const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes.js')).default;
-  server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
-
-  const aiRoutes = (await import('./routes/ai.routes.js')).default;
-  server.register(aiRoutes, { prefix: '/api/v1/ai' });
-
-  const organizationRoutes = (await import('./routes/organization.routes.js')).default;
-  server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
+    const aiRoutes = (await import('./routes/ai.routes')).default;
+    await server.register(aiRoutes, { prefix: '/api/v1/ai' });
+  
+    const organizationRoutes = (await import('./routes/organization.routes')).default;
+    await server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
 
   return server;
 };
