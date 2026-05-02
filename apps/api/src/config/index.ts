@@ -42,6 +42,7 @@ export const config = {
       : [
           'https://nexworth.online',
           'https://www.nexworth.online',
+          'https://nexworth-management.onrender.com',
           'https://nexworth-api-service.onrender.com'
         ],
     credentials: true,
