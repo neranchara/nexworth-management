@@ -9,10 +9,6 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "ignoreDeprecations": "6.0",
-    "paths": {
-      "@nexworth/database": ["./packages/database/index.ts"],
-      "@nexworth/ai-engine": ["./packages/ai-engine/src/index.ts"]
-    },
     "types": ["node"]
   },
   "exclude": ["node_modules", "dist"]
