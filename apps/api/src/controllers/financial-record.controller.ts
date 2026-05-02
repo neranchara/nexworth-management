@@ -23,12 +23,12 @@ export const listFinancialRecordsHandler = async (request: FastifyRequest, reply
       const isLiability = type === 'LIABILITY';
       const records = isLiability 
         ? await prisma.liability.findMany({
-            where: { organizationId: user.organizationId },
+            where: { account: { organizationId: user.organizationId } },
             include: { account: { include: { bank: true } } },
             orderBy: { account: { name: 'asc' } }
           })
         : await prisma.asset.findMany({
-            where: { organizationId: user.organizationId },
+            where: { account: { organizationId: user.organizationId } },
             include: { account: { include: { bank: true } } },
             orderBy: { account: { name: 'asc' } }
           });
@@ -105,7 +105,6 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
             accountId: targetAccountId,
             amount: amount,
             userId: user.sub,
-            organizationId: user.organizationId
           },
           include: { account: { include: { bank: true } } }
         });
@@ -117,7 +116,6 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
             accountId: targetAccountId,
             amount: amount,
             userId: user.sub,
-            organizationId: user.organizationId
           },
           include: { account: { include: { bank: true } } }
         });
@@ -241,10 +239,10 @@ export const deleteFinancialRecordHandler = async (request: FastifyRequest, repl
       // Deleting a real-time record means removing the tracking entry (Asset/Liability)
       // but keeping the master Account record intact.
       const assetDeleted = await prisma.asset.deleteMany({
-        where: { accountId, organizationId: user.organizationId }
+        where: { accountId, account: { organizationId: user.organizationId } }
       });
       const liabilityDeleted = await prisma.liability.deleteMany({
-        where: { accountId, organizationId: user.organizationId }
+        where: { accountId, account: { organizationId: user.organizationId } }
       });
 
       if (assetDeleted.count === 0 && liabilityDeleted.count === 0) {
