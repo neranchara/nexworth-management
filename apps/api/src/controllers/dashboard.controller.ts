@@ -4,6 +4,7 @@ import { prisma } from '../lib/prisma';
 export const getDashboardStatsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as { sub: string, organizationId: string, email: string, isSystemAdmin?: boolean, orgName?: string };
+    request.log.info({ user: user.email, orgId: user.organizationId }, '🚀 [DEBUG] Dashboard Stats Request Received!');
     const query = request.query as { year?: string, month?: string };
     
     const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
