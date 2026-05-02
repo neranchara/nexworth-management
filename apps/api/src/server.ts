@@ -78,7 +78,10 @@ const buildServer = async (): Promise<FastifyInstance> => {
     await server.register(loanRoutes, { prefix: '/api/v1/loans' });
     
     const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes')).default;
-    await server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
+    await server.register(lineWebhookRoutes, { 
+      prefix: '/api/webhook/line',
+      config: { rawBody: true } // Enable rawBody for LINE signature verification
+    });
   
     const aiRoutes = (await import('./routes/ai.routes')).default;
     await server.register(aiRoutes, { prefix: '/api/v1/ai' });

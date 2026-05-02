@@ -24,15 +24,17 @@ const verifySignature = (body: string, signature: string) => {
 
 export const handleWebhook = async (request: FastifyRequest, reply: FastifyReply) => {
   const signature = request.headers['x-line-signature'] as string;
-  
+  request.log.info({ headers: request.headers, hasRawBody: !!request.rawBody }, '📥 LINE Webhook Received');
+
   if (channelSecret && signature && request.rawBody) {
     if (!verifySignature(request.rawBody as string, signature)) {
-      request.log.error('LINE webhook signature validation failed');
+      request.log.error({ signature, channelSecret: !!channelSecret }, '❌ LINE webhook signature validation failed');
       return reply.status(401).send('Unauthorized');
     }
   }
 
   const body = request.body as webhook.CallbackRequest;
+  request.log.info({ eventCount: body.events?.length || 0 }, '📦 LINE Webhook Body Parsed');
 
   if (!body.events || body.events.length === 0) {
     return reply.status(200).send('OK');
