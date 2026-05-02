@@ -1,7 +1,7 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "declaration": true,
     "strict": true,
@@ -9,7 +9,11 @@
     "skipLibCheck": true,
     "forceConsistentCasingInFileNames": true,
     "ignoreDeprecations": "6.0",
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@nexworth/database": ["./packages/database/index.ts"],
+      "@nexworth/ai-engine": ["./packages/ai-engine/src/index.ts"]
+    }
   },
   "exclude": ["node_modules", "dist"]
 }

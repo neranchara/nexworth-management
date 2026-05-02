@@ -9,8 +9,10 @@ import * as dotenv from 'dotenv';
 // ============================================================
 const nodeEnv = process.env.NODE_ENV || 'local';
 const envFile = `.env.${nodeEnv}`;
+// Try loading from current dir and parent dir (monorepo root fallback)
 dotenv.config({ path: envFile, override: true });
-console.log(`[Config] Environment: ${nodeEnv} | Loaded: ${envFile}`);
+dotenv.config({ path: `../../${envFile}`, override: true });
+console.log(`[Config] Environment: ${nodeEnv} | Checked: ${envFile} and ../../${envFile}`);
 
 const isLocal = nodeEnv === 'local';
 const isStaging = nodeEnv === 'staging';
@@ -35,7 +37,11 @@ export const config = {
     // Production: restrict to specific domains from env var
     origin: (isLocal || isStaging)
       ? true
-      : (process.env.CORS_ORIGIN?.split(',') || ['https://nexworth.online']),
+      : [
+          'https://nexworth.online',
+          'https://www.nexworth.online',
+          'https://nexworth-api-service.onrender.com'
+        ],
     credentials: true,
   },
 

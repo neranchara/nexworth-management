@@ -2,11 +2,11 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "outDir": "./dist",
-    "rootDir": "./src",
-    "module": "ESNext",
+    "rootDir": "../../",
+    "module": "CommonJS",
     "moduleResolution": "node",
     "ignoreDeprecations": "6.0"
   },
-  "include": ["src/**/*.ts"],
-  "exclude": ["node_modules", "dist", "src/tests"]
+  "include": ["src/**/*.ts", "../../packages/**/*.ts"],
+  "exclude": ["node_modules", "dist", "src/tests", "../../packages/**/node_modules"]
 }

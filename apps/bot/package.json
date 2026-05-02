@@ -2,11 +2,10 @@
   "name": "@nexworth/bot",
   "version": "1.0.0",
   "private": true,
-  "type": "module",
   "scripts": {
     "dev": "cross-env NODE_ENV=local tsx watch src/server.ts",
     "build": "tsc",
-    "start": "node dist/server.js",
+    "start": "node dist/apps/bot/src/server.js",
     "test": "vitest run"
   },
   "dependencies": {
