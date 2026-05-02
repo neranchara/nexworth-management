@@ -2,7 +2,7 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { updateRoleHandler } from '../controllers/permission.controller.js';
 import { prisma } from '@nexworth/database';
 
-vi.mock('../lib/prisma.js', () => ({
+vi.mock('@nexworth/database', () => ({
   prisma: {
     role: {
       findUnique: vi.fn(),
@@ -18,6 +18,11 @@ describe('Permission Management Logic Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRequest = {
+      log: { error: vi.fn() },
+      query: {},
+      user: {}
+    };
     mockReply = {
       status: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
@@ -25,12 +30,9 @@ describe('Permission Management Logic Tests', () => {
   });
 
   it('should allow System Admin to update role in a different organization', async () => {
-    mockRequest = {
-      user: { isSystemAdmin: true, organizationId: 'sys-org-id', orgName: 'System Management' },
-      params: { roleId: 'other-org-role-id' },
-      body: { name: 'Updated Role' },
-      log: { error: vi.fn() }
-    };
+    mockRequest.user = { isSystemAdmin: true, organizationId: 'sys-org-id', orgName: 'System Management' };
+    mockRequest.params = { roleId: 'other-org-role-id' };
+    mockRequest.body = { name: 'Updated Role' };
 
     (prisma.role.findFirst as any).mockResolvedValue({
       id: 'other-org-role-id',
@@ -45,12 +47,9 @@ describe('Permission Management Logic Tests', () => {
   });
 
   it('should prevent Normal Admin from updating role in a different organization', async () => {
-    mockRequest = {
-      user: { isSystemAdmin: false, organizationId: 'org-a-id', orgName: 'Org A' },
-      params: { roleId: 'org-b-role-id' },
-      body: { name: 'Hacked Role' },
-      log: { error: vi.fn() }
-    };
+    mockRequest.user = { isSystemAdmin: false, organizationId: 'org-a-id', orgName: 'Org A' };
+    mockRequest.params = { roleId: 'org-b-role-id' };
+    mockRequest.body = { name: 'Hacked Role' };
 
     (prisma.role.findFirst as any).mockResolvedValue(null);
 

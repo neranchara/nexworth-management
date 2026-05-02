@@ -2,12 +2,13 @@ import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { listUsersHandler } from '../controllers/user.controller.js';
 import { prisma } from '@nexworth/database';
 
-// Mock Prisma
-vi.mock('../lib/prisma.js', () => ({
+// Mock Prisma from the database package
+vi.mock('@nexworth/database', () => ({
   prisma: {
     user: {
       findMany: vi.fn(),
       update: vi.fn(),
+      findUnique: vi.fn(),
     },
   },
 }));
@@ -18,6 +19,11 @@ describe('User Management Logic Tests', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    mockRequest = {
+      log: { error: vi.fn() },
+      query: {},
+      user: {}
+    };
     mockReply = {
       status: vi.fn().mockReturnThis(),
       send: vi.fn().mockReturnThis(),
