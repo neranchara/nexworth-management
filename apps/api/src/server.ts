@@ -10,8 +10,13 @@ import transactionRoutes from './routes/transaction.routes';
 const buildServer = async (): Promise<FastifyInstance> => {
   const server = Fastify({ logger: true });
 
-  // Plugins
-  // Register CORS correctly to handle preflight automatically
+  await server.register(fastifyRawBody, {
+    field: 'rawBody',
+    global: true, // Let's make it global to be safe for now
+    encoding: 'utf8',
+    runFirst: true
+  });
+
   await server.register(cors, {
     origin: config.cors.origin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
@@ -23,12 +28,6 @@ const buildServer = async (): Promise<FastifyInstance> => {
 
   await server.register(fastifyJwt, {
     secret: config.jwtSecret
-  });
-  await server.register(fastifyRawBody, {
-    field: 'rawBody',
-    global: false,
-    encoding: 'utf8',
-    runFirst: true
   });
 
   const fastifyRateLimit = (await import('@fastify/rate-limit')).default;
@@ -77,12 +76,6 @@ const buildServer = async (): Promise<FastifyInstance> => {
     await server.register(dashboardRoutes, { prefix: '/api/v1/dashboard' });
     await server.register(loanRoutes, { prefix: '/api/v1/loans' });
     
-    const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes')).default;
-    await server.register(lineWebhookRoutes, { 
-      prefix: '/api/webhook/line',
-      config: { rawBody: true } // Enable rawBody for LINE signature verification
-    });
-  
     const aiRoutes = (await import('./routes/ai.routes')).default;
     await server.register(aiRoutes, { prefix: '/api/v1/ai' });
   

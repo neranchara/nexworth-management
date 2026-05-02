@@ -3,28 +3,27 @@ import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRawBody from 'fastify-raw-body';
-import authRoutes from './routes/auth.routes.js';
-import userRoutes from './routes/user.routes.js';
-import transactionRoutes from './routes/transaction.routes.js';
 
 const buildServer = async (): Promise<FastifyInstance> => {
   const server = Fastify({ logger: true });
 
   // Plugins
+  await server.register(fastifyRawBody, {
+    field: 'rawBody',
+    global: true,
+    encoding: 'utf8',
+    runFirst: true
+  });
+
   await server.register(cors, {
     origin: config.cors.origin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization'],
     credentials: config.cors.credentials
   });
+
   await server.register(fastifyJwt, {
     secret: config.jwtSecret
-  });
-  await server.register(fastifyRawBody, {
-    field: 'rawBody',
-    global: false,
-    encoding: 'utf8',
-    runFirst: true
   });
 
   const fastifyRateLimit = (await import('@fastify/rate-limit')).default;
@@ -38,9 +37,9 @@ const buildServer = async (): Promise<FastifyInstance> => {
   // Health Check Route
   server.get('/', async () => {
     return { 
-      message: 'Nexworth API is online!',
+      message: 'Nexworth Bot API is online!',
       status: 'stable',
-      version: '3.0.0'
+      version: '3.0.1'
     };
   });
 
@@ -50,13 +49,13 @@ const buildServer = async (): Promise<FastifyInstance> => {
 
   // ONLY Bot Routes
   const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes.js')).default;
-  server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
+  await server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
   
   const aiRoutes = (await import('./routes/ai.routes.js')).default;
-  server.register(aiRoutes, { prefix: '/api/v1/ai' });
+  await server.register(aiRoutes, { prefix: '/api/v1/ai' });
 
   const organizationRoutes = (await import('./routes/organization.routes.js')).default;
-  server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
+  await server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
 
   return server;
 };
@@ -68,8 +67,7 @@ const start = async () => {
     await server.listen({ port, host: '0.0.0.0' });
     console.log(`Server listening on port ${port}`);
 
-    // Start Discord Bot in parallel (don't await so server can finish starting)
-    // ALWAYS Start Discord Bot for this service
+    // Start Discord Bot in parallel
     console.log('--- Starting Discord Agent Bot (Bot Service Mode) ---');
     import('./services/discordBot.js').catch(err => {
       console.error('Failed to start Discord Bot:', err);
