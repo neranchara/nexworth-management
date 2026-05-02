@@ -24,17 +24,30 @@ const verifySignature = (body: string, signature: string) => {
 
 export const handleWebhook = async (request: FastifyRequest, reply: FastifyReply) => {
   const signature = request.headers['x-line-signature'] as string;
-  request.log.info({ headers: request.headers, hasRawBody: !!request.rawBody }, '📥 LINE Webhook Received');
+  const body = request.body as webhook.CallbackRequest;
+  
+  // LOG EVERYTHING for debugging
+  request.log.info({ 
+    headers: request.headers, 
+    hasRawBody: !!request.rawBody,
+    eventCount: body.events?.length || 0,
+    firstEventType: body.events?.[0]?.type
+  }, '📥 [LINE-DEBUG] Webhook Event Received');
 
   if (channelSecret && signature && request.rawBody) {
     if (!verifySignature(request.rawBody as string, signature)) {
-      request.log.error({ signature, channelSecret: !!channelSecret }, '❌ LINE webhook signature validation failed');
+      request.log.error('❌ [LINE-DEBUG] Signature validation failed');
+      // Temporarily only log error but don't block during debugging if needed, 
+      // but for security we should block. Let's keep it blocking for now but with better logs.
       return reply.status(401).send('Unauthorized');
     }
+  } else {
+    request.log.warn({ 
+      hasSecret: !!channelSecret, 
+      hasSignature: !!signature, 
+      hasRawBody: !!request.rawBody 
+    }, '⚠️ [LINE-DEBUG] Missing verification components');
   }
-
-  const body = request.body as webhook.CallbackRequest;
-  request.log.info({ eventCount: body.events?.length || 0 }, '📦 LINE Webhook Body Parsed');
 
   if (!body.events || body.events.length === 0) {
     return reply.status(200).send('OK');
