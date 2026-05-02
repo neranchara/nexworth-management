@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 
 const transactionSchema = z.object({

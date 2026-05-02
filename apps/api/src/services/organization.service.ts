@@ -1,4 +1,4 @@
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 
 export const setupOrganizationDefaults = async (orgId: string, adminUserId: string) => {
   // 1. Roles

@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 import { authenticate } from './auth.middleware.js';
 
 export const requireRole = (allowedRoles: string[]) => {

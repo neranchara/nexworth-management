@@ -1,5 +1,5 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 
 export const authenticate = async (request: FastifyRequest, reply: FastifyReply) => {
   try {

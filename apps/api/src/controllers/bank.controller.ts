@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 
 const bankSchema = z.object({
   code: z.string().min(1).max(10),

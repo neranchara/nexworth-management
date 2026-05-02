@@ -1,6 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { messagingApi, webhook } from '@line/bot-sdk';
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 import * as aiExtractionService from '../services/aiExtractionService.js';
 import { adjustAccountBalance } from './transaction.controller.js';
 import * as crypto from 'crypto';
