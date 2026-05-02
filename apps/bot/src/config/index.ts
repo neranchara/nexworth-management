@@ -9,8 +9,13 @@ import * as dotenv from 'dotenv';
 // ============================================================
 const nodeEnv = process.env.NODE_ENV || 'local';
 const envFile = `.env.${nodeEnv}`;
-dotenv.config({ path: envFile });
-console.log(`[Config] Environment: ${nodeEnv} | Loaded: ${envFile}`);
+
+if (!process.env.DATABASE_URL) {
+  dotenv.config({ path: envFile });
+  console.log(`[Config] Environment: ${nodeEnv} | Loaded: ${envFile}`);
+} else {
+  console.log(`[Config] Environment: ${nodeEnv} | Using System Environment Variables`);
+}
 
 const isLocal = nodeEnv === 'local';
 const isStaging = nodeEnv === 'staging';
