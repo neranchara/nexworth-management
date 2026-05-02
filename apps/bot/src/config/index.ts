@@ -9,7 +9,7 @@ import * as dotenv from 'dotenv';
 // ============================================================
 const nodeEnv = process.env.NODE_ENV || 'local';
 const envFile = `.env.${nodeEnv}`;
-dotenv.config({ path: envFile, override: true });
+dotenv.config({ path: envFile });
 console.log(`[Config] Environment: ${nodeEnv} | Loaded: ${envFile}`);
 
 const isLocal = nodeEnv === 'local';

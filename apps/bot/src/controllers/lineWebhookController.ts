@@ -1,10 +1,10 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { messagingApi, webhook } from '@line/bot-sdk';
 import { prisma } from '../lib/prisma';
-import * as aiExtractionService from '../services/aiExtractionService.js';
-import { adjustAccountBalance } from './transaction.controller.js';
+import * as aiExtractionService from '../services/aiExtractionService';
+import { adjustAccountBalance } from './transaction.controller';
 import * as crypto from 'crypto';
-import { config } from '../config/index.js';
+import { config } from '../config/index';
 
 const channelAccessToken = config.line.channelAccessToken;
 const channelSecret = config.line.channelSecret;
