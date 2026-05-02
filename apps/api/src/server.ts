@@ -11,12 +11,20 @@ const buildServer = async (): Promise<FastifyInstance> => {
   const server = Fastify({ logger: true });
 
   // Plugins
+  // Register CORS first
   await server.register(cors, {
     origin: config.cors.origin,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'X-Requested-With'],
-    credentials: config.cors.credentials
+    credentials: config.cors.credentials,
+    preflight: true // Enable automatic preflight handling
   });
+
+  // Global OPTIONS handler as a fallback to prevent 404s
+  server.options('/*', async (request, reply) => {
+    return reply.status(204).send();
+  });
+
   await server.register(fastifyJwt, {
     secret: config.jwtSecret
   });

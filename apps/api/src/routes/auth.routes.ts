@@ -1,7 +1,7 @@
 import { FastifyInstance } from 'fastify';
-import { loginHandler, meHandler, logoutHandler, generateLinePairingCodeHandler } from '../controllers/auth.controller.js';
-import { authenticate } from '../middlewares/auth.middleware.js';
-import { config } from '../config/index.js';
+import { loginHandler, meHandler, logoutHandler, generateLinePairingCodeHandler } from '../controllers/auth.controller';
+import { authenticate } from '../middlewares/auth.middleware';
+import { config } from '../config/index';
 
 export default async function authRoutes(server: FastifyInstance) {
   server.post('/login', {
