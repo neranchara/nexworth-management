@@ -124,6 +124,8 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
     let recentExpenses = 0;
 
     for (const tx of transactions) {
+      if (!tx.type) continue; // Skip transactions without a type to prevent 500 error
+
       const txDate = new Date(tx.date);
       const amount = tx.amount;
       const behavior = tx.type.behavior;
@@ -132,7 +134,7 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
       // Current Year Cashflow
       if (txDate.getFullYear() === currentYear) {
         const mIdx = txDate.getMonth();
-        const accType = tx.account?.type || tx.asset?.account?.type || tx.liability?.account?.type;
+        const accType = tx.account?.type || tx.asset?.account?.type || tx.liability?.account?.type || 'UNKNOWN';
         
         const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName?.includes('โอน');
         

@@ -448,16 +448,16 @@ const pushToUser = async (to: string, text: string) => {
 
 const getLineContent = async (messageId: string): Promise<Buffer | null> => {
   try {
-    const response = await fetch(`https://api-data.line.me/v2/bot/message/${messageId}/content`, {
+    const axios = (await import('axios')).default;
+    const response = await axios.get(`https://api-data.line.me/v2/bot/message/${messageId}/content`, {
       headers: {
         Authorization: `Bearer ${channelAccessToken}`
-      }
+      },
+      responseType: 'arraybuffer'
     });
-    if (!response.ok) return null;
-    const arrayBuffer = await response.arrayBuffer();
-    return Buffer.from(arrayBuffer);
-  } catch (e) {
-    console.error('LINE Content Fetch Error:', e);
+    return Buffer.from(response.data);
+  } catch (e: any) {
+    console.error('LINE Content Fetch Error:', e.response?.data || e.message);
     return null;
   }
 };
