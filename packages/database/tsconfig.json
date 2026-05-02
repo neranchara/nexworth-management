@@ -3,6 +3,7 @@
   "compilerOptions": {
     "outDir": "./dist",
     "rootDir": ".",
+    "moduleResolution": "node16",
     "ignoreDeprecations": "6.0"
   },
   "include": ["index.ts", "seed.ts"],
