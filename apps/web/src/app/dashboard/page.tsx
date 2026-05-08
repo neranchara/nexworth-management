@@ -8,7 +8,8 @@ import Link from 'next/link';
 import { 
   TrendingUp, Activity, CreditCard, ShieldCheck, 
   Calendar, Layers, Table, BarChart2, Info, ChevronRight,
-  Building2, Target, Wallet, Check, Eye, EyeOff, Layout, Settings2 
+  Building2, Target, Wallet, Check, Eye, EyeOff, Layout, Settings2,
+  PieChart as PieChartIcon
 } from 'lucide-react';
 import { 
   BarChart, 
@@ -21,7 +22,9 @@ import {
   ResponsiveContainer,
   PieChart,
   Pie,
-  Cell
+  Cell,
+  AreaChart,
+  Area
 } from 'recharts';
 import { usePermissions } from '@/hooks/usePermissions';
 import type { GridItemConfig } from '@/components/DashboardGrid';
@@ -127,6 +130,8 @@ const YEARS = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i);
 const ALL_WIDGETS = [
   { key: 'welcome', label: 'Assets Summary', icon: Wallet },
   { key: 'health', label: 'Health Score', icon: ShieldCheck },
+  { key: 'portfolio', label: 'Portfolio Allocation', icon: PieChart },
+  { key: 'net-worth-trend', label: 'Net Worth Trend', icon: TrendingUp },
   { key: 'saving-rate', label: 'Saving Rate', icon: TrendingUp },
   { key: 'goal-rate', label: 'Goal Rate', icon: TrendingUp },
   { key: 'emergency-fund', label: 'Emergency Fund', icon: ShieldCheck },
@@ -271,6 +276,134 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
             {score >= 80 ? 'System Integrity: Optimal Balance' : score >= 50 ? 'Status: Steady Progress' : 'Warning: High Debt Exposure'}
           </p>
         </div>
+      </div>
+    </div>
+  );
+};
+
+const PortfolioAllocationCard = ({ assets, loading, currency }: any) => {
+  const chartData = useMemo(() => {
+    if (!assets || assets.length === 0) return [];
+    return assets.map((a: any, idx: number) => ({
+      name: a.name,
+      value: a.balance,
+      color: [`#3b82f6`, `#10b981`, `#8b5cf6`, `#f59e0b`, `#ec4899`, `#06b6d4`][idx % 6]
+    }));
+  }, [assets]);
+
+  return (
+    <div className="relative overflow-hidden glass-card rounded-[2.5rem] p-8 h-full flex flex-col justify-between group animate-fade-in-up stagger-2" data-testid="dashboard-portfolio-container">
+      <div className="relative z-10 w-full flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-xl font-black text-white tracking-tight leading-none" data-testid="dashboard-portfolio-hdr">Asset Allocation</h2>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1.5">Portfolio Distribution</p>
+        </div>
+        <div className="p-3 rounded-2xl bg-black/40 border border-white/10 shadow-xl text-blue-400">
+          <PieChartIcon className="w-5 h-5" />
+        </div>
+      </div>
+
+      <div className="relative z-10 flex flex-col md:flex-row items-center gap-8 flex-1">
+        <div className="w-full md:w-1/2 aspect-square max-w-[180px] relative">
+          <ResponsiveContainer width="100%" height="100%">
+            <PieChart>
+              <Pie
+                data={chartData.length > 0 ? chartData : [{ name: 'Empty', value: 1, color: 'rgba(255,255,255,0.05)' }]}
+                cx="50%"
+                cy="50%"
+                innerRadius={60}
+                outerRadius={80}
+                paddingAngle={5}
+                dataKey="value"
+                stroke="none"
+                cornerRadius={12}
+              >
+                {chartData.map((entry: any, index: number) => (
+                  <Cell key={`cell-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <Tooltip 
+                formatter={(val: any) => `${currency}${val.toLocaleString()}`}
+                contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}
+                itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}
+              />
+            </PieChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="flex-1 w-full space-y-2.5 max-h-[180px] overflow-y-auto custom-scrollbar pr-2">
+          {chartData.map((item: any, idx: number) => (
+            <div key={idx} className="flex items-center justify-between gap-3 p-3 rounded-2xl bg-black/20 border border-white/5 hover:border-white/10 transition-all">
+              <div className="flex items-center gap-2.5 overflow-hidden">
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: item.color }} />
+                <span className="text-[10px] font-black text-slate-400 uppercase tracking-wide truncate">{item.name}</span>
+              </div>
+              <span className="text-[10px] font-black text-white tabular-nums">{currency}{item.value.toLocaleString()}</span>
+            </div>
+          ))}
+          {chartData.length === 0 && <p className="text-center text-slate-600 text-[10px] font-black uppercase tracking-widest py-4">No assets found</p>}
+        </div>
+      </div>
+    </div>
+  );
+};
+
+const NetWorthTrendCard = ({ monthlyCashflow, initialNetWorth, currency }: any) => {
+  const trendData = useMemo(() => {
+    let currentNW = initialNetWorth || 0;
+    return monthlyCashflow.map((m: any) => {
+      currentNW += m.net;
+      return {
+        month: m.month,
+        value: currentNW
+      };
+    });
+  }, [monthlyCashflow, initialNetWorth]);
+
+  return (
+    <div className="relative overflow-hidden glass-card rounded-[2.5rem] p-8 h-full flex flex-col group animate-fade-in-up stagger-3" data-testid="dashboard-trend-container">
+      <div className="relative z-10 w-full flex items-center justify-between mb-8">
+        <div>
+          <h2 className="text-xl font-black text-white tracking-tight leading-none" data-testid="dashboard-trend-hdr">Wealth Projection</h2>
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1.5">Net Worth Growth Trend</p>
+        </div>
+        <div className="p-3 rounded-2xl bg-black/40 border border-white/10 shadow-xl text-emerald-400">
+          <TrendingUp className="w-5 h-5" />
+        </div>
+      </div>
+
+      <div className="relative z-10 flex-1 min-h-[150px]">
+        <ResponsiveContainer width="100%" height="100%">
+          <AreaChart data={trendData}>
+            <defs>
+              <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
+            <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.03)" vertical={false} />
+            <XAxis 
+              dataKey="month" 
+              axisLine={false} 
+              tickLine={false} 
+              tick={{ fill: 'rgba(255,255,255,0.3)', fontSize: 9, fontWeight: 900 }} 
+            />
+            <YAxis hide />
+            <Tooltip 
+              formatter={(val: any) => `${currency}${val.toLocaleString()}`}
+              contentStyle={{ backgroundColor: 'rgba(15, 23, 42, 0.9)', borderRadius: '16px', border: '1px solid rgba(255,255,255,0.1)', backdropFilter: 'blur(12px)' }}
+              itemStyle={{ color: '#fff', fontSize: '10px', fontWeight: '900', textTransform: 'uppercase' }}
+            />
+            <Area 
+              type="monotone" 
+              dataKey="value" 
+              stroke="#10b981" 
+              strokeWidth={3} 
+              fillOpacity={1} 
+              fill="url(#colorValue)" 
+              animationDuration={2000}
+            />
+          </AreaChart>
+        </ResponsiveContainer>
       </div>
     </div>
   );
@@ -849,19 +982,23 @@ export default function DashboardPage() {
       { key: 'welcome', content: <WelcomeCard user={user} stats={stats} loading={loading} />, defaultLayout: { lg: { x: 0, y: 0, w: 6, h: 6, minW: 4, minH: 4 }, md: { x: 0, y: 0, w: 10, h: 6 }, sm: { x: 0, y: 0, w: 6, h: 7 } } },
       { key: 'health', content: <HealthCard stats={stats} loading={loading} healthData={healthData} />, defaultLayout: { lg: { x: 6, y: 0, w: 3, h: 6, minW: 3, minH: 4 }, md: { x: 0, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 7, w: 6, h: 5 } } },
       
-      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${((healthMetrics.savingRate ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.saving ?? 0} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 2, minH: 3 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
+      { key: 'portfolio', content: <PortfolioAllocationCard assets={stats?.assetsByAccount} loading={loading} currency={stats?.currency || '฿'} />, defaultLayout: { lg: { x: 9, y: 0, w: 3, h: 6, minW: 3, minH: 4 }, md: { x: 5, y: 6, w: 5, h: 6 }, sm: { x: 0, y: 12, w: 6, h: 5 } } },
+
+      { key: 'net-worth-trend', content: <NetWorthTrendCard monthlyCashflow={stats?.monthlyCashflow || []} initialNetWorth={stats?.summary?.netWorth - (stats?.monthlyCashflow || []).reduce((acc: number, m: any) => acc + m.net, 0)} currency={stats?.currency || '฿'} />, defaultLayout: { lg: { x: 0, y: 6, w: 6, h: 5, minW: 4, minH: 4 }, md: { x: 0, y: 12, w: 10, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
+
+      { key: 'saving-rate', content: <MetricCard label="Saving Rate" value={`${((healthMetrics.savingRate ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.saving ?? 0} icon={TrendingUp} color="text-blue-500" bg="bg-blue-50 dark:bg-blue-900/20" loading={loading} hasDateFilter selectedMonth={selectedMonth} selectedYear={selectedYear} onMonthChange={setSelectedMonth} onYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
       
-      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${((healthMetrics.goalRate ?? 0) * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 17, w: 6, h: 5 } } },
+      { key: 'goal-rate', content: <MetricCard label="Goal Rate" value={`${((healthMetrics.goalRate ?? 0) * 100).toFixed(1)}%`} icon={TrendingUp} color="text-purple-500" bg="bg-purple-50 dark:bg-purple-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
       
-      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${healthMetrics.emergencyMonths ?? 0} Mo`} score={currentStats?.health?.scores?.emergency ?? 0} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 12, w: 5, h: 5 }, sm: { x: 0, y: 22, w: 6, h: 5 } } },
+      { key: 'emergency-fund', content: <MetricCard label="Emergency Fund" value={`${healthMetrics.emergencyMonths ?? 0} Mo`} score={currentStats?.health?.scores?.emergency ?? 0} icon={ShieldCheck} color="text-green-500" bg="bg-green-50 dark:bg-green-900/20" loading={loading} />, defaultLayout: { lg: { x: 0, y: 11, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 22, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
       
-      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${((healthMetrics.debtRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.debt ?? 0} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 27, w: 6, h: 5 } } },
+      { key: 'debt-ratio', content: <MetricCard label="Debt Ratio" value={`${((healthMetrics.debtRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.debt ?? 0} icon={CreditCard} color="text-red-500" bg="bg-red-50 dark:bg-red-900/20" loading={loading} />, defaultLayout: { lg: { x: 3, y: 11, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 22, w: 5, h: 5 }, sm: { x: 0, y: 37, w: 6, h: 5 } } },
       
-      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((healthMetrics.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 9, y: 6, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 5, y: 17, w: 5, h: 5 }, sm: { x: 0, y: 32, w: 6, h: 5 } } },
+      { key: 'investment-ratio', content: <MetricCard label="Investment" value={`${((healthMetrics.investmentRatio ?? 0) * 100).toFixed(1)}%`} score={currentStats?.health?.scores?.investment ?? 0} icon={Activity} color="text-cyan-500" bg="bg-cyan-50 dark:bg-cyan-900/20" loading={loading} />, defaultLayout: { lg: { x: 6, y: 11, w: 3, h: 5, minW: 2, minH: 3 }, md: { x: 0, y: 27, w: 5, h: 5 }, sm: { x: 0, y: 42, w: 6, h: 5 } } },
       
-      { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} selectedMonth={selectedMonth} selectedYear={selectedYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onSelectedMonthChange={setSelectedMonth} onSelectedYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 0, y: 11, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 22, w: 10, h: 14 }, sm: { x: 0, y: 37, w: 6, h: 15 } } },
+      { key: 'cashflow', content: <CashflowCard stats={stats} loading={loading} isLocked={isLocked} cashflowMode={cashflowMode} selectedMonth={selectedMonth} selectedYear={selectedYear} pieData={pieData} selectedMonthData={selectedMonthData} onModeChange={updateCashflowMode} onSelectedMonthChange={setSelectedMonth} onSelectedYearChange={setSelectedYear} />, defaultLayout: { lg: { x: 0, y: 16, w: 12, h: 14, minW: 6, minH: 8 }, md: { x: 0, y: 32, w: 10, h: 14 }, sm: { x: 0, y: 47, w: 6, h: 15 } } },
       
-      { key: 'goals', content: <GoalTrackingCard stats={stats} />, defaultLayout: { lg: { x: 0, y: 25, w: 12, h: getGoalsHeight('lg'), minW: 4, minH: 3 }, md: { x: 0, y: 36, w: 10, h: getGoalsHeight('md') }, sm: { x: 0, y: 52, w: 6, h: getGoalsHeight('sm') } } }
+      { key: 'goals', content: <GoalTrackingCard stats={stats} />, defaultLayout: { lg: { x: 0, y: 30, w: 12, h: getGoalsHeight('lg'), minW: 4, minH: 3 }, md: { x: 0, y: 46, w: 10, h: getGoalsHeight('md') }, sm: { x: 0, y: 62, w: 6, h: getGoalsHeight('sm') } } }
     ];
     return items.filter(item => enabledWidgets.includes(item.key));
   }, [user, stats, loading, isLocked, cashflowMode, enabledWidgets, selectedMonth, selectedYear, pieData, healthData, getGoalsHeight, updateCashflowMode, setSelectedMonth, setSelectedYear]);
