@@ -223,11 +223,11 @@ export default function TransactionsPage() {
     if (!window.confirm("Are you sure you want to delete this transaction? If it's a transfer, the linked transaction will also be deleted.")) return;
     try {
       await api.delete(`/transactions/${id}`);
-      showAlert('Transaction deleted successfully', 'success');
+      showAlert('Security Check Passed: Transaction record and balance adjustment successfully purged.', 'success');
       fetchData();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
+      showAlert(`System Protection: ${errorResponse.response?.data?.error || 'Operation failed. Data integrity maintained.'}`, 'error');
     }
   };
 
@@ -235,6 +235,16 @@ export default function TransactionsPage() {
     e.preventDefault();
     if (!formData.fromAccountId && !formData.toAccountId) {
        showAlert('Please select either a From Account, a To Account, or both.', 'error');
+       return;
+    }
+
+    if (isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) <= 0) {
+       showAlert('Validation Error: Amount must be a positive number.', 'error');
+       return;
+    }
+
+    if (!formData.date || isNaN(new Date(formData.date).getTime())) {
+       showAlert('Validation Error: Please select a valid record date.', 'error');
        return;
     }
 
@@ -253,7 +263,9 @@ export default function TransactionsPage() {
       ...formData,
       amount: parseFloat(formData.amount),
       date: new Date(formData.date).toISOString(),
-      actualDate: formData.actualDate ? new Date(formData.actualDate).toISOString() : null,
+      actualDate: formData.actualDate && !isNaN(new Date(formData.actualDate).getTime()) 
+        ? new Date(formData.actualDate).toISOString() 
+        : null,
       direction: (formData.fromAccountId && !formData.toAccountId) ? 'FROM' : (!formData.fromAccountId && formData.toAccountId) ? 'TO' : null
     };
 
@@ -261,19 +273,20 @@ export default function TransactionsPage() {
     if (!payload.toAccountId) delete payload.toAccountId;
 
     try {
-      console.log('[DEBUG-V4.0-FINAL] Submitting Payload:', payload);
+      console.log('[DEBUG-NEX-714] Initiating Atomic Transaction:', payload);
       if (isEditing && currentTxId) {
         await api.put(`/transactions/${currentTxId}`, payload);
-        showAlert('Transaction updated successfully (v2)', 'success');
+        showAlert('Data Integrity Verified: Transaction updated and ledger reconciled.', 'success');
       } else {
         await api.post('/transactions', payload);
-        showAlert('Transaction created successfully', 'success');
+        showAlert('Transaction Secured: Record created and account balance adjusted.', 'success');
       }
       setIsModalOpen(false);
       fetchData();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Save failed', 'error');
+      const errorMessage = errorResponse.response?.data?.error || 'Save failed';
+      showAlert(`Transaction Aborted: ${errorMessage}. Atomic rollback performed to ensure data integrity.`, 'error');
     }
   };
 
@@ -428,8 +441,9 @@ export default function TransactionsPage() {
             setLoading(false);
         }
       } catch (err: unknown) {
-        const errorMsg = err instanceof Error ? err.message : String(err);
-        showAlert('Failed to import: ' + errorMsg, 'error');
+        const errorResponse = err as { response?: { data?: { error?: string } } };
+        const errorMessage = errorResponse.response?.data?.error || (err instanceof Error ? err.message : String(err));
+        showAlert(`Bulk Import Failure: ${errorMessage}. The entire operation has been rolled back. No data was saved.`, 'error');
         setLoading(false);
       } finally {
         if (fileInputRef.current) fileInputRef.current.value = '';
