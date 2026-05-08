@@ -6,6 +6,7 @@ import fastifyRawBody from 'fastify-raw-body';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import transactionRoutes from './routes/transaction.routes';
+import { impersonationGuard } from './middlewares/impersonation.middleware';
 
 const buildServer = async (): Promise<FastifyInstance> => {
   const server = Fastify({ logger: true });
@@ -38,6 +39,9 @@ const buildServer = async (): Promise<FastifyInstance> => {
     allowList: config.isStaging ? ['127.0.0.1', 'localhost'] : []
   });
 
+  // Global Impersonation Guard (Read-only enforcement)
+  server.addHook('preHandler', impersonationGuard);
+
   // Health Check Route
     server.get('/', async () => {
       return { 
@@ -65,6 +69,7 @@ const buildServer = async (): Promise<FastifyInstance> => {
     const permissionRoutes = (await import('./routes/permission.routes')).default;
   
     const financialRecordRoutes = (await import('./routes/financial-record.routes')).default;
+    const { alertRoutes } = await import('./routes/alert.routes');
   
     await server.register(bankRoutes, { prefix: '/api/v1' });
     await server.register(accountRoutes, { prefix: '/api/v1' });
@@ -81,6 +86,11 @@ const buildServer = async (): Promise<FastifyInstance> => {
   
     const organizationRoutes = (await import('./routes/organization.routes')).default;
     await server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
+
+    // Admin Routes (New Gen Nexworth Support Tools)
+    const adminRoutes = (await import('./routes/admin.routes')).default;
+    await server.register(adminRoutes, { prefix: '/api/v1/admin' });
+    await server.register(alertRoutes, { prefix: '/api/v1/admin/alerts' });
 
   return server;
 };

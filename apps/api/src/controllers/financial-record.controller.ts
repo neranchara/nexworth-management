@@ -39,7 +39,7 @@ export const listFinancialRecordsHandler = async (request: FastifyRequest, reply
         amount: r.amount,
         date: r.updatedAt,
         type: type,
-        note: 'Real-time balance',
+        note: r.note || 'Real-time balance',
         account: r.account
       }));
 
@@ -100,10 +100,11 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
       if (isLiability) {
         updatedValue = await prisma.liability.upsert({
           where: { accountId: targetAccountId },
-          update: { amount: amount },
+          update: { amount: amount, note: body.note },
           create: {
             accountId: targetAccountId,
             amount: amount,
+            note: body.note,
             userId: user.sub,
           },
           include: { account: { include: { bank: true } } }
@@ -111,10 +112,11 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
       } else {
         updatedValue = await prisma.asset.upsert({
           where: { accountId: targetAccountId },
-          update: { amount: amount },
+          update: { amount: amount, note: body.note },
           create: {
             accountId: targetAccountId,
             amount: amount,
+            note: body.note,
             userId: user.sub,
           },
           include: { account: { include: { bank: true } } }
@@ -129,7 +131,7 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
           amount: body.amount,
           date: updatedValue.updatedAt,
           type: body.type,
-          note: body.note || 'Manual update',
+          note: updatedValue.note || 'Manual update',
           account: updatedValue.account
         }
       });
@@ -176,13 +178,13 @@ export const updateFinancialRecordHandler = async (request: FastifyRequest, repl
       if (isLiability) {
         updatedValue = await prisma.liability.update({
           where: { accountId },
-          data: { amount },
+          data: { amount, note: body.note },
           include: { account: { include: { bank: true } } }
         });
       } else {
         updatedValue = await prisma.asset.update({
           where: { accountId },
-          data: { amount },
+          data: { amount, note: body.note },
           include: { account: { include: { bank: true } } }
         });
       }
@@ -195,7 +197,7 @@ export const updateFinancialRecordHandler = async (request: FastifyRequest, repl
           amount: body.amount,
           date: updatedValue.updatedAt,
           type: body.type,
-          note: body.note || 'Real-time update',
+          note: updatedValue.note || 'Real-time update',
           account: updatedValue.account
         }
       });

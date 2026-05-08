@@ -8,7 +8,15 @@ const config: Config = {
   ],
   darkMode: 'media',
   theme: {
-    extend: {},
+    extend: {
+      colors: {
+        brand: {
+          primary: '#001F3F',    // Midnight Navy
+          secondary: '#708090',  // Slate Silver
+          accent: '#50C878',     // Emerald Green
+        }
+      }
+    },
   },
   plugins: [],
 };

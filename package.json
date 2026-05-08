@@ -7,10 +7,11 @@
     "packages/*"
   ],
   "scripts": {
-    "dev": "concurrently -n API,BOT,WEB -c blue,magenta,green \"npm run dev:api\" \"npm run dev:bot\" \"npm run dev:web\"",
+    "dev": "concurrently -n API,BOT,WEB,AGENT -c blue,magenta,green,cyan \"npm run dev:api\" \"npm run dev:bot\" \"npm run dev:web\" \"npm run dev:agent\"",
     "dev:api": "npm run dev --workspace=@nexworth/api",
     "dev:bot": "npm run dev --workspace=@nexworth/bot",
     "dev:web": "npm run dev --workspace=frontend",
+    "dev:agent": "npm run dev --workspace=@nexworth/dev-agent",
     "build": "npm run db:generate && npm run build --workspaces",
     "build:api": "npm run db:generate && npm run build --workspace=@nexworth/database && npm run build --workspace=@nexworth/ai-engine && npm run build --workspace=@nexworth/api",
     "build:bot": "npm run db:generate && npm run build --workspace=@nexworth/database && npm run build --workspace=@nexworth/ai-engine && npm run build --workspace=@nexworth/bot",

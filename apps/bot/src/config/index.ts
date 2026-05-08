@@ -1,21 +1,11 @@
 import * as dotenv from 'dotenv';
+import * as path from 'path';
 
-// ============================================================
-// Environment Resolution Order:
-//   NODE_ENV=local       -> .env.local     (Dev & QA work)
-//   NODE_ENV=staging     -> .env.staging   (E2E Regression)
-//   NODE_ENV=production  -> .env.production (Live / Render)
-//   (no NODE_ENV)        -> .env           (fallback)
-// ============================================================
 const nodeEnv = process.env.NODE_ENV || 'local';
-const envFile = `.env.${nodeEnv}`;
+const envFile = path.resolve(process.cwd(), `.env.${nodeEnv}`);
 
-if (!process.env.DATABASE_URL) {
-  dotenv.config({ path: envFile });
-  console.log(`[Config] Environment: ${nodeEnv} | Loaded: ${envFile}`);
-} else {
-  console.log(`[Config] Environment: ${nodeEnv} | Using System Environment Variables`);
-}
+dotenv.config({ path: envFile });
+console.log(`[Config] Environment: ${nodeEnv} | Loaded: ${envFile}`);
 
 const isLocal = nodeEnv === 'local';
 const isStaging = nodeEnv === 'staging';

@@ -67,6 +67,7 @@ export const config = {
   line: {
     channelAccessToken: process.env.LINE_CHANNEL_ACCESS_TOKEN || '',
     channelSecret: process.env.LINE_CHANNEL_SECRET || '',
+    adminGroupId: process.env.LINE_ADMIN_GROUP_ID || '', // Group ID for Ops/Dev alerts
   },
 
   // --- AI ---

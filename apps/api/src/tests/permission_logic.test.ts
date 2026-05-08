@@ -1,8 +1,8 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { updateRoleHandler } from '../controllers/permission.controller.js';
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 
-vi.mock('@nexworth/database', () => ({
+vi.mock('../lib/prisma', () => ({
   prisma: {
     role: {
       findUnique: vi.fn(),

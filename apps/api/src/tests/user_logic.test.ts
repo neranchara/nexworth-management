@@ -1,9 +1,9 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { listUsersHandler } from '../controllers/user.controller.js';
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 
-// Mock Prisma from the database package
-vi.mock('@nexworth/database', () => ({
+// Mock the prisma library
+vi.mock('../lib/prisma', () => ({
   prisma: {
     user: {
       findMany: vi.fn(),

@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
+import { validateTransactionDate } from '../lib/utils';
 
 const transactionSchema = z.object({
   accountId: z.string().uuid().optional().nullable(),
@@ -19,10 +20,11 @@ const transactionSchema = z.object({
   transactionType: z.string().optional().nullable(),
 });
 
-export const adjustAccountBalance = async (accountId: string, amount: number, typeId: string, direction: string | null = null, isRemoval: boolean = false) => {
+export const adjustAccountBalance = async (accountId: string, amount: number, typeId: string, direction: string | null = null, isRemoval: boolean = false, tx?: any) => {
+  const db = tx || prisma;
   const [account, type] = await Promise.all([
-    prisma.account.findUnique({ where: { id: accountId } }),
-    prisma.transactionType.findUnique({ where: { id: typeId } })
+    db.account.findUnique({ where: { id: accountId } }),
+    db.transactionType.findUnique({ where: { id: typeId } })
   ]);
   
   if (!account || !type) return;
@@ -56,13 +58,13 @@ export const adjustAccountBalance = async (accountId: string, amount: number, ty
   const finalAdjustment = isRemoval ? -(amount * multiplier) : (amount * multiplier);
 
   if (isLiability) {
-    await prisma.liability.upsert({
+    await db.liability.upsert({
       where: { accountId },
       update: { amount: { increment: finalAdjustment } },
       create: { accountId, amount: finalAdjustment, userId: account.userId, organizationId: account.organizationId }
     });
   } else {
-    await prisma.asset.upsert({
+    await db.asset.upsert({
       where: { accountId },
       update: { amount: { increment: finalAdjustment } },
       create: { accountId, amount: finalAdjustment, userId: account.userId, organizationId: account.organizationId }
@@ -119,6 +121,12 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
     const user = request.user as { sub: string, organizationId: string };
     const body = transactionSchema.parse(request.body);
 
+    // Date Sanitization
+    const dateVal = validateTransactionDate(body.date);
+    if (!dateVal.isValid) return reply.status(400).send({ error: dateVal.error });
+    const actualDateVal = validateTransactionDate(body.actualDate);
+    if (!actualDateVal.isValid) return reply.status(400).send({ error: actualDateVal.error });
+
     if (!body.accountId && !body.fromAccountId && !body.toAccountId) {
       return reply.status(400).send({ error: 'At least one account must be selected' });
     }
@@ -164,8 +172,8 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
         }
     }
 
-    const processSingleLeg = async (accId: string, catId: string, tId: string, linkedId: string | null, legDirection: string | null = null) => {
-        const account = await prisma.account.findFirst({ 
+    const processSingleLeg = async (tx: any, accId: string, catId: string, tId: string, linkedId: string | null, legDirection: string | null = null) => {
+        const account = await tx.account.findFirst({ 
           where: { 
             id: accId,
             organizationId: user.organizationId // IDOR Protection
@@ -177,14 +185,14 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
         let liabilityId: string | null = null;
 
         if (account.type === 'LIABILITY') {
-          const liability = await prisma.liability.findUnique({ where: { accountId: accId } });
+          const liability = await tx.liability.findUnique({ where: { accountId: accId } });
           liabilityId = liability?.id || null;
         } else {
-          const asset = await prisma.asset.findUnique({ where: { accountId: accId } });
+          const asset = await tx.asset.findUnique({ where: { accountId: accId } });
           assetId = asset?.id || null;
         }
 
-        const transaction = await prisma.transaction.create({
+        const transaction = await tx.transaction.create({
           data: {
             ...commonData,
             accountId: accId,
@@ -211,139 +219,141 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
           }
         });
 
-        await adjustAccountBalance(transaction.accountId, transaction.amount, transaction.typeId, transaction.direction);
+        await adjustAccountBalance(transaction.accountId, transaction.amount, transaction.typeId, transaction.direction, false, tx);
         return transaction;
     };
 
-    const syncLoanRecord = async (tx: any) => {
-        const behavior = tx.category?.type?.behavior || tx.type?.behavior;
+    const syncLoanRecord = async (tx: any, tRecord: any) => {
+        const behavior = tRecord.category?.type?.behavior || tRecord.type?.behavior;
         
         if (behavior === 'LOAN_BORROW') {
             const loanData = {
-                organizationId: tx.organizationId,
-                userId: tx.userId,
-                accountId: tx.accountId,
-                name: tx.description || 'Loan from ' + (tx.account?.name || 'Account'),
-                totalAmount: tx.amount,
+                organizationId: tRecord.organizationId,
+                userId: tRecord.userId,
+                accountId: tRecord.accountId,
+                name: tRecord.description || 'Loan from ' + (tRecord.account?.name || 'Account'),
+                totalAmount: tRecord.amount,
                 status: 'ACTIVE',
-                date: tx.date,
-                actualDate: tx.actualDate || tx.date,
+                date: tRecord.date,
+                actualDate: tRecord.actualDate || tRecord.date,
             };
 
             let loan;
-            if (tx.loanId) {
-                loan = await prisma.loan.update({
-                    where: { id: tx.loanId },
+            if (tRecord.loanId) {
+                loan = await tx.loan.update({
+                    where: { id: tRecord.loanId },
                     data: loanData
                 });
             } else {
-                loan = await prisma.loan.create({
+                loan = await tx.loan.create({
                     data: {
                         ...loanData,
                         code: 'L' + Math.floor(1000 + Math.random() * 9000)
                     }
                 });
                 
-                await prisma.transaction.update({
-                    where: { id: tx.id },
+                await tx.transaction.update({
+                    where: { id: tRecord.id },
                     data: { loanId: loan.id }
                 });
 
-                if (tx.linkedTransactionId) {
-                    await prisma.transaction.update({
-                        where: { id: tx.linkedTransactionId },
+                if (tRecord.linkedTransactionId) {
+                    await tx.transaction.update({
+                        where: { id: tRecord.linkedTransactionId },
                         data: { loanId: loan.id }
                     });
                 }
             }
             return loan;
-        } else if (tx.loanId) {
-            const oldLoanId = tx.loanId;
-            await prisma.transaction.updateMany({
+        } else if (tRecord.loanId) {
+            const oldLoanId = tRecord.loanId;
+            await tx.transaction.updateMany({
                 where: { loanId: oldLoanId },
                 data: { loanId: null }
             });
-            await prisma.loan.delete({ where: { id: oldLoanId } });
+            await tx.loan.delete({ where: { id: oldLoanId } });
         }
         return null;
     };
 
     const baseTypeId = category.typeId;
 
-    if (isTransfer) {
-        // Fetch toAccount to check if it's a personal account
-        const toAccount = await prisma.account.findUnique({ where: { id: toAccountId as string } });
-        
-        let behaviorToUse = category.type.behavior;
-        
-        // --- Logic for Non-Personal Accounts ---
-        // If transferring to an account that is NOT personal, treat it as an EXPENSE
-        // unless it's explicitly an INVESTMENT (Lending money).
-        if (toAccount && !toAccount.isPersonal && behaviorToUse !== 'INVESTMENT') {
-            behaviorToUse = 'EXPENSE';
-        }
-
-        const isRequestedExpenseLike = ['EXPENSE', 'DEBT'].includes(behaviorToUse);
-        
-        if (isRequestedExpenseLike) {
-            // --- EXPENSE TRANSFER (e.g. Salary for Mother, Debt Repayment) ---
-            // The Source (From) is the primary leg that gets the user's category.
-            const sourceTx = await processSingleLeg(fromAccountId as string, body.categoryId, baseTypeId as string, null, 'FROM');
+    const result = await prisma.$transaction(async (tx) => {
+        if (isTransfer) {
+            const toAccount = await tx.account.findUnique({ where: { id: toAccountId as string } });
+            let behaviorToUse = category.type.behavior;
             
-            // The Destination (To) gets a generic "Transfer In" (Income) category.
-            let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'INCOME' }});
-            if (!incomeType) incomeType = await prisma.transactionType.findFirst({ where: { behavior: 'INCOME' }});
-            
-            let transferInCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนเข้าภายใน' } });
-            if (!transferInCat) {
-                transferInCat = await prisma.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.organizationId, typeId: incomeType!.id, isActive: true } });
+            if (toAccount && !toAccount.isPersonal && behaviorToUse !== 'INVESTMENT') {
+                behaviorToUse = 'EXPENSE';
             }
-            
-            const destTx = await processSingleLeg(toAccountId as string, transferInCat.id, incomeType!.id, sourceTx.id, 'TO');
-            
-            const finalSourceTx = await prisma.transaction.update({
-               where: { id: sourceTx.id },
-               data: { linkedTransactionId: destTx.id },
-               include: { category: { include: { type: true } }, account: true, type: true }
-            });
- 
-            await syncLoanRecord(finalSourceTx);
-            return reply.status(201).send({ message: 'Expense transfer created successfully', transaction: finalSourceTx });
-        } else {
-            const destTx = await processSingleLeg(toAccountId as string, body.categoryId, baseTypeId as string, null, 'TO');
-            
-            let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE' }});
-            if (!expenseType) expenseType = await prisma.transactionType.findFirst({ where: { behavior: 'EXPENSE' }});
-            
-            let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนออกภายใน' } });
-            if (!transferOutCat) {
-                transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.organizationId, typeId: expenseType!.id, isActive: true } });
-            }
- 
-            const sourceTx = await processSingleLeg(fromAccountId as string, transferOutCat.id, expenseType!.id, destTx.id, 'FROM');
-            
-            const finalDestTx = await prisma.transaction.update({
-               where: { id: destTx.id },
-               data: { linkedTransactionId: sourceTx.id },
-               include: { category: { include: { type: true } }, account: true, type: true }
-            });
 
-            if (category.type.behavior === 'LOAN_BORROW') {
-                const sourceWithCat = { ...sourceTx, category: category, loanId: null };
-                await syncLoanRecord(sourceWithCat);
+            const isRequestedExpenseLike = ['EXPENSE', 'DEBT'].includes(behaviorToUse);
+            
+            if (isRequestedExpenseLike) {
+                const sourceTx = await processSingleLeg(tx, fromAccountId as string, body.categoryId, baseTypeId as string, null, 'FROM');
+                
+                let incomeType = await tx.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'INCOME' }});
+                if (!incomeType) incomeType = await tx.transactionType.findFirst({ where: { behavior: 'INCOME' }});
+                
+                let transferInCat = await tx.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนเข้าภายใน' } });
+                if (!transferInCat) {
+                    transferInCat = await tx.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.organizationId, typeId: incomeType!.id, isActive: true } });
+                }
+                
+                const destTx = await processSingleLeg(tx, toAccountId as string, transferInCat.id, incomeType!.id, sourceTx.id, 'TO');
+                
+                const finalSourceTx = await tx.transaction.update({
+                   where: { id: sourceTx.id },
+                   data: { linkedTransactionId: destTx.id },
+                   include: { category: { include: { type: true } }, account: true, type: true }
+                });
+     
+                await syncLoanRecord(tx, finalSourceTx);
+                return { type: 'EXPENSE_TRANSFER', transaction: finalSourceTx };
             } else {
-                await syncLoanRecord(finalDestTx);
+                const destTx = await processSingleLeg(tx, toAccountId as string, body.categoryId, baseTypeId as string, null, 'TO');
+                
+                let expenseType = await tx.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE' }});
+                if (!expenseType) expenseType = await tx.transactionType.findFirst({ where: { behavior: 'EXPENSE' }});
+                
+                let transferOutCat = await tx.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนออกภายใน' } });
+                if (!transferOutCat) {
+                    transferOutCat = await tx.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.organizationId, typeId: expenseType!.id, isActive: true } });
+                }
+     
+                const sourceTx = await processSingleLeg(tx, fromAccountId as string, transferOutCat.id, expenseType!.id, destTx.id, 'FROM');
+                
+                const finalDestTx = await tx.transaction.update({
+                   where: { id: destTx.id },
+                   data: { linkedTransactionId: sourceTx.id },
+                   include: { category: { include: { type: true } }, account: true, type: true }
+                });
+    
+                if (category.type.behavior === 'LOAN_BORROW') {
+                    const sourceWithCat = { ...sourceTx, category: category, loanId: null };
+                    await syncLoanRecord(tx, sourceWithCat);
+                } else {
+                    await syncLoanRecord(tx, finalDestTx);
+                }
+    
+                return { type: 'TRANSFER', transaction: finalDestTx };
             }
+        } else {
+            const targetAccId = accountId || fromAccountId || toAccountId;
+            if (!targetAccId) throw new Error('No account selected');
 
-            return reply.status(201).send({ message: 'Transfer created successfully', transaction: finalDestTx });
+            const txRecord = await processSingleLeg(tx, targetAccId, body.categoryId, baseTypeId as string, null, direction);
+            await syncLoanRecord(tx, txRecord);
+            return { type: 'SINGLE', transaction: txRecord };
         }
-    } else {
-        const targetAccId = accountId || fromAccountId || toAccountId;
-        if (!targetAccId) return reply.status(400).send({ error: 'No account selected' });
+    });
 
-        const tx = await processSingleLeg(targetAccId, body.categoryId, baseTypeId as string, null, direction);
-        await syncLoanRecord(tx);
-        return reply.status(201).send({ message: 'Transaction created', transaction: tx });
+    if (result.type === 'EXPENSE_TRANSFER') {
+        return reply.status(201).send({ message: 'Expense transfer created successfully', transaction: result.transaction });
+    } else if (result.type === 'TRANSFER') {
+        return reply.status(201).send({ message: 'Transfer created successfully', transaction: result.transaction });
+    } else {
+        return reply.status(201).send({ message: 'Transaction created', transaction: result.transaction });
     }
 
   } catch (error) {
@@ -362,6 +372,12 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       accountId: reqAccountId, fromAccountId, toAccountId, categoryId, typeId, 
       amount, description, date, actualDate, note, direction 
     } = body;
+
+    // Date Sanitization
+    const dateVal = validateTransactionDate(date);
+    if (!dateVal.isValid) return reply.status(400).send({ error: dateVal.error });
+    const actualDateVal = validateTransactionDate(actualDate);
+    if (!actualDateVal.isValid) return reply.status(400).send({ error: actualDateVal.error });
 
     amount = Math.abs(amount);
 
@@ -495,68 +511,69 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       }
     }
 
-    // Reverse old balances
-    await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, existing.direction, true);
-    if (linked) {
-      await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, linked.direction, true);
-    }
+    const result = await prisma.$transaction(async (tx) => {
+        // Reverse old balances using transaction client
+        await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, existing.direction, true, tx);
+        if (linked) {
+          await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, linked.direction, true, tx);
+        }
 
-    const updatedPrimary = await prisma.transaction.update({
-      where: { id },
-      data: {
-        accountId: targetPrimaryAccountId as string,
-        categoryId: primaryCategoryId,
-        amount: amount,
-        description: description || undefined,
-        note: note || undefined,
-        typeId: primaryTypeId,
-        assetId: assetId || undefined,
-        liabilityId: liabilityId || undefined,
-        date: date ? new Date(date) : (existing.date as Date),
-        actualDate: actualDate !== undefined ? (actualDate ? new Date(actualDate) : null) : existing.actualDate,
-        linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
-        direction: (direction as string) || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO')),
-        taxAmount: body.taxAmount !== undefined ? body.taxAmount : existing.taxAmount,
-        taxType: body.taxType !== undefined ? body.taxType : existing.taxType,
-        transactionType: body.transactionType !== undefined ? body.transactionType : existing.transactionType,
-      },
-      include: {
-        account: { include: { bank: { select: { name: true, color: true } } } },
-        asset: true,
-        liability: true,
-        category: { include: { type: true } },
-        type: true
-      }
-    });
+        const updatedPrimary = await tx.transaction.update({
+          where: { id },
+          data: {
+            accountId: targetPrimaryAccountId as string,
+            categoryId: primaryCategoryId,
+            amount: amount,
+            description: description || undefined,
+            note: note || undefined,
+            typeId: primaryTypeId,
+            assetId: assetId || undefined,
+            liabilityId: liabilityId || undefined,
+            date: date ? new Date(date) : (existing.date as Date),
+            actualDate: actualDate !== undefined ? (actualDate ? new Date(actualDate) : null) : existing.actualDate,
+            linkedTransactionId: (wasTransfer && !isTransferIntent) ? null : existing.linkedTransactionId,
+            direction: (direction as string) || (!isTransferIntent ? (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(behavior || '') ? 'FROM' : 'TO') : (isExistingExpense ? 'FROM' : 'TO')),
+            taxAmount: body.taxAmount !== undefined ? body.taxAmount : existing.taxAmount,
+            taxType: body.taxType !== undefined ? body.taxType : existing.taxType,
+            transactionType: body.transactionType !== undefined ? body.transactionType : existing.transactionType,
+          },
+          include: {
+            account: { include: { bank: { select: { name: true, color: true } } } },
+            asset: true,
+            liability: true,
+            category: { include: { type: true } },
+            type: true
+          }
+        });
 
-    const syncLoanRecordUpdate = async (tx: any) => {
-        const behavior = tx.category?.type?.behavior || tx.type?.behavior;
+    const syncLoanRecordUpdate = async (tx: any, tRecord: any) => {
+        const behavior = tRecord.category?.type?.behavior || tRecord.type?.behavior;
         if (behavior === 'LOAN_BORROW') {
             const loanData = {
-                organizationId: tx.organizationId,
-                userId: tx.userId,
-                accountId: tx.accountId,
-                name: tx.description || 'Loan from ' + (tx.account?.name || 'Account'),
-                totalAmount: tx.amount,
-                date: tx.date,
-                actualDate: tx.actualDate || tx.date,
+                organizationId: tRecord.organizationId,
+                userId: tRecord.userId,
+                accountId: tRecord.accountId,
+                name: tRecord.description || 'Loan from ' + (tRecord.account?.name || 'Account'),
+                totalAmount: tRecord.amount,
+                date: tRecord.date,
+                actualDate: tRecord.actualDate || tRecord.date,
             };
 
-            if (tx.loanId) {
-                await prisma.loan.update({ where: { id: tx.loanId }, data: loanData });
+            if (tRecord.loanId) {
+                await tx.loan.update({ where: { id: tRecord.loanId }, data: loanData });
             } else {
-                const loan = await prisma.loan.create({
+                const loan = await tx.loan.create({
                     data: { ...loanData, status: 'ACTIVE', code: 'L' + Math.floor(1000 + Math.random() * 9000) }
                 });
-                await prisma.transaction.update({ where: { id: tx.id }, data: { loanId: loan.id } });
-                if (tx.linkedTransactionId) {
-                    await prisma.transaction.update({ where: { id: tx.linkedTransactionId }, data: { loanId: loan.id } });
+                await tx.transaction.update({ where: { id: tRecord.id }, data: { loanId: loan.id } });
+                if (tRecord.linkedTransactionId) {
+                    await tx.transaction.update({ where: { id: tRecord.linkedTransactionId }, data: { loanId: loan.id } });
                 }
             }
-        } else if (tx.loanId) {
-            const oldLoanId = tx.loanId;
-            await prisma.transaction.updateMany({ where: { loanId: oldLoanId }, data: { loanId: null } });
-            await prisma.loan.delete({ where: { id: oldLoanId } });
+        } else if (tRecord.loanId) {
+            const oldLoanId = tRecord.loanId;
+            await tx.transaction.updateMany({ where: { loanId: oldLoanId }, data: { loanId: null } });
+            await tx.loan.delete({ where: { id: oldLoanId } });
         }
     };
 
@@ -670,15 +687,17 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         }
       });
       
-      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId, updatedPrimary.direction);
-      await adjustAccountBalance(targetLinkedAccountId, updatedPrimary.amount, updatedLinked.typeId, updatedLinked.direction);
-      await syncLoanRecordUpdate(updatedPrimary);
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId, updatedPrimary.direction, false, tx);
+      await adjustAccountBalance(targetLinkedAccountId, updatedPrimary.amount, updatedLinked.typeId, updatedLinked.direction, false, tx);
+      await syncLoanRecordUpdate(tx, updatedPrimary);
     } else {
-      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId, updatedPrimary.direction);
-      await syncLoanRecordUpdate(updatedPrimary);
+      await adjustAccountBalance(updatedPrimary.accountId, updatedPrimary.amount, updatedPrimary.typeId, updatedPrimary.direction, false, tx);
+      await syncLoanRecordUpdate(tx, updatedPrimary);
     }
+    return updatedPrimary;
+    });
 
-    return reply.send({ message: 'Transaction updated (v2)', transaction: updatedPrimary });
+    return reply.send({ message: 'Transaction updated (v2)', transaction: result });
   } catch (error) {
     if (error instanceof z.ZodError) return reply.status(400).send({ error: error.format() });
     request.log.error(error);
@@ -696,22 +715,24 @@ export const deleteTransactionHandler = async (request: FastifyRequest, reply: F
       return reply.status(404).send({ error: 'Transaction not found or unauthorized' });
     }
 
-    if (existing.loanId) {
-        const oldLoanId = existing.loanId;
-        await prisma.transaction.updateMany({ where: { loanId: oldLoanId }, data: { loanId: null } });
-        await prisma.loan.delete({ where: { id: oldLoanId } });
-    }
-
-    await prisma.transaction.delete({ where: { id } });
-    await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, existing.direction, true);
- 
-    if (existing.linkedTransactionId) {
-      const linked = await prisma.transaction.findUnique({ where: { id: existing.linkedTransactionId } });
-      if (linked) {
-         await prisma.transaction.delete({ where: { id: linked.id } });
-         await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, linked.direction, true);
+    await prisma.$transaction(async (tx) => {
+      if (existing.loanId) {
+          const oldLoanId = existing.loanId;
+          await tx.transaction.updateMany({ where: { loanId: oldLoanId }, data: { loanId: null } });
+          await tx.loan.delete({ where: { id: oldLoanId } });
       }
-    }
+
+      await tx.transaction.delete({ where: { id } });
+      await adjustAccountBalance(existing.accountId, existing.amount, existing.typeId, existing.direction, true, tx);
+   
+      if (existing.linkedTransactionId) {
+        const linked = await tx.transaction.findUnique({ where: { id: existing.linkedTransactionId } });
+        if (linked) {
+           await tx.transaction.delete({ where: { id: linked.id } });
+           await adjustAccountBalance(linked.accountId, linked.amount, linked.typeId, linked.direction, true, tx);
+        }
+      }
+    });
 
     return reply.send({ message: 'Transaction deleted' });
   } catch (error) {
@@ -726,36 +747,54 @@ export const bulkCreateTransactionHandler = async (request: FastifyRequest, repl
     const bulkSchema = z.array(transactionSchema);
     const body = bulkSchema.parse(request.body);
 
-    const createdTransactions = [];
-    
-    // We process them sequentially to avoid race conditions on balances
-    for (const item of body) {
+    const result = await prisma.$transaction(async (tx) => {
+      const createdTransactions = [];
+      
+      for (let i = 0; i < body.length; i++) {
+        const item = body[i];
+        const rowIndex = i + 1;
+
+        // 1. Date Sanitization
+        const dateVal = validateTransactionDate(item.date);
+        if (!dateVal.isValid) throw new Error(`Row ${rowIndex}: ${dateVal.error}`);
+        const actualDateVal = validateTransactionDate(item.actualDate);
+        if (!actualDateVal.isValid) throw new Error(`Row ${rowIndex}: ${actualDateVal.error}`);
+
         item.amount = Math.abs(item.amount);
         let baseTypeId = item.typeId;
+        
+        // 2. Existence Checks (Integrity)
         if (!baseTypeId) {
-          const category = await prisma.transactionCategory.findUnique({ where: { id: item.categoryId } });
-          if (!category) continue;
+          const category = await tx.transactionCategory.findUnique({ 
+            where: { id: item.categoryId } 
+          });
+          if (!category) throw new Error(`Row ${rowIndex}: Category ID ${item.categoryId} not found`);
+          if (category.organizationId !== user.organizationId) throw new Error(`Row ${rowIndex}: Unauthorized category access`);
           baseTypeId = category.typeId;
         }
 
         const targetAccId = item.accountId || item.fromAccountId || item.toAccountId;
-        if (!targetAccId) continue;
+        if (!targetAccId) throw new Error(`Row ${rowIndex}: No account selected`);
 
-        const account = await prisma.account.findUnique({ where: { id: targetAccId } });
-        if (!account) continue;
+        const account = await tx.account.findUnique({ 
+          where: { id: targetAccId } 
+        });
+        if (!account) throw new Error(`Row ${rowIndex}: Account ID ${targetAccId} not found`);
+        if (account.organizationId !== user.organizationId) throw new Error(`Row ${rowIndex}: Unauthorized account access`);
         
         let assetId: string | null = null;
         let liabilityId: string | null = null;
 
         if (account.type === 'LIABILITY') {
-          const liability = await prisma.liability.findUnique({ where: { accountId: targetAccId } });
+          const liability = await tx.liability.findUnique({ where: { accountId: targetAccId } });
           liabilityId = liability?.id || null;
         } else {
-          const asset = await prisma.asset.findUnique({ where: { accountId: targetAccId } });
+          const asset = await tx.asset.findUnique({ where: { accountId: targetAccId } });
           assetId = asset?.id || null;
         }
 
-        const transaction = await prisma.transaction.create({
+        // 3. Create Record
+        const transaction = await tx.transaction.create({
           data: {
             accountId: targetAccId,
             categoryId: item.categoryId,
@@ -767,19 +806,39 @@ export const bulkCreateTransactionHandler = async (request: FastifyRequest, repl
             organizationId: user.organizationId,
             assetId,
             liabilityId,
-            date: item.date ? new Date(item.date) : new Date(),
-            actualDate: item.actualDate ? new Date(item.actualDate) : null,
+            date: dateVal.date || new Date(),
+            actualDate: actualDateVal.date,
           }
         });
 
-        await adjustAccountBalance(transaction.accountId, transaction.amount, transaction.typeId, transaction.direction);
-        createdTransactions.push(transaction);
-    }
+        // 4. Adjust Balance (Must use the transaction-aware helper if available, or inline)
+        // Note: adjustAccountBalance currently uses root 'prisma', we need to pass 'tx' or inline it.
+        // For strict atomicity, let's inline the logic or refactor adjustAccountBalance.
+        
+        const type = await tx.transactionType.findUnique({ where: { id: baseTypeId as string } });
+        if (!type) throw new Error(`Row ${rowIndex}: Transaction Type not found`);
 
-    return reply.status(201).send({ message: `${createdTransactions.length} transactions imported successfully`, transactions: createdTransactions });
-  } catch (error) {
+        const behavior = type.behavior;
+        const isLiability = account.type === 'LIABILITY';
+        let multiplier = 0;
+
+        // Simplify balance adjustment logic for bulk import (assuming single leg)
+        // 4. Adjust Balance using the refactored helper
+        const direction = item.direction || 'FROM'; // Default for bulk import if not specified
+        await adjustAccountBalance(targetAccId, item.amount, baseTypeId as string, direction, false, tx);
+
+        createdTransactions.push(transaction);
+      }
+      return createdTransactions;
+    });
+
+    return reply.status(201).send({ 
+      message: `${result.length} transactions imported successfully`, 
+      transactions: result 
+    });
+  } catch (error: any) {
     if (error instanceof z.ZodError) return reply.status(400).send({ error: error.format() });
     request.log.error(error);
-    return reply.status(500).send({ error: 'Internal Server Error' });
+    return reply.status(400).send({ error: error.message || 'Internal Server Error' });
   }
 };

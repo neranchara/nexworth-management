@@ -1,6 +1,6 @@
 {
   "name": "@nexworth/api",
-  "version": "1.0.0",
+  "version": "1.0.0-next.gen",
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=local tsx watch src/server.ts",
@@ -13,6 +13,7 @@
     "@fastify/jwt": "^10.0.0",
     "@fastify/rate-limit": "^10.3.0",
     "@google/generative-ai": "^0.24.1",
+    "@line/bot-sdk": "^11.0.0",
     "@nexworth/ai-engine": "file:../../packages/ai-engine",
     "@nexworth/database": "file:../../packages/database",
     "axios": "^1.15.2",

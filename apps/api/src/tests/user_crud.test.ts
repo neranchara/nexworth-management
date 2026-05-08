@@ -1,9 +1,9 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { createUserHandler, updateUserHandler, deleteUserHandler } from '../controllers/user.controller.js';
-import { prisma } from '@nexworth/database';
+import { prisma } from '../lib/prisma';
 
 // Mock @nexworth/database
-vi.mock('@nexworth/database', () => ({
+vi.mock('../lib/prisma', () => ({
   prisma: {
     user: {
       findUnique: vi.fn(),

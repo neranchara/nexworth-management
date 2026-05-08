@@ -1,6 +1,6 @@
 {
   "name": "@nexworth/bot",
-  "version": "1.0.0",
+  "version": "1.0.0-next.gen",
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=local tsx watch src/server.ts",

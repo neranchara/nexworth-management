@@ -21,3 +21,14 @@ export const extractTransaction = async (request: FastifyRequest, reply: Fastify
     return reply.status(500).send({ success: false, error: error.message || 'AI Extraction failed' });
   }
 };
+
+export const diagnoseUserHealth = async (request: FastifyRequest, reply: FastifyReply) => {
+  const { metrics, findings } = request.body as { metrics: any[], findings: any[] };
+
+  try {
+    const result = await aiExtractionService.diagnoseUserHealth(metrics, findings);
+    return reply.send({ success: true, data: result });
+  } catch (error: any) {
+    return reply.status(500).send({ success: false, error: error.message || 'AI Diagnosis failed' });
+  }
+};

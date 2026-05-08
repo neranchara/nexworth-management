@@ -1,5 +1,5 @@
 import { FastifyInstance } from 'fastify';
-import { loginHandler, meHandler, logoutHandler, generateLinePairingCodeHandler } from '../controllers/auth.controller';
+import { loginHandler, meHandler, logoutHandler, generateLinePairingCodeHandler, getPublicKeyHandler } from '../controllers/auth.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import { config } from '../config/index';
 
@@ -14,5 +14,6 @@ export default async function authRoutes(server: FastifyInstance) {
   }, loginHandler);
   server.post('/logout', { preHandler: authenticate }, logoutHandler);
   server.get('/me', { preHandler: authenticate }, meHandler);
+  server.get('/public-key', getPublicKeyHandler);
   server.post('/line-pairing-code', { preHandler: authenticate }, generateLinePairingCodeHandler);
 }

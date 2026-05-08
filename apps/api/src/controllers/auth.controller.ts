@@ -2,16 +2,34 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
+import { securityService } from '../services/security.service';
 
 const loginSchema = z.object({
   email: z.string().email(),
-  password: z.string().min(6),
+  password: z.string().min(1).optional(), // Can be optional if encryptedPassword is provided
+  encryptedPassword: z.string().optional(),
+  keyId: z.string().uuid().optional(),
 });
 
 export const loginHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    const { email, password } = loginSchema.parse(request.body);
+    const { email, password, encryptedPassword, keyId } = loginSchema.parse(request.body);
     const normalizedEmail = email.toLowerCase().trim();
+
+    let finalPassword = password;
+
+    // RSA Decryption Logic
+    if (encryptedPassword && keyId) {
+      const decrypted = securityService.decrypt(keyId, encryptedPassword);
+      if (!decrypted) {
+        return reply.status(401).send({ error: 'Invalid or expired encryption session' });
+      }
+      finalPassword = decrypted;
+    }
+
+    if (!finalPassword) {
+      return reply.status(400).send({ error: 'Password or Encrypted Password is required' });
+    }
 
     const user = await prisma.user.findUnique({
       where: { email: normalizedEmail },
@@ -25,7 +43,7 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
       return reply.status(401).send({ error: 'Invalid credentials or inactive account/organization' });
     }
 
-    const isValid = await bcrypt.compare(password, user.passwordHash);
+    const isValid = await bcrypt.compare(finalPassword, user.passwordHash);
     if (!isValid) {
       return reply.status(401).send({ error: 'Invalid credentials' });
     }
@@ -78,6 +96,16 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
     if (error instanceof z.ZodError) {
       return reply.status(400).send({ error: error.format() });
     }
+    request.log.error(error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
+  }
+};
+
+export const getPublicKeyHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const keyData = securityService.generateKeyPair();
+    return reply.send(keyData);
+  } catch (error) {
     request.log.error(error);
     return reply.status(500).send({ error: 'Internal Server Error' });
   }

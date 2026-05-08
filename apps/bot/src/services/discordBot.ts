@@ -13,7 +13,6 @@ import axios from 'axios';
 import { PrismaClient } from '@prisma/client';
 
 // Environment variables are loaded by the main server config
-
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const AUTHORIZED_USER_ID = process.env.DISCORD_ADMIN_ID;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;

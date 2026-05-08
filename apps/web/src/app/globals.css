@@ -5,11 +5,14 @@
 :root {
   --background: #ffffff;
   --foreground: #171717;
+  --brand-primary: #001F3F;
+  --brand-secondary: #708090;
+  --brand-accent: #50C878;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
+    --background: #001F3F; /* Midnight Navy for Pillar Concept */
     --foreground: #ededed;
   }
 }
@@ -127,4 +130,26 @@ body {
   .react-grid-item.react-draggable-dragging {
     box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4);
   }
+}
+
+/* =============================================
+   Pillar Concept Custom Utilities
+   ============================================= */
+
+.glass-card {
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 8px 32px 0 rgba(0, 31, 63, 0.37);
+}
+
+.emerald-glow {
+  box-shadow: 0 0 15px rgba(80, 200, 120, 0.3);
+}
+
+.pillar-text-bold {
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
 }

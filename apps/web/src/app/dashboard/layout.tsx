@@ -23,6 +23,8 @@ import {
 } from 'lucide-react';
 import { useState } from 'react';
 import { clsx } from 'clsx';
+import Link from 'next/link';
+import Logo from '@/components/common/Logo';
 
 
 export default function DashboardLayout({
@@ -61,8 +63,8 @@ export default function DashboardLayout({
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+      <div className="min-h-screen flex items-center justify-center bg-brand-primary">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent"></div>
       </div>
     );
   }
@@ -92,7 +94,7 @@ export default function DashboardLayout({
   ];
 
   return (
-    <div className="min-h-screen bg-slate-950 transition-colors text-slate-300 font-sans selection:bg-blue-500/30">
+    <div className="min-h-screen bg-brand-primary transition-colors text-slate-300 font-sans selection:bg-brand-accent/30">
       {/* --- MOBILE DRAWER OVERLAY --- */}
       <div 
         className={clsx(
@@ -105,13 +107,13 @@ export default function DashboardLayout({
       {/* --- MOBILE SIDE DRAWER --- */}
       <aside 
         className={clsx(
-          "fixed inset-y-0 left-0 w-72 bg-slate-900 border-r border-white/5 z-[200] transform transition-transform duration-300 ease-out lg:hidden shadow-2xl",
+          "fixed inset-y-0 left-0 w-72 bg-brand-primary border-r border-white/5 z-[200] transform transition-transform duration-300 ease-out lg:hidden shadow-2xl",
           isMobileMenuOpen ? "translate-x-0" : "-translate-x-full"
         )}
       >
         <div className="flex flex-col h-full">
           <div className="p-6 flex items-center justify-between border-b border-white/5">
-            <span className="text-xl font-black text-blue-500 tracking-tight italic">Nexworth</span>
+            <Logo showText={true} textColor="text-white" />
             <button onClick={() => setIsMobileMenuOpen(false)} className="p-2 rounded-lg bg-white/5 text-slate-400">
               <X className="w-5 h-5" />
             </button>
@@ -127,7 +129,7 @@ export default function DashboardLayout({
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all"
                 >
-                  <link.icon className="w-4 h-4 text-blue-500/70" />
+                  <link.icon className="w-4 h-4 text-brand-accent/70" />
                   {link.label}
                 </Link>
               )
@@ -142,7 +144,7 @@ export default function DashboardLayout({
                   onClick={() => setIsMobileMenuOpen(false)}
                   className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-bold text-slate-400 hover:text-white hover:bg-white/5 transition-all"
                 >
-                  <link.icon className="w-4 h-4 text-slate-500" />
+                  <link.icon className="w-4 h-4 text-brand-secondary" />
                   {link.label}
                 </Link>
               )
@@ -158,7 +160,7 @@ export default function DashboardLayout({
       </aside>
 
       {/* --- DESKTOP & MOBILE TOP BAR --- */}
-      <nav className="bg-slate-900/50 backdrop-blur-xl sticky top-0 z-[100] border-b border-white/5">
+      <nav className="bg-brand-primary/50 backdrop-blur-xl sticky top-0 z-[100] border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between h-16">
             <div className="flex items-center">
@@ -171,9 +173,9 @@ export default function DashboardLayout({
               </button>
 
               <div className="flex-shrink-0 flex items-center mr-10 gap-3">
-                <span className="text-xl font-black text-blue-500 tracking-tight italic">Nexworth</span>
+                <Logo showText={true} textColor="text-white" />
                 {user?.orgName && (
-                  <span className="hidden xs:inline-block text-[10px] font-black bg-blue-500/10 text-blue-400 px-2.5 py-1 rounded-lg border border-blue-500/20 uppercase tracking-widest">
+                  <span className="hidden xs:inline-block text-[10px] pillar-text-bold bg-brand-accent/10 text-brand-accent px-2.5 py-1 rounded-lg border border-brand-accent/20 tracking-widest uppercase">
                     {user.orgName}
                   </span>
                 )}
@@ -186,10 +188,10 @@ export default function DashboardLayout({
                     <Link 
                       key={link.href}
                       href={link.href} 
-                      className="flex items-center gap-2 text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[13px] font-bold transition-all group"
+                      className="flex items-center gap-2 text-slate-400 hover:text-white hover:bg-white/5 px-4 py-2 rounded-xl text-[12px] font-bold transition-all group tracking-wide"
                     >
-                      <link.icon className="w-4 h-4 text-blue-500/40 group-hover:text-blue-500 transition-colors" />
-                      {link.label}
+                      <link.icon className="w-4 h-4 text-brand-accent/40 group-hover:text-brand-accent transition-colors" />
+                      {link.label.toUpperCase()}
                     </Link>
                   )
                 ))}
@@ -235,6 +237,7 @@ export default function DashboardLayout({
               
               <button
                 onClick={handleLogout}
+                data-testid="layout-nav-btn-logout"
                 className="hidden lg:flex p-2 rounded-xl text-slate-500 hover:text-rose-400 hover:bg-rose-400/10 transition-all border border-transparent"
                 title="Logout"
               >

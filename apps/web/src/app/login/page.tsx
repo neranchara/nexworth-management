@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
 import { useRouter } from 'next/navigation';
-import { LogIn, AlertCircle, Eye, EyeOff } from 'lucide-react';
+import { AlertCircle, Eye, EyeOff, User as UserIcon, Lock } from 'lucide-react';
 import api from '../../lib/api';
+import Logo from '@/components/common/Logo';
+import { encryptPassword } from '../../lib/crypto';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -22,7 +24,19 @@ export default function LoginPage() {
     setIsLoading(true);
 
     try {
-      const payload = { email, password };
+      // 1. Fetch RSA Public Key for this session
+      const { data: keyData } = await api.get('/auth/public-key');
+      const { publicKey, keyId } = keyData;
+
+      // 2. Encrypt password using Web Crypto API
+      const encryptedPassword = await encryptPassword(password, publicKey);
+
+      // 3. Send encrypted payload to login
+      const payload = { 
+        email, 
+        encryptedPassword, 
+        keyId 
+      };
       const { data } = await api.post('/auth/login', payload);
       login(data.token, data.user);
       
@@ -40,94 +54,93 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50 dark:bg-gray-900 py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-md w-full space-y-8 bg-white dark:bg-gray-800 p-8 rounded-xl shadow-lg border border-gray-100 dark:border-gray-700">
-        <div>
-          <h2 className="mt-2 text-center text-3xl font-extrabold text-gray-900 dark:text-white">
-            Nexworth Sign In
-          </h2>
-          <p className="mt-2 text-center text-sm text-gray-600 dark:text-gray-400">
-            Personal Finance & Asset Management
+    <div className="min-h-screen flex items-center justify-center bg-brand-primary py-12 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-md w-full space-y-8 glass-card p-10 rounded-2xl shadow-2xl">
+        <div className="flex flex-col items-center">
+          <Logo className="mb-2" textColor="text-white" />
+          <p className="mt-6 text-center text-[10px] pillar-text-bold text-brand-secondary tracking-[0.2em]">
+            Login to your secure financial portal
+          </p>
+          <p className="mt-1 text-center text-xs text-slate-400 font-medium">
+            สื่อถึงความโปร่งใส ความชัดเจน
           </p>
         </div>
         
-        <form className="mt-8 space-y-6" onSubmit={handleSubmit}>
+        <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
           {error && (
-            <div className="rounded-md bg-red-50 dark:bg-red-900/30 p-4 border border-red-200 dark:border-red-800">
-              <div className="flex">
-                <div className="flex-shrink-0">
-                  <AlertCircle className="h-5 w-5 text-red-500" aria-hidden="true" />
-                </div>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-red-800 dark:text-red-200">{error}</h3>
-                </div>
+            <div className="rounded-xl bg-rose-500/10 p-4 border border-rose-500/30">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-rose-500" />
+                <h3 className="text-xs font-bold text-rose-400">{error}</h3>
               </div>
             </div>
           )}
           
-          <div className="rounded-md shadow-sm space-y-4">
+          <div className="space-y-5">
             <div>
-              <label htmlFor="email-address" className="sr-only">
-                Email address
+              <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
+                Username / Email
               </label>
-              <input
-                id="email-address"
-                name="email"
-                type="email"
-                required
-                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm bg-white dark:bg-gray-700 transition-colors"
-                placeholder="Email address"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck="false"
-                data-testid="login-input-email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-              />
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <UserIcon className="h-4 w-4 text-slate-500 group-focus-within:text-brand-accent transition-colors" />
+                </div>
+                <input
+                  type="email"
+                  required
+                  className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all sm:text-sm"
+                  placeholder="name@company.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                />
+              </div>
             </div>
-            <div className="relative">
-              <label htmlFor="password" className="sr-only">
+
+            <div>
+              <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
                 Password
               </label>
-              <input
-                id="password"
-                name="password"
-                type={showPassword ? "text" : "password"}
-                required
-                className="appearance-none rounded-lg relative block w-full px-3 py-3 border border-gray-300 dark:border-gray-600 placeholder-gray-500 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 focus:z-10 sm:text-sm bg-white dark:bg-gray-700 transition-colors"
-                placeholder="Password"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck="false"
-                data-testid="login-input-password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-              />
-              <button
-                type="button"
-                className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                onClick={() => setShowPassword(!showPassword)}
-                data-testid="login-password-toggle"
-              >
-                {showPassword ? (
-                  <EyeOff className="h-5 w-5" aria-hidden="true" />
-                ) : (
-                  <Eye className="h-5 w-5" aria-hidden="true" />
-                )}
-              </button>
+              <div className="relative group">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <Lock className="h-4 w-4 text-slate-500 group-focus-within:text-brand-accent transition-colors" />
+                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  required
+                  className="block w-full pl-11 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all sm:text-sm"
+                  placeholder="••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+                <button
+                  type="button"
+                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                  onClick={() => setShowPassword(!showPassword)}
+                >
+                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                </button>
+              </div>
+              <div className="mt-2 text-right">
+                <button type="button" className="text-[10px] font-bold text-slate-400 hover:text-brand-accent transition-colors uppercase tracking-tight">
+                  Forgot Password?
+                </button>
+              </div>
             </div>
           </div>
 
-          <div>
+          <div className="pt-2">
             <button
               type="submit"
               disabled={isLoading}
-              className="group relative w-full flex justify-center py-3 px-4 border border-transparent text-sm font-medium rounded-lg text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors disabled:opacity-70"
+              className="w-full flex justify-center py-3.5 px-4 bg-brand-accent hover:bg-brand-accent/90 text-brand-primary text-[11px] pillar-text-bold rounded-xl transition-all shadow-lg emerald-glow disabled:opacity-50"
             >
-              <span className="absolute left-0 inset-y-0 flex items-center pl-3">
-                <LogIn className="h-5 w-5 text-blue-500 group-hover:text-blue-400" aria-hidden="true" />
-              </span>
-              {isLoading ? 'Signing in...' : 'Sign in'}
+              {isLoading ? 'Processing...' : 'LOGIN'}
+            </button>
+          </div>
+
+          <div className="text-center">
+            <button type="button" className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest border-b border-transparent hover:border-white/20 pb-1">
+              Create an Account
             </button>
           </div>
         </form>

@@ -1,34 +1,39 @@
-# Nexworth Git & Testing Workflow Protocol 🛡️✨
+# Nexworth Standard GitFlow & Testing Protocol 🛡️✨
 
 ## 🏆 The 5 Golden Rules for Testing (Environment Protocol)
 1. **DB Staging**: ต้องใช้งาน `stg_nexworth_db` เท่านั้น
 2. **Localhost Only**: เทสผ่าน localhost (ต่อกับ Staging DB ถาวร)
 3. **Test Org**: ต้องใช้ Organization สำหรับการเทสเท่านั้น
-4. **Test User**: ต้องใช้ User สำหรับการเทสเท่านั้น
-5. **Test Data**: ต้องใช้ข้อมูลสำหรับชุดเทสเท่านั้น
+4. **Test User**: ต้องใช้ User สำหรับการเทสเท่านั้น (`test@nexworth.net`)
+5. **Test Data**: ห้ามใช้ Mockup Data ที่ Prisma ให้ใช้ข้อมูลจริงใน Staging DB เท่านั้น
 
-## Step 1: 🏗️ Development & Fixes (Branch: `dev`)
-- **Coding / Fix**: ทำงานบน branch **`dev`**
-- **Code Done**: เมื่อเขียนโค้ดหรือแก้ไขบัคเสร็จสิ้น
-- **Commit**: ทำการ commit โค้ดลงใน branch **`dev`**
-- **Merge to Version Branch**: ทำการ merge ไปที่ branch **`nexworth-v-x.x.x`**
-- **Switch Back**: สลับกลับมาที่ branch **`dev`**
-- **Wait**: รอรับ Bug Report จาก QA
+## 🌳 Standard GitFlow Architecture
+1. **`main`**: Production-ready code only.
+2. **`develop`**: Main integration branch for development.
+3. **`feature/NEX-xxx`**: Branches for specific Jira tasks.
+4. **`release/vX.X.X`**: Branches for final release preparation.
+5. **`hotfix/NEX-xxx`**: Emergency fixes for Production.
 
-## Step 2: 🧼 Data Setup (Staging)
-- ใช้ข้อมูลเดิมต่อเนื่องในการพัฒนา (แนะนำให้ Backup ไว้)
-- รัน `npm run reset:stg` เพื่อ Reset ระบบให้เป็นค่ามาตรฐานและเตรียมข้อมูลพื้นฐานสำหรับการเทส
+## 🚀 Development Workflow (The Mandatory Cycle)
 
-## Step 3: 🧪 Bug Fixing & Unit Testing
-- **Read Report**: เข้าไปอ่านรายงานบัค (Bug Report)
-- **Fix Bug**: ดำเนินการแก้บัคบน branch **`dev`**
-- **Unit Test**: เขียนและรัน Unit Test สำหรับการแก้ไขบัคบน branch **`dev`**
-- **Test Pass**: ต้องผ่าน 100% (Green) ไม่มี Red Line
+### 1. Planning & Prioritization (Start Task)
+- **Select Task**: เลือก Task จาก `docs/IMPLEMENTATION_PLAN.md`.
+- **Prioritize**: จัดลำดับความสำคัญ (Critical > High > Medium > Low).
+- **Discord Start**: ส่งแจ้งเตือนเข้า Discord (หัวข้องาน, Priority, แผนการคร่าวๆ).
+- **Consultation**: หากไม่มั่นใจ Logic หรือ UI ให้หยุดและเรียก BA/SA/UXUI ทันที.
 
-## Step 4: 🏁 Final Check & Merge to Main
-- **Wait for QA**: หยุดรอ Bug Report จาก QA
-- **Merge to Main**: ถ้า QA ไม่พบบัคเพิ่มเติม (ผ่านทั้งหมด) ให้ทำการ Merge `nexworth-v-x.x.x` ไปยัง **`main`**
-- **Back to Dev**: กลับมาที่ branch **`dev`** เพื่อพัฒนาฟีเจอร์หรือเวอร์ชันต่อไป
+### 2. Feature Branching
+- **Checkout**: `git checkout develop` -> `git pull` -> `git checkout -b feature/NEX-xxx`.
+
+### 3. Implementation (Strict Rules)
+- **DataTest-ID**: ต้องใส่ `data-testid` ในทุก Interactive Element.
+- **Verification**: รัน Unit Test และ Build ตรวจสอบ Red Lines.
+- **GitFlow Commit**: `git commit -m "feat(NEX-xxx): description"`.
+
+### 4. Integration & Completion (End Task)
+- **Merge to Dev**: Merge `feature/NEX-xxx` เข้า `develop`.
+- **E2E Test**: รัน Playwright E2E tests บน Staging DB (ต้องผ่าน 100%).
+- **Discord End**: ส่งแจ้งเตือนเข้า Discord (สรุปสิ่งที่ทำ, ปัญหาที่พบ, และ Next Steps).
 
 ---
-**Core Philosophy**: แยกบทบาท Dev และ QA ให้ชัดเจนผ่าน Workspace แม้จะทำงานคนเดียว เพื่อคุณภาพของระบบสูงสุด 🚀🛡️✨
+**Core Philosophy**: "Plan First, Notify Always, Code Safely." 🚀🛡️✨

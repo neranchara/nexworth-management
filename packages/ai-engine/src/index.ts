@@ -101,8 +101,44 @@ export class NexworthAIEngine {
         if (jsonMatch) return JSON.parse(jsonMatch[0]);
       } catch (error: any) {
         console.error(`AI Engine Image: ${config.model} (${config.apiVersion}) failed:`, error.message || error);
-        continue;
       }
+    }
+    return null;
+  }
+
+  async diagnoseUserHealth(metrics: any[], findings: any[]): Promise<{ diagnosis: string; recommendations: string[] } | null> {
+    if (!this.apiKey) return null;
+
+    try {
+      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+
+      const prompt = `
+        You are an Institutional Grade Security Analyst for Nexworth, a financial management platform.
+        Analyze the following user diagnostic data and provide:
+        1. A high-level professional diagnosis of the account health (max 3 sentences).
+        2. Three specific, actionable recommendations for the Operations team to fix issues.
+
+        Data:
+        Metrics: ${JSON.stringify(metrics)}
+        Findings: ${JSON.stringify(findings)}
+
+        Return JSON format: { 
+          "diagnosis": "string", 
+          "recommendations": ["string", "string", "string"],
+          "suggestedFixes": [
+            { "type": "reconcile_account | sanitize_dates | sync_line", "description": "string", "payload": {} }
+          ]
+        }
+      `;
+
+      const result = await model.generateContent(prompt);
+      const response = await result.response;
+      const text = response.text();
+      
+      const jsonMatch = text.match(/\{[\s\S]*\}/);
+      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+    } catch (error: any) {
+      console.error('AI Diagnosis failed:', error.message || error);
     }
     return null;
   }

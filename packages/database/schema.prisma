@@ -24,6 +24,7 @@ model Organization {
   categories       TransactionCategory[]
   transactionTypes TransactionType[]
   users            User[]
+  auditLogs        AuditLog[]
 }
 
 model User {
@@ -49,6 +50,8 @@ model User {
   transactions     Transaction[]
   organization     Organization?     @relation(fields: [organizationId], references: [id])
   role             Role?             @relation(fields: [roleId], references: [id])
+  impersonatedLogs ImpersonationLog[] @relation("ImpersonatorLogs")
+  targetLogs       ImpersonationLog[] @relation("TargetUserLogs")
 }
 
 model Role {
@@ -131,6 +134,7 @@ model Asset {
   userId         String
   accountId      String        @unique
   amount         Float         @default(0)
+  note           String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   account        Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -146,6 +150,7 @@ model Liability {
   userId         String
   accountId      String        @unique
   amount         Float         @default(0)
+  note           String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
   account        Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
@@ -233,6 +238,9 @@ model Transaction {
   taxAmount           Float?              @default(0)
   taxType             String?             // 'VAT', 'WHT', 'NONE'
   transactionType     String?             // 'INCOME', 'EXPENSE', 'TRANSFER', 'LOAN', 'DEBT_REPAY'
+
+  @@index([userId, createdAt])
+  @@index([organizationId, createdAt])
 }
 
 model Loan {
@@ -288,4 +296,53 @@ enum TransactionBehavior {
   LOAN_REPAY
   GOAL
   EMERGENCY
+}
+
+model AuditLog {
+  id             String   @id @default(uuid())
+  action         String   // "CREATE", "UPDATE", "DELETE"
+  entity         String   // "Transaction", "Account", "User", etc.
+  entityId       String   // The ID of the record being changed
+  organizationId String?  // Link to organization for multi-tenancy
+  oldValue       Json?    // Snapshot of the data BEFORE change
+  newValue       Json?    // Snapshot of the data AFTER change
+  performedBy    String?  // User ID or "SYSTEM"
+  createdAt      DateTime @default(now())
+  
+  // Forensic & BA/SA Requirements
+  ipAddress      String?
+  userAgent      String?
+  riskTag        String?  @default("NORMAL")
+  reason         String?
+
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([entity, entityId])
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  category  String?  @default("GENERAL") // "BUSINESS", "TECHNICAL", "SECURITY"
+  updatedAt DateTime @updatedAt
+  updatedBy String?  // Admin User ID
+}
+
+model ImpersonationLog {
+  id              String   @id @default(uuid())
+  impersonatorId  String   // Admin User ID
+  targetUserId    String   // Target User ID
+  ticketReference String   // Reference ticket number
+  accessIp        String?  // IP Address of Admin
+  startedAt       DateTime @default(now())
+  endedAt         DateTime? // Updated when Admin stops impersonation or session ends
+  
+  impersonator    User     @relation("ImpersonatorLogs", fields: [impersonatorId], references: [id])
+  targetUser      User     @relation("TargetUserLogs", fields: [targetUserId], references: [id])
+
+  @@index([impersonatorId])
+  @@index([targetUserId])
+  @@index([startedAt])
 }
