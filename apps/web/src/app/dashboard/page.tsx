@@ -149,31 +149,41 @@ const getHealthColor = (score: number) => {
 // ============================================
 
 const WelcomeCard = ({ user, stats, loading }: { user: any; stats: any; loading: boolean }) => (
-  <div className="relative overflow-hidden bg-slate-900/40 backdrop-blur-3xl shadow-2xl rounded-[2.5rem] p-8 h-full flex flex-col justify-between border border-white/5 group">
-    {/* Animated Glows */}
-    <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-600/20 rounded-full blur-[100px] group-hover:bg-blue-600/30 transition-all duration-1000" />
-    <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-indigo-600/20 rounded-full blur-[100px] group-hover:bg-indigo-600/30 transition-all duration-1000" />
+  <div 
+    className="relative overflow-hidden glass-card rounded-[2.5rem] p-8 h-full flex flex-col justify-between group animate-fade-in-up stagger-1"
+    data-testid="dashboard-welcome-container"
+  >
+    {/* Animated Background Accents */}
+    <div className="absolute -top-24 -right-24 w-64 h-64 bg-blue-500/10 rounded-full blur-[100px] animate-float" />
+    <div className="absolute -bottom-24 -left-24 w-64 h-64 bg-emerald-500/10 rounded-full blur-[100px] animate-float" style={{ animationDelay: '2s' }} />
     
     <div className="relative z-10 mb-8">
-      <h1 className="text-3xl font-black text-white mb-2 tracking-tighter leading-tight">
+      <h1 className="text-3xl font-black text-white mb-2 tracking-tighter leading-tight" data-testid="dashboard-greeting">
         สวัสดี, {[user?.firstName].filter(Boolean).join(' ') || 'User'} ✨
       </h1>
-      <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em]">Institutional Grade Overview</p>
+      <p className="text-slate-400 text-[10px] font-black uppercase tracking-[0.3em] opacity-60">Nexworth Pillar System</p>
     </div>
     
     <div className="relative z-10 grid grid-cols-2 gap-4 flex-1">
       {[
-        { key: 'assets', label: 'Real Assets', value: stats?.summary?.totalAssets, icon: Wallet, color: 'from-blue-500/10 to-blue-600/5', text: 'text-blue-400', border: 'border-blue-500/20' },
-        { key: 'goal-assets', label: 'Goal Money', value: stats?.summary?.totalGoalAssets, icon: Target, color: 'from-purple-500/10 to-purple-600/5', text: 'text-purple-400', border: 'border-purple-500/20' },
-        { key: 'liabilities', label: 'Liabilities', value: stats?.summary?.totalLiabilities, icon: CreditCard, color: 'from-rose-500/10 to-rose-600/5', text: 'text-rose-400', border: 'border-rose-500/20' },
-        { key: 'net-worth', label: 'Net Worth', value: stats?.summary?.netWorth, icon: ShieldCheck, color: 'from-emerald-500/10 to-emerald-600/5', text: 'text-emerald-400', border: 'border-emerald-500/20' }
+        { key: 'assets', label: 'Real Assets', value: stats?.summary?.totalAssets, icon: Wallet, color: 'text-blue-400' },
+        { key: 'goal-assets', label: 'Goal Money', value: stats?.summary?.totalGoalAssets, icon: Target, color: 'text-purple-400' },
+        { key: 'liabilities', label: 'Liabilities', value: stats?.summary?.totalLiabilities, icon: CreditCard, color: 'text-rose-400' },
+        { key: 'net-worth', label: 'Net Worth', value: stats?.summary?.netWorth, icon: ShieldCheck, color: 'text-emerald-400', special: true }
       ].map((item, idx) => (
-        <div key={idx} className={`bg-gradient-to-br ${item.color} p-5 rounded-3xl border ${item.border} flex flex-col justify-between hover:scale-[1.02] transition-all duration-500 shadow-xl shadow-black/20`} data-testid={`dashboard-summary-card-${item.key}`}>
+        <div 
+          key={idx} 
+          className="glass-card glass-card-interactive p-5 rounded-3xl flex flex-col justify-between shadow-xl shadow-black/20" 
+          data-testid={`dashboard-summary-card-${item.key}`}
+        >
           <div className="flex items-center justify-between mb-2">
             <span className="text-[9px] font-black uppercase tracking-widest text-slate-500">{item.label}</span>
-            <div className={`p-1.5 rounded-lg bg-black/40 ${item.text}`}><item.icon className="w-3.5 h-3.5" /></div>
+            <div className={`p-1.5 rounded-lg bg-black/40 ${item.color}`}><item.icon className="w-3.5 h-3.5" /></div>
           </div>
-          <p className="text-xl font-black text-white tabular-nums leading-none tracking-tighter" data-testid={`dashboard-summary-val-${item.key}`}>
+          <p 
+            className={`text-xl font-black tabular-nums leading-none tracking-tighter ${item.special ? 'gradient-text' : 'text-white'}`} 
+            data-testid={`dashboard-summary-val-${item.key}`}
+          >
             {loading ? '...' : `${stats?.currency || '฿'}${(item.value ?? 0).toLocaleString()}`}
           </p>
         </div>
@@ -187,10 +197,13 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
   const color = getHealthColor(score);
   
   return (
-    <div className="relative overflow-hidden bg-slate-900/40 backdrop-blur-3xl shadow-2xl rounded-[2.5rem] p-8 h-full flex flex-col items-center justify-between border border-white/5 group">
+    <div 
+      className="relative overflow-hidden glass-card rounded-[2.5rem] p-8 h-full flex flex-col items-center justify-between group animate-fade-in-up stagger-2"
+      data-testid="dashboard-health-container"
+    >
       {/* Dynamic Background Glow */}
       <div 
-        className="absolute inset-0 opacity-20 transition-all duration-1000 blur-[80px] pointer-events-none"
+        className="absolute inset-0 opacity-10 transition-all duration-1000 blur-[80px] pointer-events-none"
         style={{ 
           background: `radial-gradient(circle at center, ${color}44 0%, transparent 70%)` 
         }} 
@@ -202,11 +215,11 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
           <p className="text-[9px] font-black text-slate-500 uppercase tracking-widest mt-1.5">AI Risk Assessment</p>
         </div>
         <div className="p-3 rounded-2xl bg-black/40 border border-white/10 shadow-xl" style={{ color }}>
-          <Activity className="w-5 h-5" />
+          <Activity className="w-5 h-5 animate-pulse" />
         </div>
       </div>
 
-      <div className="relative z-10 w-full aspect-square max-w-[200px] flex items-center justify-center">
+      <div className="relative z-10 w-full aspect-square max-w-[200px] flex items-center justify-center animate-scale-in">
         {!loading && stats ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
@@ -223,8 +236,8 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
                 stroke="none"
                 cornerRadius={20}
               >
-                <Cell fill={color} />
-                <Cell fill="rgba(255,255,255,0.05)" />
+                <Cell fill={color} className="emerald-glow" />
+                <Cell fill="rgba(255,255,255,0.02)" />
               </Pie>
             </PieChart>
           </ResponsiveContainer>
@@ -237,12 +250,12 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
         {/* Central Score Display */}
         <div className="absolute inset-0 flex flex-col items-center justify-center pt-2">
           <div className="relative">
-            <span className="text-6xl font-black text-white tracking-tighter leading-none">
+            <span className="text-6xl font-black text-white tracking-tighter leading-none" data-testid="dashboard-health-score">
               {loading ? '--' : score}
             </span>
             <span className="absolute -top-1 -right-4 text-xs font-black text-slate-500">pts</span>
           </div>
-          <div className="mt-3 px-4 py-1.5 rounded-full border shadow-2xl transition-all duration-700" style={{ backgroundColor: `${color}20`, borderColor: `${color}40` }}>
+          <div className="mt-3 px-4 py-1.5 rounded-full border shadow-2xl transition-all duration-700" style={{ backgroundColor: `${color}10`, borderColor: `${color}30` }}>
             <span className="text-[10px] font-black uppercase tracking-widest" style={{ color }}>
               {stats?.health?.status || 'Analyzing...'}
             </span>
@@ -251,9 +264,9 @@ const HealthCard = ({ stats, loading, healthData }: { stats: any; loading: boole
       </div>
 
       {/* Mini Insight */}
-      <div className="relative z-10 w-full mt-8 p-4 bg-black/30 rounded-3xl border border-white/5 shadow-inner">
+      <div className="relative z-10 w-full mt-8 p-4 bg-black/20 rounded-3xl border border-white/5 shadow-inner">
         <div className="flex items-center gap-3">
-          <div className="w-2 h-2 rounded-full shadow-[0_0_10px_rgba(255,255,255,0.3)] animate-pulse" style={{ backgroundColor: color }} />
+          <div className="w-2 h-2 rounded-full emerald-glow animate-pulse" style={{ backgroundColor: color }} />
           <p className="text-[10px] font-black text-slate-400 uppercase tracking-wide leading-relaxed">
             {score >= 80 ? 'System Integrity: Optimal Balance' : score >= 50 ? 'Status: Steady Progress' : 'Warning: High Debt Exposure'}
           </p>
@@ -277,7 +290,10 @@ const MetricCard = ({
   onMonthChange,
   onYearChange
 }: any) => (
-  <div className="group relative overflow-hidden bg-slate-900/40 backdrop-blur-3xl rounded-[2rem] p-7 h-full flex flex-col justify-between border border-white/5 hover:border-white/10 transition-all duration-500 hover:translate-y-[-4px] hover:shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+  <div 
+    className="group relative overflow-hidden glass-card glass-card-interactive rounded-[2rem] p-7 h-full flex flex-col justify-between animate-fade-in-up stagger-3"
+    data-testid={`dashboard-metric-card-${label.toLowerCase().replace(/\s+/g, '-')}`}
+  >
     {/* Subtle Glow Accent */}
     <div className={`absolute top-0 right-0 w-32 h-32 blur-[80px] opacity-10 transition-opacity group-hover:opacity-20 pointer-events-none ${bg}`} />
     
@@ -343,7 +359,10 @@ const MetricCard = ({
 );
 
 const CashflowCard = ({ stats, loading, isLocked, cashflowMode, selectedMonth, selectedYear, pieData, selectedMonthData, onModeChange, onSelectedMonthChange, onSelectedYearChange }: any) => (
-  <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+  <div 
+    className="glass-card rounded-[2.5rem] p-8 h-full flex flex-col animate-fade-in-up stagger-4"
+    data-testid="dashboard-cashflow-container"
+  >
     <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 mb-10">
       <div className="flex items-center gap-4">
         <div className="p-3.5 bg-blue-600 rounded-2xl text-white shadow-xl shadow-blue-600/20 ring-1 ring-white/20">
@@ -382,7 +401,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, selectedMonth, s
     
     <div className={`flex flex-col gap-8 flex-1 ${cashflowMode === 'both' ? 'xl:flex-row' : ''}`}>
       {(cashflowMode === 'table' || cashflowMode === 'both') && (
-        <div className={`overflow-x-auto bg-black/20 rounded-3xl border border-white/5 custom-scrollbar ${cashflowMode === 'both' ? 'xl:w-3/5' : 'w-full'}`}>
+        <div className={`overflow-x-auto bg-black/20 rounded-3xl border border-white/5 custom-scrollbar animate-scale-in ${cashflowMode === 'both' ? 'xl:w-3/5' : 'w-full'}`}>
           <table className="min-w-[800px] w-full text-[11px]">
             <thead>
               <tr className="bg-white/5 border-b border-white/5">
@@ -428,7 +447,7 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, selectedMonth, s
         </div>
       )}
       {(cashflowMode === 'chart' || cashflowMode === 'both') && (
-        <div className={`min-h-[450px] bg-black/20 p-8 rounded-[2rem] border border-white/5 flex flex-col ${cashflowMode === 'both' ? 'xl:w-2/5' : 'w-full'}`}>
+        <div className={`min-h-[450px] bg-black/20 p-8 rounded-[2rem] border border-white/5 flex flex-col animate-scale-in ${cashflowMode === 'both' ? 'xl:w-2/5' : 'w-full'}`}>
            <div className="flex items-center justify-between mb-8">
               <h3 className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em]">Flow Distribution</h3>
               <div className="flex items-center gap-2 bg-black/40 px-3 py-1.5 rounded-xl border border-white/5 shadow-inner">
@@ -508,7 +527,10 @@ const CashflowCard = ({ stats, loading, isLocked, cashflowMode, selectedMonth, s
 );
 
 const GoalTrackingCard = ({ stats }: any) => (
-  <div className="bg-slate-900/40 backdrop-blur-3xl rounded-[2.5rem] p-8 h-full flex flex-col border border-white/5 shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+  <div 
+    className="glass-card rounded-[2.5rem] p-8 h-full flex flex-col animate-fade-in-up stagger-4"
+    data-testid="dashboard-milestones-container"
+  >
     <div className="flex items-center justify-between mb-10">
       <div className="flex items-center gap-4">
         <div className="p-3.5 bg-purple-600 rounded-2xl text-white shadow-xl shadow-purple-600/20 ring-1 ring-white/20">
@@ -529,7 +551,7 @@ const GoalTrackingCard = ({ stats }: any) => (
     {stats?.goalTracking?.length > 0 ? (
       <div className="max-w-[1100px] mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 w-full">
         {stats.goalTracking.map((goal: any) => (
-          <div key={goal.id} className="group relative p-8 min-h-[240px] rounded-[2.5rem] bg-white/[0.03] border border-white/5 hover:border-purple-500/30 transition-all duration-500 hover:translate-y-[-4px] hover:shadow-[0_20px_40px_rgba(0,0,0,0.4)] flex flex-col justify-between overflow-hidden">
+          <div key={goal.id} className="group relative p-8 min-h-[240px] glass-card glass-card-interactive rounded-[2.5rem] flex flex-col justify-between overflow-hidden animate-scale-in">
             <div className="absolute top-0 left-10 right-10 h-px bg-gradient-to-r from-transparent via-purple-500/50 to-transparent opacity-0 group-hover:opacity-100 transition-opacity" />
             
             <div className="flex justify-between items-start mb-6">
@@ -581,22 +603,22 @@ const GoalTrackingCard = ({ stats }: any) => (
 );
 
 const SystemAdminDashboard = ({ stats }: { stats: any }) => (
-  <div className="pb-12 space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+  <div className="pb-12 space-y-8 animate-fade-in-up stagger-1">
     {/* Admin Hero Section */}
-    <div className="relative overflow-hidden bg-gradient-to-br from-indigo-900 via-blue-900 to-slate-900 rounded-[2.5rem] p-10 shadow-2xl group">
-      <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700" />
+    <div className="relative overflow-hidden glass-card rounded-[2.5rem] p-10 group shadow-2xl">
+      <div className="absolute top-0 right-0 -mt-16 -mr-16 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl group-hover:bg-blue-500/20 transition-all duration-700 animate-float" />
       <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
         <div>
-          <h1 className="text-4xl font-black text-white mb-3 tracking-tighter">System Intelligence</h1>
+          <h1 className="text-4xl font-black text-white mb-3 tracking-tighter" data-testid="dashboard-admin-hdr">System Intelligence</h1>
           <p className="text-blue-100/70 font-medium text-lg max-w-xl leading-relaxed">
             Global monitoring and organization oversight for the Nexworth network.
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <div className="px-6 py-4 bg-white/10 backdrop-blur-xl rounded-2xl border border-white/10">
+          <div className="px-6 py-4 glass-card rounded-2xl border-white/10">
             <p className="text-[10px] font-black text-blue-200 uppercase tracking-widest mb-1">Status</p>
             <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <div className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse emerald-glow" />
               <span className="text-sm font-black text-white uppercase">Systems Operational</span>
             </div>
           </div>
@@ -607,16 +629,16 @@ const SystemAdminDashboard = ({ stats }: { stats: any }) => (
     {/* Metric Overview */}
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       {[
-        { label: 'Total Organizations', value: stats.summary.totalOrganizations, icon: Building2, color: 'from-blue-600/20 to-blue-700/5', text: 'text-blue-400', border: 'border-blue-500/20' },
-        { label: 'Total Users', value: stats.summary.totalUsers, icon: Activity, color: 'from-indigo-600/20 to-indigo-700/5', text: 'text-indigo-400', border: 'border-indigo-500/20' },
-        { label: 'Total Transactions', value: stats.summary.totalTransactions?.toLocaleString(), icon: TrendingUp, color: 'from-emerald-600/20 to-emerald-700/5', text: 'text-emerald-400', border: 'border-emerald-500/20' }
+        { key: 'orgs', label: 'Total Organizations', value: stats.summary.totalOrganizations, icon: Building2, color: 'text-blue-400' },
+        { key: 'users', label: 'Total Users', value: stats.summary.totalUsers, icon: Activity, color: 'text-indigo-400' },
+        { key: 'txs', label: 'Total Transactions', value: stats.summary.totalTransactions?.toLocaleString(), icon: TrendingUp, color: 'text-emerald-400' }
       ].map((card, i) => (
-        <div key={i} className={`bg-gradient-to-br ${card.color} p-8 rounded-3xl border ${card.border} shadow-xl hover:translate-y-[-4px] transition-all duration-300`}>
+        <div key={i} className="glass-card glass-card-interactive p-8 rounded-3xl shadow-xl animate-scale-in" data-testid={`dashboard-admin-metric-${card.key}`}>
           <div className="flex items-center gap-6">
-            <div className={`p-4 bg-slate-900/50 rounded-2xl ${card.text} border border-white/5`}><card.icon className="w-7 h-7" /></div>
+            <div className={`p-4 bg-black/40 rounded-2xl ${card.color} border border-white/5 shadow-xl`}><card.icon className="w-7 h-7" /></div>
             <div>
               <p className="text-[11px] font-black text-slate-500 uppercase tracking-widest mb-1">{card.label}</p>
-              <p className="text-2xl font-black text-slate-900 dark:text-white tabular-nums tracking-tighter">{card.value}</p>
+              <p className="text-2xl font-black text-white tabular-nums tracking-tighter" data-testid={`dashboard-admin-metric-val-${card.key}`}>{card.value}</p>
             </div>
           </div>
         </div>
@@ -624,19 +646,23 @@ const SystemAdminDashboard = ({ stats }: { stats: any }) => (
     </div>
 
     {/* Organization Oversight Table */}
-    <div className="bg-white dark:bg-slate-900 rounded-[2rem] shadow-2xl overflow-hidden border border-slate-100 dark:border-slate-800/50">
-      <div className="p-8 border-b dark:border-slate-800 flex justify-between items-center bg-slate-50/50 dark:bg-slate-800/30">
+    <div className="glass-card rounded-[2rem] shadow-2xl overflow-hidden animate-fade-in-up stagger-3">
+      <div className="p-8 border-b border-white/5 flex justify-between items-center bg-white/5">
         <div>
-          <h2 className="text-2xl font-black text-slate-900 dark:text-white tracking-tight">Organization Oversight</h2>
+          <h2 className="text-2xl font-black text-white tracking-tight">Organization Oversight</h2>
           <p className="text-[11px] font-black text-slate-400 uppercase tracking-widest">Recent network activity</p>
         </div>
-        <Link href="/dashboard/organizations" className="px-5 py-2.5 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 uppercase tracking-wider">
+        <Link 
+          href="/dashboard/organizations" 
+          data-testid="dashboard-admin-btn-all"
+          className="px-5 py-2.5 bg-blue-600 text-white text-xs font-black rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-500/20 uppercase tracking-wider"
+        >
           View All Network
         </Link>
       </div>
       <div className="overflow-x-auto">
         <table className="w-full text-left">
-          <thead className="bg-slate-50/80 dark:bg-slate-800/50">
+          <thead className="bg-white/5">
             <tr>
               <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Organization</th>
               <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest">Established</th>
@@ -644,10 +670,10 @@ const SystemAdminDashboard = ({ stats }: { stats: any }) => (
               <th className="px-8 py-5 text-[10px] font-black text-slate-500 uppercase tracking-widest text-right">Access Level</th>
             </tr>
           </thead>
-          <tbody className="divide-y dark:divide-slate-800">
+          <tbody className="divide-y divide-white/5">
             {stats.recentOrganizations?.map((org: any) => (
-              <tr key={org.id} className="hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
-                <td className="px-8 py-5 font-black text-slate-900 dark:text-white">{org.name}</td>
+              <tr key={org.id} className="hover:bg-white/5 transition-colors">
+                <td className="px-8 py-5 font-black text-white">{org.name}</td>
                 <td className="px-8 py-5 text-slate-500 font-medium tabular-nums">{new Date(org.createdAt).toLocaleDateString()}</td>
                 <td className="px-8 py-5 text-slate-500 font-bold tabular-nums">{org._count.users} Active</td>
                 <td className="px-8 py-5 text-right">
