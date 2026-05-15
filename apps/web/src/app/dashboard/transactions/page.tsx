@@ -4,17 +4,46 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 
 import { 
-  Plus, Search, Download, Upload, MoreHorizontal, 
-  ArrowUpCircle, ArrowDownCircle, RefreshCw, Wallet, 
-  Calendar, Edit2, Trash2, X, CheckCircle, AlertCircle, ArrowRight
+  Plus, Search, MoreHorizontal, 
+  ArrowUpCircle, ArrowDownCircle, 
+  Edit2, Trash2, CheckCircle, AlertCircle, Bot, CloudUpload, Loader2,
+  Scan, X
 } from 'lucide-react';
 import { format } from 'date-fns';
 import { usePermissions } from '@/hooks/usePermissions';
 import * as XLSX from 'xlsx';
 import { Transaction, Account, TransactionCategory, TransactionType } from '@/types/models';
+import GlassCard from '@/components/ui/GlassCard';
+import GlassModal from '@/components/ui/GlassModal';
+import { mergePageLabels } from '@/utils/uiLabels';
 
-
-
+const DEFAULT_LABELS = {
+  title: 'ประวัติธุรกรรม',
+  subtitle: 'จัดการข้อมูลทางการเงิน',
+  addNew: 'บันทึกรายการใหม่',
+  search: 'ค้นหา...',
+  allCategories: 'ทุกหมวดหมู่',
+  allAccounts: 'ทุกบัญชี',
+  table: {
+    date: 'วันที่',
+    description: 'รายละเอียด',
+    category: 'หมวดหมู่',
+    account: 'บัญชี',
+    amount: 'จำนวนเงิน',
+    action: 'จัดการ'
+  },
+  form: {
+    titleAdd: 'บันทึกรายการใหม่',
+    titleEdit: 'แก้ไขรายการ',
+    amount: 'จำนวนเงิน (บาท)',
+    account: 'บัญชี',
+    category: 'หมวดหมู่',
+    note: 'บันทึกเพิ่มเติม',
+    date: 'วันที่',
+    save: 'บันทึกรายการ',
+    update: 'อัปเดตรายการ'
+  }
+};
 
 export default function TransactionsPage() {
   const [transactions, setTransactions] = useState<Transaction[]>([]);
@@ -22,27 +51,28 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
   const [types, setTypes] = useState<TransactionType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
+  const [accountTypes, setAccountTypes] = useState<any[]>([]);
   
-  // New UI Filters
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState('');
   const [filterCategory, setFilterCategory] = useState('');
   const [filterAccount, setFilterAccount] = useState('');
 
-  // Alert state
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  // Modal / Form state
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentTxId, setCurrentTxId] = useState<string | null>(null);
+  const [isScanning, setIsScanning] = useState(false);
   
-  // Form fields
+  const scanFileRef = useRef<HTMLInputElement>(null);
+
   const [formData, setFormData] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
     actualDate: '',
@@ -55,22 +85,31 @@ export default function TransactionsPage() {
     note: ''
   });
 
-
   const { hasPermission } = usePermissions();
 
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [txRes, accRes, catRes, typeRes] = await Promise.all([
+      const [txRes, accRes, catRes, typeRes, uiRes, configRes] = await Promise.all([
         api.get('/transactions', { params: { month: filterMonth, year: filterYear } }),
         api.get('/accounts'),
         api.get('/categories'),
-        api.get('/types')
+        api.get('/types'),
+        api.get('/configs', { params: { key: 'UI_LABELS_TRANSACTIONS' } }),
+        api.get('/configs', { params: { category: 'DROPDOWNS' } })
       ]);
       setTransactions(txRes.data.transactions);
       setAccounts(accRes.data.accounts);
       setCategories(catRes.data.categories);
       setTypes(typeRes.data.types);
+      
+      if (uiRes.data.data?.[0]?.value) {
+        setLabels(mergePageLabels(DEFAULT_LABELS, uiRes.data.data[0].value));
+      }
+      const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
+      if (typesConfig) {
+        setAccountTypes(typesConfig.value);
+      }
     } catch {
       console.error('Failed to load data');
     } finally {
@@ -121,8 +160,6 @@ export default function TransactionsPage() {
 
   const openEditModal = (tx: Transaction) => {
     const behavior = tx.type?.behavior || tx.category?.type?.behavior || '';
-    const isExpense = ['EXPENSE', 'DEBT'].includes(behavior);
-    
     let fromAccId = '';
     let toAccId = '';
     let displayTypeId = tx.typeId;
@@ -131,74 +168,18 @@ export default function TransactionsPage() {
     if (tx.linkedTransactionId) {
       const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
       if (linkedTx) {
-        const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
         const isCurrentFrom = ['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
-        const isLinkedFrom = ['EXPENSE', 'DEBT'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนออกภายใน';
-        const isCurrentTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(behavior) || tx.category?.name === 'โอนเข้าภายใน';
-        const isLinkedTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedBehavior) || linkedTx.category?.name === 'โอนเข้าภายใน';
-
-        if (isCurrentFrom && isLinkedTo) {
-           // Current is Source (From), Linked is Destination (To)
-           fromAccId = tx.accountId;
-           toAccId = linkedTx.accountId;
-        } else if (isCurrentTo && isLinkedFrom) {
-           // Current is Destination (To), Linked is Source (From)
-           fromAccId = linkedTx.accountId;
-           toAccId = tx.accountId;
-        } else {
-           // Fallback: If behaviors are ambiguous, trust generic category names
-           if (tx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน') {
-              fromAccId = tx.accountId;
-              toAccId = linkedTx.accountId;
-           } else {
-              fromAccId = linkedTx.accountId;
-              toAccId = tx.accountId;
-           }
-        }
-
-        // Logic to show the "Real" category instead of "Transfer In/Out"
+        const isLinkedTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedTx.type?.behavior || '') || linkedTx.category?.name === 'โอนเข้าภายใน';
+        if (isCurrentFrom && isLinkedTo) { fromAccId = tx.accountId; toAccId = linkedTx.accountId; }
+        else { fromAccId = linkedTx.accountId; toAccId = tx.accountId; }
         const isGeneric = (catName?: string) => ['โอนออกภายใน', 'โอนเข้าภายใน'].includes(catName || '');
-        
         if (isGeneric(tx.category?.name) && !isGeneric(linkedTx.category?.name)) {
             displayTypeId = linkedTx.typeId;
             displayCategoryId = linkedTx.categoryId;
-        } else if (!isGeneric(tx.category?.name)) {
-            displayTypeId = tx.typeId;
-            displayCategoryId = tx.categoryId;
         }
       }
     } else {
-      // Single transaction: Prioritize direction field from DB for perfect persistence
-      let isFromBox = true;
-      if (tx.direction === 'FROM') {
-         isFromBox = true;
-      } else if (tx.direction === 'TO') {
-         isFromBox = false;
-      } else {
-         // Fallback to heuristic logic for old data
-         const behaviorUpper = (tx.type?.behavior || tx.category?.type?.behavior || '').toUpperCase();
-         const typeName = (tx.type?.name || '').toLowerCase();
-         const categoryName = (tx.category?.name || '').toLowerCase();
-         
-          const isInbound = ['INCOME', 'LOAN_BORROW'].includes(behaviorUpper) || 
-                            categoryName.includes('เข้า') || typeName.includes('เข้า') || 
-                            categoryName.includes('ยืม') || typeName.includes('ยืม') || 
-                            categoryName.includes('กู้') || typeName.includes('กู้');
-          
-          const isOutbound = ['EXPENSE', 'DEBT', 'LOAN_REPAY', 'SAVING', 'INVESTMENT', 'INTERNAL_TRANSFER'].includes(behaviorUpper) || 
-                             categoryName.includes('ออก') || typeName.includes('ออก') || 
-                             categoryName.includes('คืน') || typeName.includes('คืน');
-
-          // Correct mapping for single account transactions:
-          // Inbound (Income/Borrow) -> To box (Green)
-          // Outbound (Expense/Repay) -> From box (Red)
-          if (isInbound && !isOutbound) {
-             isFromBox = false; // Put in To box
-          } else {
-             isFromBox = true;  // Put in From box
-          }
-      }
-
+      const isFromBox = tx.direction !== 'TO';
       fromAccId = isFromBox ? tx.accountId : '';
       toAccId = !isFromBox ? tx.accountId : '';
     }
@@ -220,15 +201,12 @@ export default function TransactionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this transaction? If it's a transfer, the linked transaction will also be deleted.")) return;
+    if (!window.confirm("Are you sure you want to delete this transaction?")) return;
     try {
       await api.delete(`/transactions/${id}`);
-      showAlert('Security Check Passed: Transaction record and balance adjustment successfully purged.', 'success');
+      showAlert('Transaction deleted successfully.', 'success');
       fetchData();
-    } catch (err: unknown) {
-      const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(`System Protection: ${errorResponse.response?.data?.error || 'Operation failed. Data integrity maintained.'}`, 'error');
-    }
+    } catch (err: any) { showAlert(`Delete failed: ${err.response?.data?.error || 'Unknown error'}`, 'error'); }
   };
 
   const handleFormSubmit = async (e: React.FormEvent) => {
@@ -238,695 +216,338 @@ export default function TransactionsPage() {
        return;
     }
 
-    if (isNaN(parseFloat(formData.amount)) || parseFloat(formData.amount) <= 0) {
-       showAlert('Validation Error: Amount must be a positive number.', 'error');
-       return;
+    const selectedType = types.find(t => t.id === formData.typeId);
+    const selectedCat = categories.find(c => c.id === formData.categoryId);
+    const behavior = selectedType?.behavior || 'EXPENSE';
+    const catName = (selectedCat?.name || '').toLowerCase();
+    
+    let finalDirection: 'FROM' | 'TO' | null = null;
+    
+    if (formData.fromAccountId && formData.toAccountId) {
+        // It's a transfer, do not force a single direction
+        finalDirection = null;
+    } else if (formData.fromAccountId) {
+        finalDirection = 'FROM';
+    } else if (formData.toAccountId) {
+        finalDirection = 'TO';
     }
 
-    if (!formData.date || isNaN(new Date(formData.date).getTime())) {
-       showAlert('Validation Error: Please select a valid record date.', 'error');
-       return;
-    }
-
-    const payload: {
-      amount: number;
-      date: string;
-      actualDate: string | null;
-      fromAccountId?: string;
-      toAccountId?: string;
-      description?: string;
-      categoryId?: string;
-      note?: string;
-      typeId?: string;
-      direction?: string | null;
-    } = {
+    const payload: any = {
       ...formData,
       amount: parseFloat(formData.amount),
       date: new Date(formData.date).toISOString(),
-      actualDate: formData.actualDate && !isNaN(new Date(formData.actualDate).getTime()) 
-        ? new Date(formData.actualDate).toISOString() 
-        : null,
-      direction: (formData.fromAccountId && !formData.toAccountId) ? 'FROM' : (!formData.fromAccountId && formData.toAccountId) ? 'TO' : null
+      actualDate: formData.actualDate ? new Date(formData.actualDate).toISOString() : null,
+      direction: finalDirection
     };
 
-    if (!payload.fromAccountId) delete payload.fromAccountId;
-    if (!payload.toAccountId) delete payload.toAccountId;
+    // Sanitize payload: Remove empty strings that cause UUID validation errors
+    if (!payload.fromAccountId || payload.fromAccountId === '') delete payload.fromAccountId;
+    if (!payload.toAccountId || payload.toAccountId === '') delete payload.toAccountId;
+    if (!payload.categoryId || payload.categoryId === '') delete payload.categoryId;
+    if (!payload.typeId || payload.typeId === '') delete payload.typeId;
 
     try {
-      console.log('[DEBUG-NEX-714] Initiating Atomic Transaction:', payload);
       if (isEditing && currentTxId) {
         await api.put(`/transactions/${currentTxId}`, payload);
-        showAlert('Data Integrity Verified: Transaction updated and ledger reconciled.', 'success');
+        showAlert('Transaction updated successfully.', 'success');
       } else {
         await api.post('/transactions', payload);
-        showAlert('Transaction Secured: Record created and account balance adjusted.', 'success');
+        showAlert('Transaction created successfully.', 'success');
       }
       setIsModalOpen(false);
       fetchData();
-    } catch (err: unknown) {
-      const errorResponse = err as { response?: { data?: { error?: string } } };
-      const errorMessage = errorResponse.response?.data?.error || 'Save failed';
-      showAlert(`Transaction Aborted: ${errorMessage}. Atomic rollback performed to ensure data integrity.`, 'error');
+    } catch (err: any) { 
+      console.error('Save failed details:', err);
+      const errorMsg = err.response?.data?.error;
+      const displayMsg = typeof errorMsg === 'object' ? JSON.stringify(errorMsg) : (errorMsg || 'Unknown error');
+      showAlert(`Save failed: ${displayMsg}`, 'error'); 
     }
   };
 
   const handleSort = (key: string) => {
     let direction: 'asc' | 'desc' = 'asc';
-    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') {
-      direction = 'desc';
-    }
+    if (sortConfig && sortConfig.key === key && sortConfig.direction === 'asc') direction = 'desc';
     setSortConfig({ key, direction });
   };
 
-  const getSortedTransactions = () => {
-    let filtered = transactions;
-    if (searchQuery) {
-        const query = searchQuery.toLowerCase();
-        filtered = filtered.filter(t => 
-            (t.description || '').toLowerCase().includes(query) || 
-            (t.note || '').toLowerCase().includes(query)
-        );
-    }
-    
-    // UI Improvement: Hide the receiving leg of a transfer when viewing All Accounts
-    if (!filterAccount) {
-      filtered = filtered.filter(t => {
-        if (t.linkedTransactionId) {
-          const linked = transactions.find(tx => tx.id === t.linkedTransactionId);
-          if (!linked) return true; // Show if we can't find the pair
-          
-          // Hide this leg if it's explicitly 'Transfer In'
-          if (t.category?.name === 'โอนเข้าภายใน') return false;
-          
-          // Hide this leg if its partner is 'Transfer Out' (meaning this is the destination)
-          if (linked.category?.name === 'โอนออกภายใน') return false;
+  const sortedTransactions = [...transactions].sort((a, b) => {
+    if (!sortConfig) return 0;
+    const aValue = a[sortConfig.key as keyof Transaction] as any;
+    const bValue = b[sortConfig.key as keyof Transaction] as any;
+    if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
+    if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
+    return 0;
+  }).filter(t => {
+    if (searchQuery && !t.description?.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+    if (filterType && t.typeId !== filterType) return false;
+    if (filterCategory && t.categoryId !== filterCategory) return false;
+    if (filterAccount && t.accountId !== filterAccount) return false;
+    return true;
+  });
 
-          // Tie-breaker fallback to ensure exactly one leg is shown if neither matched hide conditions
-          const wouldLinkedBeHidden = linked.category?.name === 'โอนเข้าภายใน' || t.category?.name === 'โอนออกภายใน';
-          if (!wouldLinkedBeHidden && t.id > linked.id) return false;
-        }
-        return true;
-      });
-    }
-
-    if (filterType) filtered = filtered.filter(t => t.typeId === filterType);
-    if (filterCategory) filtered = filtered.filter(t => t.categoryId === filterCategory);
-    if (filterAccount) filtered = filtered.filter(t => t.accountId === filterAccount);
-
-    if (!sortConfig) return filtered;
-
-    return [...filtered].sort((a, b) => {
-      let aValue: string | number;
-      let bValue: string | number;
-
-      switch (sortConfig.key) {
-        case 'date':
-          aValue = new Date(a.date).getTime();
-          bValue = new Date(b.date).getTime();
-          break;
-        case 'description':
-          aValue = (a.description || '').toLowerCase();
-          bValue = (b.description || '').toLowerCase();
-          break;
-        case 'type':
-          aValue = (a.type?.name || '').toLowerCase();
-          bValue = (b.type?.name || '').toLowerCase();
-          break;
-        case 'category':
-          aValue = (a.category?.name || '').toLowerCase();
-          bValue = (b.category?.name || '').toLowerCase();
-          break;
-        case 'account':
-          const aAccName = a.asset?.account?.name || a.liability?.account?.name || '';
-          const bAccName = b.asset?.account?.name || b.liability?.account?.name || '';
-          aValue = aAccName.toLowerCase();
-          bValue = bAccName.toLowerCase();
-          break;
-        case 'amount':
-          aValue = a.amount;
-          bValue = b.amount;
-          break;
-        default:
-          return 0;
-      }
-
-      if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-      return 0;
-    });
-  };
-
-  const sortedTransactions = getSortedTransactions();
-
-  const SortIcon = ({ column }: { column: string }) => {
-    if (sortConfig?.key !== column) return <MoreHorizontal className="w-4 h-4 ml-1 opacity-30 text-gray-400 group-hover:opacity-100 transition-opacity" />;
-    return sortConfig.direction === 'asc' ? 
-      <ArrowUpCircle className="w-4 h-4 ml-1 text-blue-500" /> : 
-      <ArrowDownCircle className="w-4 h-4 ml-1 text-blue-500" />;
-  };
-
-  const handleDownloadTemplate = () => {
-    const template = [
-      { Date: format(new Date(), 'yyyy-MM-dd'), PaymentDate: '', Description: 'เงินเดือน', Amount: 50000, CategoryName: 'เงินเดือน', AccountName: 'กสิกรไทย', Note: '' },
-      { Date: format(new Date(), 'yyyy-MM-dd'), PaymentDate: '', Description: 'กินข้าว', Amount: 150, CategoryName: 'อาหารและเครื่องดื่ม', AccountName: 'กสิกรไทย', Note: 'KFC' }
-    ];
-    const ws = XLSX.utils.json_to_sheet(template);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, 'Transactions');
-    XLSX.writeFile(wb, 'Nexworth_Transactions_Template.xlsx');
-  };
-
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
+  const handleScanSlip = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
     if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      try {
-        setLoading(true);
-        const data = new Uint8Array(e.target?.result as ArrayBuffer);
-        const workbook = XLSX.read(data, { type: 'array' });
-        const sheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[sheetName];
-        const records = XLSX.utils.sheet_to_json(worksheet) as Record<string, string | number>[];
-
-        const payload = [];
-        for (const row of records) {
-          const category = categories.find(c => c.name.toLowerCase() === row.CategoryName?.toString().toLowerCase().trim());
-          const account = accounts.find(a => a.name.toLowerCase() === row.AccountName?.toString().toLowerCase().trim());
-          
-          if (!category || !account) {
-            showAlert(`Mismatched Name: Cannot find category '${row.CategoryName}' or account '${row.AccountName}'. Please check template.`, 'error');
-            setLoading(false);
-            return;
-          }
-
-          payload.push({
-            date: new Date(row.Date.toString()).toISOString(),
-            actualDate: row.PaymentDate ? new Date(row.PaymentDate.toString()).toISOString() : null,
-            description: row.Description?.toString() || '',
-            amount: parseFloat(row.Amount.toString()),
-            categoryId: category.id,
-            accountId: account.id,
-            note: row.Note?.toString() || ''
-          });
-        }
-
-        if (payload.length > 0) {
-            await api.post('/transactions/bulk', payload);
-            showAlert(`${payload.length} transactions imported successfully`, 'success');
-            fetchData();
-        } else {
-            showAlert('No valid rows found to import.', 'error');
-            setLoading(false);
-        }
-      } catch (err: unknown) {
-        const errorResponse = err as { response?: { data?: { error?: string } } };
-        const errorMessage = errorResponse.response?.data?.error || (err instanceof Error ? err.message : String(err));
-        showAlert(`Bulk Import Failure: ${errorMessage}. The entire operation has been rolled back. No data was saved.`, 'error');
-        setLoading(false);
-      } finally {
-        if (fileInputRef.current) fileInputRef.current.value = '';
+    setIsScanning(true);
+    try {
+      const { scanAmountFromImage } = await import('../../../utils/ocrScanner');
+      const { amount: realAmount, text: rawText } = await scanAmountFromImage(file);
+      const { scanQRFromImage } = await import('../../../utils/qrScanner');
+      const qrPayload = await scanQRFromImage(file);
+      
+      let verifiedData = null;
+      if (qrPayload) {
+        const verifyRes = await api.post('/ai/verify-slip', { payload: qrPayload });
+        if (verifyRes.data.success) verifiedData = verifyRes.data.data;
       }
-    };
-    reader.readAsArrayBuffer(file);
+
+      const extracted = {
+        amount: realAmount ? realAmount : (verifiedData?.amount?.toString() || ''),
+        date: verifiedData?.transTime ? format(new Date(verifiedData.transTime), 'yyyy-MM-dd') : format(new Date(), 'yyyy-MM-dd'),
+        description: verifiedData?.receiverName ? `โอนให้ ${verifiedData.receiverName}` : 'สแกนจากสลิปธนาคาร',
+        bankName: verifiedData?.bankName || ''
+      };
+      
+      const matchAcc = accounts.find(a => 
+          a.name.toLowerCase().includes((extracted.bankName || rawText).toLowerCase()) ||
+          (rawText.toLowerCase().includes('kbank') && a.bank?.name === 'KBank')
+      );
+
+      const detectedCat = (rawText || '').toLowerCase();
+      const matchCat = categories.find(c => 
+          c.name.toLowerCase().includes(detectedCat) || 
+          (detectedCat.includes('อาหาร') && c.name === 'อาหารและเครื่องดื่ม')
+      );
+
+      setFormData(prev => ({
+          ...prev,
+          amount: extracted.amount,
+          date: extracted.date,
+          description: extracted.description,
+          fromAccountId: matchAcc?.id || prev.fromAccountId,
+          categoryId: matchCat?.id || prev.categoryId,
+          typeId: matchCat?.typeId || prev.typeId
+      }));
+      showAlert('Slip scanned and auto-filled!', 'success');
+    } catch (err) { showAlert('Scan failed. Try a clearer image.', 'error'); } 
+    finally { setIsScanning(false); if (scanFileRef.current) scanFileRef.current.value = ''; }
   };
 
-  const filteredCategories = formData.typeId ? categories.filter(c => c.typeId === formData.typeId) : categories;
-
-  if (loading && transactions.length === 0) return <div className="p-6 text-gray-500">Loading transactions...</div>;
-
-  const getTypeBadge = (behavior: string) => {
-    switch (behavior) {
-        case 'INCOME': return 'bg-green-100 text-green-800';
-        case 'EXPENSE': return 'bg-red-100 text-red-800';
-        case 'SAVING_INVESTMENT': return 'bg-blue-100 text-blue-800';
-        case 'DEBT': return 'bg-purple-100 text-purple-800';
-        default: return 'bg-gray-100 text-gray-800';
-    }
-  };
+  const currentTypeBehavior = types.find(t => t.id === formData.typeId)?.behavior || 'EXPENSE';
 
   return (
-    <div className="space-y-6 relative">
-       {/* Alert Pop-up */}
+    <div className="flex flex-col h-[calc(100vh-6rem)] overflow-hidden w-full space-y-4">
        {alert && (
-        <div className={`fixed top-4 right-4 z-[110] max-w-[400px] w-full p-4 rounded-lg shadow-lg flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 ${alert.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-          {alert.type === 'success' ? <CheckCircle className="w-5 h-5 flex-shrink-0 text-green-500" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />}
-          <p className="font-medium text-sm break-words">{alert.message}</p>
+        <div className={`fixed top-4 right-4 z-[200] p-4 rounded-2xl shadow-2xl flex items-center gap-3 transition-all backdrop-blur-md border ${
+          alert.type === 'success' ? 'bg-emerald/10 border-emerald/20 text-emerald' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+        }`}>
+          {alert.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+          <p className="font-bold text-sm">{alert.message}</p>
         </div>
       )}
 
-      {/* Header section */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <header className="flex items-center justify-between shrink-0">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Transactions</h1>
-          <p className="text-gray-500 dark:text-gray-400">Record, filter, and manage your financial transactions.</p>
+          <h2 className="text-xl font-bold text-white">{labels.title}</h2>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{labels.subtitle}</p>
         </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <button 
-             onClick={handleDownloadTemplate}
-             className="inline-flex items-center px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
-          >
-             <Download className="w-4 h-4 mr-2" /> Template
-          </button>
-          
-          <input type="file" accept=".xlsx,.csv" className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-          <button 
-             onClick={() => fileInputRef.current?.click()}
-             className="inline-flex items-center px-3 py-2 bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 text-sm font-medium rounded-lg transition-colors border border-gray-200 dark:border-gray-700"
-          >
-             <Upload className="w-4 h-4 mr-2" /> Import
-          </button>
-
-          <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1 shadow-sm ml-2">
-             <select 
-               value={filterMonth} 
-               onChange={(e) => setFilterMonth(parseInt(e.target.value))}
-               className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer px-2 dark:bg-gray-800"
-             >
-               {Array.from({ length: 12 }, (_, i) => (
-                 <option key={i + 1} value={i + 1}>
-                   {format(new Date(2024, i, 1), 'MMMM')}
-                 </option>
-               ))}
-             </select>
-             <div className="w-px h-4 bg-gray-200 dark:bg-gray-700 mx-1" />
-             <select 
-               value={filterYear} 
-               onChange={(e) => setFilterYear(parseInt(e.target.value))}
-               className="bg-transparent border-none text-sm font-medium focus:ring-0 cursor-pointer px-2 dark:bg-gray-800"
-             >
-               {[filterYear - 1, filterYear, filterYear + 1].map(y => (
-                 <option key={y} value={y}>{y}</option>
-               ))}
-             </select>
-          </div>
+        <div className="flex items-center gap-3">
           {hasPermission('transactions', 'canCreate') && (
             <button 
               onClick={openAddModal}
-              className="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors shadow-sm ml-2"
               data-testid="transactions-list-btn-add-tx"
+              className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95"
             >
-              <Plus className="w-5 h-5 mr-1" />
-              Add Transaction
+              <Plus className="w-4 h-4" /> {labels.addNew}
             </button>
           )}
         </div>
-      </div>
+      </header>
 
-      {/* Filter Bar */}
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4 p-4 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-sm">
-         <div className="relative">
-            <Search className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
+      <GlassCard className="p-3 flex gap-3 items-center shrink-0 bg-navy/40">
+         <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
             <input 
-              type="text" 
-              placeholder="Search description..." 
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-900"
-              data-testid="transactions-list-input-search"
+              type="text" placeholder={labels.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full bg-navy/50 border border-white/5 rounded-lg py-1.5 pl-9 text-xs text-white outline-none"
             />
          </div>
-         <select
-            value={filterType}
-            onChange={(e) => setFilterType(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-900"
-            data-testid="transactions-list-sel-type"
-         >
-            <option value="">All Types</option>
-            {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-         </select>
-         <select
-            value={filterCategory}
-            onChange={(e) => setFilterCategory(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-900"
-            data-testid="transactions-list-sel-category"
-         >
-            <option value="">All Categories</option>
+         <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300">
+            <option value="">{labels.allCategories}</option>
             {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
          </select>
-         <select
-            value={filterAccount}
-            onChange={(e) => setFilterAccount(e.target.value)}
-            className="w-full px-3 py-2 text-sm rounded-lg border border-gray-200 dark:border-gray-700 focus:ring-2 focus:ring-blue-500 outline-none bg-gray-50 dark:bg-gray-900"
-            data-testid="transactions-list-sel-account"
-         >
-            <option value="">All Accounts</option>
+         <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300">
+            <option value="">{labels.allAccounts}</option>
             {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
          </select>
-      </div>
+      </GlassCard>
 
-      {/* Transactions Table */}
-      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
+      <GlassCard className="flex-1 overflow-hidden bg-navy/40">
+        <div className="h-full overflow-y-auto px-4 custom-scrollbar">
+          <table className="w-full text-left text-xs border-separate border-spacing-y-2">
+            <thead className="sticky top-0 z-[60] bg-[#001229]">
               <tr>
-                <th 
-                  className="group px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors select-none"
-                  onClick={() => handleSort('date')}
-                >
-                  <div className="flex items-center gap-1">Record Date <SortIcon column="date" /></div>
-                </th>
-                <th 
-                  className="group px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors select-none"
-                  onClick={() => handleSort('description')}
-                >
-                  <div className="flex items-center">Description <SortIcon column="description" /></div>
-                </th>
-                <th 
-                  className="group px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors select-none"
-                  onClick={() => handleSort('type')}
-                >
-                  <div className="flex items-center">Type <SortIcon column="type" /></div>
-                </th>
-                <th 
-                  className="group px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors select-none"
-                  onClick={() => handleSort('category')}
-                >
-                  <div className="flex items-center">Category <SortIcon column="category" /></div>
-                </th>
-                <th 
-                  className="group px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors select-none"
-                  onClick={() => handleSort('account')}
-                >
-                  <div className="flex items-center">Account <SortIcon column="account" /></div>
-                </th>
-                <th 
-                  className="group px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right cursor-pointer hover:bg-gray-200 dark:hover:bg-gray-800 transition-colors select-none"
-                  onClick={() => handleSort('amount')}
-                >
-                  <div className="flex items-center justify-end">Amount <SortIcon column="amount" /></div>
-                </th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Actions</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{labels.table.date}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{labels.table.description}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{labels.table.category}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{labels.table.account}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] text-right">{labels.table.amount}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] text-center">{labels.table.action}</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-              {sortedTransactions.length === 0 ? (
-                <tr>
-                  <td colSpan={7} className="px-6 py-10 text-center text-gray-500">No transactions match your criteria.</td>
+            <tbody>
+              {sortedTransactions.map(tx => (
+                <tr key={tx.id} className="bg-white/[0.02] hover:bg-white/[0.06] transition-all group">
+                  <td className="px-6 py-3 rounded-l-xl text-white">{format(new Date(tx.date), 'dd/MM/yyyy')}</td>
+                  <td className="px-6 py-3 text-white font-bold">{tx.description || '-'}</td>
+                  <td className="px-6 py-3">
+                    <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
+                      tx.type?.behavior === 'INCOME' ? 'bg-emerald/10 text-emerald' : 
+                      tx.type?.behavior === 'SAVING' || tx.type?.behavior === 'GOAL_SAVING' ? 'bg-blue-500/10 text-blue-400' :
+                      tx.type?.behavior === 'INVESTMENT' ? 'bg-cyan-500/10 text-cyan-400' :
+                      tx.type?.behavior === 'INTERNAL_TRANSFER' ? 'bg-slate-500/10 text-slate-400' :
+                      tx.type?.behavior === 'EMERGENCY' ? 'bg-orange-500/10 text-orange-400' :
+                      tx.type?.behavior === 'LOAN_BORROW' ? 'bg-purple-500/10 text-purple-400' :
+                      tx.type?.behavior === 'LOAN_REPAY' ? 'bg-emerald-500/10 text-emerald-400' :
+                      'bg-rose-500/10 text-rose-400'
+                    }`}>
+                      {tx.category?.name}
+                    </span>
+                  </td>
+                  <td className="px-6 py-3 text-slate-300">{tx.account?.name}</td>
+                  <td className={`px-6 py-3 text-right font-bold ${tx.direction === 'FROM' ? 'text-rose-400' : 'text-emerald'}`}>
+                    {tx.direction === 'FROM' ? '-' : ''}
+                    {Math.abs(tx.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                  </td>
+                  <td className="px-6 py-3 text-center rounded-r-xl">
+                    <div className="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                      <button onClick={() => openEditModal(tx)} className="text-slate-400 hover:text-blue-400"><Edit2 size={14} /></button>
+                      <button onClick={() => handleDelete(tx.id)} className="text-slate-400 hover:text-rose-500"><Trash2 size={14} /></button>
+                    </div>
+                  </td>
                 </tr>
-              ) : sortedTransactions.map(tx => {
-                const behavior = tx.type?.behavior || tx.category?.type?.behavior || '';
-                
-                return (
-                  <tr key={tx.id} className="hover:bg-blue-50/50 dark:hover:bg-gray-700/50 transition-colors">
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300">
-                       <div className="font-medium text-gray-900 dark:text-white">{format(new Date(tx.date), 'dd/MM/yyyy')}</div>
-                       {tx.linkedTransactionId && (
-                           <div className="text-[10px] text-purple-600 dark:text-purple-400 font-semibold bg-purple-100 dark:bg-purple-900/40 inline-flex px-1.5 mt-1 rounded items-center">
-                              <RefreshCw className="w-2.5 h-2.5 mr-1" /> Transfer
-                           </div>
-                       )}
-                    </td>
-                    <td className="px-6 py-4 text-sm text-gray-900 dark:text-white font-medium">
-                      {tx.description || '-'}
-                      {tx.note && <div className="text-xs text-gray-400 font-normal mt-0.5">{tx.note}</div>}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                       <span className="text-xs font-bold text-gray-500 uppercase tracking-tight">
-                          {(() => {
-                              if (tx.linkedTransactionId && !filterAccount) {
-                                  const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
-                                  if (linkedTx) {
-                                      const primaryIsGeneric = tx.category?.name === 'โอนออกภายใน' || tx.category?.name === 'โอนเข้าภายใน';
-                                      const linkedIsGeneric = linkedTx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน';
-                                      if (primaryIsGeneric && !linkedIsGeneric) return linkedTx.type?.name;
-                                  }
-                              }
-                              return tx.type?.name;
-                          })()}
-                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                       <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${getTypeBadge((() => {
-                           if (tx.linkedTransactionId && !filterAccount) {
-                               const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
-                               if (linkedTx) {
-                                   const primaryIsGeneric = tx.category?.name === 'โอนออกภายใน' || tx.category?.name === 'โอนเข้าภายใน';
-                                   const linkedIsGeneric = linkedTx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน';
-                                   if (primaryIsGeneric && !linkedIsGeneric) return linkedTx.category?.type?.behavior || behavior;
-                               }
-                           }
-                           return behavior;
-                       })())}`}>
-                          {(() => {
-                              if (tx.linkedTransactionId && !filterAccount) {
-                                  const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
-                                  if (linkedTx) {
-                                      const primaryIsGeneric = tx.category?.name === 'โอนออกภายใน' || tx.category?.name === 'โอนเข้าภายใน';
-                                      const linkedIsGeneric = linkedTx.category?.name === 'โอนออกภายใน' || linkedTx.category?.name === 'โอนเข้าภายใน';
-                                      if (primaryIsGeneric && !linkedIsGeneric) return linkedTx.category?.name;
-                                  }
-                              }
-                              return tx.category?.name;
-                          })()}
-                       </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400 flex items-center gap-1.5 min-h-[56px]">
-                      {(() => {
-                        const accountInfo = tx.account;
-                        if (!accountInfo) return <span className="text-gray-400 italic">Unknown</span>;
-                        
-                        // Function to render a single account badge
-                        const renderAccount = (acc: any, isSecondary = false) => (
-                          <div className={`flex items-center gap-1.5 ${isSecondary ? 'text-gray-500 dark:text-gray-400' : ''}`}>
-                            {acc.bank?.color ? (
-                              <div 
-                                className={`${isSecondary ? 'w-1.5 h-1.5' : 'w-2 h-2'} rounded-full flex-shrink-0 ${isSecondary ? 'opacity-70' : ''}`}
-                                style={{ backgroundColor: acc.bank.color }}
-                                title={acc.bank.name}
-                              />
-                            ) : (
-                              <Wallet className={`${isSecondary ? 'w-3 h-3' : 'w-4 h-4'} text-gray-400 flex-shrink-0 ${isSecondary ? 'opacity-70' : ''}`} />
-                            )}
-                            <span className={`truncate ${isSecondary ? 'text-xs' : ''}`}>{acc.name}</span>
-                          </div>
-                        );
-
-                        // If it's a transfer and we are in "All Accounts" view, show From -> To
-                        if (tx.linkedTransactionId && !filterAccount) {
-                           const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
-                           if (linkedTx && linkedTx.account) {
-                              const linkedBehavior = linkedTx.type?.behavior || linkedTx.category?.type?.behavior || '';
-                              const isCurrentFrom = tx.direction === 'FROM' || (tx.direction !== 'TO' && (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(behavior) || tx.category?.name?.includes('ออก') || tx.category?.name?.includes('คืน')));
-                              const isLinkedFrom = linkedTx.direction === 'FROM' || (linkedTx.direction !== 'TO' && (['EXPENSE', 'DEBT', 'LOAN_REPAY', 'INTERNAL_TRANSFER'].includes(linkedBehavior) || linkedTx.category?.name?.includes('ออก') || linkedTx.category?.name?.includes('คืน')));
-                              const isCurrentTo = tx.direction === 'TO' || (tx.direction !== 'FROM' && (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY', 'LOAN_BORROW'].includes(behavior) || tx.category?.name?.includes('เข้า') || tx.category?.name?.includes('ยืม') || tx.category?.name?.includes('กู้')));
-                              const isLinkedTo = linkedTx.direction === 'TO' || (linkedTx.direction !== 'FROM' && (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY', 'LOAN_BORROW'].includes(linkedBehavior) || linkedTx.category?.name?.includes('เข้า') || linkedTx.category?.name?.includes('ยืม') || linkedTx.category?.name?.includes('กู้')));
-
-                              let fromAcc = accountInfo;
-                              let toAcc = linkedTx.account;
-
-                              if (isCurrentTo && isLinkedFrom) {
-                                 fromAcc = linkedTx.account;
-                                 toAcc = accountInfo;
-                              } else if (isCurrentFrom && isLinkedTo) {
-                                 fromAcc = accountInfo;
-                                 toAcc = linkedTx.account;
-                              } else {
-                                 // Fallback: Check generic names explicitly
-                                 if (tx.category?.name === 'โอนเข้าภายใน' || linkedTx.category?.name === 'โอนออกภายใน') {
-                                    fromAcc = linkedTx.account;
-                                    toAcc = accountInfo;
-                                 }
-                              }
-
-                              return (
-                                <div className="flex items-center gap-2">
-                                   {renderAccount(fromAcc)}
-                                   <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                   {renderAccount(toAcc, true)}
-                                </div>
-                              );
-                           }
-                        }
-
-                        // Single transaction with explicit direction
-                        if (tx.direction === 'TO') {
-                           return (
-                              <div className="flex items-center gap-2">
-                                 <div className="w-4 h-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-[8px] text-gray-400">?</div>
-                                 <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                 {renderAccount(accountInfo)}
-                              </div>
-                           );
-                        }
-                        if (tx.direction === 'FROM') {
-                           return (
-                              <div className="flex items-center gap-2">
-                                 {renderAccount(accountInfo)}
-                                 <ArrowRight className="w-3.5 h-3.5 text-gray-400" />
-                                 <div className="w-4 h-4 bg-gray-100 dark:bg-gray-700 rounded-full flex items-center justify-center text-[8px] text-gray-400">?</div>
-                              </div>
-                           );
-                        }
-
-                        return renderAccount(accountInfo);
-                      })()}
-                    </td>
-                    <td className={`px-6 py-4 whitespace-nowrap text-sm font-bold text-right ${behavior === 'INCOME' ? 'text-green-600 dark:text-green-400' : (behavior === 'EXPENSE' ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white')}`}>
-                      {behavior === 'INCOME' ? '+' : (behavior === 'EXPENSE' ? '-' : '')}{tx.amount.toLocaleString(undefined, { minimumFractionDigits: 2 })}
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                       {hasPermission('transactions', 'canUpdate') && (
-                         <button 
-                           onClick={() => openEditModal(tx)} 
-                           data-testid={`transactions-list-btn-edit-${tx.id}`}
-                           className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-3"
-                         >
-                           <Edit2 className="w-4 h-4 inline" />
-                         </button>
-                       )}
-                       {hasPermission('transactions', 'canDelete') && (
-                         <button 
-                           onClick={() => handleDelete(tx.id)} 
-                           data-testid={`transactions-list-btn-delete-${tx.id}`}
-                           className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                         >
-                           <Trash2 className="w-4 h-4 inline" />
-                         </button>
-                       )}
-                    </td>
-                  </tr>
-                );
-              })}
+              ))}
             </tbody>
           </table>
         </div>
-      </div>
+      </GlassCard>
 
-      {/* Modal */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-lg overflow-hidden transform transition-all animate-in zoom-in-95 duration-200 max-w-lg">
-              <div className="flex justify-between items-center p-6 border-b dark:border-gray-700">
-                 <h2 className="text-xl font-bold text-gray-900 dark:text-white">
-                   {isEditing ? 'Edit Transaction' : 'Record New Transaction'}
-                 </h2>
-                 <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                    <X className="w-6 h-6" />
-                 </button>
+      {/* Modern Record New Transaction Modal */}
+      <GlassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? labels.form.titleEdit : labels.form.titleAdd}>
+        <div className="flex flex-col gap-6 max-h-[80vh] overflow-y-auto custom-scrollbar pr-2">
+          
+          {/* Smart Slip Scanner Section */}
+          {!isEditing && (
+            <div className="bg-[#0A2A2A] border border-emerald/20 rounded-2xl p-5 flex items-center justify-between group hover:border-emerald/40 transition-all">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald/10 rounded-xl flex items-center justify-center text-emerald">
+                  {isScanning ? <Loader2 className="w-6 h-6 animate-spin" /> : <Scan className="w-6 h-6" />}
+                </div>
+                <div>
+                  <h4 className="text-sm font-bold text-emerald uppercase tracking-wider">Smart Slip Scanner</h4>
+                  <p className="text-[10px] text-slate-400">Auto-fill details from bank slip</p>
+                </div>
               </div>
-              
-              <form onSubmit={handleFormSubmit} className="p-6 space-y-4 max-h-[70vh] overflow-y-auto">
-                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Record Date</label>
-                       <div className="relative">
-                          <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-gray-400" />
-                          <input 
-                            type="date" required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})}
-                            data-testid="transactions-form-input-date"
-                            className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                          />
-                       </div>
-                    </div>
-                    <div>
-                       <label className="block text-sm font-medium text-blue-600 dark:text-blue-400 mb-1 flex items-center gap-1">
-                          Actual Date <span className="text-[10px] font-normal text-gray-400">(Optional)</span>
-                       </label>
-                       <div className="relative">
-                          <Calendar className="absolute left-3 top-2.5 w-4 h-4 text-blue-400" />
-                          <input 
-                            type="date" value={formData.actualDate} onChange={(e) => setFormData({...formData, actualDate: e.target.value})}
-                            data-testid="transactions-form-input-actual-date"
-                            className="w-full pl-10 pr-3 py-2 text-sm rounded-lg border border-blue-200 dark:border-blue-900 bg-blue-50/50 dark:bg-blue-900/20 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                          />
-                       </div>
-                    </div>
-                 </div>
+              <button 
+                onClick={() => scanFileRef.current?.click()}
+                disabled={isScanning}
+                className="bg-emerald text-navy px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:shadow-[0_0_15px_rgba(80,200,120,0.4)] transition-all disabled:opacity-50"
+              >
+                Select Slip
+              </button>
+              <input type="file" ref={scanFileRef} className="hidden" accept="image/*" onChange={handleScanSlip} />
+            </div>
+          )}
 
-                 <div className="grid grid-cols-2 gap-4">
-                    <div>
-                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
-                       <select 
-                         value={formData.typeId} onChange={(e) => handleTypeChange(e.target.value)}
-                         data-testid="transactions-form-sel-type"
-                         className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                       >
-                         {types.map(t => <option key={t.id} value={t.id}>{t.name}</option>)}
-                       </select>
-                    </div>
-                    <div>
-                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Category</label>
-                       <select 
-                         required value={formData.categoryId} onChange={(e) => setFormData({...formData, categoryId: e.target.value})}
-                         data-testid="transactions-form-sel-category"
-                         className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                       >
-                         <option value="">Select Category</option>
-                         {filteredCategories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
-                       </select>
-                    </div>
-                 </div>
 
-                 {/* Dual Account Selector */}
-                 <div className="p-3 bg-gray-50 border border-gray-200 dark:bg-gray-900/50 dark:border-gray-700 rounded-lg space-y-3">
-                     <p className="text-xs text-center text-gray-500 font-medium pb-2 border-b border-gray-200 dark:border-gray-700">Account Selection (Pick exactly one, or both to do a Transfer)</p>
-                     <div className="grid grid-cols-2 gap-4">
-                        <div>
-                           <label htmlFor="from-account-select" className="block text-sm font-semibold text-red-600 dark:text-red-400 mb-1">บัญชีต้นทาง (From)</label>
-                           <select 
-                             id="from-account-select"
-                             value={formData.fromAccountId} 
-                             onChange={(e) => setFormData({...formData, fromAccountId: e.target.value})}
-                             data-testid="transactions-form-sel-from-account"
-                             className="w-full px-3 py-2 text-sm rounded-lg border border-red-200 dark:border-red-900 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 outline-none transition-all"
-                           >
-                              <option value="">- None -</option>
-                              {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                           </select>
-                        </div>
-                        <div>
-                           <label htmlFor="to-account-select" className="block text-sm font-semibold text-green-600 dark:text-green-400 mb-1">บัญชีปลายทาง (To)</label>
-                           <select 
-                             id="to-account-select"
-                             value={formData.toAccountId} 
-                             onChange={(e) => setFormData({...formData, toAccountId: e.target.value})}
-                             data-testid="transactions-form-sel-to-account"
-                             className="w-full px-3 py-2 text-sm rounded-lg border border-green-200 dark:border-green-900 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-green-500 outline-none transition-all"
-                           >
-                              <option value="">- None -</option>
-                              {accounts.map(acc => <option key={acc.id} value={acc.id}>{acc.name}</option>)}
-                           </select>
-                        </div>
-                     </div>
-                 </div>
+          <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
+            {/* Amount Field (Main Highlight) */}
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.form.amount}</label>
+              <div className="relative group">
+                <input 
+                  type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})}
+                  placeholder="0.00"
+                  className="w-full bg-[#001229] border border-white/5 rounded-2xl px-6 py-6 text-3xl font-black text-white outline-none focus:border-emerald transition-all placeholder:text-slate-800"
+                />
+                <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-600 font-bold">฿</div>
+              </div>
+            </div>
 
-                 <div>
-                    <label htmlFor="amount-input" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Amount</label>
-                    <div className="relative">
-                       <span className="absolute left-4 top-2 text-gray-400 font-bold text-lg">฿</span>
-                       <input 
-                         id="amount-input"
-                         type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})}
-                         placeholder="0.00"
-                         data-testid="transactions-form-input-amount"
-                         className="w-full pl-10 pr-3 py-2 rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white text-lg font-bold focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                       />
-                    </div>
-                 </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.form.category}</label>
+              <select 
+                required value={formData.categoryId} 
+                onChange={(e) => {
+                  const catId = e.target.value;
+                  const selectedCat = categories.find(c => c.id === catId);
+                  setFormData({
+                    ...formData,
+                    categoryId: catId,
+                    typeId: selectedCat?.typeId || formData.typeId
+                  });
+                }}
+                className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
+              >
+                <option value="">Select Category</option>
+                {categories.map(c => {
+                  const typeName = types.find(t => t.id === c.typeId)?.name || 'Unknown';
+                  return (
+                    <option key={c.id} value={c.id} className="bg-[#001229]">
+                      [{typeName}] {c.name}
+                    </option>
+                  );
+                })}
+              </select>
+            </div>
 
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Description</label>
-                    <input 
-                      type="text" value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}
-                      placeholder="e.g. Salary, Grocery shopping"
-                      data-testid="transactions-form-input-description"
-                      className="w-full px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                    />
-                 </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">จากบัญชี (From)</label>
+                <select 
+                  required={!formData.toAccountId} value={formData.fromAccountId} onChange={(e) => setFormData({...formData, fromAccountId: e.target.value})}
+                  className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
+                >
+                  <option value="">- ไม่มีบัญชีต้นทาง -</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">เข้าบัญชี (To)</label>
+                <select 
+                  required={!formData.fromAccountId} value={formData.toAccountId} onChange={(e) => setFormData({...formData, toAccountId: e.target.value})}
+                  className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
+                >
+                  <option value="">- ไม่มีบัญชีปลายทาง -</option>
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                </select>
+              </div>
+            </div>
 
-                 <div className="pt-6 border-t dark:border-gray-700 flex gap-3">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="flex-1 px-4 py-2 bg-gray-100 dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-white font-medium rounded-lg hover:bg-gray-200 transition-colors">Cancel</button>
-                    <button type="submit" className="flex-1 px-4 py-2 bg-blue-600 text-white font-bold rounded-lg hover:bg-blue-700 shadow-md transition-colors" data-testid="transactions-form-btn-save">
-                      {isEditing ? 'Update Transaction' : 'Save Transaction'}
-                    </button>
-                 </div>
-              </form>
-           </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.form.note}</label>
+              <textarea 
+                value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}
+                placeholder="What was this for?"
+                rows={2}
+                className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all resize-none placeholder:text-slate-700"
+              />
+            </div>
+
+            <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.form.date}</label>
+                <input type="date" required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white [color-scheme:dark]" />
+            </div>
+
+            <button 
+              type="submit" 
+              className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-widest py-4 rounded-xl mt-2 hover:shadow-[0_0_25px_rgba(80,200,120,0.4)] transition-all active:scale-[0.98]"
+            >
+              {isEditing ? labels.form.update : labels.form.save}
+            </button>
+          </form>
         </div>
-      )}
+      </GlassModal>
     </div>
   );
 }
