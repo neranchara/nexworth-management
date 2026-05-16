@@ -5,10 +5,11 @@ import { authenticate } from '../middlewares/auth.middleware.js';
 import { prisma } from '../lib/prisma.js';
 
 export default async function userRoutes(server: FastifyInstance) {
-  server.get('/users', { preHandler: [requireRole(['Admin'])] }, listUsersHandler);
-  server.post('/users', { preHandler: [requireRole(['Admin'])] }, createUserHandler);
-  server.put<{ Params: { id: string } }>('/users/:id', updateUserHandler);
-  server.delete<{ Params: { id: string } }>('/users/:id', { preHandler: [requireRole(['Admin'])] }, deleteUserHandler);
+  server.get('/users', { preHandler: [authenticate, requireRole(['Admin'])] }, listUsersHandler);
+  server.post('/users', { preHandler: [authenticate, requireRole(['Admin'])] }, createUserHandler);
+  server.put<{ Params: { id: string } }>('/users/:id', { preHandler: [authenticate] }, updateUserHandler);
+  server.patch<{ Params: { id: string } }>('/users/:id', { preHandler: [authenticate] }, updateUserHandler);
+  server.delete<{ Params: { id: string } }>('/users/:id', { preHandler: [authenticate, requireRole(['Admin'])] }, deleteUserHandler);
   server.post<{ Params: { id: string } }>('/users/:id/reset-password', { preHandler: [requireRole(['Admin'])] }, resetPasswordHandler);
 
   /**

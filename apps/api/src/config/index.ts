@@ -72,4 +72,14 @@ export const config = {
 
   // --- AI ---
   geminiApiKey: process.env.GEMINI_API_KEY || '',
+
+  // --- Email (SMTP) ---
+  email: {
+    host: process.env.SMTP_HOST || 'smtp.sendgrid.net',
+    port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
+    user: process.env.SMTP_USER || '',
+    pass: process.env.SMTP_PASS || '',
+    from: process.env.EMAIL_FROM || 'Nexworth Security <noreply@nexworth.online>',
+    frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
+  },
 };

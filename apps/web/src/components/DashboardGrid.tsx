@@ -7,6 +7,7 @@ import { Lock, Unlock, RotateCcw, GripVertical } from 'lucide-react';
 
 const ResponsiveGridLayoutComponent = ResponsiveGridLayout as any;
 
+// @ts-ignore
 import 'react-grid-layout/css/styles.css';
 
 const STORAGE_KEY = 'nexworth-dashboard-layout';
@@ -27,8 +28,8 @@ interface DashboardGridProps {
   setIsLocked?: (locked: boolean) => void;
 }
 
-const BREAKPOINTS = { lg: 1200, md: 996, sm: 768 };
-const COLS = { lg: 12, md: 10, sm: 6 };
+const BREAKPOINTS = { lg: 1200, md: 996, sm: 768, xs: 480, xxs: 0 };
+const COLS = { lg: 12, md: 10, sm: 6, xs: 4, xxs: 2 };
 
 function getDefaultLayouts(items: GridItemConfig[]): ResponsiveLayouts {
   const lg: LayoutItem[] = items.map(item => ({
@@ -56,7 +57,23 @@ function getDefaultLayouts(items: GridItemConfig[]): ResponsiveLayouts {
     }),
   }));
 
-  return { lg, md, sm };
+  const xs: LayoutItem[] = items.map(item => ({
+    i: item.key,
+    x: 0,
+    y: 0,
+    w: 4,
+    h: item.defaultLayout.lg.h,
+  }));
+
+  const xxs: LayoutItem[] = items.map(item => ({
+    i: item.key,
+    x: 0,
+    y: 0,
+    w: 2,
+    h: item.defaultLayout.lg.h,
+  }));
+
+  return { lg, md, sm, xs, xxs };
 }
 
 function loadLayouts(): ResponsiveLayouts | null {
@@ -114,7 +131,7 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
     let needsSync = false;
     const synced = { ...saved };
     
-    (['lg', 'md', 'sm'] as const).forEach(bp => {
+    (['lg', 'md', 'sm', 'xs', 'xxs'] as const).forEach(bp => {
       const bpLayout = [...(synced[bp] || [])];
       items.forEach(item => {
         if (!bpLayout.find(l => l.i === item.key)) {
@@ -145,7 +162,7 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
         const next = { ...current };
         let changed = false;
 
-        (['lg', 'md', 'sm'] as const).forEach(bp => {
+        (['lg', 'md', 'sm', 'xs', 'xxs'] as const).forEach(bp => {
           const bpLayout = [...(next[bp] || [])];
           items.forEach(item => {
             if (!bpLayout.find(l => l.i === item.key)) {
@@ -194,9 +211,10 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
                     ? 'text-slate-400 hover:text-blue-500 dark:text-slate-500 dark:hover:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20' 
                     : 'bg-blue-600 text-white shadow-xl shadow-blue-500/30 ring-4 ring-blue-500/10'
                 }`}
+                aria-label={isLocked ? "Unlock Layout" : "Lock Layout"}
                 title={isLocked ? "Unlock Layout" : "Lock Layout"}
               >
-                {isLocked ? <Lock className="w-5 h-5" /> : <Unlock className="w-5 h-5" />}
+                {isLocked ? <Lock className="w-5 h-5" aria-hidden="true" /> : <Unlock className="w-5 h-5" aria-hidden="true" />}
               </button>
               
               {!isLocked && (
@@ -204,9 +222,10 @@ export default function DashboardGrid({ items, isLocked: externalLocked, setIsLo
                   onClick={handleReset}
                   data-testid="dashboard-grid-btn-reset-layout"
                   className="w-12 h-12 flex items-center justify-center rounded-2xl bg-amber-500 text-white hover:bg-amber-600 shadow-xl shadow-amber-500/30 transition-all duration-300 animate-in zoom-in slide-in-from-bottom-2"
+                  aria-label="Reset Layout"
                   title="Reset Layout"
                 >
-                  <RotateCcw className="w-5 h-5" />
+                  <RotateCcw className="w-5 h-5" aria-hidden="true" />
                 </button>
               )}
             </div>

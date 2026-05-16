@@ -16,7 +16,11 @@ export const listCategoriesHandler = async (request: FastifyRequest, reply: Fast
       include: { type: true },
       orderBy: { name: 'asc' },
     });
-    return reply.send({ categories });
+
+    // ISP Policy: Explicitly enforce UTF-8 for Thai language support
+    return reply
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send({ categories });
   } catch (error) {
     request.log.error(error);
     return reply.status(500).send({ error: 'Internal Server Error' });

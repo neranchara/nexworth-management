@@ -18,8 +18,10 @@ export const SystemSettings = () => {
     try {
       const res = await api.get('/admin/config');
       setConfigs(res.data.data);
-    } catch (error) {
-      console.error('Failed to fetch configs:', error);
+    } catch (error: any) {
+      if (error.response?.status !== 401) {
+        console.error('Failed to fetch configs:', error);
+      }
     } finally {
       setLoading(false);
     }
@@ -65,19 +67,19 @@ export const SystemSettings = () => {
           label="Tax Rate (VAT)" 
           description="Global VAT percentage applied to transactions."
           value={getConfig('tax_rate_vat')}
-          onSave={(val) => handleSave('tax_rate_vat', val, 'BUSINESS')}
+          onSave={(val: string) => handleSave('tax_rate_vat', val, 'BUSINESS')}
         />
         <ConfigItem 
           label="Auto-Match Threshold (Amount)" 
           description="Max difference allowed for auto-reconciliation (THB)."
           value={getConfig('reconcile_threshold_amount')}
-          onSave={(val) => handleSave('reconcile_threshold_amount', val, 'BUSINESS')}
+          onSave={(val: string) => handleSave('reconcile_threshold_amount', val, 'BUSINESS')}
         />
         <ConfigItem 
           label="Auto-Match Threshold (Percent)" 
           description="Max difference allowed for auto-reconciliation (%)."
           value={getConfig('reconcile_threshold_percent')}
-          onSave={(val) => handleSave('reconcile_threshold_percent', val, 'BUSINESS')}
+          onSave={(val: string) => handleSave('reconcile_threshold_percent', val, 'BUSINESS')}
         />
       </ConfigSection>
 
@@ -87,13 +89,13 @@ export const SystemSettings = () => {
           label="Maintenance Mode" 
           description="Redirect users to maintenance page during updates."
           active={getConfig('maintenance_mode') === 'true'}
-          onSave={(val) => handleSave('maintenance_mode', val ? 'true' : 'false', 'TECHNICAL')}
+          onSave={(val: boolean) => handleSave('maintenance_mode', val ? 'true' : 'false', 'TECHNICAL')}
         />
         <ConfigItem 
           label="System Alert Message" 
           description="Global banner message shown to all users."
           value={getConfig('system_alert_message')}
-          onSave={(val) => handleSave('system_alert_message', val, 'TECHNICAL')}
+          onSave={(val: string) => handleSave('system_alert_message', val, 'TECHNICAL')}
         />
       </ConfigSection>
 
@@ -103,7 +105,7 @@ export const SystemSettings = () => {
           label="Payment Webhook URL" 
           description="Endpoint for receiving external payment notifications."
           value={getConfig('webhook_payment_url')}
-          onSave={(val) => handleSave('webhook_payment_url', val, 'TECHNICAL')}
+          onSave={(val: string) => handleSave('webhook_payment_url', val, 'TECHNICAL')}
         />
       </ConfigSection>
     </div>
@@ -112,12 +114,12 @@ export const SystemSettings = () => {
 
 function ConfigSection({ title, icon, children }: any) {
   return (
-    <div className="bg-slate-900/50 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
-      <div className="px-6 py-4 border-b border-slate-800 bg-slate-800/30 flex items-center gap-3">
+    <div className="bg-slate-900/50 border border-white/5 rounded-2xl overflow-hidden shadow-2xl">
+      <div className="px-6 py-4 border-b border-white/5 bg-white/5 flex items-center gap-3">
         {icon}
         <h3 className="text-xs font-black text-white uppercase tracking-[0.2em]">{title}</h3>
       </div>
-      <div className="divide-y divide-slate-800/50">
+      <div className="divide-y divide-white/5">
         {children}
       </div>
     </div>
@@ -135,7 +137,7 @@ function ConfigItem({ label, description, value, onSave }: any) {
       <div className="flex items-center gap-3">
         <input 
           type="text" 
-          className="bg-slate-950 border border-slate-800 rounded-lg px-3 py-1.5 text-xs text-white focus:ring-2 focus:ring-indigo-500/50 transition-all w-48"
+          className="bg-slate-950 border border-white/5 rounded-lg px-3 py-1.5 text-xs text-white focus:ring-2 focus:ring-indigo-500/30 transition-all w-48 outline-none"
           value={currentValue}
           onChange={(e) => setCurrentValue(e.target.value)}
         />

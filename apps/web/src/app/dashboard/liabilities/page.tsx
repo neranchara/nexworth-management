@@ -2,10 +2,39 @@
 
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, PlusCircle, CreditCard, ArrowUpCircle, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, Search, Landmark } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Account, Bank, FinancialRecord } from '@/types/models';
+import GlassCard from '@/components/ui/GlassCard';
+import GlassModal from '@/components/ui/GlassModal';
 
+
+const DEFAULT_LABELS = {
+  title: 'หนี้สิน (Liabilities)',
+  subtitle: 'ติดตามภาระหนี้และยอดค้างชำระ',
+  addNew: 'บันทึกยอดหนี้ใหม่',
+  search: 'ค้นหาบัญชี...',
+  totalLiabilities: 'ยอดหนี้รวมทั้งหมด',
+  table: {
+    account: 'ชื่อบัญชี / ประเภท',
+    type: 'ประเภท',
+    institution: 'สถาบัน',
+    amount: 'ยอดคงค้าง',
+    action: 'จัดการ'
+  },
+  form: {
+    account: 'เลือกบัญชีหนี้สิน',
+    newAccount: '+ สร้างบัญชีหนี้ใหม่',
+    name: 'ชื่อเจ้าหนี้ / สินเชื่อ',
+    type: 'ประเภทหนี้',
+    bank: 'สถาบันการเงิน',
+    amount: 'ยอดหนี้ (บาท)',
+    note: 'บันทึกเพิ่มเติม',
+    date: 'วันที่อัปเดต',
+    cancel: 'ยกเลิก',
+    save: 'บันทึกยอดหนี้'
+  }
+};
 
 export default function LiabilitiesPage() {
   const [records, setRecords] = useState<FinancialRecord[]>([]);
@@ -16,6 +45,8 @@ export default function LiabilitiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
+  const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
+  const [accountTypes, setAccountTypes] = useState<any[]>([]);
 
   // Alert state
   const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -41,12 +72,23 @@ export default function LiabilitiesPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [recordsRes, accountsRes, banksRes, statsRes] = await Promise.all([
+      const [recordsRes, accountsRes, banksRes, statsRes, uiRes, configRes] = await Promise.all([
         api.get('/financial-records?type=LIABILITY'),
-        api.get('/accounts'),
+        api.get('/accounts?type=LIABILITY'),
         api.get('/banks'),
         api.get('/dashboard/stats'),
+        api.get('/configs', { params: { key: 'UI_LABELS_LIABILITIES' } }),
+        api.get('/configs', { params: { category: 'DROPDOWNS' } }),
       ]);
+
+      if (uiRes.data.data?.[0]?.value) {
+        setLabels(uiRes.data.data[0].value);
+      }
+
+      const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
+      if (typesConfig) {
+        setAccountTypes(typesConfig.value);
+      }
 
       setRecords(recordsRes.data.records);
       setAccounts(accountsRes.data.accounts);
@@ -195,317 +237,221 @@ export default function LiabilitiesPage() {
   const sortedRecords = getSortedRecords();
 
   const SortIcon = ({ column }: { column: string }) => {
-    if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
+    if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20 inline" />;
     return sortConfig.direction === 'asc' ? 
-      <ArrowUpCircle className="w-3 h-3 ml-1 text-blue-500" /> : 
-      <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
+      <ArrowUpCircle className="w-3 h-3 ml-1 text-emerald inline" /> : 
+      <ArrowDownCircle className="w-3 h-3 ml-1 text-emerald inline" />;
   };
 
   const totalLiabilities = dashboardStats?.summary?.totalLiabilities || 0;
 
-  if (loading && records.length === 0) return <div className="p-6">Loading data...</div>;
-  if (error && records.length === 0) return <div className="p-6 text-red-500">{error}</div>;
+  if (loading && records.length === 0) return <div className="p-6 text-white">Loading data...</div>;
+  if (error && records.length === 0) return <div className="p-6 text-rose-400">{error}</div>;
 
   return (
-    <div className="relative space-y-6">
-      {/* Alert Pop-up */}
+    <div className="flex flex-col h-[calc(100vh-6rem)] overflow-hidden w-full space-y-4">
+      {/* Alert */}
       {alert && (
-        <div
-          className={`fixed top-4 right-4 z-50 max-w-[400px] w-full p-4 rounded-lg shadow-lg flex items-center gap-3 transition-all ${
-            alert.type === 'success'
-              ? 'bg-green-50 text-green-800 border border-green-200'
-              : 'bg-red-50 text-red-800 border border-red-200'
-          }`}
-        >
-          {alert.type === 'success' ? (
-            <CheckCircle className="w-5 h-5 flex-shrink-0 text-green-500" />
-          ) : (
-            <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />
-          )}
-          <p className="font-medium text-sm break-words">{alert.message}</p>
+        <div className={`fixed top-4 right-4 z-[200] max-w-[400px] w-full p-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md border ${
+          alert.type === 'success' ? 'bg-emerald/10 border-emerald/20 text-emerald' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+        }`}>
+          {alert.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+          <p className="font-bold text-sm">{alert.message}</p>
         </div>
       )}
 
-      {/* Summary Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Liabilities</span>
-            <div className="bg-red-100 dark:bg-red-900/30 p-2 rounded-lg">
-              <CreditCard className="w-5 h-5 text-red-600" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-red-600 dark:text-red-400">
-            ฿{totalLiabilities.toLocaleString()}
-          </p>
-          <span className="text-sm text-gray-500 mt-1">Calculated from latest liability records</span>
+      {/* Header — same structure as Transaction History */}
+      <header className="flex items-center justify-between shrink-0">
+        <div>
+          <h2 className="text-xl font-bold text-white">{labels.title}</h2>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest -mt-0.5">{labels.subtitle}</p>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm">
-          <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Liability Entries</span>
-            <div className="bg-orange-100 dark:bg-orange-900/30 p-2 rounded-lg">
-              <AlertCircle className="w-5 h-5 text-orange-600" />
-            </div>
-          </div>
-          <p className="text-3xl font-bold text-gray-900 dark:text-white">{records.length}</p>
-          <span className="text-sm text-gray-500 mt-1">Tracked debt points</span>
+        <div className="flex items-center gap-3">
+          <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest px-2">
+            {labels.totalLiabilities}: <span className="text-rose-400 text-sm font-black">฿{totalLiabilities.toLocaleString()}</span>
+          </span>
+          {hasPermission('liabilities', 'canCreate') && (
+            <button
+              onClick={openAddModal}
+              data-testid="liabilities-list-btn-add-liab"
+              className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
+            >
+              <Plus className="w-4 h-4" /> {labels.addNew}
+            </button>
+          )}
         </div>
-      </div>
+      </header>
 
-      {/* Table Section */}
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <div className="sm:flex sm:items-center">
-          <div className="sm:flex-auto">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Liabilities Management</h1>
-            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-              Manage your credit lines, loans, and other liability values here.
-            </p>
-          </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            {hasPermission('liabilities', 'canCreate') && (
-              <button
-                id="btn-add-asset"
-                onClick={openAddModal}
-                data-testid="liabilities-list-btn-add-liab"
-                className="inline-flex items-center justify-center gap-2 rounded-md border border-transparent bg-red-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-red-700"
-              >
-                <PlusCircle className="w-4 h-4" />
-                Add Liability Value
-              </button>
-            )}
-          </div>
+      {/* Unified Filter Bar — same as Transaction History */}
+      <GlassCard className="p-3 flex flex-wrap gap-3 items-center shrink-0 bg-navy/40">
+        <div className="relative flex-1 min-w-[200px]">
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
+          <input 
+            type="text" placeholder="Search entries..." 
+            className="w-full bg-navy/50 border border-white/5 rounded-lg py-1.5 pl-9 pr-4 text-xs text-white focus:outline-none focus:border-emerald placeholder:text-slate-500 transition-all"
+          />
         </div>
+        <select className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald appearance-none">
+          <option className="bg-[#001F3F]">All Institutions</option>
+          {banks.map(b => <option key={b.id} value={b.id} className="bg-[#001F3F]">{b.name}</option>)}
+        </select>
+      </GlassCard>
 
-        <div className="mt-8 flex flex-col">
-          <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th 
-                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('name')}
-                      >
-                        <div className="flex items-center">Account <SortIcon column="name" /></div>
-                      </th>
-                      <th 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('date')}
-                      >
-                        <div className="flex items-center">Date <SortIcon column="date" /></div>
-                      </th>
-                      <th 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('bank')}
-                      >
-                        <div className="flex items-center">Institution <SortIcon column="bank" /></div>
-                      </th>
-                      <th 
-                        className="px-3 py-3.5 text-right text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                        onClick={() => handleSort('amount')}
-                      >
-                        <div className="flex items-center justify-end">Outstanding Balance <SortIcon column="amount" /></div>
-                      </th>
-                      <th className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white">Note</th>
-                      <th className="relative py-3.5 pl-3 pr-4 sm:pr-6 whitespace-nowrap text-right text-sm font-medium">Actions</th>
+      {/* Full-height Table — same as Transaction History */}
+      <GlassCard className="flex-1 flex flex-col overflow-hidden bg-navy/40">
+        <div className="flex-1 overflow-y-auto px-4 pb-4 pt-0 custom-scrollbar relative">
+          <table className="w-full text-left text-xs border-separate border-spacing-y-2">
+            <thead className="sticky top-0 z-[60]">
+              <tr>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('name')}>{labels.table.account} <SortIcon column="name" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('date')}>{labels.table.type} <SortIcon column="date" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('bank')}>{labels.table.institution} <SortIcon column="bank" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('amount')}>{labels.table.amount} <SortIcon column="amount" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">Note</th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">{labels.table.action}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedRecords.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="px-6 py-10 text-center text-slate-400">No liability records found.</td>
+                </tr>
+              ) : (
+                sortedRecords.map((record) => {
+                  const account = record.account;
+                  if (!account) return null;
+                  return (
+                    <tr key={record.id} className="bg-white/[0.02] hover:bg-white/[0.06] transition-all group">
+                      <td className="px-6 py-3 rounded-l-xl">
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-xl bg-white/5 text-slate-400 flex items-center justify-center border border-white/5">
+                            <CreditCard size={16} />
+                          </div>
+                          <span className="font-bold text-white text-sm">{account.name}</span>
+                        </div>
+                      </td>
+                      <td className="px-6 py-3 text-slate-300 text-sm">
+                        {record.date ? new Date(record.date).toLocaleDateString() : '-'}
+                      </td>
+                      <td className="px-6 py-3 text-slate-300 text-xs">
+                        {account.bank ? (
+                          <div className="flex items-center gap-2">
+                            <Landmark size={12} className="text-slate-500" />
+                            {account.bank.name}
+                          </div>
+                        ) : '-'}
+                      </td>
+                      <td className="px-6 py-3 text-right font-bold text-sm text-white">
+                        ฿{Math.abs(record.amount).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+                      </td>
+                      <td className="px-6 py-3 text-slate-400 text-xs italic max-w-[150px] truncate">
+                        {record.note || '-'}
+                      </td>
+                      <td className="px-6 py-3 text-center rounded-r-xl">
+                        <div className="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                          {hasPermission('liabilities', 'canUpdate') && (
+                            <button onClick={() => openEditModal(record)} data-testid={`liabilities-list-btn-edit-${account.name}`} className="text-slate-400 hover:text-blue-400 transition-colors">
+                              <Edit2 size={14} />
+                            </button>
+                          )}
+                          {hasPermission('liabilities', 'canDelete') && (
+                            <button onClick={() => handleDelete(record.id)} data-testid={`liabilities-list-btn-delete-${account.name}`} className="text-slate-400 hover:text-rose-500 transition-colors">
+                              <Trash2 size={14} />
+                            </button>
+                          )}
+                        </div>
+                      </td>
                     </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                    {sortedRecords.length === 0 ? (
-                      <tr>
-                        <td colSpan={6} className="py-8 text-center text-sm text-gray-500">
-                          No liability records found. Add one if needed.
-                        </td>
-                      </tr>
-                    ) : (
-                      sortedRecords.map((record) => {
-                        const account = record.account;
-                        if (!account) return null;
-                        return (
-                          <tr key={record.id}>
-                            <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
-                              <div className="flex items-center gap-2">
-                                <AlertCircle className="w-4 h-4 text-orange-500" />
-                                {account.name}
-                              </div>
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
-                               {record.date ? new Date(record.date).toLocaleDateString() : '-'}
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
-                              {account.bank ? (
-                                <div className="flex items-center gap-2">
-                                  {account.bank.color && (
-                                    <div className="w-2 h-2 rounded-full" style={{ backgroundColor: account.bank.color }} />
-                                  )}
-                                  {account.bank.name}
-                                </div>
-                              ) : (
-                                <span>-</span>
-                              )}
-                            </td>
-                            <td className="whitespace-nowrap px-3 py-4 text-sm text-right font-medium text-red-600 dark:text-red-400">
-                              {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(Math.abs(record.amount))}
-                            </td>
-                            <td className="px-3 py-4 text-sm text-gray-500 dark:text-gray-300 max-w-[150px] truncate">
-                              {record.note || '-'}
-                            </td>
-                            <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                              {hasPermission('liabilities', 'canUpdate') && (
-                                <button
-                                  onClick={() => openEditModal(record)}
-                                  data-testid={`liabilities-list-btn-edit-${account.name}`}
-                                  className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4"
-                                  title="Edit"
-                                >
-                                  <Edit2 className="w-4 h-4 inline" />
-                                </button>
-                              )}
-                              {hasPermission('liabilities', 'canDelete') && (
-                                <button
-                                  onClick={() => handleDelete(record.id)}
-                                  data-testid={`liabilities-list-btn-delete-${account.name}`}
-                                  className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300"
-                                  title="Delete"
-                                >
-                                  <Trash2 className="w-4 h-4 inline" />
-                                </button>
-                              )}
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Modal for Create/Edit */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-            <div className="flex justify-between items-center p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                {isEditing ? 'Edit Liability Record' : 'Add Liability Value'}
-              </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                <X className="w-5 h-5" />
-              </button>
-            </div>
-            <form onSubmit={handleFormSubmit} className="p-5 space-y-5">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Select Account (from My Accounts)</label>
-                <select
-                  required
-                  disabled={isEditing}
-                  value={formData.accountId}
-                  onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
-                  data-testid="liabilities-form-sel-account"
-                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-                >
-                  <option value="new">+ Create New Liability / Loan</option>
-                  {accounts.map((acc) => (
-                    <option key={acc.id} value={acc.id}>
-                      {acc.name} ({acc.type})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              {formData.accountId === 'new' && !isEditing && (
-                <div className="space-y-4 p-4 bg-red-50/50 dark:bg-red-900/10 rounded-lg border border-red-100 dark:border-red-800/50">
-                  <div>
-                    <label className="block text-xs font-bold text-red-700 dark:text-red-400 uppercase mb-1 tracking-wider">New Liability Name</label>
-                    <input
-                      type="text"
-                      placeholder="e.g. หนี้เพื่อน A"
-                      required={formData.accountId === 'new'}
-                      value={formData.newAccountName}
-                      onChange={(e) => setFormData({ ...formData, newAccountName: e.target.value })}
-                      data-testid="liabilities-form-input-new-name"
-                      className="w-full rounded-md border border-red-200 dark:border-red-800 px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-red-500 shadow-sm"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-xs font-bold text-red-700 dark:text-red-400 uppercase mb-1 tracking-wider">Institution (Optional)</label>
-                    <select
-                      value={formData.bankId}
-                      onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
-                      data-testid="liabilities-form-sel-bank"
-                      className="w-full rounded-md border border-red-200 dark:border-red-800 px-3 py-2 bg-white dark:bg-gray-700 text-sm focus:ring-2 focus:ring-red-500 shadow-sm"
-                    >
-                      <option value="">No Institution</option>
-                      {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
-                    </select>
-                  </div>
-                </div>
+                  );
+                })
               )}
+            </tbody>
+          </table>
+        </div>
+      </GlassCard>
 
-              <div className="flex gap-4">
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Outstanding Balance (฿)</label>
-                  <input
-                    id="input-liability-amount"
-                    type="number"
-                    step="0.01"
-                    required
-                    value={formData.amount}
-                    onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
-                    data-testid="liabilities-form-input-amount"
-                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-                <div className="flex-1">
-                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">As of Date</label>
-                  <input
-                    type="date"
-                    required
-                    value={formData.date}
-                    onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                    data-testid="liabilities-form-input-date"
-                    className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  />
-                </div>
-              </div>
+      {/* GlassModal for Add/Edit */}
+      <GlassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? labels.form.titleEdit || 'Edit Liability' : labels.form.titleAdd || 'Add Liability'}>
+        <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.account}</label>
+            <select
+              required disabled={isEditing} value={formData.accountId}
+              onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
+              data-testid="liabilities-form-sel-account"
+              className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none disabled:opacity-50"
+            >
+              <option value="new" className="bg-[#001F3F]">{labels.form.newAccount}</option>
+              {accounts.map(acc => <option key={acc.id} value={acc.id} className="bg-[#001F3F]">{acc.name} ({accountTypes.find(t => t.value === acc.type)?.label || acc.type})</option>)}
+            </select>
+          </div>
 
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Note (Optional)</label>
-                <textarea
-                  value={formData.note}
-                  onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-                  placeholder="e.g. Current outstanding balance"
-                  data-testid="liabilities-form-input-note"
-                  className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 min-h-[80px]"
+          {formData.accountId === 'new' && !isEditing && (
+            <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-xl flex flex-col gap-3">
+              <div className="flex flex-col gap-2">
+                <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">New Liability Name</label>
+                <input
+                  type="text" placeholder="e.g. หนี้เพื่อน A" required={formData.accountId === 'new'}
+                  value={formData.newAccountName}
+                  onChange={(e) => setFormData({ ...formData, newAccountName: e.target.value })}
+                  data-testid="liabilities-form-input-new-name"
+                  className="w-full bg-navy/50 border border-rose-500/20 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-rose-400 placeholder:text-slate-600"
                 />
               </div>
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{labels.form.bank}</label>
+                  <select
+                    value={formData.bankId}
+                    onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
+                    data-testid="liabilities-form-sel-bank"
+                    className="w-full bg-navy/50 border border-rose-500/20 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-rose-400 appearance-none"
+                  >
+                    <option value="" className="bg-[#001F3F]">No Institution</option>
+                    {banks.map(b => <option key={b.id} value={b.id} className="bg-[#001F3F]">{b.name}</option>)}
+                  </select>
+                </div>
+            </div>
+          )}
 
-              <div className="pt-4 border-t dark:border-gray-700 flex justify-end gap-3">
-                <button
-                  type="button"
-                  id="btn-cancel-liability"
-                  onClick={() => setIsModalOpen(false)}
-                  className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 hover:dark:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                >
-                  Cancel
-                </button>
-                <button
-                  id="btn-save-liability"
-                  type="submit"
-                  data-testid="liabilities-form-btn-save"
-                  className="px-4 py-2 text-sm font-medium text-white bg-red-600 border border-transparent rounded-md hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors"
-                >
-                  {isEditing ? 'Update Value' : 'Save Value'}
-                </button>
-              </div>
-            </form>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{labels.form.amount}</label>
+              <input
+                type="number" step="0.01" required value={formData.amount}
+                onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
+                data-testid="liabilities-form-input-amount"
+                className="w-full bg-navy/50 border border-rose-500/30 rounded-xl px-4 py-3 text-xl font-bold text-white outline-none focus:border-rose-400 focus:ring-1 focus:ring-rose-500/50 transition-all"
+              />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.date}</label>
+              <input
+                type="date" required value={formData.date}
+                onChange={(e) => setFormData({ ...formData, date: e.target.value })}
+                data-testid="liabilities-form-input-date"
+                className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all [color-scheme:dark]"
+              />
+            </div>
           </div>
-        </div>
-      )}
+
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.note}</label>
+            <textarea
+              value={formData.note}
+              onChange={(e) => setFormData({ ...formData, note: e.target.value })}
+              placeholder="e.g. Current outstanding balance"
+              data-testid="liabilities-form-input-note"
+              className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all min-h-[80px] placeholder:text-slate-600"
+            />
+          </div>
+
+          <button type="submit" data-testid="liabilities-form-btn-save" className="w-full bg-rose-600 text-white font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-2 hover:shadow-[0_0_20px_rgba(225,29,72,0.3)] transition-all active:scale-[0.98]">
+            {isEditing ? labels.form.update || 'Update' : labels.form.save || 'Save'}
+          </button>
+        </form>
+      </GlassModal>
     </div>
   );
 }
+
+

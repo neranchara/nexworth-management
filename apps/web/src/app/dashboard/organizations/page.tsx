@@ -117,7 +117,7 @@ export default function OrganizationsPage() {
           <button
             onClick={() => setShowCreateModal(true)}
             data-testid="orgs-list-btn-add-org"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-1.5 rounded-lg text-[12px] font-bold transition-all flex items-center gap-2 active:scale-95"
+            className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
           >
             <Plus className="w-3.5 h-3.5" />
             Create Org

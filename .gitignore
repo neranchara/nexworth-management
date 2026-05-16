@@ -43,10 +43,31 @@ docs/
 
 # Prisma
 **/prisma/*.ts
-!**/prisma/seed.ts
+**/prisma/seed.ts
+**/seed.ts
 
 # Markdown except core docs
 *.md
 !README.md
 !CONFIG_POLICY.md
 !PROD_CONFIG_GUIDE.md
+
+# Tests & Mocks
+**/tests/
+**/__tests__/
+**/*.test.ts
+**/*.test.tsx
+**/*.spec.ts
+**/*.spec.tsx
+mock/
+**/mock/
+
+# Test results and logs
+**/test_output.txt
+**/test_results.txt
+**/single_test_output.txt
+test-results/
+**/test-results/
+
+# Training data (OCR)
+*.traineddata

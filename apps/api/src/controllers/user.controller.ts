@@ -21,6 +21,8 @@ const updateUserSchema = z.object({
   roleId: z.string().uuid().optional(),
   organizationId: z.string().uuid().optional(),
   isActive: z.boolean().optional(),
+  liquidityDangerZone: z.number().optional(),
+  liquiditySafeZone: z.number().optional(),
 });
 
 

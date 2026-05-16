@@ -51,6 +51,8 @@ export default function TransactionsPage() {
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
   const [types, setTypes] = useState<TransactionType[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isScanning, setIsScanning] = useState(false);
+  const scanFileRef = useRef<HTMLInputElement>(null);
   const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
@@ -69,9 +71,6 @@ export default function TransactionsPage() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [currentTxId, setCurrentTxId] = useState<string | null>(null);
-  const [isScanning, setIsScanning] = useState(false);
-  
-  const scanFileRef = useRef<HTMLInputElement>(null);
 
   const [formData, setFormData] = useState({
     date: format(new Date(), 'yyyy-MM-dd'),
@@ -352,6 +351,15 @@ export default function TransactionsPage() {
           <p className="text-[10px] text-slate-400 uppercase tracking-widest">{labels.subtitle}</p>
         </div>
         <div className="flex items-center gap-3">
+          <button 
+            onClick={() => setIsModalOpen(true)}
+            data-testid="transactions-header-btn-scan-slip"
+            className="bg-white/5 border border-white/5 text-emerald px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 hover:bg-emerald/10 hover:border-emerald/20"
+          >
+            <Scan className="w-4 h-4" /> Scan Slip
+          </button>
+          <input type="file" ref={scanFileRef} className="hidden" accept="image/*" onChange={handleScanSlip} data-testid="ai-scanner-input" />
+          
           {hasPermission('transactions', 'canCreate') && (
             <button 
               onClick={openAddModal}
@@ -444,11 +452,12 @@ export default function TransactionsPage() {
                   {isScanning ? <Loader2 className="w-6 h-6 animate-spin" /> : <Scan className="w-6 h-6" />}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-emerald uppercase tracking-wider">Smart Slip Scanner</h4>
+                  <h4 className="text-sm font-bold text-emerald uppercase tracking-wider">AI Slip Intelligence</h4>
                   <p className="text-[10px] text-slate-400">Auto-fill details from bank slip</p>
                 </div>
               </div>
               <button 
+                data-testid="transactions-btn-scan-slip"
                 onClick={() => scanFileRef.current?.click()}
                 disabled={isScanning}
                 className="bg-emerald text-navy px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:shadow-[0_0_15px_rgba(80,200,120,0.4)] transition-all disabled:opacity-50"

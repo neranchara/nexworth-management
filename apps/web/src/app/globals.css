@@ -3,30 +3,51 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #000B18;
+  --foreground: #F8FAFC;
   --brand-primary: #001F3F;
   --brand-secondary: #708090;
   --brand-accent: #50C878;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #001F3F; /* Midnight Navy for Pillar Concept */
-    --foreground: #ededed;
-  }
-}
-
 body {
-  background: var(--background);
+  background: radial-gradient(circle at top right, #001F3F 0%, #000B18 100%);
   color: var(--foreground);
   font-family: var(--font-prompt), 'Prompt', 'Noto Sans Thai', 'Sarabun', sans-serif;
   -webkit-font-smoothing: antialiased;
+  min-height: 100vh;
+  overflow: hidden; /* No-Scroll Rule for Main Stage */
 }
 
-/* Force Thai-compatible font on all form elements (browser defaults to system fonts) */
-select, option, input, textarea, button {
-  font-family: var(--font-prompt), 'Prompt', 'Noto Sans Thai', 'Sarabun', sans-serif;
+/* =============================================
+   No-Scroll & Custom Scrollbar
+   ============================================= */
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 5px;
+  height: 5px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: rgba(0, 0, 0, 0.1);
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: #708090;
+  border-radius: 10px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #50C878;
 }
 
 /* =============================================
@@ -56,18 +77,18 @@ select, option, input, textarea, button {
   justify-content: center;
   width: 24px;
   height: 24px;
-  background: rgba(59, 130, 246, 0.15);
-  border: 1px solid rgba(59, 130, 246, 0.3);
+  background: rgba(80, 200, 120, 0.15); /* Emerald Tint */
+  border: 1px solid rgba(80, 200, 120, 0.3);
   border-radius: 6px;
   cursor: grab;
-  color: #3b82f6;
+  color: #50C878;
   opacity: 0.6;
   transition: all 0.2s ease;
 }
 
 .grid-drag-handle:hover {
   opacity: 1;
-  background: rgba(59, 130, 246, 0.25);
+  background: rgba(80, 200, 120, 0.25);
   transform: scale(1.05);
 }
 
@@ -77,8 +98,8 @@ select, option, input, textarea, button {
 
 /* Placeholder (drop zone) */
 .react-grid-placeholder {
-  background: rgba(59, 130, 246, 0.12) !important;
-  border: 2px dashed rgba(59, 130, 246, 0.4) !important;
+  background: rgba(80, 200, 120, 0.12) !important;
+  border: 2px dashed rgba(80, 200, 120, 0.4) !important;
   border-radius: 0.75rem !important;
   opacity: 1 !important;
   transition: all 0.15s ease !important;
@@ -90,7 +111,7 @@ select, option, input, textarea, button {
 }
 
 .react-resizable-handle::after {
-  border-color: rgba(59, 130, 246, 0.4) !important;
+  border-color: rgba(80, 200, 120, 0.4) !important;
 }
 
 /* Grid item transitions */
@@ -115,47 +136,27 @@ select, option, input, textarea, button {
   transition: none !important;
 }
 
-/* Dark mode adjustments */
-@media (prefers-color-scheme: dark) {
-  .grid-drag-handle {
-    background: rgba(96, 165, 250, 0.15);
-    border-color: rgba(96, 165, 250, 0.3);
-    color: #60a5fa;
-  }
-  
-  .grid-drag-handle:hover {
-    background: rgba(96, 165, 250, 0.25);
-  }
-
-  .react-grid-placeholder {
-    background: rgba(96, 165, 250, 0.08) !important;
-    border-color: rgba(96, 165, 250, 0.3) !important;
-  }
-
-  .react-grid-item.react-draggable-dragging {
-    box-shadow: 0 20px 40px -8px rgba(0, 0, 0, 0.4);
-  }
-}
 
 /* =============================================
    Pillar Concept & Glassmorphism Utilities
    ============================================= */
 
 .glass-card {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.3);
+  background: rgba(17, 34, 64, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  box-shadow: 0 10px 40px -10px rgba(0, 0, 0, 0.5);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card-interactive:hover {
-  background: rgba(255, 255, 255, 0.06);
-  border-color: rgba(255, 255, 255, 0.15);
-  transform: translateY(-4px);
-  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.4);
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.1);
+  transform: translateX(4px);
+  box-shadow: 0 20px 50px -15px rgba(0, 0, 0, 0.6);
 }
+
 
 .emerald-glow {
   box-shadow: 0 0 20px rgba(80, 200, 120, 0.2);

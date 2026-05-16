@@ -1,10 +1,13 @@
 'use client';
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
-import { PlusCircle, ArrowUpCircle, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal } from 'lucide-react';
+import { Plus, ArrowUpCircle, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal, Search, FileText, CircleAlert, HandCoins, PenLine, Info } from 'lucide-react';
 import api from '@/lib/api';
 import { format } from 'date-fns';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Account } from '@/types/models';
+import Link from 'next/link';
+import GlassCard from '@/components/ui/GlassCard';
+import GlassModal from '@/components/ui/GlassModal';
 
 interface Loan {
   id: string;
@@ -37,7 +40,7 @@ export default function LoanTrackerPage() {
 
   // Form states
   const [newLoanForm, setNewLoanForm] = useState({ name: '', accountId: '', initialAmount: '', actualDate: '' });
-  const [repayForm, setRepayForm] = useState({ amount: '', type: 'REPAY' as 'REPAY' | 'BORROW', note: '', actualDate: '' });
+  const [repayForm, setRepayForm] = useState({ amount: '', type: 'REPAY' as 'REPAY' | 'BORROW', note: '', actualDate: '', accountId: '' });
 
   // Alert state
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -120,10 +123,11 @@ export default function LoanTrackerPage() {
         type: repayForm.type,
         amount: parseFloat(repayForm.amount),
         note: repayForm.note,
+        accountId: repayForm.accountId,
         actualDate: repayForm.actualDate ? new Date(repayForm.actualDate).toISOString() : undefined
       });
       setShowRepayModal(false);
-      setRepayForm({ amount: '', type: 'REPAY', note: '', actualDate: '' });
+      setRepayForm({ amount: '', type: 'REPAY', note: '', actualDate: '', accountId: '' });
       setSelectedLoan(null);
       showAlert('บันทึกรายการสำเร็จ', 'success');
       fetchData();
@@ -243,239 +247,289 @@ export default function LoanTrackerPage() {
   const totalBorrowed = loans.reduce((acc, l) => acc + l.totalBorrowed, 0);
   const totalRepaid = loans.reduce((acc, l) => acc + l.totalRepaid, 0);
   const remainingDebt = totalBorrowed - totalRepaid;
+  const repaymentPercentage = totalBorrowed > 0 ? Math.round((totalRepaid / totalBorrowed) * 100) : 0;
+
+  // Simple SVG Donut Chart
+  const CircularProgress = ({ percentage }: { percentage: number }) => {
+    const radius = 36;
+    const circumference = 2 * Math.PI * radius;
+    const strokeDashoffset = circumference - (percentage / 100) * circumference;
+    return (
+      <div className="relative w-20 h-20 flex items-center justify-center">
+        <svg className="w-full h-full transform -rotate-90" viewBox="0 0 100 100">
+          <circle cx="50" cy="50" r={radius} className="stroke-white/5" strokeWidth="8" fill="none" />
+          <circle 
+            cx="50" cy="50" r={radius} 
+            className="stroke-emerald transition-all duration-1000 ease-in-out" 
+            strokeWidth="8" fill="none" 
+            strokeDasharray={circumference} 
+            strokeDashoffset={strokeDashoffset} 
+            strokeLinecap="round" 
+          />
+        </svg>
+        <div className="absolute inset-0 flex flex-col items-center justify-center">
+          <span className="text-xl font-bold text-emerald">{percentage}%</span>
+        </div>
+      </div>
+    );
+  };
 
   return (
-    <div className="space-y-6 relative">
+    <div className="flex flex-col h-[calc(100vh-6rem)] overflow-hidden w-full space-y-4">
       {/* Alert Pop-up */}
       {alert && (
-        <div className={`fixed top-4 right-4 z-[110] max-w-[400px] w-full p-4 rounded-lg shadow-lg flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-300 ${alert.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-          {alert.type === 'success' ? <CheckCircle className="w-5 h-5 flex-shrink-0 text-green-500" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />}
-          <p className="font-medium text-sm break-words">{alert.message}</p>
+        <div className={`fixed top-4 right-4 z-[200] max-w-[400px] w-full p-4 rounded-2xl shadow-2xl flex items-center gap-3 backdrop-blur-md border ${
+          alert.type === 'success' ? 'bg-emerald/10 border-emerald/20 text-emerald' : 'bg-rose-500/10 border-rose-500/20 text-rose-400'
+        }`}>
+          {alert.type === 'success' ? <CheckCircle size={20} /> : <AlertCircle size={20} />}
+          <p className="font-bold text-sm">{alert.message}</p>
         </div>
       )}
 
-      <div className="flex justify-between items-center">
-        <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Loan Tracker (โอนภายใน)</h1>
-        {hasPermission('loan-tracker', 'canCreate') && (
-          <button
-            onClick={() => setShowNewLoanModal(true)}
-            data-testid="loans-list-btn-add-loan"
-            className="bg-blue-600 text-white px-4 py-2 rounded-lg flex items-center gap-2 hover:bg-blue-700"
-          >
-            <PlusCircle className="w-5 h-5" /> สร้างรายการยืมใหม่
-          </button>
-        )}
+      {/* Header Section (Navigation Focus) */}
+      <header className="flex items-center justify-between shrink-0">
+        <div>
+          <h2 className="text-2xl font-bold text-white flex items-baseline gap-2">
+            Loan Tracker <span className="text-slate-400 text-sm font-normal">สรุปสถานะการยืม (ภายใน)</span>
+          </h2>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest -mt-1">Lending Management & Monitoring</p>
+        </div>
+        <div className="flex items-center gap-4">
+          <p className="hidden md:block text-[10px] text-slate-500 italic mr-2">ต้องการบันทึกการยืมเงินเพิ่ม?</p>
+          <Link href="/dashboard/transactions" className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95">
+            <Plus className="w-4 h-4" /> ไปหน้าธุรกรรม
+          </Link>
+        </div>
+      </header>
+
+      {/* Summary Area */}
+      <div className="grid grid-cols-12 gap-4 shrink-0">
+        <GlassCard className="col-span-12 lg:col-span-3 p-5 border-l-4 border-orange-500 flex flex-col justify-between h-32 hover:bg-white/[0.02] transition-colors">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">ยอดขอยืมทั้งหมด</span>
+          <h3 className="text-3xl font-bold text-white">฿{totalBorrowed.toLocaleString()}</h3>
+          <p className="text-[9px] text-orange-500 font-bold uppercase flex items-center gap-1">
+            <CircleAlert size={10} /> Pending Dues
+          </p>
+        </GlassCard>
+        <GlassCard className="col-span-12 lg:col-span-3 p-5 border-l-4 border-emerald flex flex-col justify-between h-32 hover:bg-white/[0.02] transition-colors">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">คืนแล้ว (Settled)</span>
+          <h3 className="text-3xl font-bold text-emerald">฿{totalRepaid.toLocaleString()}</h3>
+          <p className="text-[9px] text-slate-400 uppercase">Fully Repaid: {loans.filter(l => l.balance <= 0).length} Records</p>
+        </GlassCard>
+        <GlassCard className="col-span-12 lg:col-span-3 p-5 border-l-4 border-blue-400 flex flex-col justify-between h-32 hover:bg-white/[0.02] transition-colors">
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">คงเหลือสุทธิ</span>
+          <h3 className="text-3xl font-bold text-white">฿{remainingDebt.toLocaleString()}</h3>
+          <div className="w-full bg-navy border border-white/5 h-1.5 rounded-full overflow-hidden mt-1">
+             <div className="bg-blue-400 h-full transition-all duration-1000" style={{ width: `${totalBorrowed > 0 ? (remainingDebt / totalBorrowed) * 100 : 0}%` }}></div>
+          </div>
+        </GlassCard>
+        <GlassCard className="col-span-12 lg:col-span-3 p-4 flex items-center justify-center gap-6 h-32 bg-emerald/5 border border-emerald/10 hover:bg-emerald/10 transition-colors">
+          <CircularProgress percentage={repaymentPercentage} />
+          <div className="flex flex-col text-left">
+            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Overall</span>
+            <span className="text-[10px] text-emerald uppercase font-bold tracking-widest">Repayment Progress</span>
+          </div>
+        </GlassCard>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">ยอดยืมทั้งหมด (Borrowed)</p>
-          <p className="text-3xl font-bold text-orange-600">฿{totalBorrowed.toLocaleString()}</p>
+      {/* Transaction Table Section */}
+      <GlassCard className="flex-1 flex flex-col overflow-hidden bg-navy/40">
+        {/* Filters */}
+        <div className="px-6 py-4 flex items-center justify-between border-b border-white/5 shrink-0">
+          <div className="flex items-center gap-4">
+            <div className="relative min-w-[250px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
+              <input type="text" placeholder="ค้นหาชื่อบัญชีหรือรายการ..." className="w-full bg-navy/50 border border-white/5 rounded-full py-1.5 pl-9 pr-4 text-[10px] text-white focus:outline-none focus:border-emerald placeholder:text-slate-500 transition-all" />
+            </div>
+            <select className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-[10px] text-slate-300 outline-none focus:border-emerald appearance-none">
+                <option className="bg-[#001F3F]">สถานะ: ทั้งหมด</option>
+                <option className="bg-[#001F3F]">สถานะ: ค้างชำระ</option>
+                <option className="bg-[#001F3F]">สถานะ: ชำระครบแล้ว</option>
+            </select>
+          </div>
         </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">คืนแล้ว (Repaid)</p>
-          <p className="text-3xl font-bold text-green-600">฿{totalRepaid.toLocaleString()}</p>
-        </div>
-        <div className="bg-white dark:bg-gray-800 p-6 rounded-xl shadow-sm border border-gray-100 dark:border-gray-700">
-          <p className="text-sm text-gray-500 dark:text-gray-400">คงเหลือ (Balance)</p>
-          <p className="text-3xl font-bold text-blue-600">฿{remainingDebt.toLocaleString()}</p>
-        </div>
-      </div>
 
-      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-lg overflow-hidden border border-gray-200 dark:border-gray-700">
-        <table className="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-          <thead className="bg-gray-50 dark:bg-gray-900/50">
-            <tr>
-              <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleSort('code')}
-              >
-                <div className="flex items-center">REF <SortIcon column="code" /></div>
-              </th>
-              <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleSort('date')} 
-              >
-                <div className="flex items-center">DATE <SortIcon column="date" /></div>
-              </th>
-              <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleSort('description')}
-              >
-                <div className="flex items-center">DESCRIPTION <SortIcon column="description" /></div>
-              </th>
-              <th 
-                className="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleSort('account')}
-              >
-                <div className="flex items-center">ACCOUNT <SortIcon column="account" /></div>
-              </th>
-              <th 
-                className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleSort('borrowed')}
-              >
-                <div className="flex items-center justify-end">BORROW <SortIcon column="borrowed" /></div>
-              </th>
-              <th 
-                className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleSort('repaid')}
-              >
-                <div className="flex items-center justify-end">REPAID <SortIcon column="repaid" /></div>
-              </th>
-              <th 
-                className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                onClick={() => handleSort('balance')}
-              >
-                <div className="flex items-center justify-end">BAL <SortIcon column="balance" /></div>
-              </th>
-              <th className="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">ACTION</th>
-            </tr>
-          </thead>
-          <tbody className="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
-            {loans.map((loan) => (
-              <tr key={loan.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-bold text-blue-600 dark:text-blue-400">
-                  {loan.code}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">
-                  {format(new Date(loan.actualDate || loan.date), 'dd/MM/yyyy')}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 font-medium">
-                  {loan.name}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm text-gray-700 dark:text-gray-300 flex items-center gap-2">
-                  <Wallet className="w-4 h-4 text-gray-400" />
-                  {loan.accountName}
-                </td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-orange-600 text-right" data-testid={`loans-list-td-borrowed-${loan.code}`}>{loan.totalBorrowed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-green-600 text-right" data-testid={`loans-list-td-repaid-${loan.code}`}>{loan.totalRepaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="px-4 py-4 whitespace-nowrap text-sm font-semibold text-blue-600 text-right" data-testid={`loans-list-td-balance-${loan.code}`}>{loan.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
-                <td className="px-4 py-4 whitespace-nowrap text-right text-sm font-medium">
-                  {hasPermission('loan-tracker', 'canUpdate') && (
-                    <div className="flex justify-end gap-2">
-                      <button 
-                        disabled={loan.balance === 0}
-                        onClick={() => { setSelectedLoan(loan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'REPAY' }) }}
-                        data-testid={`loans-list-btn-repay-${loan.code}`}
-                        className={`px-3 py-1 rounded ${loan.balance === 0 ? 'bg-gray-100 text-gray-400 cursor-not-allowed opacity-50' : 'text-green-600 hover:text-green-900 bg-green-50'}`}
-                      >
-                        คืนเงิน
-                      </button>
-                      <button 
-                        onClick={() => { 
-                          setSelectedLoan(loan); 
-                          setShowRepayModal(true); 
-                          setRepayForm({ ...repayForm, type: 'BORROW' });
-                        }}
-                        data-testid={`loans-list-btn-borrow-more-${loan.code}`}
-                        className="px-3 py-1 rounded text-orange-600 hover:text-orange-900 bg-orange-50"
-                      >
-                        ยืมเพิ่ม
-                      </button>
-                      <button 
-                        onClick={() => openEditModal(loan)}
-                        data-testid={`loans-list-btn-edit-${loan.code}`}
-                        className="px-3 py-1 rounded text-blue-600 hover:text-blue-900 bg-blue-50"
-                      >
-                        แก้ไข
-                      </button>
-                    </div>
-                  )}
-                </td>
+        {/* Table Content */}
+        <div className="flex-1 overflow-y-auto px-4 pb-4 pt-0 custom-scrollbar relative">
+          <table className="w-full text-left text-xs border-separate border-spacing-y-2">
+            <thead className="sticky top-0 z-[60]">
+              <tr>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] rounded-l-lg" onClick={() => handleSort('code')}>REF <SortIcon column="code" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('date')}>DATE <SortIcon column="date" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('description')}>DESCRIPTION <SortIcon column="description" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('account')}>ACCOUNT <SortIcon column="account" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('borrowed')}>BORROWED <SortIcon column="borrowed" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('repaid')}>REPAID <SortIcon column="repaid" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('balance')}>BALANCE <SortIcon column="balance" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] rounded-r-lg">ACTIONS</th>
               </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-
-      {showNewLoanModal && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6 shadow-xl">
-            <h2 className="text-xl font-bold mb-4">{isEditing ? 'แก้ไขรายการยืมเงิน' : 'สร้างรายการยืมใหม่ (New Loan)'}</h2>
-            <form onSubmit={handleCreateLoan} className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">รายละเอียด / วัตถุประสงค์</label>
-                <input required type="text" className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
-                  value={newLoanForm.name} onChange={e => setNewLoanForm({...newLoanForm, name: e.target.value})} placeholder="เช่น ทำบ้าน, จ่ายภาษี" 
-                  data-testid="loans-form-input-name" />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">บัญชีต้นทาง (ยืมจากบัญชีไหน)</label>
-                <select required className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
-                  value={newLoanForm.accountId} onChange={e => setNewLoanForm({...newLoanForm, accountId: e.target.value})}
-                  data-testid="loans-form-sel-account">
-                  <option value="">เลือกบัญชี...</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
-                </select>
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">จำนวนเงิน {isEditing && <span className="text-[10px] text-gray-400 font-normal ml-1">(ไม่สามารถเปลี่ยนได้ผ่านการแก้ไขนี้)</span>}</label>
-                <input required type="number" step="0.01" className={`w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600 ${isEditing ? 'bg-gray-100 opacity-60 cursor-not-allowed' : ''}`}
-                  disabled={isEditing}
-                  value={newLoanForm.initialAmount} onChange={e => setNewLoanForm({...newLoanForm, initialAmount: e.target.value})} 
-                  data-testid="loans-form-input-amount" />
-              </div>
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
-                <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> วันที่ยืมเงินจริง (Loan Date)
-                </label>
-                <input 
-                  type="date" 
-                  className="w-full border rounded-lg p-2 bg-white dark:bg-gray-700 border-blue-200 dark:border-blue-800 focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={newLoanForm.actualDate} onChange={e => setNewLoanForm({...newLoanForm, actualDate: e.target.value})}
-                  data-testid="loans-form-input-date"
-                />
-                <p className="text-[10px] text-blue-600 dark:text-blue-400 mt-1">* ระบุวันที่ยืมเงินจริง เพื่อใช้คำนวณในคอลัมน์ Loan Date</p>
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setShowNewLoanModal(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">ยกเลิก</button>
-                <button type="submit" data-testid="loans-form-btn-save" className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700">บันทึกรายการ</button>
-              </div>
-            </form>
-          </div>
+            </thead>
+            <tbody>
+              {loans.map((loan) => {
+                const isPending = loan.balance > 0;
+                return (
+                  <tr key={loan.id} className={`bg-white/[0.02] hover:bg-white/[0.06] transition-all group ${isPending ? 'border-l-4 border-orange-500' : 'border-l-4 border-white/5'}`}>
+                    <td className={`px-6 py-4 rounded-l-xl font-bold ${isPending ? 'text-orange-500' : 'text-slate-500'}`}>
+                      {loan.code || '-'}
+                    </td>
+                    <td className="px-6 py-4 text-slate-400 text-xs">
+                      {format(new Date(loan.actualDate || loan.date), 'dd/MM/yyyy')}
+                    </td>
+                    <td className="px-6 py-4 font-medium text-white text-sm">
+                      {loan.name}
+                    </td>
+                    <td className="px-6 py-4 text-slate-400 text-xs">
+                      <div className="flex items-center gap-2">
+                        <FileText size={12} className="opacity-50" />
+                        {loan.accountName}
+                      </div>
+                    </td>
+                    <td className="px-6 py-4 text-right font-bold text-white text-sm" data-testid={`loans-list-td-borrowed-${loan.code}`}>
+                      {loan.totalBorrowed.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 text-right font-bold text-emerald text-sm" data-testid={`loans-list-td-repaid-${loan.code}`}>
+                      {loan.totalRepaid.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className={`px-6 py-4 text-right font-bold text-sm ${isPending ? 'text-orange-500' : 'text-slate-500'}`} data-testid={`loans-list-td-balance-${loan.code}`}>
+                      {loan.balance.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    </td>
+                    <td className="px-6 py-4 rounded-r-xl">
+                      <div className="flex justify-center items-center gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {hasPermission('loan-tracker', 'canUpdate') && (
+                          <>
+                            {isPending && (
+                              <button 
+                                onClick={() => { setSelectedLoan(loan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'REPAY' }) }}
+                                data-testid={`loans-list-btn-repay-${loan.code}`}
+                                className="px-4 py-1.5 rounded-lg text-[10px] font-bold bg-emerald text-navy hover:shadow-[0_0_10px_rgba(80,200,120,0.4)] transition-all"
+                              >
+                                คืนเงิน
+                              </button>
+                            )}
+                            <button 
+                              onClick={() => openEditModal(loan)}
+                              data-testid={`loans-list-btn-edit-${loan.code}`}
+                              className="px-2 py-1.5 rounded-lg text-[10px] bg-white/5 text-slate-400 border border-white/10 hover:bg-white/10 hover:text-white transition-all"
+                            >
+                              <PenLine size={12} />
+                            </button>
+                          </>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+              {loans.length === 0 && (
+                <tr>
+                  <td colSpan={8} className="px-6 py-10 text-center text-slate-400">ไม่มีข้อมูลการยืม</td>
+                </tr>
+              )}
+            </tbody>
+          </table>
         </div>
-      )}
+      </GlassCard>
 
-      {showRepayModal && selectedLoan && (
-        <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-          <div className="bg-white dark:bg-gray-800 rounded-xl max-w-md w-full p-6 shadow-xl">
-            <h2 className="text-xl font-bold mb-4">{repayForm.type === 'REPAY' ? 'รายการคืนเงิน (Repay)' : 'รายการยืมเพิ่ม (Borrow More)'}</h2>
-            <p className="text-sm text-gray-500 mb-4">สำหรับ: {selectedLoan.name} ({selectedLoan.accountName})</p>
-            <form onSubmit={handleTransaction} className="space-y-4">
-               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1 flex justify-between">
-                  <span>จำนวนเงิน</span>
-                  <span className="text-xs text-gray-500">(Initial: ฿{selectedLoan.totalBorrowed?.toLocaleString()})</span>
-                </label>
-                <input required type="number" step="0.01" className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
-                  value={repayForm.amount} onChange={e => setRepayForm({...repayForm, amount: e.target.value})} 
-                  data-testid="loans-repay-form-input-amount" />
-              </div>
-              <div className="bg-blue-50 dark:bg-blue-900/20 p-3 rounded-lg border border-blue-100 dark:border-blue-800">
-                <label className="block text-sm font-medium text-blue-700 dark:text-blue-300 mb-1 flex items-center gap-2">
-                  <CheckCircle className="w-4 h-4" /> วันที่จ่ายเงินจริง (Actual Date)
-                </label>
-                <input 
-                  type="date" 
-                  className="w-full border rounded-lg p-2 bg-white dark:bg-gray-700 border-blue-200 dark:border-blue-800 focus:ring-2 focus:ring-blue-500 outline-none"
-                  value={repayForm.actualDate} onChange={e => setRepayForm({...repayForm, actualDate: e.target.value})}
-                  data-testid="loans-repay-form-input-date"
-                />
-              </div>
-               <div>
-                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">หมายเหตุ (ถ้ามี)</label>
-                <input type="text" className="w-full border rounded-lg p-2 dark:bg-gray-700 dark:border-gray-600"
-                  value={repayForm.note} onChange={e => setRepayForm({...repayForm, note: e.target.value})} 
-                  data-testid="loans-repay-form-input-note" />
-              </div>
-              <div className="flex justify-end gap-3 mt-6">
-                <button type="button" onClick={() => setShowRepayModal(false)} className="px-4 py-2 text-gray-500 hover:bg-gray-100 rounded-lg">ยกเลิก</button>
-                <button type="submit" data-testid="loans-repay-form-btn-save" className={`px-4 py-2 text-white rounded-lg ${repayForm.type === 'REPAY' ? 'bg-green-600 hover:bg-green-700' : 'bg-orange-600 hover:bg-orange-700'}`}>บันทึกรายการ</button>
-              </div>
-            </form>
+      {/* Edit Loan Modal (Glassmorphism) - Still needed for editing purposes */}
+      <GlassModal isOpen={showNewLoanModal} onClose={() => { setShowNewLoanModal(false); setIsEditing(false); }} title={isEditing ? 'แก้ไขรายการยืมเงิน' : 'สร้างรายการยืมใหม่'}>
+        <form onSubmit={handleCreateLoan} className="flex flex-col gap-4">
+          {!isEditing && (
+             <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-lg flex items-start gap-2 text-orange-400 text-xs mb-2">
+                <Info size={14} className="shrink-0 mt-0.5" />
+                <p>การสร้างรายการยืมเงิน ควรสร้างจากหน้า Transaction เพื่อให้ระบบบัญชีครบถ้วน การสร้างจากหน้านี้เหมาะสำหรับการยอดยกมาเท่านั้น</p>
+             </div>
+          )}
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">รายละเอียด / วัตถุประสงค์</label>
+            <input required type="text" className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald placeholder:text-slate-600 transition-all"
+              value={newLoanForm.name} onChange={e => setNewLoanForm({...newLoanForm, name: e.target.value})} placeholder="เช่น ทำบ้าน, จ่ายภาษี" 
+              data-testid="loans-form-input-name" />
           </div>
+          <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">บัญชีต้นทาง (ยืมจากบัญชีไหน)</label>
+            <select required className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
+              value={newLoanForm.accountId} onChange={e => setNewLoanForm({...newLoanForm, accountId: e.target.value})}
+              data-testid="loans-form-sel-account">
+              <option value="" className="bg-[#001F3F]">เลือกบัญชี...</option>
+              {accounts.map(a => <option key={a.id} value={a.id} className="bg-[#001F3F]">{a.name}</option>)}
+            </select>
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">จำนวนเงิน {isEditing && <span className="text-[8px] text-orange-400">(ไม่สามารถแก้ได้)</span>}</label>
+              <input required type="number" step="0.01" className={`w-full bg-navy/50 border rounded-xl px-4 py-3 text-sm font-bold text-white outline-none transition-all ${isEditing ? 'border-white/5 opacity-50 cursor-not-allowed' : 'border-emerald/30 focus:border-emerald'}`}
+                disabled={isEditing}
+                value={newLoanForm.initialAmount} onChange={e => setNewLoanForm({...newLoanForm, initialAmount: e.target.value})} 
+                data-testid="loans-form-input-amount" />
+            </div>
+            <div className="flex flex-col gap-2">
+              <label className="text-[10px] font-black text-emerald uppercase tracking-widest flex items-center gap-1">
+                 วันที่ยืมเงินจริง
+              </label>
+              <input 
+                type="date" 
+                className="w-full bg-navy/50 border border-emerald/20 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all [color-scheme:dark]"
+                value={newLoanForm.actualDate} onChange={e => setNewLoanForm({...newLoanForm, actualDate: e.target.value})}
+                data-testid="loans-form-input-date"
+              />
+            </div>
+          </div>
+          
+          <button type="submit" data-testid="loans-form-btn-save" className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-4 hover:shadow-[0_0_15px_rgba(80,200,120,0.3)] transition-all active:scale-[0.98]">
+            บันทึกรายการ
+          </button>
+        </form>
+      </GlassModal>
+
+      {/* Repay Modal (Glassmorphism) */}
+      <GlassModal isOpen={showRepayModal && selectedLoan !== null} onClose={() => { setShowRepayModal(false); setSelectedLoan(null); }} title="รายการคืนเงิน (Repay)">
+        <div className="mb-4 bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col gap-1">
+           <span className="text-[10px] text-slate-400 uppercase tracking-widest">สำหรับรายการ</span>
+           <span className="text-sm font-bold text-white">{selectedLoan?.name} <span className="text-emerald text-xs ml-1">({selectedLoan?.accountName})</span></span>
         </div>
-      )}
+        <form onSubmit={handleTransaction} className="flex flex-col gap-4">
+           <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between">
+              <span>จำนวนเงิน</span>
+              <span className="text-orange-400">ยอดคงเหลือ: ฿{selectedLoan?.balance.toLocaleString()}</span>
+            </label>
+            <input required type="number" step="0.01" className="w-full bg-navy/50 border border-emerald/30 rounded-xl px-4 py-3 text-2xl font-bold text-white outline-none focus:border-emerald transition-all"
+              value={repayForm.amount} onChange={e => setRepayForm({...repayForm, amount: e.target.value})} 
+              data-testid="loans-repay-form-input-amount" placeholder="0.00" />
+          </div>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="flex flex-col gap-2 col-span-2">
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">จ่ายจากบัญชีไหน (Source Account)</label>
+              <select required className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
+                value={repayForm.accountId} onChange={e => setRepayForm({...repayForm, accountId: e.target.value})}
+                data-testid="loans-repay-form-sel-account">
+                <option value="" className="bg-[#001F3F]">เลือกบัญชีเพื่อหักเงิน...</option>
+                {accounts.map(a => <option key={a.id} value={a.id} className="bg-[#001F3F]">{a.name} (฿{a.balance?.toLocaleString() || 0})</option>)}
+              </select>
+            </div>
+            <div className="flex flex-col gap-2 col-span-2">
+              <label className="text-[10px] font-black text-emerald uppercase tracking-widest flex items-center gap-1">
+                วันที่จ่ายเงินจริง (Actual Date)
+              </label>
+              <input 
+                type="date" 
+                className="w-full bg-navy/50 border border-emerald/20 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all [color-scheme:dark]"
+                value={repayForm.actualDate} onChange={e => setRepayForm({...repayForm, actualDate: e.target.value})}
+                data-testid="loans-repay-form-input-date"
+              />
+            </div>
+          </div>
+           <div className="flex flex-col gap-2">
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">หมายเหตุ (ถ้ามี)</label>
+            <input type="text" className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all placeholder:text-slate-600"
+              value={repayForm.note} onChange={e => setRepayForm({...repayForm, note: e.target.value})} 
+              data-testid="loans-repay-form-input-note" placeholder="คำอธิบายการคืนเงิน" />
+          </div>
+          <button type="submit" data-testid="loans-repay-form-btn-save" className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-4 hover:shadow-[0_0_15px_rgba(80,200,120,0.3)] transition-all active:scale-[0.98]">
+            บันทึกการชำระ
+          </button>
+        </form>
+      </GlassModal>
     </div>
   );
 }

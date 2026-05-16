@@ -14,12 +14,26 @@ export default function LoginPage() {
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [viewMode, setViewMode] = useState<'login' | 'forgot_password' | 'otp'>('login');
   
   const login = useAuthStore((state) => state.login);
   const router = useRouter();
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleForgotPassword = async () => {
+    setError('');
+    setIsLoading(true);
+    try {
+      await api.post('/auth/request-password-reset', { email });
+      setViewMode('otp');
+    } catch (err: any) {
+      setError(err.response?.data?.error || 'Failed to send reset link. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setError('');
     setIsLoading(true);
 
@@ -76,73 +90,144 @@ export default function LoginPage() {
             </div>
           )}
           
-          <div className="space-y-5">
-            <div>
-              <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-                Username / Email
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <UserIcon className="h-4 w-4 text-slate-500 group-focus-within:text-brand-accent transition-colors" />
+          {viewMode === 'login' ? (
+            <>
+              <div className="space-y-5">
+                <div>
+                  <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
+                    Username / Email
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <UserIcon className="h-4 w-4 text-slate-500 group-focus-within:text-brand-accent transition-colors" />
+                    </div>
+                    <input
+                      type="email"
+                      required
+                      className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all sm:text-sm"
+                      placeholder="name@company.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                    />
+                  </div>
                 </div>
-                <input
-                  type="email"
-                  required
-                  className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all sm:text-sm"
-                  placeholder="name@company.com"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-              </div>
-            </div>
 
-            <div>
-              <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-                Password
-              </label>
-              <div className="relative group">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <Lock className="h-4 w-4 text-slate-500 group-focus-within:text-brand-accent transition-colors" />
+                <div>
+                  <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
+                    Password
+                  </label>
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                      <Lock className="h-4 w-4 text-slate-500 group-focus-within:text-brand-accent transition-colors" />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      required
+                      className="block w-full pl-11 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all sm:text-sm"
+                      placeholder="••••••••"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                    />
+                    <button
+                      type="button"
+                      className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <div className="mt-2 text-right">
+                    <button type="button" onClick={() => setViewMode('forgot_password')} className="text-[10px] font-bold text-slate-400 hover:text-brand-accent transition-colors uppercase tracking-tight">
+                      Forgot Password?
+                    </button>
+                  </div>
                 </div>
-                <input
-                  type={showPassword ? "text" : "password"}
-                  required
-                  className="block w-full pl-11 pr-12 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all sm:text-sm"
-                  placeholder="••••••••"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
+              </div>
+
+              <div className="pt-2">
                 <button
                   type="button"
-                  className="absolute inset-y-0 right-0 pr-4 flex items-center text-slate-500 hover:text-white transition-colors"
-                  onClick={() => setShowPassword(!showPassword)}
+                  onClick={handleSubmit}
+                  disabled={isLoading}
+                  className="w-full flex justify-center py-3.5 px-4 bg-brand-accent hover:bg-brand-accent/90 text-brand-primary text-[11px] pillar-text-bold rounded-xl transition-all shadow-lg emerald-glow disabled:opacity-50"
                 >
-                  {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                  {isLoading ? 'Processing...' : 'LOGIN'}
                 </button>
               </div>
-              <div className="mt-2 text-right">
-                <button type="button" className="text-[10px] font-bold text-slate-400 hover:text-brand-accent transition-colors uppercase tracking-tight">
-                  Forgot Password?
+            </>
+          ) : viewMode === 'forgot_password' ? (
+            <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
+              <div className="text-center mb-6">
+                <h2 className="text-lg font-black text-white uppercase tracking-widest">Reset Security Key</h2>
+                <p className="text-xs text-slate-400 mt-2">Enter your email address to receive reset instructions.</p>
+              </div>
+              
+              <div>
+                <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
+                  Registered Email
+                </label>
+                <div className="relative group">
+                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <UserIcon className="h-4 w-4 text-slate-500 group-focus-within:text-brand-accent transition-colors" />
+                  </div>
+                  <input
+                    type="email"
+                    required
+                    className="block w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:ring-2 focus:ring-brand-accent/50 focus:border-brand-accent transition-all sm:text-sm"
+                    placeholder="name@company.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="pt-2 space-y-3">
+                <button
+                  type="button"
+                  onClick={handleForgotPassword}
+                  disabled={isLoading || !email}
+                  className="w-full flex justify-center py-3.5 px-4 bg-brand-accent hover:bg-brand-accent/90 text-brand-primary text-[11px] pillar-text-bold rounded-xl transition-all shadow-lg emerald-glow disabled:opacity-50"
+                >
+                  {isLoading ? 'Sending Request...' : 'SEND RESET LINK'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setViewMode('login')}
+                  className="w-full flex justify-center py-3.5 px-4 bg-white/5 hover:bg-white/10 text-white text-[11px] pillar-text-bold rounded-xl transition-all border border-white/10"
+                >
+                  BACK TO LOGIN
                 </button>
               </div>
             </div>
-          </div>
+          ) : (
+            <div className="space-y-6 animate-in fade-in zoom-in-95 duration-500 text-center">
+              <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
+                <Lock className="w-8 h-8 text-emerald-500" />
+              </div>
+              <h2 className="text-lg font-black text-white uppercase tracking-widest">Check Your Inbox</h2>
+              <p className="text-xs text-slate-400 mt-2">
+                We have sent a secure link to reset your password to <br/><span className="text-white font-bold">{email}</span>.
+              </p>
+              <div className="pt-6">
+                <button
+                  type="button"
+                  onClick={() => setViewMode('login')}
+                  className="w-full flex justify-center py-3.5 px-4 bg-white/5 hover:bg-white/10 text-white text-[11px] pillar-text-bold rounded-xl transition-all border border-white/10"
+                >
+                  RETURN TO LOGIN
+                </button>
+              </div>
+            </div>
+          )}
 
-          <div className="pt-2">
-            <button
-              type="submit"
-              disabled={isLoading}
-              className="w-full flex justify-center py-3.5 px-4 bg-brand-accent hover:bg-brand-accent/90 text-brand-primary text-[11px] pillar-text-bold rounded-xl transition-all shadow-lg emerald-glow disabled:opacity-50"
-            >
-              {isLoading ? 'Processing...' : 'LOGIN'}
-            </button>
-          </div>
-
+          {/* TODO: เปิดเมื่อระบบ self-registration พร้อม
           <div className="text-center">
             <button type="button" className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest border-b border-transparent hover:border-white/20 pb-1">
               Create an Account
             </button>
           </div>
+          */}
+
         </form>
       </div>
     </div>

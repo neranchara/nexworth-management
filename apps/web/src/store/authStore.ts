@@ -64,7 +64,10 @@ export const useAuthStore = create<AuthState>((set) => ({
         isLoading: false 
       });
     } catch (err: any) {
-      console.error('checkAuth failed:', err.response?.status, err.message, err);
+      // 401 is expected if session expires, no need to clutter console with error
+      if (err.response?.status !== 401) {
+        console.error('checkAuth failed:', err.response?.status, err.message);
+      }
       localStorage.removeItem('token');
       set({ user: null, isAuthenticated: false, isLoading: false });
     }

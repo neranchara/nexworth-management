@@ -12,6 +12,7 @@ const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const AUTHORIZED_USER_ID = process.env.DISCORD_ADMIN_ID;
 const REPORT_CHANNEL_ID = process.env.DISCORD_REPORT_CHANNEL_ID;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
+const PLAN_PATH = path.join(__dirname, '../../../docs/IMPLEMENTATION_PLAN.md');
 
 const genAI = GEMINI_KEY ? new GoogleGenerativeAI(GEMINI_KEY) : null;
 const model = genAI ? genAI.getGenerativeModel({ model: 'gemini-2.0-flash' }) : null;

@@ -13,6 +13,17 @@ export interface ExtractedTransaction {
   transactionType?: 'INCOME' | 'EXPENSE' | 'TRANSFER' | 'LOAN' | 'DEBT_REPAY';
 }
 
+export interface AITelemetry {
+  model: string;
+  latencyMs: number;
+  success: boolean;
+}
+
+export interface AIResult<T> {
+  data: T | null;
+  telemetry: AITelemetry;
+}
+
 export class NexworthAIEngine {
   private genAI: GoogleGenerativeAI;
   private apiKey: string;
@@ -22,15 +33,20 @@ export class NexworthAIEngine {
     this.genAI = new GoogleGenerativeAI(apiKey);
   }
 
-  async extractFromText(text: string): Promise<ExtractedTransaction | null> {
-    if (!this.apiKey) return null;
+  async extractFromText(text: string): Promise<AIResult<ExtractedTransaction>> {
+    if (!this.apiKey) {
+      return { 
+        data: null, 
+        telemetry: { model: 'none', latencyMs: 0, success: false } 
+      };
+    }
 
     const configurations = [
       { model: 'gemini-1.5-flash-latest', apiVersion: 'v1' },
-      { model: 'gemini-3-flash', apiVersion: 'v1' },
-      { model: 'gemini-3.1-flash-lite', apiVersion: 'v1' }
+      { model: 'gemini-2.0-flash', apiVersion: 'v1' }
     ];
 
+    const startTime = Date.now();
     for (const config of configurations) {
       try {
         const model = this.genAI.getGenerativeModel({ 
@@ -50,39 +66,63 @@ export class NexworthAIEngine {
         const resultText = response.text();
         
         const jsonMatch = resultText.match(/\{[\s\S]*\}/);
-        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+        if (jsonMatch) {
+          return {
+            data: JSON.parse(jsonMatch[0]),
+            telemetry: { 
+              model: config.model, 
+              latencyMs: Date.now() - startTime, 
+              success: true 
+            }
+          };
+        }
       } catch (error: any) {
         console.warn(`AI Engine Text: ${config.model} failed:`, error.message || error);
         continue;
       }
     }
-    return null;
+    return { 
+      data: null, 
+      telemetry: { model: 'failed-all', latencyMs: Date.now() - startTime, success: false } 
+    };
   }
 
-  async extractFromImage(imageBuffer: Buffer, mimeType: string): Promise<ExtractedTransaction | null> {
-    if (!this.apiKey) return null;
+  async extractFromImage(imageBuffer: Buffer, mimeType: string): Promise<AIResult<ExtractedTransaction>> {
+    if (!this.apiKey) {
+      console.warn('[AI Engine] API Key missing, skipping extraction.');
+      return { 
+        data: null, 
+        telemetry: { model: 'none', latencyMs: 0, success: false } 
+      };
+    }
 
-    // For images, we try v1beta for newest multimodal features or stable v1
     const configurations = [
       { model: 'gemini-1.5-flash', apiVersion: 'v1' },
-      { model: 'gemini-2.0-flash', apiVersion: 'v1beta' },
-      { model: 'gemini-3-flash', apiVersion: 'v1' }
+      { model: 'gemini-1.5-flash-latest', apiVersion: 'v1' },
+      { model: 'gemini-1.5-pro', apiVersion: 'v1' },
+      { model: 'gemini-2.0-flash', apiVersion: 'v1' }
     ];
+
+    const startTime = Date.now();
+    let lastError: any = null;
 
     for (const config of configurations) {
       try {
+        console.log(`[AI Engine] Attempting image extraction with ${config.model} (${config.apiVersion})...`);
         const model = this.genAI.getGenerativeModel({ 
           model: config.model 
         }, { apiVersion: config.apiVersion as any });
 
         const prompt = `
-          Analyze this Thai bank transfer slip. Extract data to strict JSON.
-          Rules:
-          - amount: total amount (number)
-          - description: receiver/sender name
-          - isExpense: true (most slips are outbound)
-          - transactionType: 'EXPENSE'
-          Return ONLY JSON object.
+          Analyze this Thai bank transfer slip image carefully.
+          Extract the following data into strict JSON:
+          - amount: The total transaction amount (number, required)
+          - description: The receiver name or sender name (string)
+          - categoryName: Best guess for the category (e.g., Food, Travel, Shopping)
+          - type: 'EXPENSE' (default) or 'INCOME' (if receiving money)
+          
+          Return ONLY a valid JSON object. Do not include markdown formatting or extra text.
+          Example: {"amount": 120.50, "description": "Somchai", "category": "Food", "type": "EXPENSE"}
         `;
 
         const imagePart = {
@@ -92,25 +132,55 @@ export class NexworthAIEngine {
           },
         };
 
-        // Correct structure for multimodal input
         const result = await model.generateContent([prompt, imagePart]);
         const response = await result.response;
         const text = response.text();
         
+        console.log(`[AI Engine] ${config.model} raw response:`, text);
+
         const jsonMatch = text.match(/\{[\s\S]*\}/);
-        if (jsonMatch) return JSON.parse(jsonMatch[0]);
+        if (jsonMatch) {
+          const data = JSON.parse(jsonMatch[0]);
+          console.log(`[AI Engine] Successfully extracted data using ${config.model}`);
+          return {
+            data,
+            telemetry: { 
+              model: config.model, 
+              latencyMs: Date.now() - startTime, 
+              success: true 
+            }
+          };
+        }
       } catch (error: any) {
-        console.error(`AI Engine Image: ${config.model} (${config.apiVersion}) failed:`, error.message || error);
+        lastError = error;
+        console.error(`[AI Engine] Image extraction failed for ${config.model}:`, error.message || error);
+        // Continue to next model
       }
     }
-    return null;
+
+    console.error('[AI Engine] All image extraction configurations failed.');
+    return { 
+      data: null, 
+      telemetry: { 
+        model: 'failed-all', 
+        latencyMs: Date.now() - startTime, 
+        success: false 
+      } 
+    };
   }
 
-  async diagnoseUserHealth(metrics: any[], findings: any[]): Promise<{ diagnosis: string; recommendations: string[] } | null> {
-    if (!this.apiKey) return null;
+  async diagnoseUserHealth(metrics: any[], findings: any[]): Promise<AIResult<{ diagnosis: string; recommendations: string[] }>> {
+    const startTime = Date.now();
+    if (!this.apiKey) {
+      return { 
+        data: null, 
+        telemetry: { model: 'none', latencyMs: 0, success: false } 
+      };
+    }
 
     try {
-      const model = this.genAI.getGenerativeModel({ model: 'gemini-1.5-flash-latest' });
+      const modelName = 'gemini-1.5-flash-latest';
+      const model = this.genAI.getGenerativeModel({ model: modelName });
 
       const prompt = `
         You are an Institutional Grade Security Analyst for Nexworth, a financial management platform.
@@ -136,10 +206,22 @@ export class NexworthAIEngine {
       const text = response.text();
       
       const jsonMatch = text.match(/\{[\s\S]*\}/);
-      if (jsonMatch) return JSON.parse(jsonMatch[0]);
+      if (jsonMatch) {
+        return {
+          data: JSON.parse(jsonMatch[0]),
+          telemetry: { 
+            model: modelName, 
+            latencyMs: Date.now() - startTime, 
+            success: true 
+          }
+        };
+      }
     } catch (error: any) {
       console.error('AI Diagnosis failed:', error.message || error);
     }
-    return null;
+    return { 
+      data: null, 
+      telemetry: { model: 'gemini-1.5-flash-latest', latencyMs: Date.now() - startTime, success: false } 
+    };
   }
 }

@@ -20,6 +20,7 @@ const updateLoanSchema = z.object({
 const addTransactionSchema = z.object({
   type: z.enum(['BORROW', 'REPAY']),
   amount: z.number().positive(),
+  accountId: z.string().uuid().optional(),
   date: z.string().datetime().optional(),
   actualDate: z.string().datetime().optional(),
   note: z.string().optional(),
@@ -229,13 +230,34 @@ export const addLoanTransactionHandler = async (request: FastifyRequest, reply: 
     const category = await getCategory(categoryType, user.organizationId);
     const txDate = body.date ? new Date(body.date) : new Date();
 
+    let txAccountId = loan.accountId;
+    let txAssetId = loan.assetId;
+    let txLiabilityId = loan.liabilityId;
+
+    // Use the user-selected account for the transaction if provided (e.g. which account to pay from)
+    if (body.accountId) {
+      const account = await prisma.account.findUnique({ where: { id: body.accountId } });
+      if (account && account.organizationId === user.organizationId) {
+        txAccountId = account.id;
+        if (account.type === 'LIABILITY') {
+          const l = await prisma.liability.findUnique({ where: { accountId: body.accountId } });
+          txLiabilityId = l?.id || null;
+          txAssetId = null;
+        } else {
+          const a = await prisma.asset.findUnique({ where: { accountId: body.accountId } });
+          txAssetId = a?.id || null;
+          txLiabilityId = null;
+        }
+      }
+    }
+
     const transaction = await prisma.transaction.create({
       data: {
         userId: user.sub,
         organizationId: user.organizationId,
-        accountId: loan.accountId,
-        assetId: loan.assetId,
-        liabilityId: loan.liabilityId,
+        accountId: txAccountId,
+        assetId: txAssetId,
+        liabilityId: txLiabilityId,
         categoryId: category.id,
         typeId: category.type.id,
         loanId: loan.id,
@@ -248,9 +270,15 @@ export const addLoanTransactionHandler = async (request: FastifyRequest, reply: 
     });
 
     // Update Asset balance based on transaction type
-    // BORROW = ยืมออกไปเพิ่ม -> ยอด Asset ลด
-    // REPAY  = รับคืนมา       -> ยอด Asset เพิ่ม
-    await adjustAssetBalance(loan.accountId, body.amount, body.type);
+    // If it's a REPAY and BA specifies it as 'รายจ่าย' (Expense), money leaves the selected account
+    // So we use type 'BORROW' for adjustAssetBalance to decrease the balance, or write a custom update
+    if (body.type === 'REPAY') {
+       // Decrease balance for the account used to repay
+       await adjustAssetBalance(txAccountId, body.amount, 'BORROW');
+    } else {
+       // If borrow more (เงินเข้าบัญชี) -> Increase balance
+       await adjustAssetBalance(txAccountId, body.amount, 'REPAY');
+    }
 
     return reply.status(201).send({ message: 'Transaction added successfully', transaction });
   } catch (error) {

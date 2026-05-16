@@ -47,6 +47,15 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   });
 
   /**
+   * 8.1 Real-time Performance Analytics (Phase 18)
+   */
+  fastify.get('/performance', async (request, reply) => {
+    const { getPerformanceMetrics } = await import('../services/performanceService.js');
+    const metrics = await getPerformanceMetrics();
+    return { data: metrics };
+  });
+
+  /**
    * Enhanced User Diagnostic (SA Requirement)
    */
   fastify.get('/user-diagnostic/:id', async (request: any, reply) => {
@@ -108,6 +117,14 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   });
 
   /**
+   * 1.2 Fetch Impersonation Logs (Support Console)
+   */
+  fastify.get('/impersonation-logs', async (request, reply) => {
+    const logs = await adminService.getImpersonationLogs();
+    return { data: logs };
+  });
+
+  /**
    * 1.1 Export Audit Logs (Streaming CSV)
    */
   fastify.get('/export/audit-logs', async (request: any, reply) => {
@@ -148,12 +165,17 @@ export default async function adminRoutes(fastify: FastifyInstance) {
         case 'flush-cache': result = { message: `Successfully flushed cache for ${target || 'global'}` }; break;
         case 'sync-line':
           if (!userId) throw new Error('User ID required for LINE sync');
-          result = { message: `Re-triggered LINE Webhook sync for user ${userId}` };
+          result = await adminService.syncLineUser(userId);
           break;
         case 'revoke-sessions':
           if (!userId) throw new Error('User ID required for session revocation');
           await prisma.session.deleteMany({ where: { userId } });
           result = { message: `Revoked all active sessions and MFA for user ${userId}` };
+          break;
+        case 'reconcile-all':
+          if (!userId) throw new Error('User ID required for reconciliation');
+          result = await adminService.reconcileUserAccounts(userId) as any;
+          result = { message: `Successfully scanned and reconciled ${(result as any).totalChecked} accounts for target user.` };
           break;
         default: throw new Error('Unknown command');
       }
@@ -184,6 +206,15 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     } catch (err: any) { return reply.status(400).send({ error: err.message }); }
   });
 
+  fastify.post('/reconcile/:accountId/sync', async (request: any, reply) => {
+    const { accountId } = request.params;
+    const adminUser = request.user as any;
+    try {
+      const result = await adminService.syncAccountBalance(accountId, adminUser.sub);
+      return { data: result };
+    } catch (err: any) { return reply.status(400).send({ error: err.message }); }
+  });
+
   fastify.get('/integrity-report', async (request, reply) => {
     const report = await adminService.getGlobalIntegrityReport();
     return { data: report };
@@ -195,7 +226,10 @@ export default async function adminRoutes(fastify: FastifyInstance) {
   fastify.post('/impersonate', async (request: any, reply) => {
     const { targetUserId, ticketReference } = request.body;
     const adminUser = request.user as any;
-    const targetUser = await prisma.user.findUnique({ where: { id: targetUserId } });
+    const targetUser = await prisma.user.findUnique({ 
+      where: { id: targetUserId },
+      include: { role: true }
+    });
     if (!targetUser || targetUser.organizationId !== adminUser.organizationId) {
       return reply.status(403).send({ error: 'Unauthorized' });
     }
@@ -209,7 +243,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
     });
     const token = fastify.jwt.sign({
       id: targetUser.id,
-      role: targetUser.role,
+      role: targetUser.role?.name || 'Guest',
       isImpersonated: true,
       impersonatorId: adminUser.id,
       logId: log.id

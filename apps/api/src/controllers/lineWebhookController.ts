@@ -262,11 +262,12 @@ const processEvent = async (event: webhook.Event) => {
 
     await pushToUser(lineUserId, 'กำลังวิเคราะห์ข้อความของคุณ...');
     
-    const extracted = await aiExtractionService.extractFromText(text);
-    if (!extracted) {
+    const aiResult = await aiExtractionService.extractFromText(text);
+    if (!aiResult || !aiResult.data) {
       await pushToUser(lineUserId, 'ขออภัย ไม่สามารถดึงข้อมูลจากข้อความได้ครับ กรุณาลองใหม่อีกครั้ง');
       return;
     }
+    const extracted = aiResult.data;
     
     // Check for Account Match
     let matchedAccountId = null;
@@ -312,11 +313,12 @@ const processEvent = async (event: webhook.Event) => {
       return;
     }
 
-    const extracted = await aiExtractionService.extractFromImage(imageContent, 'image/jpeg');
-    if (!extracted) {
+    const aiResult = await aiExtractionService.extractFromImage(imageContent, 'image/jpeg');
+    if (!aiResult || !aiResult.data) {
       await pushToUser(lineUserId, 'ขออภัย AI ไม่สามารถอ่านข้อมูลสลิปนี้ได้ชัดเจนครับ');
       return;
     }
+    const extracted = aiResult.data;
 
     // For image, we usually don't have account name, so ask as well if no obvious match
     await client.replyMessage({

@@ -75,6 +75,21 @@ export class NotificationService {
       console.error('[NotificationService] Failed to send High Value Alert:', error);
     }
   }
+
+  /**
+   * Send a direct message to a specific user
+   */
+  async sendDirectMessage(to: string, message: string) {
+    try {
+      await client.pushMessage({
+        to,
+        messages: [{ type: 'text', text: message }]
+      });
+    } catch (error) {
+      console.error(`[NotificationService] Failed to send DM to ${to}:`, error);
+      throw error;
+    }
+  }
 }
 
 export const notificationService = new NotificationService();

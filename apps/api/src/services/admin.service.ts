@@ -4,15 +4,17 @@ import { notificationService } from './notification.service';
 export class AdminService {
   /**
    * Reconciles an account's balance by comparing it with the sum of all transactions.
-   * Based on SA's recommendation for institutional-grade data integrity.
+   * Uses the behavior multiplier logic to ensure accuracy.
    */
   async reconcileAccountBalance(accountId: string) {
-    // 1. Fetch current cached balance
     const account = await prisma.account.findUnique({
       where: { id: accountId },
       include: {
         asset: true,
-        liability: true
+        liability: true,
+        transactions: {
+          include: { type: true }
+        }
       }
     });
 
@@ -20,33 +22,79 @@ export class AdminService {
       throw new Error(`Account with ID ${accountId} not found.`);
     }
 
-    // 2. Aggregate sum from all transactions
-    const aggregations = await prisma.transaction.aggregate({
-      _sum: { amount: true },
-      where: { accountId: accountId }
-    });
+    // Calculate sum using behavior logic
+    let calculatedBalance = 0;
+    for (const tx of account.transactions) {
+      const behavior = tx.type.behavior;
+      let multiplier = 0;
+      
+      if (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'INTERNAL_TRANSFER', 'LOAN_BORROW'].includes(behavior)) {
+        multiplier = 1;
+      } else if (['EXPENSE', 'DEBT', 'LOAN_REPAY'].includes(behavior)) {
+        multiplier = -1;
+      }
+      
+      calculatedBalance += (tx.amount * multiplier);
+    }
 
-    const calculatedBalance = aggregations._sum.amount || 0;
-
-    // 3. Verify integrity
-    // Note: In Nexworth, Account balance might be stored in the Account model or linked Asset/Liability
-    // Current As-Is logic stores balances in multiple places.
     const currentBalance = account.asset?.amount ?? account.liability?.amount ?? 0;
     const diff = currentBalance - calculatedBalance;
-    const isMatch = Math.abs(diff) < 0.01; // Using epsilon for float comparison
+    const isMatch = Math.abs(diff) < 0.01;
 
-    // Trigger High Value Alert (ISP Recommendation)
-    if (!isMatch && Math.abs(diff) >= 1000000) {
-      notificationService.sendHighValueAlert(accountId, diff);
-    }
-    
     return {
       accountId,
       accountName: account.name,
-      currentBalance,
-      calculatedBalance,
-      diff: currentBalance - calculatedBalance,
-      isMatch
+      type: account.asset ? 'ASSET' : 'LIABILITY',
+      currentBalance: parseFloat(currentBalance.toFixed(2)),
+      calculatedBalance: parseFloat(calculatedBalance.toFixed(2)),
+      diff: parseFloat(diff.toFixed(2)),
+      isMatch,
+      transactionCount: account.transactions.length
+    };
+  }
+
+  /**
+   * Forces the account balance to match the calculated transaction sum.
+   * Records an audit log for this administrative action.
+   */
+  async syncAccountBalance(accountId: string, performedBy: string) {
+    const report = await this.reconcileAccountBalance(accountId);
+    
+    if (report.isMatch) {
+      return { success: true, message: 'Account is already in sync.', report };
+    }
+
+    if (report.type === 'ASSET') {
+      await prisma.asset.update({
+        where: { accountId },
+        data: { amount: report.calculatedBalance }
+      });
+    } else {
+      await prisma.liability.update({
+        where: { accountId },
+        data: { amount: report.calculatedBalance }
+      });
+    }
+
+    // Record special audit log for manual override
+    await prisma.auditLog.create({
+      data: {
+        action: 'MANUAL_BALANCE_SYNC',
+        entity: report.type === 'ASSET' ? 'Asset' : 'Liability',
+        entityId: accountId,
+        oldValue: { amount: report.currentBalance },
+        newValue: { amount: report.calculatedBalance },
+        performedBy,
+        riskTag: 'DATA_INTEGRITY_FIX',
+        reason: 'Admin forced balance synchronization due to mismatch with transaction history.'
+      }
+    });
+
+    return { 
+      success: true, 
+      message: `Successfully synchronized ${report.accountName}. Balance set to ${report.calculatedBalance}.`,
+      previousBalance: report.currentBalance,
+      newBalance: report.calculatedBalance
     };
   }
 
@@ -166,6 +214,72 @@ export class AdminService {
       totalAnomalousValue: totalDiffValue,
       scannedAt: new Date()
     };
+  }
+
+  /**
+   * Synchronizes LINE Bot status for a specific user.
+   * Verifies if the user is paired and sends a heartbeat notification.
+   */
+  async syncLineUser(userId: string) {
+    const user = await prisma.user.findUnique({
+      where: { id: userId },
+      select: { id: true, lineUserId: true, email: true }
+    });
+
+    if (!user) throw new Error('User not found');
+    if (!user.lineUserId) {
+      return { 
+        status: 'unlinked', 
+        message: 'User is not currently paired with LINE Bot.' 
+      };
+    }
+
+    try {
+      // Send a sync notification to the user's LINE
+      await notificationService.sendDirectMessage(user.lineUserId, 
+        `🔄 [SYSTEM SYNC]\n\nบัญชี Nexworth ของคุณ (${user.email}) ได้รับการตรวจสอบและซิงโครไนซ์สถานะเรียบร้อยแล้วครับ!`
+      );
+
+      return { 
+        status: 'synced', 
+        message: 'Successfully synchronized with LINE and sent heartbeat notification.',
+        lineUserId: user.lineUserId 
+      };
+    } catch (error: any) {
+      console.error('LINE sync failed:', error);
+      return { 
+        status: 'error', 
+        message: `LINE sync failed: ${error.message}` 
+      };
+    }
+  }
+
+  /**
+   * Retrieves all impersonation (support) logs for audit transparency.
+   * Part of the Support Console (Ops Center) implementation.
+   */
+  async getImpersonationLogs() {
+    return await prisma.impersonationLog.findMany({
+      orderBy: { startedAt: 'desc' },
+      include: {
+        impersonator: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        },
+        targetUser: {
+          select: {
+            id: true,
+            email: true,
+            firstName: true,
+            lastName: true
+          }
+        }
+      }
+    });
   }
 }
 

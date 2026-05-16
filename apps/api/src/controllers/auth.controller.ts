@@ -3,6 +3,7 @@ import { prisma } from '../lib/prisma';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { securityService } from '../services/security.service';
+import { mailerService } from '../services/mailer.service';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -177,5 +178,147 @@ export const generateLinePairingCodeHandler = async (request: FastifyRequest, re
   } catch (err) {
     request.log.error(err);
     return reply.status(500).send({ error: 'Failed to generate pairing code' });
+  }
+};
+
+const requestResetSchema = z.object({
+  email: z.string().email(),
+});
+
+const resetPasswordSchema = z.object({
+  token: z.string(),
+  newPassword: z.string().min(8).optional(),
+  encryptedPassword: z.string().optional(),
+  keyId: z.string().uuid().optional(),
+});
+
+export const requestPasswordResetHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { email } = requestResetSchema.parse(request.body);
+    const normalizedEmail = email.toLowerCase().trim();
+
+    const user = await prisma.user.findUnique({
+      where: { email: normalizedEmail }
+    });
+
+    // Silent success for non-existent users (BA Requirement US-01)
+    if (!user) {
+      return reply.send({ message: 'If this email exists in our system, a reset link has been sent.' });
+    }
+
+    // Generate secure token
+    const token = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    const expiresAt = new Date();
+    expiresAt.setMinutes(expiresAt.getMinutes() + 15); // 15 mins expiry
+
+    await prisma.passwordReset.create({
+      data: {
+        email: normalizedEmail,
+        token: token,
+        expiresAt: expiresAt
+      }
+    });
+
+    // Telemetry Logging
+    await prisma.systemLog.create({
+      data: {
+        type: 'security',
+        tag: 'password-reset-request',
+        payload: { email: normalizedEmail, action: 'request' }
+      }
+    });
+
+    // Send actual email via MailerService
+    try {
+      await mailerService.sendPasswordResetEmail(normalizedEmail, token);
+    } catch (error) {
+      // We don't fail the request if email sending fails to avoid user enumeration timing attacks,
+      // but we log it for admin investigation.
+      request.log.error(`[CRITICAL] Failed to send reset email to ${normalizedEmail}: ${error}`);
+    }
+
+    return reply.send({ message: 'If this email exists in our system, a reset link has been sent.' });
+  } catch (error) {
+    if (error instanceof z.ZodError) return reply.status(400).send({ error: error.format() });
+    request.log.error(error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
+  }
+};
+
+export const verifyResetTokenHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { token } = request.query as { token: string };
+    
+    if (!token) return reply.status(400).send({ error: 'Token is required' });
+
+    const resetRequest = await prisma.passwordReset.findUnique({
+      where: { token }
+    });
+
+    if (!resetRequest || resetRequest.used || resetRequest.expiresAt < new Date()) {
+      return reply.status(400).send({ error: 'Invalid or expired token' });
+    }
+
+    return reply.send({ valid: true, email: resetRequest.email });
+  } catch (error) {
+    request.log.error(error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
+  }
+};
+
+export const resetPasswordHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { token, newPassword, encryptedPassword, keyId } = resetPasswordSchema.parse(request.body);
+
+    let finalPassword = newPassword;
+
+    // RSA Decryption Logic
+    if (encryptedPassword && keyId) {
+      const decrypted = securityService.decrypt(keyId, encryptedPassword);
+      if (!decrypted) {
+        return reply.status(401).send({ error: 'Invalid or expired encryption session' });
+      }
+      finalPassword = decrypted;
+    }
+
+    if (!finalPassword) {
+      return reply.status(400).send({ error: 'Password or Encrypted Password is required' });
+    }
+
+    const resetRequest = await prisma.passwordReset.findUnique({
+      where: { token }
+    });
+
+    if (!resetRequest || resetRequest.used || resetRequest.expiresAt < new Date()) {
+      return reply.status(400).send({ error: 'Invalid or expired token' });
+    }
+
+    const passwordHash = await bcrypt.hash(finalPassword, 10);
+
+    // Atomic update
+    await prisma.$transaction([
+      prisma.user.update({
+        where: { email: resetRequest.email },
+        data: { passwordHash }
+      }),
+      prisma.passwordReset.update({
+        where: { id: resetRequest.id },
+        data: { used: true }
+      }),
+      prisma.auditLog.create({
+        data: {
+          action: 'PASSWORD_RESET',
+          entity: 'User',
+          entityId: resetRequest.email,
+          newValue: { action: 'password_changed_via_token' }
+        }
+      })
+    ]);
+
+    return reply.send({ message: 'Password has been reset successfully.' });
+  } catch (error) {
+    if (error instanceof z.ZodError) return reply.status(400).send({ error: error.format() });
+    request.log.error(error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
   }
 };

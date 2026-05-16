@@ -59,6 +59,7 @@ export interface Account {
   isPersonal: boolean;
   bank?: Bank | null;
   user?: User;
+  balance?: number;
 }
 
 export interface TransactionType {
@@ -94,4 +95,27 @@ export interface Transaction {
   direction?: string | null;
   asset?: FinancialRecord;
   liability?: FinancialRecord;
+}
+
+export interface Goal {
+  id: string;
+  name: string;
+  targetAmount: number;
+  color: string;
+  deadline?: string | null;
+  status: 'ACTIVE' | 'COMPLETED' | 'CANCELLED';
+  priority: 'LOW' | 'NORMAL' | 'HIGH' | 'CRITICAL';
+  createdAt: string;
+  updatedAt: string;
+  allocations?: GoalAllocation[];
+}
+
+export interface GoalAllocation {
+  id: string;
+  goalId: string;
+  assetId: string;
+  allocatedAmount: number;
+  lastUpdated: string;
+  asset?: FinancialRecord;
+  goal?: Goal;
 }

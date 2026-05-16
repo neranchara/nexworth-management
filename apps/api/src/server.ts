@@ -3,19 +3,28 @@ import Fastify, { FastifyInstance } from 'fastify';
 import cors from '@fastify/cors';
 import fastifyJwt from '@fastify/jwt';
 import fastifyRawBody from 'fastify-raw-body';
+import multipart from '@fastify/multipart';
 import authRoutes from './routes/auth.routes';
 import userRoutes from './routes/user.routes';
 import transactionRoutes from './routes/transaction.routes';
 import { impersonationGuard } from './middlewares/impersonation.middleware';
+import { performanceRequestHook, performanceResponseHook } from './middlewares/performance.middleware';
+import { contextRequestHook } from './middlewares/context.middleware';
 
 const buildServer = async (): Promise<FastifyInstance> => {
   const server = Fastify({ logger: true });
 
   await server.register(fastifyRawBody, {
     field: 'rawBody',
-    global: true, // Let's make it global to be safe for now
-    encoding: 'utf8',
+    global: true,
+    encoding: 'utf8', // Ensure raw body is UTF-8
     runFirst: true
+  });
+  
+  await server.register(multipart, {
+    limits: {
+      fileSize: 10 * 1024 * 1024, // 10MB limit
+    }
   });
 
   await server.register(cors, {
@@ -39,6 +48,12 @@ const buildServer = async (): Promise<FastifyInstance> => {
     allowList: config.isStaging ? ['127.0.0.1', 'localhost'] : []
   });
 
+  // Global Context & Performance Interceptors
+  server.addHook('onRequest', contextRequestHook);
+  server.addHook('onRequest', performanceRequestHook);
+  server.addHook('onResponse', performanceResponseHook);
+
+
   // Global Impersonation Guard (Read-only enforcement)
   server.addHook('preHandler', impersonationGuard);
 
@@ -47,12 +62,32 @@ const buildServer = async (): Promise<FastifyInstance> => {
       return { 
         message: 'Nexworth API is online!',
         status: 'stable',
-        version: '3.0.1'
+        version: '3.2.0'
       };
     });
 
   server.get('/health', async () => {
     return { status: 'ok' };
+  });
+
+  // ISP Policy: Global UTF-8 Enforcement for Thai Language Support
+  server.addHook('onSend', async (request, reply, payload) => {
+    const contentType = reply.getHeader('content-type') as string;
+    if (contentType && contentType.includes('application/json') && !contentType.includes('charset')) {
+      reply.header('content-type', 'application/json; charset=utf-8');
+    }
+    return payload;
+  });
+
+  server.get('/api/v1/debug-encoding', async (request, reply) => {
+    const { prisma } = await import('./lib/prisma');
+    const configs = await prisma.systemConfig.findMany({
+      where: { category: 'DROPDOWNS' }
+    });
+    const banks = await prisma.bank.findMany({ take: 3 });
+    return reply
+      .header('Content-Type', 'application/json; charset=utf-8')
+      .send({ configs, banks });
   });
 
     // API Routes
@@ -65,6 +100,7 @@ const buildServer = async (): Promise<FastifyInstance> => {
     
     const dashboardRoutes = (await import('./routes/dashboard.routes')).default;
     const { loanRoutes } = await import('./routes/loan.routes');
+    const { goalRoutes } = await import('./routes/goal.routes');
     const typeRoutes = (await import('./routes/type.routes')).default;
     const permissionRoutes = (await import('./routes/permission.routes')).default;
   
@@ -80,12 +116,16 @@ const buildServer = async (): Promise<FastifyInstance> => {
     await server.register(financialRecordRoutes, { prefix: '/api/v1' });
     await server.register(dashboardRoutes, { prefix: '/api/v1/dashboard' });
     await server.register(loanRoutes, { prefix: '/api/v1/loans' });
+    await server.register(goalRoutes, { prefix: '/api/v1/goals' });
     
     const aiRoutes = (await import('./routes/ai.routes')).default;
     await server.register(aiRoutes, { prefix: '/api/v1/ai' });
   
     const organizationRoutes = (await import('./routes/organization.routes')).default;
     await server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
+
+    const configRoutes = (await import('./routes/config.routes')).default;
+    await server.register(configRoutes, { prefix: '/api/v1' });
 
     // Admin Routes (New Gen Nexworth Support Tools)
     const adminRoutes = (await import('./routes/admin.routes')).default;

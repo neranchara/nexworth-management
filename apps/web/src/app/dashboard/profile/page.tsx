@@ -2,8 +2,10 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Link2, Copy, CheckCircle, AlertCircle, User, Loader2, Eye, EyeOff, QrCode } from 'lucide-react';
+import { Link2, Copy, CheckCircle, AlertCircle, User, Loader2, Eye, EyeOff, QrCode, Sparkles, ShieldCheck } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
+import { clsx } from 'clsx';
+import GlassCard from '@/components/ui/GlassCard';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore();
@@ -69,220 +71,250 @@ export default function ProfilePage() {
     }
   };
 
-  if (!user) return <div className="p-6">Loading profile...</div>;
+  if (!user) return (
+    <div className="flex items-center justify-center py-20">
+      <Loader2 className="w-8 h-8 text-emerald animate-spin" />
+    </div>
+  );
 
   return (
-    <div className="max-w-2xl mx-auto py-6 space-y-6 pb-20 animate-in fade-in duration-500">
-      <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-        <User className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-        My Profile
-      </h1>
+    <div className="max-w-4xl mx-auto py-2 space-y-8 pb-20 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
-      {/* Alert Pop-up */}
-      {alert && (
-        <div className={`p-4 rounded-lg flex items-center gap-3 animate-in fade-in slide-in-from-top-2 duration-300 ${alert.type === 'success' ? 'bg-green-50 text-green-800 border border-green-100' : 'bg-red-50 text-red-800 border border-red-100'}`}>
-          {alert.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
-          <p className="text-sm font-medium">{alert.message}</p>
-        </div>
-      )}
-
-      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl p-5 border border-gray-100 dark:border-gray-700/50">
-        <h2 className="text-xs font-black text-gray-400 uppercase tracking-widest mb-6 border-b dark:border-gray-700 pb-2">Account Details</h2>
+      {/* Header Section */}
+      <div className="relative overflow-hidden p-8 rounded-[2.5rem] bg-white/[0.03] border border-white/10 shadow-[0_20px_50px_rgba(0,0,0,0.3)] group backdrop-blur-md">
+        <div className="absolute -right-24 -top-24 w-80 h-80 bg-emerald/10 rounded-full blur-[100px] group-hover:bg-emerald/20 transition-colors duration-1000" />
+        <div className="absolute -left-24 -bottom-24 w-64 h-64 bg-blue-500/5 rounded-full blur-[80px]" />
         
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <div className="space-y-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">First Name</label>
-                <input 
-                  type="text" 
-                  value={firstName} 
-                  onChange={(e) => setFirstName(e.target.value)}
-                  data-testid="profile-form-input-firstname"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
-                />
-              </div>
-              <div>
-                <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Last Name</label>
-                <input 
-                  type="text" 
-                  value={lastName} 
-                  onChange={(e) => setLastName(e.target.value)}
-                  data-testid="profile-form-input-lastname"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
-                />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-8">
+          <div className="flex items-center gap-6">
+            <div className="relative">
+              <div className="absolute inset-0 bg-emerald blur-2xl opacity-20 group-hover:opacity-40 transition-opacity" />
+              <div className="w-24 h-24 rounded-[2rem] bg-gradient-to-br from-white/10 to-white/5 border border-white/20 flex items-center justify-center text-emerald shadow-2xl relative z-10 group-hover:rotate-3 transition-transform duration-500">
+                <User size={48} className="group-hover:scale-110 transition-transform duration-500" />
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">Email Address</label>
-              <input 
-                type="email" 
-                value={email} 
-                onChange={(e) => setEmail(e.target.value)}
-                data-testid="profile-form-input-email"
-                autoCapitalize="none"
-                autoCorrect="off"
-                spellCheck="false"
-                className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent"
-              />
-            </div>
-            <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-1">New Password</label>
-              <div className="relative">
-                <input 
-                  type={showPassword ? "text" : "password"} 
-                  value={password} 
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="••••••••"
-                  data-testid="profile-form-input-password"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  spellCheck="false"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-1.5 text-[12px] font-bold focus:outline-none focus:border-blue-500 bg-transparent pr-10"
-                />
-                <button
-                  type="button"
-                  className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600 focus:outline-none"
-                  onClick={() => setShowPassword(!showPassword)}
-                  data-testid="profile-password-toggle"
-                >
-                  {showPassword ? (
-                    <EyeOff className="h-4 w-4" aria-hidden="true" />
-                  ) : (
-                    <Eye className="h-4 w-4" aria-hidden="true" />
-                  )}
-                </button>
+              <h1 className="text-4xl font-black text-white tracking-tighter flex items-center gap-3">
+                {firstName || 'User'} {lastName}
+                <Sparkles className="w-6 h-6 text-emerald animate-pulse" />
+              </h1>
+              <p className="text-emerald font-black uppercase tracking-[0.4em] text-[10px] mt-2 opacity-80">Nexworth Cloud Identity</p>
+              <div className="flex items-center gap-3 mt-4">
+                <div className="flex items-center gap-2 px-3 py-1.5 bg-emerald/20 border border-emerald/30 text-emerald text-[9px] font-black rounded-full uppercase tracking-widest shadow-[0_0_15px_rgba(80,200,120,0.2)]">
+                  <ShieldCheck size={12} />
+                  {user.role}
+                </div>
+                <div className="px-3 py-1.5 bg-white/5 border border-white/10 text-slate-400 text-[9px] font-black rounded-full uppercase tracking-widest backdrop-blur-sm">
+                  {user.orgName || 'Nexworth Personal'}
+                </div>
               </div>
             </div>
           </div>
           
-          <div className="space-y-3 bg-gray-50/50 dark:bg-gray-900/30 p-4 rounded-xl border border-gray-100 dark:border-gray-700/50">
-            <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Role</label>
-              <div className="text-[12px] font-bold text-gray-900 dark:text-white">{user.role}</div>
-            </div>
-            <div>
-              <label className="block text-[10px] font-black text-gray-400 uppercase tracking-widest mb-0.5">Organization</label>
-              <div className="text-[12px] font-bold text-gray-900 dark:text-white">{user.orgName || 'N/A'}</div>
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-8 flex justify-end pt-5 border-t dark:border-gray-700/50">
           <button 
             onClick={handleSave}
             disabled={isSaving}
-            data-testid="profile-form-btn-save"
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-2 rounded-lg text-[12px] font-bold transition-all active:scale-95 shadow-sm disabled:opacity-50"
+            className="px-10 py-4 bg-emerald text-navy rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:shadow-[0_0_40px_rgba(80,200,120,0.5)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-3 overflow-hidden relative group/btn"
           >
-            {isSaving ? 'Saving...' : 'Save Changes'}
+            <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
+            {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle size={16} className="relative z-10" />}
+            <span className="relative z-10">{isSaving ? 'Processing...' : 'Save Changes'}</span>
           </button>
         </div>
       </div>
+      
+      {/* Alert Pop-up */}
+      {alert && (
+        <div className={clsx(
+          "p-4 rounded-2xl flex items-center gap-3 animate-in fade-in slide-in-from-top-4 duration-500 border",
+          alert.type === 'success' 
+            ? "bg-emerald/10 text-emerald border-emerald/20" 
+            : "bg-rose/10 text-rose border-rose/20"
+        )}>
+          {alert.type === 'success' ? <CheckCircle className="w-5 h-5" /> : <AlertCircle className="w-5 h-5" />}
+          <p className="text-xs font-black uppercase tracking-widest">{alert.message}</p>
+        </div>
+      )}
 
-      <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl p-6 border border-gray-100 dark:border-gray-700">
-        <h2 className="text-lg font-bold border-b pb-3 mb-6 dark:border-gray-700 flex items-center gap-2">
-          <div className="w-8 h-8 rounded bg-[#06C755] flex items-center justify-center text-white font-bold text-xl">L</div>
-          LINE Integration
-        </h2>
-        <p className="text-gray-600 dark:text-gray-400 text-sm mb-4">
-          Connect your LINE account to automatically record transactions by sending short messages or transfer slips directly to the Nexworth Bot.
-        </p>
-
-        {!pairingCode ? (
-          <button 
-            onClick={generateCode}
-            disabled={isLoading}
-            data-testid="profile-line-btn-generate-code"
-            className="flex items-center gap-2 bg-[#06C755] hover:bg-[#05b34c] text-white px-4 py-2 rounded-lg font-medium transition-colors"
-          >
-            <Link2 className="w-4 h-4" />
-            {isLoading ? 'Generating...' : 'Generate LINE Pairing Code'}
-          </button>
-        ) : (
-          <div className="bg-gray-50 dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-2xl p-6">
-            <div className="flex flex-col md:flex-row gap-8 items-start">
-              {/* QR Code Section */}
-              <div className="flex flex-col items-center gap-3 bg-white p-4 rounded-2xl shadow-sm border border-gray-100">
-                <QRCodeSVG 
-                  value={`https://line.me/R/oaMessage/${process.env.NEXT_PUBLIC_LINE_BOT_ID || '@072ywdwj'}/?${pairingCode}`}
-                  size={140}
-                  level="H"
-                  includeMargin={false}
-                  imageSettings={{
-                    src: "https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg",
-                    x: undefined,
-                    y: undefined,
-                    height: 24,
-                    width: 24,
-                    excavate: true,
-                  }}
-                />
-                <span className="text-[10px] font-black text-[#06C755] uppercase tracking-widest">Scan to Pair</span>
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        
+        <div className="space-y-8">
+          <div className="p-8 rounded-[2rem] bg-white/[0.02] border border-white/10 shadow-xl backdrop-blur-sm">
+            <div className="flex items-center gap-4 mb-10">
+              <div className="w-10 h-10 rounded-xl bg-emerald/10 flex items-center justify-center text-emerald border border-emerald/20">
+                <User size={20} />
               </div>
-
-              {/* Steps and Code Section */}
-              <div className="flex-1 space-y-6">
-                <div>
-                  <p className="text-[10px] font-black text-gray-400 uppercase tracking-widest mb-2">Your Pairing Code:</p>
-                  <div className="flex items-center gap-3">
-                    <code 
-                      data-testid="profile-line-text-pairing-code"
-                      className="text-2xl font-black text-blue-600 dark:text-blue-400 bg-white dark:bg-gray-800 px-5 py-2 rounded-xl border border-gray-200 dark:border-gray-700 shadow-sm"
-                    >
-                      {pairingCode}
-                    </code>
-                    <button 
-                      onClick={copyToClipboard}
-                      className="p-2.5 text-gray-500 hover:text-gray-700 dark:hover:text-gray-300 bg-white dark:bg-gray-800 border dark:border-gray-700 rounded-xl transition-all active:scale-95 flex items-center gap-1.5 shadow-sm"
-                    >
-                      {copied ? <CheckCircle className="w-4 h-4 text-green-500" /> : <Copy className="w-4 h-4" />}
-                      <span className="text-xs font-bold">{copied ? 'Copied' : 'Copy'}</span>
-                    </button>
-                  </div>
-                </div>
-                
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">1</div>
-                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Scan the QR code or add Line ID: <span className="text-blue-500">{process.env.NEXT_PUBLIC_LINE_BOT_ID || '@072ywdwj'}</span></p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">2</div>
-                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">The code above will be pre-filled, just click <span className="text-blue-500">Send</span>.</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 flex items-center justify-center text-[10px] font-black shrink-0 mt-0.5">3</div>
-                    <p className="text-xs font-bold text-gray-600 dark:text-gray-400">Once connected, you can start recording transactions immediately!</p>
-                  </div>
-                </div>
+              <div>
+                <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">Identity Profile</h2>
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Primary Account Details</p>
               </div>
             </div>
             
-            <div className="mt-8 pt-4 border-t dark:border-gray-700 flex justify-between items-center">
-              <button onClick={() => setPairingCode(null)} className="text-[10px] font-black text-blue-500 uppercase tracking-widest hover:underline">
-                Generate a new code
-              </button>
-              <div className="flex items-center gap-1 text-[10px] font-black text-gray-400 uppercase tracking-widest">
-                <AlertCircle className="w-3 h-3" />
-                Code expires in 10 minutes
+            <div className="space-y-8">
+              <div className="grid grid-cols-2 gap-6">
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">First Name</label>
+                  <input 
+                    type="text" 
+                    value={firstName} 
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-emerald/50 focus:bg-white/[0.05] transition-all placeholder:text-slate-700 shadow-inner"
+                  />
+                </div>
+                <div className="space-y-3">
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Last Name</label>
+                  <input 
+                    type="text" 
+                    value={lastName} 
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-emerald/50 focus:bg-white/[0.05] transition-all placeholder:text-slate-700 shadow-inner"
+                  />
+                </div>
+              </div>
+              
+              <div className="space-y-3">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Email Connection</label>
+                <input 
+                  type="email" 
+                  value={email} 
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-emerald/50 focus:bg-white/[0.05] transition-all placeholder:text-slate-700 shadow-inner"
+                />
+              </div>
+              
+              <div className="space-y-3">
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Security Key Override</label>
+                <div className="relative">
+                  <input 
+                    type={showPassword ? "text" : "password"} 
+                    value={password} 
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="ENTER NEW PASSWORD"
+                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-emerald/50 focus:bg-white/[0.05] transition-all placeholder:text-slate-600 shadow-inner pr-14 tracking-widest"
+                  />
+                  <button
+                    type="button"
+                    className="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-500 hover:text-emerald transition-colors focus:outline-none z-10 cursor-pointer"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 px-1">
+                   <AlertCircle size={10} className="text-slate-600" />
+                   <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">Leave empty to keep current password</p>
+                </div>
               </div>
             </div>
           </div>
-        )}
+        </div>
+
+        {/* Right Side: LINE Integration */}
+        <div className="space-y-8">
+          <div className="p-8 rounded-[2rem] bg-[#06C755]/[0.03] border border-[#06C755]/20 shadow-xl relative overflow-hidden group backdrop-blur-sm">
+            <div className="absolute -right-16 -top-16 w-48 h-48 bg-[#06C755]/10 rounded-full blur-[60px] group-hover:bg-[#06C755]/20 transition-colors duration-500" />
+            
+            <div className="flex items-center justify-between mb-10 relative z-10">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-[#06C755]/20 flex items-center justify-center text-[#06C755] border border-[#06C755]/30 shadow-[0_0_20px_rgba(6,199,85,0.1)]">
+                  <Link2 size={24} />
+                </div>
+                <div>
+                  <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">LINE Integration</h2>
+                  <p className="text-[9px] text-[#06C755] font-black uppercase tracking-widest mt-1">Smart Automation Hub</p>
+                </div>
+              </div>
+              <div className="w-10 h-10 rounded-xl bg-[#06C755] flex items-center justify-center text-navy font-black text-xl shadow-[0_10px_20px_rgba(6,199,85,0.3)]">L</div>
+            </div>
+            
+            <p className="text-xs font-bold text-slate-300 leading-relaxed mb-10 relative z-10">
+              ยกระดับการจัดการเงินของคุณด้วยระบบ LINE Sync ที่รองรับการบันทึกรายการผ่านแชทและสแกนสลิปอัตโนมัติ
+            </p>
+
+            {!pairingCode ? (
+              <button 
+                onClick={generateCode}
+                disabled={isLoading}
+                className="w-full flex items-center justify-center gap-4 bg-[#06C755] text-navy px-8 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:shadow-[0_0_30px_rgba(6,199,85,0.4)] hover:-translate-y-1 active:scale-95 disabled:opacity-50"
+              >
+                {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <QrCode size={20} />}
+                {isLoading ? 'Activating Hub...' : 'Generate New Pairing Link'}
+              </button>
+            ) : (
+              <div className="space-y-10 animate-in fade-in zoom-in-95 duration-500 relative z-10">
+                <div className="flex flex-col items-center bg-white/5 border border-white/10 p-8 rounded-[2rem] shadow-inner backdrop-blur-md">
+                  {/* QR Code Section */}
+                  <div className="relative group/qr mb-8">
+                    <div className="absolute inset-0 bg-white blur-2xl opacity-10 group-hover/qr:opacity-20 transition-opacity" />
+                    <div className="bg-white p-5 rounded-[2rem] shadow-2xl relative z-10">
+                      <QRCodeSVG 
+                        value={`https://line.me/R/oaMessage/${process.env.NEXT_PUBLIC_LINE_BOT_ID || '@072ywdwj'}/?${pairingCode}`}
+                        size={160}
+                        level="H"
+                        includeMargin={false}
+                        imageSettings={{
+                          src: "https://upload.wikimedia.org/wikipedia/commons/4/41/LINE_logo.svg",
+                          x: undefined,
+                          y: undefined,
+                          height: 32,
+                          width: 32,
+                          excavate: true,
+                        }}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="w-full space-y-4">
+                    <p className="text-[10px] font-black text-slate-500 uppercase tracking-widest text-center">One-Time Security Token</p>
+                    <div className="flex items-center gap-3">
+                      <code className="flex-1 text-3xl font-black text-emerald bg-navy/60 px-8 py-5 rounded-2xl border border-white/10 shadow-inner tracking-[0.2em] text-center font-mono">
+                        {pairingCode}
+                      </code>
+                      <button 
+                        onClick={copyToClipboard}
+                        className="p-5 text-slate-400 hover:text-white bg-white/5 hover:bg-white/10 border border-white/10 rounded-2xl transition-all active:scale-95 shadow-xl"
+                      >
+                        {copied ? <CheckCircle size={24} className="text-emerald" /> : <Copy size={24} />}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 gap-4">
+                  {[
+                    { step: 1, text: `เพิ่มเพื่อน LINE ID: @072ywdwj` },
+                    { step: 2, text: `ส่งรหัส Pairing ด้านบนเข้าห้องแชท` },
+                    { step: 3, text: `เริ่มส่งสลิปเพื่อบันทึกรายการได้ทันที` }
+                  ].map((item) => (
+                    <div key={item.step} className="flex items-center gap-5 p-4 bg-white/[0.03] border border-white/5 rounded-2xl group/step hover:bg-white/[0.05] transition-colors">
+                      <div className="w-8 h-8 rounded-full bg-emerald/10 text-emerald flex items-center justify-center text-[11px] font-black shrink-0 border border-emerald/20 group-hover/step:scale-110 transition-transform">0{item.step}</div>
+                      <p className="text-[11px] font-bold text-slate-300 uppercase tracking-tight">{item.text}</p>
+                    </div>
+                  ))}
+                </div>
+                
+                <div className="flex justify-between items-center pt-6 border-t border-white/10">
+                  <button onClick={() => setPairingCode(null)} className="text-[10px] font-black text-emerald uppercase tracking-[0.2em] hover:text-white transition-colors">
+                    Reset Pairing
+                  </button>
+                  <div className="flex items-center gap-2 text-[10px] font-black text-rose uppercase tracking-widest bg-rose/10 px-4 py-2 rounded-full border border-rose/20 animate-pulse">
+                    <AlertCircle size={14} />
+                    Active Access
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-center pt-10">
-        <div className="px-4 py-1.5 bg-gray-100 dark:bg-gray-800 rounded-full border border-gray-200 dark:border-gray-700">
-           <span className="text-[10px] font-black text-gray-400 uppercase tracking-widest">Version: 2.1.0-build-V4.0-FINAL</span>
+      {/* Footer / Version */}
+      <div className="flex flex-col items-center gap-4 pt-10">
+        <div className="px-6 py-2 bg-navy/80 backdrop-blur-md rounded-full border border-white/5 shadow-2xl">
+           <span className="text-[10px] font-black text-slate uppercase tracking-[0.4em] opacity-40">Nexworth Operational Standard — v3.2.0-STABLE</span>
         </div>
       </div>
     </div>
   );
 }
+

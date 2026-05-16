@@ -8,50 +8,56 @@ datasource db {
 }
 
 model Organization {
-  id               String                @id @default(uuid())
+  id               String                     @id @default(uuid())
   name             String
-  isActive         Boolean               @default(true)
-  createdAt        DateTime              @default(now())
-  updatedAt        DateTime              @updatedAt
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  isActive         Boolean                    @default(true)
   accounts         Account[]
   assets           Asset[]
+  auditLogs        AuditLog[]
   banks            Bank[]
   financialRecords FinancialRecord[]
+  goals            Goal[]
   liabilities      Liability[]
   loans            Loan[]
+  monthlySnapshots MonthlyFinancialSnapshot[]
   roles            Role[]
   transactions     Transaction[]
   categories       TransactionCategory[]
   transactionTypes TransactionType[]
   users            User[]
-  auditLogs        AuditLog[]
 }
 
 model User {
-  id               String            @id @default(uuid())
-  email            String            @unique
+  id               String                     @id @default(uuid())
+  email            String                     @unique
   passwordHash     String
   firstName        String?
   lastName         String?
   roleId           String?
   organizationId   String?
-  isActive         Boolean           @default(true)
-  lineUserId       String?           @unique
-  pairingCode      String?           @unique
-  createdAt        DateTime          @default(now())
-  updatedAt        DateTime          @updatedAt
-  isSystemAdmin    Boolean           @default(false)
+  isActive         Boolean                    @default(true)
+  lineUserId       String?                    @unique
+  pairingCode      String?                    @unique
+  createdAt        DateTime                   @default(now())
+  updatedAt        DateTime                   @updatedAt
+  isSystemAdmin    Boolean                    @default(false)
   accounts         Account[]
   assets           Asset[]
   financialRecords FinancialRecord[]
+  goals            Goal[]
+  impersonatedLogs ImpersonationLog[]         @relation("ImpersonatorLogs")
+  targetLogs       ImpersonationLog[]         @relation("TargetUserLogs")
   liabilities      Liability[]
   loans            Loan[]
+  monthlySnapshots MonthlyFinancialSnapshot[]
   sessions         Session[]
   transactions     Transaction[]
-  organization     Organization?     @relation(fields: [organizationId], references: [id])
-  role             Role?             @relation(fields: [roleId], references: [id])
-  impersonatedLogs ImpersonationLog[] @relation("ImpersonatorLogs")
-  targetLogs       ImpersonationLog[] @relation("TargetUserLogs")
+  organization     Organization?              @relation(fields: [organizationId], references: [id])
+  role             Role?                      @relation(fields: [roleId], references: [id])
+  liquidityDangerZone Float                      @default(30000)
+  liquiditySafeZone   Float                      @default(70000)
 }
 
 model Role {
@@ -60,8 +66,8 @@ model Role {
   description    String?
   createdAt      DateTime      @default(now())
   organizationId String?
-  isSystemRole   Boolean       @default(false)
   isActive       Boolean       @default(true)
+  isSystemRole   Boolean       @default(false)
   permissions    Permission[]
   organization   Organization? @relation(fields: [organizationId], references: [id])
   users          User[]
@@ -129,19 +135,22 @@ model Account {
 }
 
 model Asset {
-  id             String        @id @default(uuid())
-  organizationId String?
-  userId         String
-  accountId      String        @unique
-  amount         Float         @default(0)
-  note           String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  account        Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
-  organization   Organization? @relation(fields: [organizationId], references: [id])
-  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
-  loans          Loan[]
-  transactions   Transaction[]
+  id              String           @id @default(uuid())
+  organizationId  String?
+  userId          String
+  accountId       String           @unique
+  amount          Float            @default(0)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  note            String?
+  account         Account          @relation(fields: [accountId], references: [id], onDelete: Cascade)
+  organization    Organization?    @relation(fields: [organizationId], references: [id])
+  user            User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  goalAllocations GoalAllocation[]
+  loans           Loan[]
+  transactions    Transaction[]
+
+  @@index([userId])
 }
 
 model Liability {
@@ -150,14 +159,16 @@ model Liability {
   userId         String
   accountId      String        @unique
   amount         Float         @default(0)
-  note           String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+  note           String?
   account        Account       @relation(fields: [accountId], references: [id], onDelete: Cascade)
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   loans          Loan[]
   transactions   Transaction[]
+
+  @@index([userId])
 }
 
 model FinancialRecord {
@@ -224,23 +235,24 @@ model Transaction {
   assetId             String?
   liabilityId         String?
   linkedTransactionId String?
+  direction           String?
+  taxAmount           Float?              @default(0)
+  taxType             String?
+  transactionType     String?
   account             Account             @relation(fields: [accountId], references: [id])
   asset               Asset?              @relation(fields: [assetId], references: [id])
   category            TransactionCategory @relation(fields: [categoryId], references: [id])
-  liability            Liability?          @relation(fields: [liabilityId], references: [id])
+  liability           Liability?          @relation(fields: [liabilityId], references: [id])
   linkedTransaction   Transaction?        @relation("LinkedTransactions", fields: [linkedTransactionId], references: [id])
   linkedFrom          Transaction[]       @relation("LinkedTransactions")
   loan                Loan?               @relation(fields: [loanId], references: [id])
   organization        Organization?       @relation(fields: [organizationId], references: [id])
   type                TransactionType     @relation(fields: [typeId], references: [id])
   user                User                @relation(fields: [userId], references: [id], onDelete: Cascade)
-  direction           String?             // 'FROM' or 'TO' for single transactions
-  taxAmount           Float?              @default(0)
-  taxType             String?             // 'VAT', 'WHT', 'NONE'
-  transactionType     String?             // 'INCOME', 'EXPENSE', 'TRANSFER', 'LOAN', 'DEBT_REPAY'
 
   @@index([userId, createdAt])
   @@index([organizationId, createdAt])
+  @@index([userId, date])
 }
 
 model Loan {
@@ -263,6 +275,102 @@ model Loan {
   organization   Organization? @relation(fields: [organizationId], references: [id])
   user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
   transactions   Transaction[]
+}
+
+model AuditLog {
+  id             String        @id @default(uuid())
+  action         String
+  entity         String
+  entityId       String
+  organizationId String?
+  oldValue       Json?
+  newValue       Json?
+  performedBy    String?
+  createdAt      DateTime      @default(now())
+  ipAddress      String?
+  userAgent      String?
+  riskTag        String?       @default("NORMAL")
+  reason         String?
+  organization   Organization? @relation(fields: [organizationId], references: [id])
+
+  @@index([organizationId, createdAt])
+  @@index([entity, entityId])
+}
+
+model SystemConfig {
+  id        String   @id @default(uuid())
+  key       String   @unique
+  value     Json
+  category  String?  @default("GENERAL")
+  updatedAt DateTime @updatedAt
+  updatedBy String?
+}
+
+model ImpersonationLog {
+  id              String    @id @default(uuid())
+  impersonatorId  String
+  targetUserId    String
+  ticketReference String
+  accessIp        String?
+  startedAt       DateTime  @default(now())
+  endedAt         DateTime?
+  impersonator    User      @relation("ImpersonatorLogs", fields: [impersonatorId], references: [id])
+  targetUser      User      @relation("TargetUserLogs", fields: [targetUserId], references: [id])
+
+  @@index([impersonatorId])
+  @@index([targetUserId])
+  @@index([startedAt])
+}
+
+model Goal {
+  id             String           @id @default(uuid())
+  organizationId String?
+  userId         String
+  name           String
+  targetAmount   Float
+  color          String           @default("Emerald")
+  deadline       DateTime?
+  status         String           @default("ACTIVE")
+  priority       String           @default("NORMAL")
+  createdAt      DateTime         @default(now())
+  updatedAt      DateTime         @updatedAt
+  organization   Organization?    @relation(fields: [organizationId], references: [id])
+  user           User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  allocations    GoalAllocation[]
+
+  @@index([organizationId])
+  @@index([userId])
+}
+
+model GoalAllocation {
+  id              String   @id @default(uuid())
+  goalId          String
+  assetId         String
+  allocatedAmount Float    @default(0)
+  lastUpdated     DateTime @default(now()) @updatedAt
+  asset           Asset    @relation(fields: [assetId], references: [id], onDelete: Cascade)
+  goal            Goal     @relation(fields: [goalId], references: [id], onDelete: Cascade)
+
+  @@unique([goalId, assetId])
+}
+
+model MonthlyFinancialSnapshot {
+  id               String        @id @default(uuid())
+  organizationId   String?
+  userId           String
+  monthYear        String
+  totalAssets      Float         @default(0)
+  totalLiabilities Float         @default(0)
+  totalIncome      Float         @default(0)
+  totalExpense     Float         @default(0)
+  savingsRate      Float         @default(0)
+  netWorth         Float         @default(0)
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+  organization     Organization? @relation(fields: [organizationId], references: [id])
+  user             User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, monthYear])
 }
 
 enum FinancialRecordType {
@@ -298,51 +406,25 @@ enum TransactionBehavior {
   EMERGENCY
 }
 
-model AuditLog {
-  id             String   @id @default(uuid())
-  action         String   // "CREATE", "UPDATE", "DELETE"
-  entity         String   // "Transaction", "Account", "User", etc.
-  entityId       String   // The ID of the record being changed
-  organizationId String?  // Link to organization for multi-tenancy
-  oldValue       Json?    // Snapshot of the data BEFORE change
-  newValue       Json?    // Snapshot of the data AFTER change
-  performedBy    String?  // User ID or "SYSTEM"
-  createdAt      DateTime @default(now())
-  
-  // Forensic & BA/SA Requirements
-  ipAddress      String?
-  userAgent      String?
-  riskTag        String?  @default("NORMAL")
-  reason         String?
-
-  organization   Organization? @relation(fields: [organizationId], references: [id])
-
-  @@index([organizationId, createdAt])
-  @@index([entity, entityId])
-}
-
-model SystemConfig {
+model SystemLog {
   id        String   @id @default(uuid())
-  key       String   @unique
-  value     Json
-  category  String?  @default("GENERAL") // "BUSINESS", "TECHNICAL", "SECURITY"
-  updatedAt DateTime @updatedAt
-  updatedBy String?  // Admin User ID
+  type      String   // e.g., "telemetry", "performance", "error"
+  tag       String?  // e.g., "ai-engine", "db-query"
+  payload   Json
+  createdAt DateTime @default(now())
+
+  @@index([type, tag])
+  @@index([createdAt])
 }
 
-model ImpersonationLog {
-  id              String   @id @default(uuid())
-  impersonatorId  String   // Admin User ID
-  targetUserId    String   // Target User ID
-  ticketReference String   // Reference ticket number
-  accessIp        String?  // IP Address of Admin
-  startedAt       DateTime @default(now())
-  endedAt         DateTime? // Updated when Admin stops impersonation or session ends
-  
-  impersonator    User     @relation("ImpersonatorLogs", fields: [impersonatorId], references: [id])
-  targetUser      User     @relation("TargetUserLogs", fields: [targetUserId], references: [id])
+model PasswordReset {
+  id        String   @id @default(uuid())
+  email     String
+  token     String   @unique
+  expiresAt DateTime
+  used      Boolean  @default(false)
+  createdAt DateTime @default(now())
 
-  @@index([impersonatorId])
-  @@index([targetUserId])
-  @@index([startedAt])
+  @@index([email])
+  @@index([token])
 }

@@ -3,14 +3,52 @@
 import { useState, useEffect, useRef } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, TrendingUp, Coins, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, User } from 'lucide-react';
+import { 
+  Edit2, 
+  Trash2, 
+  X, 
+  CheckCircle, 
+  AlertCircle, 
+  Building2, 
+  TrendingUp, 
+  Coins, 
+  ArrowUpCircle, 
+  ArrowDownCircle, 
+  MoreHorizontal, 
+  User,
+  Plus,
+} from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Account, Bank } from '@/types/models';
+import GlassCard from '@/components/ui/GlassCard';
 
+
+const DEFAULT_LABELS = {
+  title: 'บัญชีของฉัน',
+  subtitle: 'จัดการสภาพคล่องและวงเงินสินเชื่อ',
+  totalAssets: 'สินทรัพย์ทั้งหมด',
+  liabilities: 'หนี้สิน',
+  personal: 'ส่วนตัว',
+  active: 'เปิดใช้งาน',
+  addNew: 'เพิ่มบัญชีใหม่',
+  noData: 'ไม่พบบัญชี',
+  form: {
+    name: 'ชื่อบัญชี',
+    number: 'เลขที่บัญชี',
+    type: 'ประเภท',
+    institution: 'สถาบันการเงิน',
+    personal: 'บัญชีส่วนตัว',
+    status: 'สถานะการใช้งาน',
+    cancel: 'ยกเลิก',
+    save: 'บันทึกบัญชี'
+  }
+};
 
 export default function AccountsManagementPage() {
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
+  const [accountTypes, setAccountTypes] = useState<{label: string, value: string}[]>([]);
+  const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
@@ -40,15 +78,31 @@ export default function AccountsManagementPage() {
   const fetchAccountsAndBanks = async () => {
     try {
       setLoading(true);
-      const [accountsRes, banksRes] = await Promise.all([
+      const [accountsRes, banksRes, configRes, uiRes] = await Promise.all([
         api.get('/accounts'),
-        api.get('/banks')
+        api.get('/banks'),
+        api.get('/configs', { params: { category: 'DROPDOWNS' } }),
+        api.get('/configs', { params: { key: 'UI_LABELS_ACCOUNTS' } })
       ]);
-      setAccounts(accountsRes.data.accounts);
-      setBanks(banksRes.data.banks);
+      setAccounts(accountsRes.data.accounts || []);
+      setBanks(banksRes.data.banks || []);
       
-      // Initialize bankId if banks exist
-      if (banksRes.data.banks.length > 0 && formData.bankId === '') {
+      const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
+      if (typesConfig) {
+        setAccountTypes(typesConfig.value);
+      }
+
+      if (uiRes.data.data?.[0]?.value) {
+        setLabels({
+          ...DEFAULT_LABELS,
+          ...uiRes.data.data[0].value,
+          form: {
+            ...DEFAULT_LABELS.form,
+            ...(uiRes.data.data[0].value.form || {})
+          }
+        });
+      }
+      if (banksRes.data.banks?.length > 0 && formData.bankId === '') {
         setFormData(prev => ({ ...prev, bankId: banksRes.data.banks[0].id }));
       }
     } catch {
@@ -89,15 +143,15 @@ export default function AccountsManagementPage() {
 
   const openEditModal = (a: Account) => {
     setFormData({
-      name: a.name,
-      accountNumber: a.accountNumber || '',
-      type: a.type,
-      bankId: a.bankId || (banks.length > 0 ? banks[0].id : ''),
-      isActive: a.isActive,
-      isPersonal: a.isPersonal !== undefined ? a.isPersonal : true
+      name: a?.name || '',
+      accountNumber: a?.accountNumber || '',
+      type: a?.type || 'BANK',
+      bankId: a?.bankId || (banks && banks.length > 0 ? banks[0].id : ''),
+      isActive: a?.isActive ?? true,
+      isPersonal: a?.isPersonal ?? true
     });
     setIsEditing(true);
-    setCurrentAccountId(a.id);
+    setCurrentAccountId(a?.id || null);
     setIsModalOpen(true);
   };
 
@@ -141,21 +195,21 @@ export default function AccountsManagementPage() {
       case 'CASHFLOW':
       case 'SAVING':
       case 'INTERNAL':
-        return <Building2 className="w-4 h-4 text-blue-500" />;
+        return <Building2 className="w-5 h-5 text-emerald" />;
       case 'STOCK':
       case 'INVESTMENT':
-        return <TrendingUp className="w-4 h-4 text-emerald-500" />;
+        return <TrendingUp className="w-5 h-5 text-blue-400" />;
       case 'GOLD':
-        return <Coins className="w-4 h-4 text-yellow-500" />;
+        return <Coins className="w-5 h-5 text-yellow-500" />;
       case 'GOAL':
-        return <CheckCircle className="w-4 h-4 text-purple-500" />;
+        return <CheckCircle className="w-5 h-5 text-purple-500" />;
       case 'EMERGENCY':
-        return <AlertCircle className="w-4 h-4 text-red-500" />;
+        return <AlertCircle className="w-5 h-5 text-red-500" />;
       case 'FAMILY':
-        return <CheckCircle className="w-4 h-4 text-indigo-500" />;
+        return <CheckCircle className="w-5 h-5 text-indigo-500" />;
       case 'LIABILITY':
-        return <AlertCircle className="w-4 h-4 text-orange-500" />;
-      default: return <Building2 className="w-4 h-4 text-gray-500" />;
+        return <AlertCircle className="w-5 h-5 text-rose" />;
+      default: return <Building2 className="w-5 h-5 text-slate" />;
     }
   };
 
@@ -207,273 +261,217 @@ export default function AccountsManagementPage() {
 
   const sortedAccounts = getSortedAccounts();
 
-  const SortIcon = ({ column }: { column: string }) => {
-    if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
-    return sortConfig.direction === 'asc' ? 
-      <ArrowUpCircle className="w-3 h-3 ml-1 text-blue-500" /> : 
-      <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
-  };
-
   if (loading && accounts.length === 0) return <div className="p-6">Loading data...</div>;
-  if (error && accounts.length === 0) return <div className="p-6 text-red-500">{error}</div>;
+  if (error && accounts.length === 0) return <div className="p-6 text-rose">{error}</div>;
 
   return (
-    <div className="relative">
+    <div className="relative min-h-screen pb-12 animate-fade-in-up">
       {/* Alert Pop-up */}
       {alert && (
-        <div className={`fixed top-4 right-4 z-50 max-w-[400px] w-full p-4 rounded-lg shadow-lg flex items-center gap-3 transition-all ${alert.type === 'success' ? 'bg-green-50 text-green-800 border border-green-200' : 'bg-red-50 text-red-800 border border-red-200'}`}>
-          {alert.type === 'success' ? <CheckCircle className="w-5 h-5 flex-shrink-0 text-green-500" /> : <AlertCircle className="w-5 h-5 flex-shrink-0 text-red-500" />}
-          <p className="font-medium text-sm break-words">{alert.message}</p>
+        <div className={`fixed top-4 right-4 z-[110] max-w-[400px] w-full p-4 rounded-xl shadow-2xl flex items-center gap-3 backdrop-blur-md border animate-scale-in ${alert.type === 'success' ? 'bg-emerald/20 text-emerald border-emerald/30' : 'bg-rose/20 text-rose border-rose/30'}`}>
+          {alert.type === 'success' ? <CheckCircle className="w-5 h-5 text-emerald" /> : <AlertCircle className="w-5 h-5 text-rose" />}
+          <p className="font-bold text-xs uppercase tracking-wider">{alert.message}</p>
         </div>
       )}
 
-      <div className="bg-white dark:bg-gray-800 shadow rounded-lg p-6">
-        <div className="sm:flex sm:items-center">
-          <div className="sm:flex-auto">
-            <h1 className="text-xl font-semibold text-gray-900 dark:text-white">My Accounts</h1>
-            <p className="mt-2 text-sm text-gray-700 dark:text-gray-300">
-              Manage your Bank, Investment (Stock), and Gold accounts here.
-            </p>
-          </div>
-          <div className="mt-4 sm:mt-0 sm:ml-16 sm:flex-none">
-            {hasPermission('accounts', 'canCreate') && (
-              <button 
-                onClick={openAddModal}
-                data-testid="accounts-list-btn-add-account"
-                className="inline-flex items-center justify-center rounded-md border border-transparent bg-blue-600 px-4 py-2 text-sm font-medium text-white shadow-sm hover:bg-blue-700"
-              >
-                Add Account
-              </button>
-            )}
-          </div>
+      {/* Header Section */}
+      <div className="flex flex-col md:flex-row md:items-end justify-between mb-8 gap-4">
+        <div>
+          <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3 uppercase">
+            <Building2 className="w-8 h-8 text-emerald" />
+            {labels.title}
+          </h1>
+          <p className="text-[10px] text-slate mt-1 uppercase font-black tracking-[0.2em]">{labels.subtitle}</p>
         </div>
         
-        <div className="mt-8 flex flex-col">
-          <div className="-my-2 -mx-4 overflow-x-auto sm:-mx-6 lg:-mx-8">
-            <div className="inline-block min-w-full py-2 align-middle md:px-6 lg:px-8">
-              <div className="overflow-hidden shadow ring-1 ring-black ring-opacity-5 md:rounded-lg">
-                <table className="min-w-full divide-y divide-gray-300 dark:divide-gray-700">
-                  <thead className="bg-gray-50 dark:bg-gray-700">
-                    <tr>
-                      <th 
-                        scope="col" 
-                        className="py-3.5 pl-4 pr-3 text-left text-sm font-semibold text-gray-900 dark:text-white sm:pl-6 cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                        onClick={() => handleSort('name')}
-                      >
-                        <div className="flex items-center">Account Name <SortIcon column="name" /></div>
-                      </th>
-                      <th 
-                        scope="col" 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                        onClick={() => handleSort('accountNumber')}
-                      >
-                        <div className="flex items-center">Account Number <SortIcon column="accountNumber" /></div>
-                      </th>
-                      <th 
-                        scope="col" 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                        onClick={() => handleSort('type')}
-                      >
-                        <div className="flex items-center">Type <SortIcon column="type" /></div>
-                      </th>
-                      <th 
-                        scope="col" 
-                        className="px-3 py-3.5 text-left text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                        onClick={() => handleSort('bank')}
-                      >
-                        <div className="flex items-center">Institution <SortIcon column="bank" /></div>
-                      </th>
-                      <th 
-                        scope="col" 
-                        className="px-3 py-3.5 text-center text-sm font-semibold text-gray-900 dark:text-white cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors"
-                        onClick={() => handleSort('isActive')}
-                      >
-                        <div className="flex items-center justify-center">Status <SortIcon column="isActive" /></div>
-                      </th>
-                      <th scope="col" className="relative py-3.5 pl-3 pr-4 sm:pr-6 whitespace-nowrap text-right text-sm font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                    {sortedAccounts.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="py-8 text-center text-sm text-gray-500">No accounts found. Create one to get started.</td>
-                      </tr>
-                    ) : sortedAccounts.map((account) => (
-                      <tr key={account.id}>
-                        <td className="whitespace-nowrap py-4 pl-4 pr-3 text-sm font-medium text-gray-900 dark:text-white sm:pl-6">
-                          <div className="flex items-center gap-2">
-                            {getAccountIcon(account.type)}
-                            {account.name}
-                            {account.isPersonal && <span title="Personal Account"><User className="w-3 h-3 text-blue-400" /></span>}
-                          </div>
-                          {user?.role === 'Admin' && <div className="text-xs text-gray-400 font-normal mt-1">Owner: {account.user?.firstName} {account.user?.lastName}</div>}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
-                          {account.accountNumber}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
-                          <span className={`inline-flex items-center rounded-md px-2 py-1 text-xs font-medium ring-1 ring-inset ${
-                            ['BANK', 'CASHFLOW', 'INTERNAL', 'SAVING'].includes(account.type) ? 'bg-blue-50 text-blue-700 ring-blue-700/10' : 
-                            ['STOCK', 'INVESTMENT'].includes(account.type) ? 'bg-emerald-50 text-emerald-700 ring-emerald-600/10' : 
-                            ['GOLD'].includes(account.type) ? 'bg-yellow-50 text-yellow-800 ring-yellow-600/20' :
-                            ['EMERGENCY', 'LIABILITY'].includes(account.type) ? 'bg-red-50 text-red-700 ring-red-600/10' :
-                            'bg-purple-50 text-purple-700 ring-purple-600/10'
-                          }`}>
-                            {account.type}
-                          </span>
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-gray-500 dark:text-gray-300">
-                          {account.bank ? (
-                             <div className="flex items-center gap-2">
-                               {account.bank.color && <div className="w-2 h-2 rounded-full" style={{ backgroundColor: account.bank.color }}></div>}
-                               {account.bank.name}
-                             </div>
-                          ) : (
-                             <span>-</span>
-                          )}
-                        </td>
-                        <td className="whitespace-nowrap px-3 py-4 text-sm text-center">
-                          {account.isActive ? (
-                             <span className="inline-flex rounded-full bg-green-100 px-2 text-xs font-semibold leading-5 text-green-800">Active</span>
-                          ) : (
-                             <span className="inline-flex rounded-full bg-red-100 px-2 text-xs font-semibold leading-5 text-red-800">Inactive</span>
-                          )}
-                        </td>
-                        <td className="relative whitespace-nowrap py-4 pl-3 pr-4 text-right text-sm font-medium sm:pr-6">
-                          {hasPermission('accounts', 'canUpdate') && (
-                            <button 
-                              onClick={() => openEditModal(account)} 
-                              data-testid={`accounts-list-btn-edit-${account.name}`}
-                              className="text-blue-600 hover:text-blue-900 dark:text-blue-400 dark:hover:text-blue-300 mr-4" 
-                              title="Edit"
-                            >
-                              <Edit2 className="w-4 h-4 inline" />
-                            </button>
-                          )}
-                          {hasPermission('accounts', 'canDelete') && (
-                            <button 
-                              onClick={() => handleDelete(account.id)} 
-                              data-testid={`accounts-list-btn-delete-${account.name}`}
-                              className="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300" 
-                              title="Delete"
-                            >
-                              <Trash2 className="w-4 h-4 inline" />
-                            </button>
-                          )}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-          </div>
-        </div>
+        {hasPermission('accounts', 'canCreate') && (
+          <button 
+            onClick={openAddModal}
+            data-testid="accounts-list-btn-add-account"
+            className="flex items-center justify-center gap-3 px-8 py-3 bg-emerald text-navy font-black rounded-full transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 group relative overflow-hidden"
+          >
+             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+             <Plus size={18} className="relative z-10" />
+             <span className="text-xs uppercase tracking-[0.1em] relative z-10">{labels.addNew}</span>
+          </button>
+        )}
       </div>
+
+      {/* Summary Stats */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
+        {[
+          { label: labels.totalAssets, count: accounts.filter(a => a.type !== 'LIABILITY').length, icon: TrendingUp, color: 'text-emerald' },
+          { label: labels.liabilities, count: accounts.filter(a => a.type === 'LIABILITY').length, icon: AlertCircle, color: 'text-rose' },
+          { label: labels.personal, count: accounts.filter(a => a.isPersonal).length, icon: User, color: 'text-blue-400' },
+          { label: labels.active, count: accounts.filter(a => a.isActive).length, icon: CheckCircle, color: 'text-emerald' },
+        ].map((stat, i) => (
+          <GlassCard key={i} className="p-4 flex items-center gap-4">
+            <div className={`p-2 rounded-lg bg-white/5 ${stat.color}`}>
+              <stat.icon className="w-5 h-5" />
+            </div>
+            <div>
+              <p className="text-[9px] font-black text-slate uppercase tracking-widest">{stat.label}</p>
+              <p className="text-xl font-black text-white">{stat.count}</p>
+            </div>
+          </GlassCard>
+        ))}
+      </div>
+
+      {/* Accounts Grid */}
+      {sortedAccounts.length === 0 ? (
+        <GlassCard className="p-12 text-center rounded-[1.25rem]">
+          <Building2 className="w-12 h-12 text-slate/20 mx-auto mb-4" />
+          <p className="text-slate font-bold uppercase text-[10px] tracking-widest">{labels.noData}</p>
+        </GlassCard>
+      ) : (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+          {sortedAccounts.map((account, i) => (
+            <GlassCard 
+              key={account.id} 
+              interactive
+              className={`p-4 stagger-${(i % 4) + 1}`}
+              borderAccent={account.type === 'LIABILITY' ? 'rose' : 'emerald'}
+            >
+              <div className="flex justify-between items-start mb-3">
+                <div className="p-2 rounded-lg bg-white/5">
+                  {getAccountIcon(account.type)}
+                </div>
+                <div className="flex gap-1.5">
+                  {hasPermission('accounts', 'canUpdate') && (
+                    <button onClick={() => openEditModal(account)} className="p-1.5 text-slate hover:text-white transition-colors">
+                      <Edit2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                  {hasPermission('accounts', 'canDelete') && (
+                    <button onClick={() => handleDelete(account.id)} className="p-1.5 text-slate hover:text-rose transition-colors">
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <h3 className="text-base font-black text-white group-hover:text-emerald transition-colors truncate uppercase tracking-tight">
+                  {account.name}
+                </h3>
+                <p className="text-[10px] text-slate font-bold font-mono mt-0.5 opacity-60">
+                  {account.accountNumber || '•••• •••• ••••'}
+                </p>
+              </div>
+
+              <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
+                <div className="flex items-center gap-1.5 text-[8px] font-black text-slate uppercase tracking-widest">
+                  <span className={`w-1.5 h-1.5 rounded-full ${account.isActive ? 'bg-emerald animate-pulse shadow-[0_0_8px_rgba(80,200,120,0.6)]' : 'bg-slate-700'}`} />
+                  {accountTypes.find(t => t.value === account.type)?.label || account.type}
+                </div>
+                {account.bank && (
+                   <span className="text-[8px] text-emerald font-black uppercase px-2 py-0.5 rounded-md bg-emerald/10 border border-emerald/20">
+                      {account.bank?.name}
+                   </span>
+                )}
+              </div>
+            </GlassCard>
+          ))}
+        </div>
+      )}
 
       {/* Modal for Create/Edit */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 backdrop-blur-sm px-4">
-           <div className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl w-full max-w-md overflow-hidden transform transition-all">
-              <div className="flex justify-between items-center p-4 border-b dark:border-gray-700 bg-gray-50 dark:bg-gray-800/50">
-                 <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-                   {isEditing ? 'Edit Account' : 'Create New Account'}
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md px-4 py-8 overflow-y-auto animate-scale-in">
+           <div className="bg-navy/90 border border-white/10 rounded-[1.25rem] shadow-2xl w-full max-w-lg overflow-hidden">
+              <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
+                 <h2 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
+                   {isEditing ? <Edit2 className="w-5 h-5 text-emerald" /> : <Building2 className="w-5 h-5 text-emerald" />}
+                   {isEditing ? 'แก้ไขบัญชี' : 'บัญชีใหม่'}
                  </h2>
-                 <button onClick={() => setIsModalOpen(false)} className="text-gray-500 hover:text-gray-700 dark:hover:text-gray-300">
-                   <X className="w-5 h-5" />
+                 <button onClick={() => setIsModalOpen(false)} className="text-slate hover:text-white transition-colors">
+                   <X className="w-6 h-6" />
                  </button>
               </div>
-              <form onSubmit={handleFormSubmit} className="p-5 space-y-5">
-                 <div>
-                   <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Display Name</label>
-                   <input 
-                     type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
-                     placeholder="e.g. My SCB Savings, Dime Gold"
-                     data-testid="accounts-form-input-name"
-                     className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                   />
+              
+              <form onSubmit={handleFormSubmit} className="p-8 space-y-6">
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.name}</label>
+                      <input 
+                        type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
+                        placeholder="e.g. Savings Primary"
+                        className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 transition-all" 
+                      />
+                    </div>
+                    
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.number}</label>
+                      <input 
+                        type="text" value={formData.accountNumber} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
+                        placeholder="Optional"
+                        className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 transition-all" 
+                      />
+                    </div>
                  </div>
-                 
-                 <div>
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Number</label>
-                    <input 
-                      type="text" value={formData.accountNumber} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
-                      placeholder="e.g. 000-0-00000-0 (Optional)"
-                      data-testid="accounts-form-input-number"
-                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500" 
-                    />
-                  </div>
 
-                 <div className="flex gap-4">
-                    <div className="flex-1">
-                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Account Type</label>
-                       <select 
+                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.type}</label>
+                        <select 
                         required value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
-                        data-testid="accounts-form-sel-type"
-                        className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 appearance-none transition-all"
                       >
-                         <option value="CASHFLOW">Cashflow</option>
-                         <option value="SAVING">Saving</option>
-                         <option value="INVESTMENT">Investment</option>
-                         <option value="INTERNAL">Internal Transfer</option>
-                         <option value="EMERGENCY">Emergency Fund</option>
-                         <option value="GOAL">Financial Goal</option>
-                         <option value="FAMILY">Family Helper</option>
-                         <option value="LIABILITY">Liability / Credit</option>
-                         <option value="BANK">Legacy Bank Account</option>
-                         <option value="STOCK">Legacy Stock</option>
-                         <option value="GOLD">Legacy Gold</option>
+                         {accountTypes.map(t => (
+                           <option key={t.value} className="bg-navy" value={t.value}>{t.label}</option>
+                         ))}
                       </select>
                     </div>
-                  </div>
 
-                 <div className="animate-in fade-in slide-in-from-top-2 duration-300">
-                    <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Institution (Bank)</label>
-                    <select 
-                      required value={formData.bankId} onChange={(e) => setFormData({...formData, bankId: e.target.value})}
-                      data-testid="accounts-form-sel-bank"
-                      className="w-full rounded-md border border-gray-300 dark:border-gray-600 px-3 py-2 bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
-                    >
-                      <option value="">None</option>
-                      {banks.map(b => (
-                        <option key={b.id} value={b.id}>{b.name} ({b.code})</option>
-                      ))}
-                    </select>
-                  </div>
-
-                  <div className="flex items-center justify-between pt-2 pb-2">
-                    <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex flex-col">
-                      <span>Personal Account</span>
-                      <span className="text-xs text-gray-500 font-normal">Is this your personal account?</span>
-                    </label>
-                    <button 
-                      type="button"
-                      onClick={() => setFormData({...formData, isPersonal: !formData.isPersonal})}
-                      data-testid="accounts-form-btn-toggle-personal"
-                      className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.isPersonal ? 'bg-blue-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                    >
-                      <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.isPersonal ? 'translate-x-5' : 'translate-x-0'}`} />
-                    </button>
-                  </div>
-
-                 <div className="flex items-center justify-between pt-2 pb-2">
-                   <label className="text-sm font-medium text-gray-700 dark:text-gray-300 flex flex-col">
-                     <span>Account Status</span>
-                     <span className="text-xs text-gray-500 font-normal">Is this account currently active?</span>
-                   </label>
-                   <button 
-                     type="button"
-                     onClick={() => setFormData({...formData, isActive: !formData.isActive})}
-                     data-testid="accounts-form-btn-toggle-status"
-                     className={`relative inline-flex h-6 w-11 flex-shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 ${formData.isActive ? 'bg-green-500' : 'bg-gray-300 dark:bg-gray-600'}`}
-                   >
-                     <span className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${formData.isActive ? 'translate-x-5' : 'translate-x-0'}`} />
-                   </button>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.institution}</label>
+                      <select 
+                        required value={formData.bankId} onChange={(e) => setFormData({...formData, bankId: e.target.value})}
+                        className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 appearance-none transition-all"
+                      >
+                        <option className="bg-navy" value="">None</option>
+                        {banks && banks.map(b => (
+                          <option className="bg-navy" key={b.id} value={b.id}>{b?.name}</option>
+                        ))}
+                      </select>
+                    </div>
                  </div>
 
-                 <div className="pt-4 border-t dark:border-gray-700 flex justify-end gap-3">
-                   <button type="button" onClick={() => setIsModalOpen(false)} className="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 hover:dark:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">Cancel</button>
-                   <button type="submit" data-testid="accounts-form-btn-save" className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-colors">Save Account</button>
+                 <div className="flex flex-col gap-4 pt-4 border-t border-white/5">
+                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                      <div>
+                        <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.personal}</p>
+                        <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Track as personal asset</p>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => setFormData({...formData, isPersonal: !formData.isPersonal})}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isPersonal ? 'bg-emerald' : 'bg-white/10'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isPersonal ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+
+                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                      <div>
+                        <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.status}</p>
+                        <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Enable system tracking</p>
+                      </div>
+                      <button 
+                        type="button"
+                        onClick={() => setFormData({...formData, isActive: !formData.isActive})}
+                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-emerald' : 'bg-white/10'}`}
+                      >
+                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                      </button>
+                    </div>
+                 </div>
+
+                 <div className="flex justify-end gap-4 pt-4">
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors">{labels.form.cancel}</button>
+                    <button type="submit" className="px-8 py-3 bg-emerald text-navy font-black text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] active:scale-95 transition-all">
+                      {isEditing ? labels.form.save : labels.form.save}
+                    </button>
                  </div>
               </form>
            </div>

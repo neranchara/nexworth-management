@@ -17,6 +17,7 @@
     "build:bot": "npm run db:generate && npm run build --workspace=@nexworth/database && npm run build --workspace=@nexworth/ai-engine && npm run build --workspace=@nexworth/bot",
     "db:generate": "npm run db:generate --workspace=@nexworth/database",
     "db:push": "npm run db:push --workspace=@nexworth/database",
+    "migrate:stg": "prisma migrate dev --schema packages/database/schema.prisma --name",
     "start:api": "npm run start --workspace=@nexworth/api",
     "start:bot": "npm run start --workspace=@nexworth/bot",
     "start:web": "npm run start --workspace=frontend"
