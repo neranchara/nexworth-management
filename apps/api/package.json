@@ -1,6 +1,6 @@
 {
   "name": "@nexworth/api",
-  "version": "1.0.0-next.gen",
+  "version": "3.2.0",
   "private": true,
   "scripts": {
     "dev": "cross-env NODE_ENV=local tsx watch src/server.ts",
