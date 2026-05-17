@@ -15,6 +15,7 @@ import {
   Shield
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { APP_CONFIG } from '@/config/app.config';
 
 interface AdminSidebarProps {
   activeTab: string;
@@ -85,7 +86,7 @@ export default function AdminSidebar({
             onClick={() => setActiveTab(item.id)}
           />
         ))}
-        
+
         <div className="mt-auto py-6 border-t border-ops-border/50">
           <NavItem 
             icon={<Settings size={20} />} 
@@ -101,6 +102,15 @@ export default function AdminSidebar({
             onClick={handleExit}
             danger 
           />
+          
+          <div className={clsx(
+            "mt-4 px-4 transition-opacity duration-300",
+            isCollapsed ? "opacity-0 invisible" : "opacity-100 visible"
+          )}>
+            <p className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] opacity-40">
+              System {APP_CONFIG.FULL_VERSION_STRING}
+            </p>
+          </div>
         </div>
       </nav>
     </aside>

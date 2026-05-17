@@ -1,12 +1,12 @@
 import { prisma } from '../lib/prisma';
 
-export const setupOrganizationDefaults = async (orgId: string, adminUserId: string) => {
+export const setupOrganizationDefaults = async (orgId: string, adminUserId: string, db: any = prisma) => {
   // 1. Roles
   const roleNames = ['Admin', 'Production User', 'Officer', 'Guest'];
   const roles: any = {};
   
   for (const roleName of roleNames) {
-    roles[roleName] = await prisma.role.upsert({
+    roles[roleName] = await db.role.upsert({
       where: { organizationId_name: { organizationId: orgId, name: roleName } },
       update: {},
       create: { name: roleName, organizationId: orgId },
@@ -14,7 +14,7 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
   }
 
   // 2. Assign Admin User to Admin Role
-  await prisma.user.update({
+  await db.user.update({
     where: { id: adminUserId },
     data: { roleId: roles['Admin'].id }
   });
@@ -28,7 +28,7 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
 
   for (const resource of resources) {
     // Admin gets all permissions
-    await prisma.permission.upsert({
+    await db.permission.upsert({
       where: { roleId_resource: { roleId: roles['Admin'].id, resource } },
       update: {
         canView: true,
@@ -50,7 +50,7 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     const managementResources = ['users', 'permissions', 'accounts', 'banks', 'types', 'categories'];
     for (const roleName of ['Production User', 'Officer', 'Guest']) {
        const canView = !managementResources.includes(resource);
-       await prisma.permission.upsert({
+       await db.permission.upsert({
         where: { roleId_resource: { roleId: roles[roleName].id, resource } },
         update: { canView },
         create: {
@@ -73,7 +73,7 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     { name: 'ธนาคารยูโอบี', code: 'UOB' },
   ];
   for (const bank of initialBanks) {
-    await prisma.bank.upsert({
+    await db.bank.upsert({
       where: { organizationId_code: { organizationId: orgId, code: bank.code } },
       update: { name: bank.name },
       create: { name: bank.name, code: bank.code, organizationId: orgId }
@@ -92,7 +92,7 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     { name: 'เงินมีเป้าหมาย', behavior: 'GOAL_SAVING' },
   ];
   for (const t of typeData) {
-    await prisma.transactionType.upsert({
+    await db.transactionType.upsert({
       where: { organizationId_name: { organizationId: orgId, name: t.name } },
       update: { behavior: t.behavior as any },
       create: { name: t.name, behavior: t.behavior as any, organizationId: orgId }
@@ -100,9 +100,10 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
   }
 
   // 6. Seed Categories for the Organization
-  const seededTypes = await prisma.transactionType.findMany({ where: { organizationId: orgId } });
-  const getTypeId = (name: string) => seededTypes.find(t => t.name === name)?.id;
-  const getTypeByBehavior = (behavior: string) => seededTypes.find(t => t.behavior === behavior)?.id;
+  const seededTypes = await db.transactionType.findMany({ where: { organizationId: orgId } });
+  const getTypeId = (name: string) => seededTypes.find((t: any) => t.name === name)?.id;
+  const getTypeByBehavior = (behavior: string) => seededTypes.find((t: any) => t.behavior === behavior)?.id;
+
 
   const categoryData = [
     { name: 'เงินเดือน', typeName: 'รายรับ' },
@@ -127,7 +128,7 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
   for (const cat of categoryData) {
     const typeId = cat.typeName ? getTypeId(cat.typeName) : getTypeByBehavior(cat.typeBehavior!);
     if (typeId) {
-      await prisma.transactionCategory.upsert({
+      await db.transactionCategory.upsert({
         where: { organizationId_name_typeId: { organizationId: orgId, name: cat.name, typeId } },
         update: {},
         create: { name: cat.name, typeId, organizationId: orgId }
@@ -135,3 +136,4 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     }
   }
 };
+

@@ -6,6 +6,7 @@ import { Link2, Copy, CheckCircle, AlertCircle, User, Loader2, Eye, EyeOff, QrCo
 import { QRCodeSVG } from 'qrcode.react';
 import { clsx } from 'clsx';
 import GlassCard from '@/components/ui/GlassCard';
+import { APP_CONFIG } from '@/config/app.config';
 
 export default function ProfilePage() {
   const { user, updateUser } = useAuthStore();
@@ -311,7 +312,9 @@ export default function ProfilePage() {
       {/* Footer / Version */}
       <div className="flex flex-col items-center gap-4 pt-10">
         <div className="px-6 py-2 bg-navy/80 backdrop-blur-md rounded-full border border-white/5 shadow-2xl">
-           <span className="text-[10px] font-black text-slate uppercase tracking-[0.4em] opacity-40">Nexworth Operational Standard — v3.2.0-STABLE</span>
+           <span className="text-[10px] font-black text-slate uppercase tracking-[0.4em] opacity-40">
+             {APP_CONFIG.FULL_VERSION_STRING}
+           </span>
         </div>
       </div>
     </div>

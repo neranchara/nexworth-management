@@ -33,6 +33,7 @@ function DrawerLinks({
             key={link.href}
             href={link.href}
             onClick={onNavigate}
+            data-testid={link.testId}
             className={clsx(
               'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
               isActive
@@ -104,6 +105,7 @@ export default function MobileNavDrawer({
           <Link
             href={SETUP_LINK.href}
             onClick={onClose}
+            data-testid={SETUP_LINK.testId}
             className={clsx(
               'flex items-center gap-3 px-4 py-3 rounded-xl text-sm font-medium transition-all',
               pathname === SETUP_LINK.href

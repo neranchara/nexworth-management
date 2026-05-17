@@ -1,12 +1,13 @@
 'use client';
 
 import { useState } from 'react';
-import { User, Shield, Bell, CreditCard, ChevronRight } from 'lucide-react';
+import { User, Shield, Bell, CreditCard, ChevronRight, Users } from 'lucide-react';
 import { clsx } from 'clsx';
 import ProfilePage from '../profile/page';
 import UserSecurityPage from '../security/page';
+import TeamPage from '../team/page';
 
-type SettingsTab = 'profile' | 'security' | 'notifications' | 'billing';
+type SettingsTab = 'profile' | 'security' | 'team' | 'notifications' | 'billing';
 
 export default function AccountSetupPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
@@ -14,6 +15,7 @@ export default function AccountSetupPage() {
   const tabs = [
     { id: 'profile', label: 'โปรไฟล์ & LINE', icon: User },
     { id: 'security', label: 'ความปลอดภัย', icon: Shield },
+    { id: 'team', label: 'ทีมและสิทธิ์', icon: Users },
     // { id: 'notifications', label: 'การแจ้งเตือน', icon: Bell },
     // { id: 'billing', label: 'การสมัครสมาชิก', icon: CreditCard },
   ];
@@ -56,6 +58,7 @@ export default function AccountSetupPage() {
         <main className="flex-1 bg-white/[0.02] border border-white/5 rounded-[2rem] p-8 overflow-y-auto custom-scrollbar shadow-2xl">
           {activeTab === 'profile' && <ProfilePage />}
           {activeTab === 'security' && <UserSecurityPage />}
+          {activeTab === 'team' && <TeamPage />}
           {(activeTab === 'notifications' || activeTab === 'billing') && (
             <div className="flex flex-col items-center justify-center py-20 text-center opacity-50 grayscale">
               <div className="w-20 h-20 bg-white/5 rounded-full mb-4 flex items-center justify-center">

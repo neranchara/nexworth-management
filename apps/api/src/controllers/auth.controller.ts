@@ -4,6 +4,7 @@ import bcrypt from 'bcrypt';
 import { z } from 'zod';
 import { securityService } from '../services/security.service';
 import { mailerService } from '../services/mailer.service';
+import { setupOrganizationDefaults } from '../services/organization.service';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -101,6 +102,81 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
     return reply.status(500).send({ error: 'Internal Server Error' });
   }
 };
+
+const registerSchema = z.object({
+  email: z.string().email(),
+  firstName: z.string().min(1),
+  lastName: z.string().min(1),
+  encryptedPassword: z.string(),
+  keyId: z.string().uuid(),
+});
+
+export const registerHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const { email, firstName, lastName, encryptedPassword, keyId } = registerSchema.parse(request.body);
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // 1. RSA Decryption Logic
+    const decryptedPassword = securityService.decrypt(keyId, encryptedPassword);
+    if (!decryptedPassword) {
+      return reply.status(401).send({ error: 'Invalid or expired encryption session' });
+    }
+
+    // 2. Check if user exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: normalizedEmail }
+    });
+
+    if (existingUser) {
+      return reply.status(400).send({ error: 'Email already registered' });
+    }
+
+    // 3. Hash password
+    const passwordHash = await bcrypt.hash(decryptedPassword, 10);
+
+    // 4. Create Organization and User in an atomic transaction
+    const result = await prisma.$transaction(async (tx) => {
+      // Create Organization
+      const org = await tx.organization.create({
+        data: { name: `${firstName}'s Workspace` }
+      });
+
+      // Create User
+      const user = await tx.user.create({
+        data: {
+          email: normalizedEmail,
+          passwordHash,
+          firstName,
+          lastName,
+          organizationId: org.id,
+          isActive: true
+        }
+      });
+
+      // Setup Defaults (Roles, Permissions, Categories, etc.)
+      await setupOrganizationDefaults(org.id, user.id, tx);
+
+      return { user, org };
+    });
+
+    return reply.status(201).send({
+      message: 'Account created successfully',
+      user: {
+        id: result.user.id,
+        email: result.user.email,
+        orgName: result.org.name
+      }
+    });
+
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return reply.status(400).send({ error: error.format() });
+    }
+    request.log.error(error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
+  }
+};
+
 
 export const getPublicKeyHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {

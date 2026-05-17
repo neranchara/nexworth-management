@@ -11,7 +11,7 @@ import { impersonationGuard } from './middlewares/impersonation.middleware';
 import { performanceRequestHook, performanceResponseHook } from './middlewares/performance.middleware';
 import { contextRequestHook } from './middlewares/context.middleware';
 
-const buildServer = async (): Promise<FastifyInstance> => {
+export const buildServer = async (): Promise<FastifyInstance> => {
   const server = Fastify({ logger: true });
 
   await server.register(fastifyRawBody, {
@@ -124,6 +124,9 @@ const buildServer = async (): Promise<FastifyInstance> => {
     const organizationRoutes = (await import('./routes/organization.routes')).default;
     await server.register(organizationRoutes, { prefix: '/api/v1/organizations' });
 
+    const invitationRoutes = (await import('./routes/invitation.routes')).default;
+    await server.register(invitationRoutes, { prefix: '/api/v1/invitations' });
+
     const configRoutes = (await import('./routes/config.routes')).default;
     await server.register(configRoutes, { prefix: '/api/v1' });
 
@@ -150,4 +153,9 @@ const start = async () => {
   }
 };
 
-start();
+// Using process.argv to detect if the file is being executed directly
+import { fileURLToPath } from 'url';
+// @ts-ignore
+if (process.argv[1] === fileURLToPath(import.meta.url)) {
+  start();
+}

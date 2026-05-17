@@ -2,11 +2,12 @@
 
 import { useState } from 'react';
 import { useAuthStore } from '../../store/authStore';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Eye, EyeOff, User as UserIcon, Lock } from 'lucide-react';
 import api from '../../lib/api';
 import Logo from '@/components/common/Logo';
 import { encryptPassword } from '../../lib/crypto';
+import { APP_CONFIG } from '@/config/app.config';
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -18,6 +19,8 @@ export default function LoginPage() {
   
   const login = useAuthStore((state) => state.login);
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const redirectUrl = searchParams.get('redirect');
 
   const handleForgotPassword = async () => {
     setError('');
@@ -54,7 +57,9 @@ export default function LoginPage() {
       const { data } = await api.post('/auth/login', payload);
       login(data.token, data.user);
       
-      if (data.user.isSystemAdmin) {
+      if (redirectUrl) {
+        router.push(redirectUrl);
+      } else if (data.user.isSystemAdmin) {
         router.push('/dashboard/organizations');
       } else {
         router.push('/dashboard');
@@ -220,15 +225,22 @@ export default function LoginPage() {
             </div>
           )}
 
-          {/* TODO: เปิดเมื่อระบบ self-registration พร้อม
-          <div className="text-center">
-            <button type="button" className="text-[10px] font-bold text-slate-400 hover:text-white transition-colors uppercase tracking-widest border-b border-transparent hover:border-white/20 pb-1">
-              Create an Account
+          <div className="text-center pt-2">
+            <button 
+              type="button" 
+              onClick={() => router.push(redirectUrl ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register')}
+              className="text-[10px] font-bold text-slate-400 hover:text-brand-accent transition-colors uppercase tracking-widest border-b border-transparent hover:border-brand-accent/20 pb-1"
+            >
+              Don't have an account? Create one
             </button>
           </div>
-          */}
-
         </form>
+
+        <div className="pt-6 border-t border-white/5 flex flex-col items-center gap-2">
+          <p className="text-[9px] font-black text-slate-500 uppercase tracking-[0.3em] opacity-40">
+            {APP_CONFIG.FULL_VERSION_STRING}
+          </p>
+        </div>
       </div>
     </div>
   );

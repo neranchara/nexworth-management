@@ -4,9 +4,9 @@
     "outDir": "./dist",
     "rootDir": "../../",
     "module": "CommonJS",
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0"
+    "moduleResolution": "node"
   },
+
   "include": ["src/**/*.ts", "../../packages/**/*.ts"],
   "exclude": [
     "node_modules",

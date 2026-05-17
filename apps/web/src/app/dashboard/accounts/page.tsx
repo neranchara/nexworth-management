@@ -338,12 +338,12 @@ export default function AccountsManagementPage() {
                 </div>
                 <div className="flex gap-1.5">
                   {hasPermission('accounts', 'canUpdate') && (
-                    <button onClick={() => openEditModal(account)} className="p-1.5 text-slate hover:text-white transition-colors">
+                    <button onClick={() => openEditModal(account)} className="p-1.5 text-slate hover:text-white transition-colors" title="Edit">
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                   {hasPermission('accounts', 'canDelete') && (
-                    <button onClick={() => handleDelete(account.id)} className="p-1.5 text-slate hover:text-rose transition-colors">
+                    <button onClick={() => handleDelete(account.id)} className="p-1.5 text-slate hover:text-rose transition-colors" title="Delete">
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
                   )}
@@ -396,6 +396,7 @@ export default function AccountsManagementPage() {
                       <input 
                         type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                         placeholder="e.g. Savings Primary"
+                        data-testid="accounts-form-input-name"
                         className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 transition-all" 
                       />
                     </div>
@@ -415,6 +416,7 @@ export default function AccountsManagementPage() {
                       <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.type}</label>
                         <select 
                         required value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
+                        data-testid="accounts-form-sel-type"
                         className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 appearance-none transition-all"
                       >
                          {accountTypes.map(t => (
@@ -427,6 +429,7 @@ export default function AccountsManagementPage() {
                       <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.institution}</label>
                       <select 
                         required value={formData.bankId} onChange={(e) => setFormData({...formData, bankId: e.target.value})}
+                        data-testid="accounts-form-sel-bank"
                         className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 appearance-none transition-all"
                       >
                         <option className="bg-navy" value="">None</option>
@@ -438,38 +441,39 @@ export default function AccountsManagementPage() {
                  </div>
 
                  <div className="flex flex-col gap-4 pt-4 border-t border-white/5">
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-                      <div>
-                        <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.personal}</p>
-                        <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Track as personal asset</p>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={() => setFormData({...formData, isPersonal: !formData.isPersonal})}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isPersonal ? 'bg-emerald' : 'bg-white/10'}`}
-                      >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isPersonal ? 'translate-x-6' : 'translate-x-1'}`} />
-                      </button>
-                    </div>
+                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                       <div>
+                         <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.personal}</p>
+                         <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Track as personal asset</p>
+                       </div>
+                       <button 
+                         type="button"
+                         onClick={() => setFormData({...formData, isPersonal: !formData.isPersonal})}
+                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isPersonal ? 'bg-emerald' : 'bg-white/10'}`}
+                       >
+                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isPersonal ? 'translate-x-6' : 'translate-x-1'}`} />
+                       </button>
+                     </div>
 
-                    <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
-                      <div>
-                        <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.status}</p>
-                        <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Enable system tracking</p>
-                      </div>
-                      <button 
-                        type="button"
-                        onClick={() => setFormData({...formData, isActive: !formData.isActive})}
-                        className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-emerald' : 'bg-white/10'}`}
-                      >
-                        <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
-                      </button>
-                    </div>
-                 </div>
+                     <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
+                       <div>
+                         <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.status}</p>
+                         <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Enable system tracking</p>
+                       </div>
+                       <button 
+                         type="button"
+                         data-testid="accounts-form-btn-toggle-active"
+                         onClick={() => setFormData({...formData, isActive: !formData.isActive})}
+                         className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${formData.isActive ? 'bg-emerald' : 'bg-white/10'}`}
+                       >
+                         <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${formData.isActive ? 'translate-x-6' : 'translate-x-1'}`} />
+                       </button>
+                     </div>
+                  </div>
 
                  <div className="flex justify-end gap-4 pt-4">
                     <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors">{labels.form.cancel}</button>
-                    <button type="submit" className="px-8 py-3 bg-emerald text-navy font-black text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] active:scale-95 transition-all">
+                    <button type="submit" data-testid="accounts-form-btn-save" className="px-8 py-3 bg-emerald text-navy font-black text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] active:scale-95 transition-all">
                       {isEditing ? labels.form.save : labels.form.save}
                     </button>
                  </div>
