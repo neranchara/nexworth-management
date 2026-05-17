@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, Suspense } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { AlertCircle, Eye, EyeOff, User as UserIcon, Lock, Mail, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
@@ -9,7 +9,7 @@ import Logo from '@/components/common/Logo';
 import { encryptPassword } from '../../lib/crypto';
 import { APP_CONFIG } from '@/config/app.config';
 
-export default function RegisterPage() {
+function RegisterForm() {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -210,5 +210,20 @@ export default function RegisterPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function RegisterPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen flex items-center justify-center bg-brand-primary font-sans text-white">
+        <div className="flex flex-col items-center space-y-4">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent"></div>
+          <p className="text-slate-400 text-xs uppercase tracking-widest font-bold">Loading Secure Portal...</p>
+        </div>
+      </div>
+    }>
+      <RegisterForm />
+    </Suspense>
   );
 }
