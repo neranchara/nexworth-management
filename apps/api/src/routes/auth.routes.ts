@@ -1,9 +1,28 @@
 import { FastifyInstance } from 'fastify';
-import { loginHandler, meHandler, logoutHandler, generateLinePairingCodeHandler, getPublicKeyHandler, requestPasswordResetHandler, verifyResetTokenHandler, resetPasswordHandler } from '../controllers/auth.controller';
+import { 
+  loginHandler, 
+  registerHandler,
+  meHandler, 
+  logoutHandler, 
+  generateLinePairingCodeHandler, 
+  getPublicKeyHandler, 
+  requestPasswordResetHandler, 
+  verifyResetTokenHandler, 
+  resetPasswordHandler 
+} from '../controllers/auth.controller';
 import { authenticate } from '../middlewares/auth.middleware';
 import { config } from '../config/index';
 
 export default async function authRoutes(server: FastifyInstance) {
+  server.post('/register', {
+    config: {
+      rateLimit: {
+        max: 5,
+        timeWindow: '1 hour'
+      }
+    }
+  }, registerHandler);
+
   server.post('/login', {
     config: {
       rateLimit: {
@@ -12,6 +31,7 @@ export default async function authRoutes(server: FastifyInstance) {
       }
     }
   }, loginHandler);
+
   server.post('/logout', { preHandler: authenticate }, logoutHandler);
   server.get('/me', { preHandler: authenticate }, meHandler);
   server.get('/public-key', getPublicKeyHandler);

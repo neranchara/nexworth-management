@@ -1,8 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { ChevronLeft, ChevronRight, Settings } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { ChevronLeft, ChevronRight, Settings, LogOut } from 'lucide-react';
+import api from '@/lib/api';
 import { clsx } from 'clsx';
 import Logo from '@/components/common/Logo';
 import { SETUP_LINK } from './navConfig';
@@ -15,7 +16,18 @@ interface SidebarProps {
 
 export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   const pathname = usePathname();
+  const router = useRouter();
   const { mainLinks, mgmtLinks, setupLabel } = useDashboardNav();
+
+  const handleLogout = async () => {
+    try {
+      await api.post('/auth/logout');
+      router.push('/login');
+    } catch (error) {
+      // Even if API fails, clear local state and redirect
+      router.push('/login');
+    }
+  };
 
   return (
     <aside
@@ -46,6 +58,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 key={link.href}
                 href={link.href}
                 title={isCollapsed ? link.title : ''}
+                data-testid={link.testId}
                 className={clsx(
                   'flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-medium transition-all group',
                   isActive
@@ -83,6 +96,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                   key={link.href}
                   href={link.href}
                   title={isCollapsed ? link.title : ''}
+                  data-testid={link.testId}
                   className={clsx(
                     'flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-medium transition-all group',
                     isActive
@@ -112,6 +126,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         <Link
           href={SETUP_LINK.href}
           title={isCollapsed ? SETUP_LINK.title : ''}
+          data-testid={SETUP_LINK.testId}
           className={clsx(
             'flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all group',
             pathname === SETUP_LINK.href
@@ -124,6 +139,17 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
             <span className="whitespace-nowrap transition-opacity duration-300">{setupLabel}</span>
           )}
         </Link>
+        
+        <button
+          onClick={handleLogout}
+          title={isCollapsed ? "Logout" : ''}
+          className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all text-rose-400 hover:text-rose-300 hover:bg-rose-500/5 group mt-1"
+        >
+          <LogOut className="w-5 h-5 shrink-0" />
+          {!isCollapsed && (
+            <span className="whitespace-nowrap transition-opacity duration-300">ออกจากระบบ</span>
+          )}
+        </button>
       </div>
     </aside>
   );

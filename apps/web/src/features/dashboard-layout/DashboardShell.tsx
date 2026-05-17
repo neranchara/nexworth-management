@@ -115,7 +115,11 @@ export default function DashboardShell({ children }: { children: React.ReactNode
            </div>
                       <div className="flex items-center gap-4 ml-auto">
                <div className="hidden sm:flex flex-col items-end mr-2">
-                  <span className="text-xs font-bold text-white leading-none">{user.firstName || user.email}</span>
+                  <span className="text-xs font-bold text-white leading-none">
+                     {user.firstName 
+                       ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}` 
+                       : user.email}
+                  </span>
                   <span className="text-[9px] text-slate uppercase tracking-tighter mt-1">{user.role || 'User'}</span>
                </div>
                <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer">

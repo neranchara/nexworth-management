@@ -132,7 +132,7 @@ export const DiagnosticTerminal = () => {
           { subject: 'Integrity', value: 95, fullMark: 100 },
           { subject: 'Accounts', value: Math.min((userData._count?.accounts || 0) * 20, 100), fullMark: 100 },
           { subject: 'Activity', value: Math.min((userData._count?.transactions || 0) * 5, 100), fullMark: 100 },
-          { subject: 'Privilege', value: userData.role === 'ADMIN' ? 100 : 50, fullMark: 100 },
+          { subject: 'Privilege', value: (typeof userData.role === 'object' ? userData.role?.name : userData.role) === 'ADMIN' || (typeof userData.role === 'object' ? userData.role?.name : userData.role) === 'Admin' ? 100 : 50, fullMark: 100 },
         ],
         findings: [
           { 
@@ -268,7 +268,11 @@ export const DiagnosticTerminal = () => {
                   <div className="flex flex-col gap-1 mt-2">
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] text-slate font-bold opacity-40">Role:</span>
-                      <span className="text-[9px] font-black text-ops-primary uppercase tracking-widest">{(data.user as any).role}</span>
+                      <span className="text-[9px] font-black text-ops-primary uppercase tracking-widest">
+                        {typeof (data.user as any).role === 'object' 
+                          ? ((data.user as any).role?.name || 'USER') 
+                          : ((data.user as any).role || 'USER')}
+                      </span>
                     </div>
                     <div className="flex items-center justify-between">
                       <span className="text-[9px] text-slate font-bold opacity-40">Last IP:</span>
