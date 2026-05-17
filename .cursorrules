@@ -11,7 +11,7 @@ You MUST ALWAYS follow these rules without any exception:
 7. **Tests for New Changes**: ทุกครั้งที่มีการเพิ่ม api,function,modaul หรือ เปลี่ยน logic ให้เพิ่ม test case จากนั้น run test ทุกครั้ง (Every time you add an API, function, module, or change logic, add corresponding test cases and run tests).
 8. **Bug Fixing during Testing**: ทุกครั้งที่มีการ run test ถ้าเจอ bug ต้องทำการ fix แล้ว run test ใหม่จนกว่าจะผ่าน (If tests fail or find a bug, fix it immediately and rerun tests until they all pass).
 9. **Staging DB for Testing**: กรณีที่ run test ให้ต่อไปที่ database env staging ทุกครั้ง (Always connect to the STAGING database env when running tests).
-10. **Production DB Switch**: กรณีที่ run test ผ่านแล้วให้สลับไปที่ database env prod ทุกครั้ง (Always switch the connection back to the PRODUCTION database env once all tests pass).
+
 
 ---
 
