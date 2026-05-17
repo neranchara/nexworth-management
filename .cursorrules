@@ -1,0 +1,35 @@
+# 🤖 Agent Rules & Git Submodule Workflow (Nexworth)
+
+## 📌 User-Defined Rules (MANDATORY & STRICT)
+You MUST ALWAYS follow these rules without any exception:
+1. **Function Modification**: หากมีการแก้ไข fuction ต้องแจ้งเพื่อขออนุญาติก่อนทุกครั้ง (Always ask for permission before modifying any function).
+2. **Parameter Modification**: ถ้าต้องแก้ parameter ต้องแจ้งเพื่อขออนุญาติก่อนทุกครั้ง (Always ask for permission before modifying any parameter).
+3. **Refactoring**: ทุกครั้งที่ให้ทำการ refactoring ต้องตรวจสอบ code ทั้งหมดก่อน จากนั้น ต้องแจ้งเพื่อขออนุญาติก่อนทุกครั้ง (Always check all code and request permission before refactoring).
+4. **Prisma Mockup Data**: ห้ามใช้ mockup data ที่ prisma และ ห้ามใช้งาน prisma mockup data อีกจนกว่าจะมีคำสั่งยกเลิก (Do NOT use Prisma mock data under any circumstances until further notice).
+5. **Mockup Data Environment**: ถ้าจะเทสโดยการ mockup data ให้่ไปทำที่ env staging (If testing with mockup data, do it ONLY in the staging environment).
+6. **Code Errors Check**: ทุกครั้งที่มีการ fix code ให้เช็คว่าไม่มี error red line แล้ว (Always ensure no red-line compile/lint errors exist after fixing code).
+7. **Tests for New Changes**: ทุกครั้งที่มีการเพิ่ม api,function,modaul หรือ เปลี่ยน logic ให้เพิ่ม test case จากนั้น run test ทุกครั้ง (Every time you add an API, function, module, or change logic, add corresponding test cases and run tests).
+8. **Bug Fixing during Testing**: ทุกครั้งที่มีการ run test ถ้าเจอ bug ต้องทำการ fix แล้ว run test ใหม่จนกว่าจะผ่าน (If tests fail or find a bug, fix it immediately and rerun tests until they all pass).
+9. **Staging DB for Testing**: กรณีที่ run test ให้ต่อไปที่ database env staging ทุกครั้ง (Always connect to the STAGING database env when running tests).
+10. **Production DB Switch**: กรณีที่ run test ผ่านแล้วให้สลับไปที่ database env prod ทุกครั้ง (Always switch the connection back to the PRODUCTION database env once all tests pass).
+
+---
+
+## 📦 Git Submodule Workflow
+This project utilizes a centralized repository for documentation and QA/Dev standards.
+- **Submodule Location**: `docs/standards`
+- **Physical Source**: `D:/Project/MyProject/Standard knowledge and Skills`
+
+### Required Procedures for Agent:
+1. **Initialize/Sync Submodule**:
+   If the submodule directory is empty or out-of-sync, run:
+   `git -c protocol.file.allow=always submodule update --init --recursive`
+2. **Reading Standards**:
+   Read and follow all testing/QA guidelines and architecture logs in `docs/standards/`.
+3. **Modifying Standards**:
+   If you need to update standards or write new standard guides:
+   - Make edits inside `docs/standards/`.
+   - Commit and push the changes within the submodule directory first:
+     `git -C docs/standards add . && git -C docs/standards commit -m "chore: [brief message]" && git -C docs/standards push origin main`
+   - Then, stage and commit the submodule pointer update in the main `Nexworth` repository:
+     `git add docs/standards && git commit -m "chore: update standards submodule pointer" && git push`
