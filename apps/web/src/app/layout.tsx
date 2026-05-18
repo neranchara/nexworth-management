@@ -21,6 +21,13 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="th">
+      <head>
+        {/* Preconnect and DNS prefetch for Google Fonts and API Host */}
+        <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://nexworth-management.onrender.com" />
+        <link rel="preconnect" href="https://nexworth-management.onrender.com" crossOrigin="anonymous" />
+      </head>
       <body
         className={`${prompt.variable} ${prompt.className} font-sans antialiased bg-midnight text-slate-100`}
       >

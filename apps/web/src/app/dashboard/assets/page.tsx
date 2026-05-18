@@ -581,6 +581,7 @@ export default function AssetsPage() {
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.account}</label>
             <select
+              data-testid="assets-form-sel-account"
               required disabled={isEditing} value={formData.accountId}
               onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald/50 appearance-none disabled:opacity-50"
@@ -595,6 +596,7 @@ export default function AssetsPage() {
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{labels.form.name}</label>
                 <input
+                  data-testid="accounts-form-input-name"
                   type="text" placeholder="e.g. SCB Saving" required={formData.accountId === 'new'}
                   value={formData.newAccountName} onChange={(e) => setFormData({ ...formData, newAccountName: e.target.value })}
                   className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-400 transition-all placeholder:text-slate-600"
@@ -604,6 +606,7 @@ export default function AssetsPage() {
                 <div className="flex flex-col gap-2">
                   <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{labels.form.type}</label>
                   <select
+                    data-testid="accounts-form-sel-type"
                     value={formData.newAccountType} onChange={(e) => setFormData({ ...formData, newAccountType: e.target.value })}
                     className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-400 appearance-none"
                   >
@@ -613,6 +616,7 @@ export default function AssetsPage() {
                 <div className="flex flex-col gap-2">
                   <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{labels.form.bank}</label>
                   <select
+                    data-testid="accounts-form-sel-bank"
                     value={formData.bankId} onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
                     className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-400 appearance-none"
                   >
@@ -628,6 +632,7 @@ export default function AssetsPage() {
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-emerald uppercase tracking-widest">{labels.form.amount}</label>
               <input
+                data-testid="assets-form-input-amount"
                 type="number" step="0.01" required value={formData.amount || ''}
                 onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
                 className="w-full bg-navy/50 border border-emerald/30 rounded-xl px-4 py-3 text-xl font-bold text-white outline-none focus:border-emerald focus:ring-1 focus:ring-emerald/50 transition-all"
@@ -636,6 +641,7 @@ export default function AssetsPage() {
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.date}</label>
               <input
+                data-testid="assets-form-input-date"
                 type="date" required value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
                 className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all [color-scheme:dark]"
@@ -652,7 +658,7 @@ export default function AssetsPage() {
             />
           </div>
 
-          <button type="submit" className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-2 hover:shadow-[0_0_20px_rgba(80,200,120,0.3)] transition-all active:scale-[0.98]">
+          <button type="submit" data-testid="assets-form-btn-save" className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-2 hover:shadow-[0_0_20px_rgba(80,200,120,0.3)] transition-all active:scale-[0.98]">
             {isEditing ? labels.form.update || 'Update' : labels.form.save || 'Save'}
           </button>
         </form>

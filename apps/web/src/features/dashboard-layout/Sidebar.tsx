@@ -143,6 +143,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         <button
           onClick={handleLogout}
           title={isCollapsed ? "Logout" : ''}
+          data-testid="layout-nav-btn-logout"
           className="w-full flex items-center gap-4 px-4 py-3 rounded-xl text-sm font-medium transition-all text-rose-400 hover:text-rose-300 hover:bg-rose-500/5 group mt-1"
         >
           <LogOut className="w-5 h-5 shrink-0" />

@@ -182,6 +182,7 @@ export default function GoalsPage() {
           <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Tracking Dreams & Stability</p>
         </div>
         <button 
+          data-testid="goals-btn-add"
           onClick={() => setShowCreateModal(true)}
           className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95"
         >
@@ -346,6 +347,8 @@ export default function GoalsPage() {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ชื่อเป้าหมาย (Goal Name)</label>
             <input 
               type="text" required 
+              name="title"
+              data-testid="goals-input-title"
               placeholder="e.g. ดาวน์บ้าน, เที่ยวญี่ปุ่น"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all"
               value={newGoalForm.name} onChange={e => setNewGoalForm({...newGoalForm, name: e.target.value})}
@@ -356,6 +359,8 @@ export default function GoalsPage() {
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ยอดเงินเป้าหมาย (Target Amount)</label>
             <input 
               type="number" required min="0" step="0.01"
+              name="targetAmount"
+              data-testid="goals-input-targetAmount"
               placeholder="100000"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all"
               value={newGoalForm.targetAmount} onChange={e => setNewGoalForm({...newGoalForm, targetAmount: e.target.value})}
@@ -390,6 +395,8 @@ export default function GoalsPage() {
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ผูกกับบัญชีสินทรัพย์ (Linked Asset)</label>
             <select 
+              name="linkedAssetId"
+              data-testid="goals-select-linkedAssetId"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
               value={newGoalForm.accountId} onChange={e => setNewGoalForm({...newGoalForm, accountId: e.target.value})}
             >
@@ -414,7 +421,7 @@ export default function GoalsPage() {
             <button type="button" onClick={() => setShowCreateModal(false)} className="px-5 py-2.5 rounded-xl font-bold text-xs bg-white/5 text-slate-300 hover:bg-white/10 transition-all">
               ยกเลิก
             </button>
-            <button type="submit" className="px-5 py-2.5 rounded-xl font-bold text-xs bg-emerald text-navy btn-glow">
+            <button type="submit" data-testid="goals-btn-submit" className="px-5 py-2.5 rounded-xl font-bold text-xs bg-emerald text-navy btn-glow">
               สร้างเป้าหมาย
             </button>
           </div>

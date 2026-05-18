@@ -289,10 +289,24 @@ export default function TransactionsPage() {
     if (!file) return;
     setIsScanning(true);
     try {
-      const { scanAmountFromImage } = await import('../../../utils/ocrScanner');
-      const { amount: realAmount, text: rawText } = await scanAmountFromImage(file);
-      const { scanQRFromImage } = await import('../../../utils/qrScanner');
-      const qrPayload = await scanQRFromImage(file);
+      let realAmount = null;
+      let rawText = '';
+      let qrPayload = null;
+
+      // Safe Hookสำหรับระบบ Automate Test (Playwright E2E Sandbox)
+      if (typeof window !== 'undefined' && (window as any).__playwrightMockOCR) {
+        const mockRes = await (window as any).__playwrightMockOCR(file);
+        realAmount = mockRes.amount;
+        rawText = mockRes.text;
+        qrPayload = mockRes.qrPayload;
+      } else {
+        const { scanAmountFromImage } = await import('../../../utils/ocrScanner');
+        const res = await scanAmountFromImage(file);
+        realAmount = res.amount;
+        rawText = res.text;
+        const { scanQRFromImage } = await import('../../../utils/qrScanner');
+        qrPayload = await scanQRFromImage(file);
+      }
       
       let verifiedData = null;
       if (qrPayload) {
@@ -358,7 +372,6 @@ export default function TransactionsPage() {
           >
             <Scan className="w-4 h-4" /> Scan Slip
           </button>
-          <input type="file" ref={scanFileRef} className="hidden" accept="image/*" onChange={handleScanSlip} data-testid="ai-scanner-input" />
           
           {hasPermission('transactions', 'canCreate') && (
             <button 
@@ -464,7 +477,7 @@ export default function TransactionsPage() {
               >
                 Select Slip
               </button>
-              <input type="file" ref={scanFileRef} className="hidden" accept="image/*" onChange={handleScanSlip} />
+              <input type="file" ref={scanFileRef} className="hidden" accept="image/*" onChange={handleScanSlip} data-testid="ai-scanner-input" />
             </div>
           )}
 
@@ -477,6 +490,7 @@ export default function TransactionsPage() {
                 <input 
                   type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})}
                   placeholder="0.00"
+                  data-testid="transactions-form-input-amount"
                   className="w-full bg-[#001229] border border-white/5 rounded-2xl px-6 py-6 text-3xl font-black text-white outline-none focus:border-emerald transition-all placeholder:text-slate-800"
                 />
                 <div className="absolute right-6 top-1/2 -translate-y-1/2 text-slate-600 font-bold">฿</div>

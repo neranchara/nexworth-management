@@ -96,10 +96,26 @@ export default function DashboardCockpit() {
     try {
       setIsScanning(true);
       
-      console.log(`[SlipScanner] Starting Real-Data Scan for: ${file.name}`);
+      console.log(`[SlipScanner] Starting Scan for: ${file.name}`);
       
-      const { scanAmountFromImage } = await import('../../utils/ocrScanner');
-      const { amount: realAmount, text: rawText } = await scanAmountFromImage(file);
+      let realAmount = null;
+      let rawText = '';
+      let qrPayload = null;
+
+      // Safe Hook สำหรับระบบ Automate Test (Playwright E2E Sandbox)
+      if (typeof window !== 'undefined' && (window as any).__playwrightMockOCR) {
+        const mockRes = await (window as any).__playwrightMockOCR(file);
+        realAmount = mockRes.amount;
+        rawText = mockRes.text;
+        qrPayload = mockRes.qrPayload;
+      } else {
+        const { scanAmountFromImage } = await import('../../utils/ocrScanner');
+        const res = await scanAmountFromImage(file);
+        realAmount = res.amount;
+        rawText = res.text;
+        const { scanQRFromImage } = await import('../../utils/qrScanner');
+        qrPayload = await scanQRFromImage(file);
+      }
 
       if (realAmount) {
         console.log('[SlipScanner] Real amount extracted via OCR:', realAmount);
@@ -111,9 +127,7 @@ export default function DashboardCockpit() {
         else setNote('Scan: Slip Data');
       }
 
-      // Step 2: Try QR Extraction for Metadata (Verification Path)
-      const { scanQRFromImage } = await import('../../utils/qrScanner');
-      const qrPayload = await scanQRFromImage(file);
+
 
       if (qrPayload) {
         console.log('[SlipScanner] QR found, payload length:', qrPayload.length);

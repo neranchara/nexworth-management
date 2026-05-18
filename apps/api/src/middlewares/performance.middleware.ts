@@ -27,7 +27,7 @@ export const performanceResponseHook = async (request: FastifyRequest, reply: Fa
           path: request.url.split('?')[0], // Strip query params for cleaner aggregation
           method: request.method,
           durationMs: duration,
-          statusCode: reply.statusCode,
+          statusCode: reply.raw?.statusCode || reply.statusCode,
           timestamp: new Date().toISOString()
         }
       }

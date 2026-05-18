@@ -19,6 +19,10 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   // Initialize sidebar state
   useEffect(() => {
+    checkAuth();
+  }, [checkAuth]);
+
+  useEffect(() => {
     let lastWidth = window.innerWidth;
     const isDesktop = lastWidth >= 1280;
     const saved = localStorage.getItem('nexworth-sidebar-collapsed');
@@ -31,7 +35,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     }
     
     setIsLoaded(true);
-    checkAuth();
 
     const handleAutoCollapse = () => {
       const currentWidth = window.innerWidth;
@@ -50,7 +53,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
     
     window.addEventListener('resize', handleAutoCollapse);
     return () => window.removeEventListener('resize', handleAutoCollapse);
-  }, [checkAuth]);
+  }, []);
 
   // Persist sidebar state
   useEffect(() => {
