@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Search, Filter, Shield, UserCheck, Clock, ExternalLink, RefreshCw, AlertTriangle, CheckCircle2, Zap, Activity } from 'lucide-react';
 import api from '@/lib/api';
+import { useImpersonation } from '@/context/ImpersonationContext';
 
 interface ImpersonationLog {
   id: string;
@@ -24,12 +25,19 @@ interface ReconciliationReport {
 }
 
 export const SupportConsole = () => {
-  const [activeTab, setActiveTab] = useState<'logs' | 'integrity'>('logs');
+  const [activeTab, setActiveTab] = useState<'logs' | 'integrity' | 'impersonate'>('logs');
   const [logs, setLogs] = useState<ImpersonationLog[]>([]);
   const [integrityReports, setIntegrityReports] = useState<ReconciliationReport[]>([]);
   const [loading, setLoading] = useState(true);
   const [syncing, setSyncing] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+
+  const { startViewAs } = useImpersonation();
+  const [users, setUsers] = useState<any[]>([]);
+  const [selectedUserId, setSelectedUserId] = useState('');
+  const [ticketRef, setTicketRef] = useState('');
+  const [impersonateLoading, setImpersonateLoading] = useState(false);
+  const [impersonateError, setImpersonateError] = useState<string | null>(null);
 
   const fetchLogs = async () => {
     try {
@@ -88,9 +96,54 @@ export const SupportConsole = () => {
     }
   };
 
+  const fetchUsers = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get('/users');
+      if (response.data && response.data.users) {
+        setUsers(response.data.users);
+      }
+    } catch (error) {
+      console.error('Failed to fetch users:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartImpersonate = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!selectedUserId || !ticketRef.trim()) {
+      setImpersonateError('Please select a user and provide a ticket reference.');
+      return;
+    }
+    try {
+      setImpersonateLoading(true);
+      setImpersonateError(null);
+      const res = await api.post('/admin/impersonate', {
+        targetUserId: selectedUserId,
+        ticketReference: ticketRef.trim()
+      });
+      
+      const targetUser = users.find(u => u.id === selectedUserId);
+      if (targetUser && res.data.token) {
+        startViewAs({
+          id: targetUser.id,
+          name: targetUser.firstName ? `${targetUser.firstName} ${targetUser.lastName || ''}`.trim() : targetUser.email,
+          email: targetUser.email
+        }, res.data.token);
+      }
+    } catch (error: any) {
+      console.error('Impersonation failed:', error);
+      setImpersonateError(error.response?.data?.error || 'Failed to start impersonation session. Verify authorization.');
+    } finally {
+      setImpersonateLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (activeTab === 'logs') fetchLogs();
-    else fetchIntegrity();
+    else if (activeTab === 'integrity') fetchIntegrity();
+    else if (activeTab === 'impersonate') fetchUsers();
   }, [activeTab]);
 
   const filteredLogs = logs.filter(log => 
@@ -127,6 +180,12 @@ export const SupportConsole = () => {
               className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'integrity' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-500 hover:text-slate-300'}`}
             >
               Data Integrity
+            </button>
+            <button 
+              onClick={() => setActiveTab('impersonate')}
+              className={`px-4 py-1.5 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${activeTab === 'impersonate' ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/20' : 'text-slate-500 hover:text-slate-300'}`}
+            >
+              View-As Console
             </button>
           </div>
 
@@ -219,7 +278,7 @@ export const SupportConsole = () => {
                 )}
               </tbody>
             </table>
-          ) : (
+          ) : activeTab === 'integrity' ? (
             <table className="w-full text-left text-[11px] border-collapse min-w-[800px]">
               <thead className="sticky top-0 bg-slate-900/90 backdrop-blur-md z-10">
                 <tr>
@@ -295,6 +354,71 @@ export const SupportConsole = () => {
                 )}
               </tbody>
             </table>
+          ) : (
+            <div className="p-8 max-w-2xl mx-auto flex flex-col gap-6">
+              <div className="border border-amber-500/20 bg-amber-500/5 rounded-2xl p-5 flex gap-4 items-start shadow-lg shadow-amber-500/[0.02]">
+                <div className="p-2 bg-amber-500/10 rounded-lg text-amber-400 border border-amber-500/20 shrink-0">
+                  <AlertTriangle className="w-5 h-5" />
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <h4 className="text-xs font-black text-amber-400 uppercase tracking-widest">Strict Security Protocols Active</h4>
+                  <p className="text-[10.5px] leading-relaxed text-slate-400">
+                    Entering <strong>View-As Mode</strong> grants temporary, fully-audited read-only access to the targeted user's workspace. All mutating operations (e.g. creating/updating assets, modifying profile settings) are strictly blocked at both network and API layers.
+                  </p>
+                  <ul className="text-[9.5px] list-disc list-inside text-amber-400/80 mt-1 font-semibold space-y-1">
+                    <li>Session automatically expires and terminates in 15 minutes.</li>
+                    <li>Every action, click, and page viewed is cryptographically logged under your Admin ID.</li>
+                    <li>A valid and open ITAM / support ticket reference must be supplied to execute.</li>
+                  </ul>
+                </div>
+              </div>
+
+              <form onSubmit={handleStartImpersonate} className="flex flex-col gap-5 bg-slate-900/50 p-6 rounded-2xl border border-white/5 shadow-2xl">
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Select Target Workspace</label>
+                  <select
+                    value={selectedUserId}
+                    onChange={(e) => setSelectedUserId(e.target.value)}
+                    className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-4 py-3 text-xs text-slate-200 focus:ring-2 focus:ring-emerald-500/30 transition-all outline-none"
+                    required
+                  >
+                    <option value="" className="text-slate-600">-- Choose User Profile to View --</option>
+                    {users.map(u => (
+                      <option key={u.id} value={u.id} className="text-slate-200">
+                        {u.firstName ? `${u.firstName} ${u.lastName || ''} (${u.email})` : u.email} [{u.role?.name || 'User'}]
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                <div className="flex flex-col gap-2">
+                  <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest">Support Ticket Reference</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. SUPPORT-1029"
+                    value={ticketRef}
+                    onChange={(e) => setTicketRef(e.target.value)}
+                    className="w-full bg-slate-950/80 border border-white/10 rounded-xl px-4 py-3 text-xs text-slate-200 focus:ring-2 focus:ring-emerald-500/30 transition-all outline-none placeholder:text-slate-700"
+                    required
+                  />
+                </div>
+
+                {impersonateError && (
+                  <div className="bg-rose-500/10 border border-rose-500/25 text-rose-400 px-4 py-2.5 rounded-xl text-[10px] font-bold tracking-tight">
+                    ⚠️ {impersonateError}
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={impersonateLoading || !selectedUserId || !ticketRef.trim()}
+                  className="w-full bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-midnight py-3 rounded-xl text-xs font-black uppercase tracking-widest shadow-lg shadow-emerald-500/20 active:scale-[0.98] transition-all flex items-center justify-center gap-2 mt-2"
+                >
+                  <UserCheck className="w-4 h-4" />
+                  {impersonateLoading ? 'Initializing Session...' : 'Launch View-As Session'}
+                </button>
+              </form>
+            </div>
           )}
         </div>
       </div>
@@ -303,14 +427,14 @@ export const SupportConsole = () => {
       <div className="flex items-center justify-between shrink-0 pt-2 px-1">
         <div className="flex items-center gap-4">
           <div className="flex items-center gap-2">
-            <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'logs' ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]'}`} />
-            <span className={`text-[9px] font-black uppercase tracking-widest ${activeTab === 'logs' ? 'text-emerald-500' : 'text-blue-500'}`}>
-              {activeTab === 'logs' ? 'Live Audit Active' : 'Integrity Monitor Online'}
+            <div className={`w-1.5 h-1.5 rounded-full ${activeTab === 'logs' ? 'bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]' : activeTab === 'integrity' ? 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.5)]' : 'bg-amber-500 animate-pulse shadow-[0_0_8px_rgba(245,158,11,0.5)]'}`} />
+            <span className={`text-[9px] font-black uppercase tracking-widest ${activeTab === 'logs' ? 'text-emerald-500' : activeTab === 'integrity' ? 'text-blue-500' : 'text-amber-500'}`}>
+              {activeTab === 'logs' ? 'Live Audit Active' : activeTab === 'integrity' ? 'Integrity Monitor Online' : 'View-As Console Ready'}
             </span>
           </div>
           <span className="w-px h-3 bg-white/10" />
           <span className="text-[10px] text-slate-600 font-bold uppercase tracking-tight">
-            {activeTab === 'logs' ? `${filteredLogs.length} Records Retrieved` : `${integrityReports.length} Accounts Scanned`}
+            {activeTab === 'logs' ? `${filteredLogs.length} Records Retrieved` : activeTab === 'integrity' ? `${integrityReports.length} Accounts Scanned` : `${users.length} User Profiles Loaded`}
           </span>
         </div>
         

@@ -91,6 +91,17 @@ export default function TeamPage() {
     }
   };
 
+  const handleRevoke = async (id: string) => {
+    if (!confirm('Are you sure you want to revoke this invitation?')) return;
+    try {
+      await api.delete(`/invitations/${id}`);
+      setAlert({ message: 'Invitation revoked successfully', type: 'success' });
+      fetchData(); // Refresh lists
+    } catch (err: any) {
+      setAlert({ message: err.response?.data?.error || 'Failed to revoke invitation', type: 'error' });
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -214,10 +225,20 @@ export default function TeamPage() {
                         "text-[9px] font-black uppercase tracking-widest px-2 py-1 rounded-md border",
                         inv.status === 'PENDING' ? "bg-orange-500/10 text-orange-500 border-orange-500/20" :
                         inv.status === 'ACCEPTED' ? "bg-emerald/10 text-emerald border-emerald/20" :
+                        inv.status === 'REVOKED' ? "bg-rose-500/10 text-rose border-rose-500/20" :
                         "bg-slate-500/10 text-slate-400 border-slate-500/20"
                       )}>
                         {inv.status}
                       </span>
+                      {canManageTeam && inv.status === 'PENDING' && (
+                        <button 
+                          onClick={() => handleRevoke(inv.id)}
+                          className="p-2 text-rose hover:bg-rose/10 rounded-lg transition-colors border border-transparent hover:border-rose/20"
+                          title="Revoke Invitation"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      )}
                     </div>
                   </div>
                 ))}

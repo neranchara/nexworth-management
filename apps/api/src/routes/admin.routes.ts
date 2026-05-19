@@ -245,7 +245,7 @@ export default async function adminRoutes(fastify: FastifyInstance) {
       id: targetUser.id,
       role: targetUser.role?.name || 'Guest',
       isImpersonated: true,
-      impersonatorId: adminUser.id,
+      impersonatorId: adminUser.sub,
       logId: log.id
     }, { expiresIn: '15m' });
     return { message: 'Impersonation started', token };

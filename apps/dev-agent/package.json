@@ -3,7 +3,8 @@
   "version": "1.0.0",
   "private": true,
   "scripts": {
-    "dev": "cross-env NODE_ENV=local tsx watch src/server.ts"
+    "dev": "cross-env NODE_ENV=local tsx watch src/server.ts",
+    "build": "echo 'No build step required for dev-agent'"
   },
   "dependencies": {
     "discord.js": "^14.26.4",

@@ -1,11 +1,15 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { z } from 'zod';
-import { sendTeamInvitation, acceptTeamInvitation } from '../services/invitation.service';
+import { sendTeamInvitation, acceptTeamInvitation, revokeTeamInvitation } from '../services/invitation.service';
 import { prisma } from '../lib/prisma';
 
 const sendInviteSchema = z.object({
   email: z.string().email(),
   roleId: z.string().uuid(),
+});
+
+const revokeInviteSchema = z.object({
+  id: z.string().uuid(),
 });
 
 export const sendInvitationHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -88,6 +92,9 @@ export const acceptInvitationHandler = async (request: FastifyRequest, reply: Fa
     if (error.message === 'INVALID_TOKEN') {
       return reply.status(404).send({ error: 'Invitation not found or invalid token' });
     }
+    if (error.message === 'INVITATION_REVOKED') {
+      return reply.status(400).send({ error: 'ลิงก์คำเชิญไม่ถูกต้องหรือถูกยกเลิกแล้ว' });
+    }
     if (error.message === 'INVITATION_NOT_PENDING') {
       return reply.status(400).send({ error: 'This invitation has already been processed' });
     }
@@ -99,6 +106,49 @@ export const acceptInvitationHandler = async (request: FastifyRequest, reply: Fa
     }
     if (error.message === 'EMAIL_MISMATCH') {
       return reply.status(403).send({ error: 'This invitation was sent to a different email address' });
+    }
+
+    request.log.error(error);
+    return reply.status(500).send({ error: 'Internal Server Error' });
+  }
+};
+
+export const revokeInvitationHandler = async (request: FastifyRequest, reply: FastifyReply) => {
+  try {
+    const user = request.user as any;
+    if (!user.organizationId) {
+      return reply.status(400).send({ error: 'User does not belong to an organization' });
+    }
+
+    // Role verification (Only Admin or Owner can revoke)
+    const currentUserRole = await prisma.role.findUnique({
+      where: { id: user.roleId },
+    });
+
+    if (!currentUserRole || (currentUserRole.name !== 'Admin' && currentUserRole.name !== 'Owner' && !user.isSystemAdmin)) {
+      return reply.status(403).send({ error: 'Insufficient permissions to revoke invitations' });
+    }
+
+    const { id } = revokeInviteSchema.parse(request.params);
+
+    await revokeTeamInvitation(id, user.organizationId, user.id);
+
+    return reply.status(200).send({
+      message: 'Invitation revoked successfully',
+    });
+  } catch (error: any) {
+    if (error instanceof z.ZodError) {
+      return reply.status(400).send({ error: error.format() });
+    }
+
+    if (error.message === 'INVITATION_NOT_FOUND') {
+      return reply.status(404).send({ error: 'Invitation not found' });
+    }
+    if (error.message === 'UNAUTHORIZED') {
+      return reply.status(403).send({ error: 'You are not authorized to revoke this invitation' });
+    }
+    if (error.message === 'INVITATION_NOT_PENDING') {
+      return reply.status(400).send({ error: 'Only pending invitations can be revoked' });
     }
 
     request.log.error(error);

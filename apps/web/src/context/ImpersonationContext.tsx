@@ -1,3 +1,5 @@
+"use client";
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface ImpersonationData {
@@ -60,7 +62,7 @@ export const ImpersonationProvider: React.FC<{ children: React.ReactNode }> = ({
     setImpersonationData(null);
     
     // Redirect back to Admin Dashboard
-    window.location.href = '/admin/dashboard';
+    window.location.href = '/admin/ops';
   };
 
   return (

@@ -65,6 +65,35 @@ export const sendTeamInvitation = async (
   return invitation;
 };
 
+export const revokeTeamInvitation = async (
+  invitationId: string,
+  organizationId: string,
+  revokedByUserId: string
+) => {
+  const invitation = await prisma.invitation.findUnique({
+    where: { id: invitationId },
+  });
+
+  if (!invitation) {
+    throw new Error('INVITATION_NOT_FOUND');
+  }
+
+  if (invitation.organizationId !== organizationId) {
+    throw new Error('UNAUTHORIZED');
+  }
+
+  if (invitation.status !== 'PENDING') {
+    throw new Error('INVITATION_NOT_PENDING');
+  }
+
+  const updatedInvitation = await prisma.invitation.update({
+    where: { id: invitationId },
+    data: { status: 'REVOKED' },
+  });
+
+  return updatedInvitation;
+};
+
 export const acceptTeamInvitation = async (token: string, userId: string) => {
   const invitation = await prisma.invitation.findUnique({
     where: { token },
@@ -72,6 +101,10 @@ export const acceptTeamInvitation = async (token: string, userId: string) => {
 
   if (!invitation) {
     throw new Error('INVALID_TOKEN');
+  }
+
+  if (invitation.status === 'REVOKED') {
+    throw new Error('INVITATION_REVOKED');
   }
 
   if (invitation.status !== 'PENDING') {
