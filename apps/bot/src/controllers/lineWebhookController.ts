@@ -176,7 +176,7 @@ const processEvent = async (event: webhook.Event) => {
         const balance = assetAmt - liabilityAmt;
         return `- ${acc.name}: ${balance.toLocaleString()} บาท`;
       }).join('\n');
-      await pushToUser(lineUserId, `💰 ยอดเงินปัจจุบันของคุณ:\n${balanceText || 'คุณยังไม่มีบัญชีที่มียอดเงินครับ'}`);
+      await replyToUser(replyToken, `💰 ยอดเงินปัจจุบันของคุณ:\n${balanceText || 'คุณยังไม่มีบัญชีที่มียอดเงินครับ'}`);
       return;
     }
 
@@ -224,7 +224,7 @@ const processEvent = async (event: webhook.Event) => {
       });
 
       const monthName = now.toLocaleString('th-TH', { month: 'long' });
-      await pushToUser(lineUserId, `📊 สรุปรายงานเดือน ${monthName}:\n💰 รายรับ: ${income.toLocaleString()} บาท\n💸 รายจ่าย: ${expense.toLocaleString()} บาท\n⚖️ คงเหลือ: ${(income - expense).toLocaleString()} บาท`);
+      await replyToUser(replyToken, `📊 สรุปรายงานเดือน ${monthName}:\n💰 รายรับ: ${income.toLocaleString()} บาท\n💸 รายจ่าย: ${expense.toLocaleString()} บาท\n⚖️ คงเหลือ: ${(income - expense).toLocaleString()} บาท`);
       return;
     }
 
