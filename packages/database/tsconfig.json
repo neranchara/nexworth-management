@@ -4,8 +4,7 @@
     "outDir": "./dist",
     "rootDir": ".",
     "module": "ESNext",
-    "moduleResolution": "node",
-    "ignoreDeprecations": "6.0"
+    "moduleResolution": "bundler"
   },
   "include": ["index.ts"],
   "exclude": ["node_modules", "dist", "seed.ts", "**/*.test.ts"]
