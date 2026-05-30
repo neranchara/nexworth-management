@@ -18,8 +18,8 @@ const AUTHORIZED_USER_ID = process.env.DISCORD_ADMIN_ID;
 const GEMINI_KEY = process.env.GEMINI_API_KEY;
 
 if (!TOKEN) {
-  console.error('❌ DISCORD_BOT_TOKEN is missing');
-  process.exit(1);
+  console.warn('⚠️  DISCORD_BOT_TOKEN is missing — Discord bot will not start');
+  throw new Error('DISCORD_BOT_TOKEN is missing');
 }
 
 const prisma = new PrismaClient();
