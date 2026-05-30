@@ -17,6 +17,8 @@ export class MailerService {
         user: config.email.user,
         pass: config.email.pass,
       },
+      connectionTimeout: 5000,
+      socketTimeout: 5000,
     });
   }
 
