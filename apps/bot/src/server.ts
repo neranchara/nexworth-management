@@ -5,7 +5,10 @@ import fastifyJwt from '@fastify/jwt';
 import fastifyRawBody from 'fastify-raw-body';
 
 const buildServer = async (): Promise<FastifyInstance> => {
-  const server = Fastify({ logger: true });
+  const server = Fastify({ 
+    logger: true,
+    ignoreTrailingSlash: true
+  });
 
   // Plugins
   await server.register(fastifyRawBody, {
