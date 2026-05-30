@@ -135,6 +135,10 @@ export const buildServer = async (): Promise<FastifyInstance> => {
     await server.register(adminRoutes, { prefix: '/api/v1/admin' });
     await server.register(alertRoutes, { prefix: '/api/v1/admin/alerts' });
 
+    // LINE Webhook Routes (to support both API and Bot services handling)
+    const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes')).default;
+    await server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
+
   return server;
 };
 

@@ -6,4 +6,5 @@ export default async function lineWebhookRoutes(fastify: FastifyInstance) {
   // Note: LINE requires signature validation, but for simple MVP we can rely on standard fastify body parsing
   // To do strict validation, fastify-raw-body would be needed. 
   fastify.post('/', lineWebhookController.handleWebhook);
+  fastify.post('', lineWebhookController.handleWebhook);
 }
