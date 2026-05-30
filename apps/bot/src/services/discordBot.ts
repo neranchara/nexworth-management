@@ -196,4 +196,6 @@ client.on('messageCreate', async (message: Message) => {
   }
 });
 
-client.login(TOKEN);
+client.login(TOKEN).catch((err) => {
+  console.error('❌ Discord login failed — bot will not connect:', err.message);
+});
