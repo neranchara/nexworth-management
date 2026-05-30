@@ -1,0 +1,20 @@
+name: Keep Alive - Render Free Tier
+
+on:
+  schedule:
+    - cron: '*/14 * * * *'  # every 14 minutes
+  workflow_dispatch:         # manual trigger
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping API Service
+        run: |
+          curl -s -o /dev/null -w "API: %{http_code}\n" \
+            https://nexworth-management.onrender.com/health || true
+
+      - name: Ping Bot Service
+        run: |
+          curl -s -o /dev/null -w "Bot: %{http_code}\n" \
+            https://nexworth-bot-service.onrender.com/health || true
