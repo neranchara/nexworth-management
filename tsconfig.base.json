@@ -3,7 +3,7 @@
     "target": "ESNext",
     "module": "CommonJS",
     "moduleResolution": "node",
-    "ignoreDeprecations": "5.0",
+    "ignoreDeprecations": "6.0",
     "declaration": true,
     "strict": true,
     "esModuleInterop": true,
