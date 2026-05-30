@@ -142,15 +142,25 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                       <div className="flex items-center gap-4 ml-auto">
                <div className="hidden sm:flex flex-col items-end mr-2">
                   <span className="text-xs font-bold text-white leading-none">
-                     {user.firstName 
-                       ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}` 
+                     {user.firstName
+                       ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`
                        : user.email}
+                     {user.role && (
+                       <span className="text-slate font-normal">, {user.role}</span>
+                     )}
                   </span>
-                  <span className="text-[9px] text-slate uppercase tracking-tighter mt-1">{user.role || 'User'}</span>
+                  <span className="text-[9px] text-slate uppercase tracking-tighter mt-1">
+                    {user.orgName || '—'}
+                  </span>
                </div>
-               <div className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 transition-colors cursor-pointer">
+               <button
+                 type="button"
+                 onClick={() => router.push('/dashboard/profile')}
+                 className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-emerald/30 transition-all cursor-pointer"
+                 title="โปรไฟล์"
+               >
                   <div className="w-5 h-5 rounded-full bg-emerald/20 border border-emerald/40" />
-               </div>
+               </button>
             </div>
         </header>
 

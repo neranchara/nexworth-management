@@ -30,7 +30,7 @@ export const config = {
     // Production: restrict to specific domains from env var
     origin: (isLocal || isStaging)
       ? true
-      : (process.env.CORS_ORIGIN?.split(',') || ['https://nexworth.online']),
+      : (process.env.CORS_ORIGIN?.split(',') || ['https://nexworth.cc']),
     credentials: true,
   },
 

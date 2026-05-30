@@ -27,11 +27,11 @@ const updateUserSchema = z.object({
 export const listUsersHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
     
     const { orgId } = request.query as { orgId?: string };
     const targetOrgId = (isSystemAdmin && orgId) ? orgId : user.organizationId;
-    const isSuperAdmin = user.role === 'Super Admin' || user.email === 'superadmin@nexworth.online';
+    const isSuperAdmin = user.role === 'Super Admin' || user.email === 'superadmin@nexworth.cc';
 
     // Standard view: only show users of the target organization
     const whereClause: any = {
@@ -74,7 +74,7 @@ export const listUsersHandler = async (request: FastifyRequest, reply: FastifyRe
 export const createUserHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
     const body = createUserSchema.parse(request.body);
 
     // Isolation: Non-SystemAdmin can only create users in their own organization
@@ -130,7 +130,7 @@ export const createUserHandler = async (request: FastifyRequest, reply: FastifyR
 export const updateUserHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
     const id = request.params.id;
     const body = updateUserSchema.parse(request.body);
 
@@ -206,7 +206,7 @@ export const updateUserHandler = async (request: FastifyRequest<{ Params: { id: 
 export const deleteUserHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
     const id = request.params.id;
 
     // 1. Fetch user to check organization
@@ -238,7 +238,7 @@ export const deleteUserHandler = async (request: FastifyRequest<{ Params: { id: 
 export const resetPasswordHandler = async (request: FastifyRequest<{ Params: { id: string } }>, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
     const id = request.params.id;
 
     // 1. Check if the requester is a System Admin
@@ -296,7 +296,7 @@ export const requestResetPasswordHandler = async (request: any, reply: any) => {
     const targetUser = await prisma.user.findUnique({ where: { id } });
     if (!targetUser) return reply.status(404).send({ error: "User not found" });
 
-    const isSystemAdmin = user.isSystemAdmin || user.email === "superadmin@nexworth.online" || user.organizationId === "7f4b8f80-dfb7-4492-9a06-28dad5691dd7";
+    const isSystemAdmin = user.isSystemAdmin || user.email === "superadmin@nexworth.cc" || user.organizationId === "7f4b8f80-dfb7-4492-9a06-28dad5691dd7";
     if (!isSystemAdmin && targetUser.id !== user.sub) return reply.status(403).send({ error: "Access denied" });
 
     console.log("[MOCK EMAIL] Sending reset password link to: " + targetUser.email);

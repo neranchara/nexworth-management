@@ -65,8 +65,8 @@ export const updateRolePermissionsHandler = async (request: FastifyRequest, repl
 export const listAllRolesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     try {
         const user = request.user as any;
-        const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
-        const isSuperAdmin = user.role === 'Super Admin' || user.email === 'superadmin@nexworth.online';
+        const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
+        const isSuperAdmin = user.role === 'Super Admin' || user.email === 'superadmin@nexworth.cc';
 
         const { orgId } = request.query as { orgId?: string };
         const targetOrgId = (isSystemAdmin && orgId) ? orgId : user.organizationId;
@@ -107,7 +107,7 @@ const roleSchema = z.object({
 export const createRoleHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
     
     const { name, description, organizationId } = request.body as any;
     
@@ -133,7 +133,7 @@ export const createRoleHandler = async (request: FastifyRequest, reply: FastifyR
 export const updateRoleHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
     
     const { roleId } = request.params as { roleId: string };
     const { name, description } = request.body as any;

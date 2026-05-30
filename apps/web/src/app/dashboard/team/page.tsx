@@ -2,7 +2,7 @@
 import { useState, useEffect } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { Users, UserPlus, Mail, Shield, CheckCircle, AlertCircle, Loader2, Clock, Trash2, ShieldCheck, MailWarning } from 'lucide-react';
+import { Users, UserPlus, Mail, Shield, CheckCircle, AlertCircle, Loader2, Clock, Trash2, ShieldCheck, MailWarning, Construction } from 'lucide-react';
 import { clsx } from 'clsx';
 
 interface User {
@@ -260,57 +260,15 @@ export default function TeamPage() {
               </div>
             </div>
 
-            {canManageTeam ? (
-              <form onSubmit={handleInvite} className="space-y-6">
-                <div className="space-y-3">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Email Address</label>
-                  <input 
-                    type="email" 
-                    required
-                    value={inviteEmail}
-                    onChange={(e) => setInviteEmail(e.target.value)}
-                    placeholder="colleague@company.com"
-                    className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-emerald/50 focus:bg-white/[0.05] transition-all placeholder:text-slate-700 shadow-inner"
-                  />
-                </div>
-
-                <div className="space-y-3">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Assign Role</label>
-                  <div className="relative">
-                    <Shield size={16} className="absolute left-5 top-1/2 -translate-y-1/2 text-slate-500" />
-                    <select 
-                      value={inviteRoleId}
-                      onChange={(e) => setInviteRoleId(e.target.value)}
-                      required
-                      className="w-full bg-white/[0.03] border border-white/10 rounded-2xl pl-12 pr-5 py-4 text-sm font-bold text-white outline-none focus:border-emerald/50 focus:bg-white/[0.05] transition-all shadow-inner appearance-none cursor-pointer"
-                    >
-                      {roles.map(role => (
-                        <option key={role.id} value={role.id} className="bg-navy text-white">
-                          {role.name}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                </div>
-
-                <button 
-                  type="submit"
-                  disabled={isInviting || !inviteEmail || !inviteRoleId}
-                  className="w-full flex items-center justify-center gap-3 bg-emerald text-navy px-6 py-4 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:shadow-[0_0_30px_rgba(80,200,120,0.4)] hover:-translate-y-1 active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {isInviting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Mail size={16} />}
-                  {isInviting ? 'Sending...' : 'Send Invitation'}
-                </button>
-              </form>
-            ) : (
-              <div className="py-10 text-center">
-                <div className="w-16 h-16 bg-white/5 rounded-full flex items-center justify-center mx-auto mb-4 text-slate-500">
-                  <Shield size={24} />
-                </div>
-                <h3 className="text-sm font-bold text-white mb-2">Access Restricted</h3>
-                <p className="text-[10px] text-slate-400 uppercase tracking-widest leading-relaxed">Only Administrators or Owners can invite new members to the organization.</p>
+            <div className="flex flex-col items-center justify-center py-8 text-center">
+              <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10 text-slate">
+                <Construction size={24} />
               </div>
-            )}
+              <h3 className="text-sm font-black text-white mb-2 uppercase tracking-widest">Coming Soon</h3>
+              <p className="text-[10px] text-slate leading-relaxed uppercase tracking-widest">
+                ระบบเชิญสมาชิกอยู่ระหว่างพัฒนา<br />จะเปิดใช้งานในเวอร์ชันถัดไป
+              </p>
+            </div>
           </div>
         </div>
       </div>

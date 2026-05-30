@@ -40,8 +40,8 @@ export const config = {
     origin: (isLocal || isStaging)
       ? true
       : [
-          'https://nexworth.online',
-          'https://www.nexworth.online',
+          'https://nexworth.cc',
+          'https://www.nexworth.cc',
           'https://nexworth-management.onrender.com',
           'https://nexworth-api-service.onrender.com'
         ],
@@ -79,7 +79,7 @@ export const config = {
     port: process.env.SMTP_PORT ? parseInt(process.env.SMTP_PORT) : 587,
     user: process.env.SMTP_USER || '',
     pass: process.env.SMTP_PASS || '',
-    from: process.env.EMAIL_FROM || 'Nexworth Security <noreply@nexworth.online>',
+    from: process.env.EMAIL_FROM || 'Nexworth Security <noreply@nexworth.cc>',
     frontendUrl: process.env.FRONTEND_URL || 'http://localhost:3000',
   },
 };

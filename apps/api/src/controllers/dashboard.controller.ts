@@ -7,7 +7,7 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
     request.log.info({ user: user.email, orgId: user.organizationId }, '🚀 [DEBUG] Dashboard Stats Request Received!');
     const query = request.query as { year?: string, month?: string };
     
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
 
     if (isSystemAdmin) {
       // ---------------------------------------------------------

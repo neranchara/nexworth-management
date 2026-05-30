@@ -195,10 +195,13 @@ export default function ProfilePage() {
                   />
                   <button
                     type="button"
-                    className="absolute inset-y-0 right-0 pr-5 flex items-center text-slate-500 hover:text-emerald transition-colors focus:outline-none z-10 cursor-pointer"
-                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute inset-y-0 right-0 pr-4 flex items-center focus:outline-none z-20 cursor-pointer"
+                    onMouseDown={(e) => { e.preventDefault(); setShowPassword(v => !v); }}
+                    title={showPassword ? 'ซ่อนรหัสผ่าน' : 'แสดงรหัสผ่าน'}
                   >
-                    {showPassword ? <EyeOff size={20} /> : <Eye size={20} />}
+                    <span className={`p-2 rounded-lg border transition-all ${showPassword ? 'bg-emerald/20 border-emerald/40 text-emerald' : 'bg-white/10 border-white/20 text-white hover:bg-white/20'}`}>
+                      {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                    </span>
                   </button>
                 </div>
                 <div className="flex items-center gap-2 px-1">

@@ -33,7 +33,7 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // 1 day expiry
 
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.organization?.name === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.organization?.name === 'System Management';
 
     const tokenPayload = {
       sub: user.id,
@@ -96,7 +96,7 @@ export const meHandler = async (request: FastifyRequest, reply: FastifyReply) =>
 
     if (!user) return reply.status(404).send({ error: 'User not found' });
 
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.online' || user.organization?.name === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.organization?.name === 'System Management';
 
     return reply.send({ 
       user: {

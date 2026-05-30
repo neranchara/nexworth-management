@@ -5,11 +5,12 @@ import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
-import { 
-  Shield, Plus, Trash2, Edit2, ShieldCheck, 
-  ArrowRight, Loader2, X, Settings2, ChevronRight
+import {
+  Shield, Plus, Trash2, Edit2, ShieldCheck,
+  ArrowRight, Loader2, X, ChevronRight, Users
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
+import { clsx } from 'clsx';
 
 interface Role {
   id: string;
@@ -64,11 +65,11 @@ export default function RolesListPage() {
         await api.put(`/roles/${currentRoleId}`, { name: roleName, description: roleDescription, isSystemRole });
         setMessage({ text: 'Updated', type: 'success' });
       } else {
-        await api.post('/roles', { 
-          name: roleName, 
-          description: roleDescription, 
+        await api.post('/roles', {
+          name: roleName,
+          description: roleDescription,
           isSystemRole,
-          organizationId: orgId || user?.organizationId 
+          organizationId: orgId || user?.organizationId
         });
         setMessage({ text: 'Created', type: 'success' });
       }
@@ -110,94 +111,109 @@ export default function RolesListPage() {
 
   const filteredRoles = roles.filter(r => {
     const targetOrg = organizations.find(o => o.id === (orgId || user?.organizationId));
-    const isSuperAdmin = user?.role === 'Super Admin' || user?.email === 'superadmin@nexworth.online';
+    const isSuperAdmin = user?.role === 'Super Admin' || user?.email === 'superadmin@nexworth.cc';
 
-    // If we are looking at System Management org (either via Menu or Hub)
     if (targetOrg?.name === 'System Management' || user?.orgName === 'System Management' && !orgId) {
-      // 1. Only show roles marked as isSystemRole
       if (!r.isSystemRole) return false;
-      // 2. If Login User is NOT Super Admin, hide the 'Super Admin' role itself
       if (!isSuperAdmin && r.name === 'Super Admin') return false;
       return true;
     }
-    // For all other organizations, show all their roles
     return true;
   });
 
   return (
-    <div className="p-4 sm:p-6 max-w-5xl mx-auto min-h-screen animate-in fade-in duration-500">
-      {/* Balanced Header */}
-      <div className="flex justify-between items-center mb-8 border-b border-gray-100 dark:border-gray-800 pb-6">
+    <div className="flex-1 flex flex-col min-h-0 animate-in fade-in duration-500">
+
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8 border-b border-white/10 pb-6 shrink-0">
         <div className="flex items-center gap-3">
-          <div className="p-1.5 bg-blue-600 rounded-lg">
-            <Shield className="text-white w-4 h-4" />
+          <div className="p-2 bg-emerald/10 border border-emerald/20 rounded-xl">
+            <Shield className="text-emerald w-5 h-5" />
           </div>
-          <h1 className="text-lg font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
-            Role Permissions
-            {orgId && (
-              <span className="flex items-center gap-2 text-gray-300 ml-1">
-                <ChevronRight className="w-4 h-4" />
-                <span className="text-gray-500 dark:text-gray-400 font-medium">{organizations.find(o => o.id === orgId)?.name || 'Org Roles'}</span>
-              </span>
-            )}
-          </h1>
+          <div>
+            <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
+              Role Permissions
+              {orgId && (
+                <span className="flex items-center gap-2 text-white/30 ml-1">
+                  <ChevronRight className="w-4 h-4" />
+                  <span className="text-slate font-medium">{organizations.find(o => o.id === orgId)?.name || 'Org Roles'}</span>
+                </span>
+              )}
+            </h1>
+            <p className="text-slate text-[11px] font-bold uppercase tracking-widest mt-0.5">Manage roles and access levels</p>
+          </div>
         </div>
-        
-        <div className="flex items-center gap-3">
-          {hasPermission('permissions', 'canCreate') && (
-            <button
-              onClick={openCreateModal}
-              data-testid="permissions-list-btn-add-role"
-              className="flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3.5 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm active:scale-95"
-            >
-              <Plus className="w-3.5 h-3.5" />
-              New Role
-            </button>
-          )}
-        </div>
+
+        {hasPermission('permissions', 'canCreate') && (
+          <button
+            onClick={openCreateModal}
+            data-testid="permissions-list-btn-add-role"
+            className="bg-emerald text-navy px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
+          >
+            <Plus className="w-3.5 h-3.5" />
+            New Role
+          </button>
+        )}
       </div>
 
+      {/* Alert */}
       {message && (
-        <div className={`mb-6 py-2 px-4 rounded-lg flex items-center gap-2 text-xs font-bold animate-in slide-in-from-top-2 ${message.type === 'success' ? 'bg-green-50 text-green-700' : 'bg-red-50 text-red-700'}`}>
+        <div className={clsx(
+          "mb-6 py-3 px-4 rounded-xl flex items-center gap-2 text-xs font-bold animate-in slide-in-from-top-2 border",
+          message.type === 'success'
+            ? 'bg-emerald/10 text-emerald border-emerald/20'
+            : 'bg-rose/10 text-rose border-rose/20'
+        )}>
           <ShieldCheck className="w-3.5 h-3.5" />
           {message.text}
         </div>
       )}
 
+      {/* Role Cards */}
       {loading ? (
         <div className="flex flex-col items-center py-20">
-          <Loader2 className="w-6 h-6 animate-spin text-blue-600" />
+          <Loader2 className="w-6 h-6 animate-spin text-emerald" />
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredRoles.map((role) => (
-            <div 
+            <div
               key={role.id}
-              className="group bg-white dark:bg-gray-800 rounded-xl p-4 border border-gray-100 dark:border-gray-700 shadow-sm hover:border-blue-500/50 transition-all flex flex-col justify-between"
+              className="group bg-navy/40 backdrop-blur-xl rounded-[1.25rem] p-5 border border-white/5 hover:border-emerald/30 hover:bg-navy/60 transition-all duration-300 flex flex-col justify-between"
             >
-              <div className="flex justify-between items-start mb-3">
-                <div className="flex items-center gap-2 overflow-hidden">
-                  <div className={`p-1.5 rounded-md ${role.isSystemRole ? 'bg-orange-50 text-orange-600' : 'bg-blue-50 text-blue-600'}`}>
-                    <Shield className="w-3.5 h-3.5" />
+              <div className="flex justify-between items-start mb-4">
+                <div className="flex items-center gap-3 overflow-hidden">
+                  <div className={clsx(
+                    "p-2 rounded-xl border",
+                    role.isSystemRole
+                      ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                      : 'bg-emerald/10 text-emerald border-emerald/20'
+                  )}>
+                    <Shield className="w-4 h-4" />
                   </div>
-                  <span className="font-bold text-[13px] text-gray-900 dark:text-white truncate">{role.name}</span>
+                  <div className="overflow-hidden">
+                    <span className="font-black text-sm text-white truncate block">{role.name}</span>
+                    {role.isSystemRole && (
+                      <span className="text-[9px] font-black text-orange-400 uppercase tracking-widest">System Role</span>
+                    )}
+                  </div>
                 </div>
-                
+
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {hasPermission('permissions', 'canUpdate') && (
-                    <button 
-                      onClick={() => openEditModal(role)} 
+                    <button
+                      onClick={() => openEditModal(role)}
                       data-testid={`permissions-list-btn-edit-${role.name}`}
-                      className="p-1 text-gray-400 hover:text-blue-600"
+                      className="p-1.5 text-slate hover:text-emerald hover:bg-emerald/10 rounded-lg transition-colors"
                     >
                       <Edit2 className="w-3.5 h-3.5" />
                     </button>
                   )}
                   {hasPermission('permissions', 'canDelete') && (role._count?.users || 0) === 0 && (
-                    <button 
-                      onClick={() => handleDeleteRole(role.id, role.name)} 
+                    <button
+                      onClick={() => handleDeleteRole(role.id, role.name)}
                       data-testid={`permissions-list-btn-delete-${role.name}`}
-                      className="p-1 text-gray-400 hover:text-red-600"
+                      className="p-1.5 text-slate hover:text-rose hover:bg-rose/10 rounded-lg transition-colors"
                     >
                       <Trash2 className="w-3.5 h-3.5" />
                     </button>
@@ -205,18 +221,22 @@ export default function RolesListPage() {
                 </div>
               </div>
 
-              <div className="flex items-center justify-between mt-2 pt-3 border-t border-gray-50 dark:border-gray-700/50">
-                <div className="flex items-center gap-1.5 text-gray-400">
-                  <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
+              {role.description && (
+                <p className="text-[11px] text-slate leading-relaxed mb-4 line-clamp-2">{role.description}</p>
+              )}
+
+              <div className="flex items-center justify-between pt-3 border-t border-white/5">
+                <div className="flex items-center gap-2 text-slate">
+                  <Users className="w-3 h-3" />
                   <span className="text-[11px] font-bold">{role._count?.users || 0} Users</span>
                 </div>
 
                 <button
                   onClick={() => router.push(`/dashboard/permissions/${role.id}${orgId ? `?orgId=${orgId}` : ''}`)}
                   data-testid={`permissions-list-btn-config-${role.name}`}
-                  className="flex items-center gap-1 text-[11px] font-black text-blue-600 hover:text-blue-700 uppercase tracking-wider"
+                  className="flex items-center gap-1.5 text-[11px] font-black text-emerald hover:text-white uppercase tracking-wider transition-colors"
                 >
-                  Config
+                  Configure
                   <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
@@ -225,52 +245,63 @@ export default function RolesListPage() {
         </div>
       )}
 
-      {/* Compact Modal */}
+      {/* Modal — New Role / Edit Role */}
       {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-gray-900/40 backdrop-blur-sm animate-in fade-in duration-200">
-          <div className="bg-white dark:bg-gray-800 rounded-2xl shadow-xl w-full max-w-sm overflow-hidden border border-gray-100 dark:border-gray-700">
-            <div className="flex justify-between items-center p-4 border-b dark:border-gray-700">
-              <h2 className="text-sm font-bold text-gray-900 dark:text-white">
+        <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="bg-navy/80 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-white/10">
+            <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
+              <h2 className="text-sm font-black text-white uppercase tracking-widest">
                 {isEditingRole ? 'Edit Role' : 'New Role'}
               </h2>
-              <button onClick={() => setIsModalOpen(false)} className="text-gray-400 hover:text-gray-600"><X className="w-4 h-4" /></button>
+              <button onClick={() => setIsModalOpen(false)} className="text-slate hover:text-white transition-colors">
+                <X className="w-4 h-4" />
+              </button>
             </div>
 
-            <form onSubmit={handleCreateOrUpdateRole} className="p-4 space-y-4">
+            <form onSubmit={handleCreateOrUpdateRole} className="p-5 space-y-4">
               <div>
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Role Name</label>
-                <input 
+                <label className="block text-[10px] font-black text-slate uppercase tracking-widest mb-1.5">Role Name</label>
+                <input
                   type="text" required value={roleName} onChange={(e) => setRoleName(e.target.value)}
                   data-testid="permissions-form-input-name"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-[13px] font-bold focus:outline-none focus:border-blue-500 bg-transparent" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm font-bold text-white outline-none focus:border-emerald/50 transition-all"
                 />
               </div>
 
               <div>
-                <label className="block text-[11px] font-black text-gray-400 uppercase tracking-widest mb-1.5">Description (Optional)</label>
-                <textarea 
+                <label className="block text-[10px] font-black text-slate uppercase tracking-widest mb-1.5">Description <span className="text-[9px] lowercase font-medium opacity-60">(optional)</span></label>
+                <textarea
                   value={roleDescription} onChange={(e) => setRoleDescription(e.target.value)}
                   data-testid="permissions-form-input-description"
-                  className="w-full rounded-lg border border-gray-200 dark:border-gray-700 px-3 py-2 text-[13px] focus:outline-none focus:border-blue-500 bg-transparent min-h-[80px]" 
+                  className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white outline-none focus:border-emerald/50 transition-all min-h-[80px] resize-none"
                 />
               </div>
 
               {user?.isSystemAdmin && (
-                <div className="flex items-center justify-between p-3 rounded-xl bg-gray-50 dark:bg-gray-900/50">
-                  <span className="text-[11px] font-bold text-gray-500">System Management Role</span>
-                  <button 
+                <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
+                  <span className="text-xs font-bold text-slate">System Management Role</span>
+                  <button
                     type="button"
                     onClick={() => setIsSystemRole(!isSystemRole)}
                     data-testid="permissions-form-btn-toggle-system"
-                    className={`relative inline-flex h-5 w-9 items-center rounded-full transition-all ${isSystemRole ? 'bg-orange-500' : 'bg-gray-300'}`}
+                    className={clsx(
+                      "relative inline-flex h-5 w-9 items-center rounded-full transition-all",
+                      isSystemRole ? 'bg-orange-500 shadow-[0_0_10px_rgba(249,115,22,0.4)]' : 'bg-white/10'
+                    )}
                   >
-                    <span className={`inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform ${isSystemRole ? 'translate-x-5' : 'translate-x-0.5'}`} />
+                    <span className={clsx("inline-block h-3.5 w-3.5 transform rounded-full bg-white transition-transform shadow-sm", isSystemRole ? 'translate-x-5' : 'translate-x-0.5')} />
                   </button>
                 </div>
               )}
 
-              <div className="pt-2 flex gap-3">
-                <button type="submit" data-testid="permissions-form-btn-save" className="flex-1 py-2 bg-blue-600 text-white text-xs font-bold rounded-lg hover:bg-blue-700 transition-all">Save</button>
+              <div className="pt-1">
+                <button
+                  type="submit"
+                  data-testid="permissions-form-btn-save"
+                  className="w-full py-2.5 bg-emerald text-navy text-xs font-black rounded-xl hover:shadow-[0_0_20px_rgba(80,200,120,0.4)] transition-all active:scale-95"
+                >
+                  Save
+                </button>
               </div>
             </form>
           </div>

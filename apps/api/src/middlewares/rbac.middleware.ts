@@ -13,8 +13,8 @@ export const requireRole = (allowedRoles: string[]) => {
 
       const decoded = request.user as { sub: string; email: string; role: string; isSystemAdmin?: boolean };
 
-      // Global bypass for superadmin@nexworth.online or Super Admin role or isSystemAdmin flag
-      const isSuper = decoded.email === 'superadmin@nexworth.online' || decoded.role === 'Super Admin' || decoded.isSystemAdmin === true;
+      // Global bypass for superadmin@nexworth.cc or Super Admin role or isSystemAdmin flag
+      const isSuper = decoded.email === 'superadmin@nexworth.cc' || decoded.role === 'Super Admin' || decoded.isSystemAdmin === true;
       if (isSuper) return;
 
       if (!decoded.role) {

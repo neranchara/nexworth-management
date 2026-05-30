@@ -34,7 +34,7 @@ describe('User Management Logic Tests', () => {
   
   it('CASE 1: Org == System Management and User == SuperAdmin (Should see all)', async () => {
     mockRequest = {
-      user: { role: 'Super Admin', email: 'superadmin@nexworth.online', isSystemAdmin: true, organizationId: 'sys-id', orgName: 'System Management' },
+      user: { role: 'Super Admin', email: 'superadmin@nexworth.cc', isSystemAdmin: true, organizationId: 'sys-id', orgName: 'System Management' },
       query: {}
     };
 
