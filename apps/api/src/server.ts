@@ -160,9 +160,4 @@ const start = async () => {
   }
 };
 
-// Using process.argv to detect if the file is being executed directly
-import { fileURLToPath } from 'url';
-// @ts-ignore
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
-  start();
-}
+start();
