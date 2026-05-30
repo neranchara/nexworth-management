@@ -17,4 +17,4 @@ jobs:
       - name: Ping Bot Service
         run: |
           curl -s -o /dev/null -w "Bot: %{http_code}\n" \
-            https://nexworth-bot-service.onrender.com/health || true
+            https://nexworth-backend-1dxg.onrender.com/health || true
