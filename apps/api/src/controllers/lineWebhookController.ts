@@ -113,6 +113,13 @@ const processEvent = async (event: webhook.Event) => {
   if (!event.source || !event.source.userId) return;
 
   const lineUserId = event.source.userId;
+  
+  // Gracefully bypass dummy verification events from LINE Developer Console
+  if (lineUserId === 'U00000000000000000000000000000000') {
+    console.log('✅ [LINE-DEBUG] Bypassing LINE Developers Console Verification dummy event.');
+    return;
+  }
+
   const replyToken = (event as any).replyToken || '';
   
   if (event.type !== 'message') return;
