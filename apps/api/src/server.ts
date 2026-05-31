@@ -141,6 +141,9 @@ export const buildServer = async (): Promise<FastifyInstance> => {
     const invitationRoutes = (await import('./routes/invitation.routes')).default;
     await server.register(invitationRoutes, { prefix: '/api/v1/invitations' });
 
+    const settingsRoutes = (await import('./routes/settings.routes')).default;
+    await server.register(settingsRoutes, { prefix: '/api/v1/settings' });
+
     const configRoutes = (await import('./routes/config.routes')).default;
     await server.register(configRoutes, { prefix: '/api/v1' });
 
