@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { authenticate } from './auth.middleware.js';
+import { ADMIN_ROLES } from '../constants/systemConfig.js';
 
 /**
  * Admin-specific RBAC Guard.
@@ -15,7 +16,7 @@ export const adminGuard = async (request: FastifyRequest, reply: FastifyReply) =
     const user = request.user as { sub: string; email: string; role: string; isSystemAdmin?: boolean };
 
     // 2. Strict Role Check
-    const allowedAdminRoles = ['Admin', 'Super Admin', 'Operation'];
+    const allowedAdminRoles = [...ADMIN_ROLES];
     const hasAdminAccess = allowedAdminRoles.includes(user.role) || user.isSystemAdmin === true;
 
     if (!hasAdminAccess) {

@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { listUsersHandler } from '../controllers/user.controller.js';
 import { prisma } from '@nexworth/database';
+import { SYSTEM_ADMIN_EMAIL, SUPER_ADMIN_ROLE, SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
 
 // Mock Prisma from the database package
 vi.mock('@nexworth/database', () => ({
@@ -34,7 +35,7 @@ describe('User Management Logic Tests', () => {
   
   it('CASE 1: Org == System Management and User == SuperAdmin (Should see all)', async () => {
     mockRequest = {
-      user: { role: 'Super Admin', email: 'superadmin@nexworth.cc', isSystemAdmin: true, organizationId: 'sys-id', orgName: 'System Management' },
+      user: { role: SUPER_ADMIN_ROLE, email: SYSTEM_ADMIN_EMAIL, isSystemAdmin: true, organizationId: 'sys-id', orgName: SYSTEM_ORG_NAME },
       query: {}
     };
 
@@ -47,7 +48,7 @@ describe('User Management Logic Tests', () => {
 
   it('CASE 2: Org == System Management and User != SuperAdmin (Should hide Super Admin)', async () => {
     mockRequest = {
-      user: { role: 'App Support', email: 'staff@test.com', isSystemAdmin: true, organizationId: 'sys-id', orgName: 'System Management' },
+      user: { role: 'App Support', email: 'staff@test.com', isSystemAdmin: true, organizationId: 'sys-id', orgName: SYSTEM_ORG_NAME },
       query: {}
     };
 
@@ -55,7 +56,7 @@ describe('User Management Logic Tests', () => {
     const callArgs = (prisma.user.findMany as any).mock.calls[0][0];
     
     expect(callArgs.where.organizationId).toBe('sys-id');
-    expect(callArgs.where.role.name.not).toBe('Super Admin'); // SHOULD hide Super Admin
+    expect(callArgs.where.role.name.not).toBe(SUPER_ADMIN_ROLE); // SHOULD hide Super Admin
   });
 
   it('CASE 3: Org != System Management and User == Admin (Should see their org only)', async () => {
