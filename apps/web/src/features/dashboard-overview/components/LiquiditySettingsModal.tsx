@@ -61,19 +61,20 @@ export default function LiquiditySettingsModal({
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
-            <input 
-              type="range" 
-              min="0" 
-              max="200000" 
-              step="5000"
-              value={danger}
-              onChange={(e) => setDanger(Number(e.target.value))}
-              className="flex-1 accent-rose-500 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="w-24 px-3 py-2 bg-navy/40 border border-white/10 rounded-xl text-center">
-              <span className="text-xs font-black text-rose-400">฿{danger.toLocaleString()}</span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 px-4 py-3 bg-navy/60 border border-rose-500/20 rounded-xl focus-within:border-rose-500/50 transition-colors">
+              <span className="text-rose-400 font-bold text-sm">฿</span>
+              <input
+                type="number"
+                value={danger || ''}
+                onChange={(e) => setDanger(e.target.value === '' ? 0 : Number(e.target.value))}
+                placeholder="0"
+                className="flex-1 bg-transparent text-white font-bold text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
             </div>
+            {danger > 0 && (
+              <p className="text-[10px] text-rose-400/70 pl-1">= ฿{danger.toLocaleString('th-TH')}</p>
+            )}
           </div>
         </div>
 
@@ -89,19 +90,20 @@ export default function LiquiditySettingsModal({
             </div>
           </div>
           
-          <div className="flex items-center gap-6">
-            <input 
-              type="range" 
-              min="0" 
-              max="500000" 
-              step="10000"
-              value={safe}
-              onChange={(e) => setSafe(Number(e.target.value))}
-              className="flex-1 accent-emerald-500 h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer"
-            />
-            <div className="w-24 px-3 py-2 bg-navy/40 border border-white/10 rounded-xl text-center">
-              <span className="text-xs font-black text-emerald-400">฿{safe.toLocaleString()}</span>
+          <div className="flex flex-col gap-2">
+            <div className="flex items-center gap-2 px-4 py-3 bg-navy/60 border border-emerald-500/20 rounded-xl focus-within:border-emerald-500/50 transition-colors">
+              <span className="text-emerald-400 font-bold text-sm">฿</span>
+              <input
+                type="number"
+                value={safe || ''}
+                onChange={(e) => setSafe(e.target.value === '' ? 0 : Number(e.target.value))}
+                placeholder="0"
+                className="flex-1 bg-transparent text-white font-bold text-sm outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+              />
             </div>
+            {safe > 0 && (
+              <p className="text-[10px] text-emerald-400/70 pl-1">= ฿{safe.toLocaleString('th-TH')}</p>
+            )}
           </div>
         </div>
 

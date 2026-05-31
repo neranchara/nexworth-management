@@ -446,7 +446,8 @@ export default function AssetsPage() {
                   const account = record.account;
                   if (!account) return null;
                   const isNonCounted = nonCountedIds.has(record.id);
-                  const isPositive = record.amount >= 0;
+                  const displayAmount = Math.abs(record.amount) < 0.005 ? 0 : record.amount;
+                  const isPositive = displayAmount >= 0;
                   const styling = getTypeBadgeColor(account.type);
                   
                   return (
@@ -480,7 +481,7 @@ export default function AssetsPage() {
                         ) : '-'}
                       </td>
                       <td className={`px-6 py-3 text-right font-bold text-sm ${isPositive ? 'text-emerald' : 'text-rose-500'}`}>
-                        {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(record.amount)}
+                        {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(displayAmount)}
                       </td>
                       <td className="px-6 py-3 text-center rounded-r-xl">
                         <div className="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
@@ -516,7 +517,8 @@ export default function AssetsPage() {
                     const account = record.account;
                     if (!account) return null;
                     const isNonCounted = nonCountedIds.has(record.id);
-                    const isPositive = record.amount >= 0;
+                    const displayAmount = Math.abs(record.amount) < 0.005 ? 0 : record.amount;
+                    const isPositive = displayAmount >= 0;
                     const styling = getTypeBadgeColor(account.type);
                     
                     return (
@@ -549,7 +551,7 @@ export default function AssetsPage() {
                           ) : '-'}
                         </td>
                         <td className={`px-6 py-3 text-right font-bold text-sm ${isPositive ? 'text-emerald' : 'text-rose-500'}`}>
-                          {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(record.amount)}
+                          {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(displayAmount)}
                         </td>
                         <td className="px-6 py-3 text-center rounded-r-xl">
                           <div className="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">

@@ -7,7 +7,8 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import {
   Shield, Plus, Trash2, Edit2, ShieldCheck,
-  ArrowRight, Loader2, X, ChevronRight, Users
+  ArrowRight, Loader2, X, ChevronRight, Users,
+  LayoutGrid, List,
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { clsx } from 'clsx';
@@ -31,6 +32,15 @@ export default function RolesListPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const orgId = searchParams.get('orgId');
+
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(() =>
+    (typeof window !== 'undefined' ? localStorage.getItem('viewMode_permissions') as 'grid' | 'table' : null) || 'grid'
+  );
+
+  const toggleViewMode = (mode: 'grid' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('viewMode_permissions', mode);
+  };
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditingRole, setIsEditingRole] = useState(false);
@@ -144,16 +154,33 @@ export default function RolesListPage() {
           </div>
         </div>
 
-        {hasPermission('permissions', 'canCreate') && (
-          <button
-            onClick={openCreateModal}
-            data-testid="permissions-list-btn-add-role"
-            className="bg-emerald text-navy px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
-          >
-            <Plus className="w-3.5 h-3.5" />
-            New Role
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <div className="flex bg-white/5 border border-white/5 rounded-lg p-0.5">
+            {(['grid', 'table'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => toggleViewMode(mode)}
+                className={clsx(
+                  'p-1.5 rounded-md transition-all',
+                  viewMode === mode ? 'bg-emerald/20 text-emerald' : 'text-slate hover:text-white'
+                )}
+              >
+                {mode === 'grid' ? <LayoutGrid size={14} /> : <List size={14} />}
+              </button>
+            ))}
+          </div>
+
+          {hasPermission('permissions', 'canCreate') && (
+            <button
+              onClick={openCreateModal}
+              data-testid="permissions-list-btn-add-role"
+              className="bg-emerald text-navy px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
+            >
+              <Plus className="w-3.5 h-3.5" />
+              New Role
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Alert */}
@@ -169,12 +196,12 @@ export default function RolesListPage() {
         </div>
       )}
 
-      {/* Role Cards */}
+      {/* Role View */}
       {loading ? (
         <div className="flex flex-col items-center py-20">
           <Loader2 className="w-6 h-6 animate-spin text-emerald" />
         </div>
-      ) : (
+      ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredRoles.map((role) => (
             <div
@@ -198,7 +225,6 @@ export default function RolesListPage() {
                     )}
                   </div>
                 </div>
-
                 <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
                   {hasPermission('permissions', 'canUpdate') && (
                     <button
@@ -220,17 +246,14 @@ export default function RolesListPage() {
                   )}
                 </div>
               </div>
-
               {role.description && (
                 <p className="text-[11px] text-slate leading-relaxed mb-4 line-clamp-2">{role.description}</p>
               )}
-
               <div className="flex items-center justify-between pt-3 border-t border-white/5">
                 <div className="flex items-center gap-2 text-slate">
                   <Users className="w-3 h-3" />
                   <span className="text-[11px] font-bold">{role._count?.users || 0} Users</span>
                 </div>
-
                 <button
                   onClick={() => router.push(`/dashboard/permissions/${role.id}${orgId ? `?orgId=${orgId}` : ''}`)}
                   data-testid={`permissions-list-btn-config-${role.name}`}
@@ -242,6 +265,80 @@ export default function RolesListPage() {
               </div>
             </div>
           ))}
+        </div>
+      ) : (
+        <div className="bg-navy/40 backdrop-blur-xl rounded-[1.25rem] border border-white/5 overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/5">
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">Role</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">คำอธิบาย</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">ประเภท</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">Users</th>
+                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredRoles.map((role) => (
+                <tr key={role.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <div className={clsx(
+                        'p-1.5 rounded-lg border',
+                        role.isSystemRole ? 'bg-orange-500/10 text-orange-400 border-orange-500/20' : 'bg-emerald/10 text-emerald border-emerald/20'
+                      )}>
+                        <Shield className="w-3 h-3" />
+                      </div>
+                      <span className="text-xs font-black text-white">{role.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="text-[11px] text-slate line-clamp-1">{role.description || '—'}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    {role.isSystemRole
+                      ? <span className="text-[9px] font-black text-orange-400 bg-orange-500/10 border border-orange-500/20 px-2 py-0.5 rounded">System</span>
+                      : <span className="text-[9px] font-black text-emerald bg-emerald/10 border border-emerald/20 px-2 py-0.5 rounded">Custom</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5 text-slate">
+                      <Users className="w-3 h-3" />
+                      <span className="text-[11px] font-bold">{role._count?.users || 0}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-1">
+                      <button
+                        onClick={() => router.push(`/dashboard/permissions/${role.id}${orgId ? `?orgId=${orgId}` : ''}`)}
+                        data-testid={`permissions-list-btn-config-${role.name}`}
+                        className="flex items-center gap-1 text-[10px] font-black text-emerald hover:text-white transition-colors px-2 py-1"
+                      >
+                        Config <ArrowRight className="w-3 h-3" />
+                      </button>
+                      {hasPermission('permissions', 'canUpdate') && (
+                        <button
+                          onClick={() => openEditModal(role)}
+                          data-testid={`permissions-list-btn-edit-${role.name}`}
+                          className="p-1.5 text-slate hover:text-emerald transition-colors"
+                        >
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {hasPermission('permissions', 'canDelete') && (role._count?.users || 0) === 0 && (
+                        <button
+                          onClick={() => handleDeleteRole(role.id, role.name)}
+                          data-testid={`permissions-list-btn-delete-${role.name}`}
+                          className="p-1.5 text-slate hover:text-rose transition-colors"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
         </div>
       )}
 

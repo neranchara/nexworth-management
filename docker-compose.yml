@@ -1,0 +1,30 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    container_name: stg_nexworth_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "nop@ssw0rd"
+      POSTGRES_DB: stg_nexworth_db
+    ports:
+      - "5432:5432"
+    volumes:
+      - nexworth_pgdata:/var/lib/postgresql
+    restart: unless-stopped
+
+  postgres-backup:
+    image: postgres:18-alpine
+    container_name: prod_nexworth_db
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: "nop@ssw0rd"
+      POSTGRES_DB: prod_nexworth_db
+    ports:
+      - "5435:5432"
+    volumes:
+      - nexworth_pgdata_backup:/var/lib/postgresql
+    restart: unless-stopped
+
+volumes:
+  nexworth_pgdata:
+  nexworth_pgdata_backup:

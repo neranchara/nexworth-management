@@ -112,7 +112,7 @@ async function calculateFinancialStats(
       if (LIQUID_TYPES.includes(acc.type)) liquidAssets += balance;
       if (INVESTMENT_TYPES.includes(acc.type)) investmentAssets += balance;
       if (balance !== 0) {
-        assetsByAccount.push({ id: acc.id, name: acc.name, type: acc.type, balance });
+        assetsByAccount.push({ id: acc.id, name: acc.name, type: acc.type, tag: acc.tag, balance });
       }
     }
   });
@@ -246,6 +246,20 @@ async function calculateFinancialStats(
   else if (totalHealthScore >= 60) healthStatus = 'Good';
   else if (totalHealthScore >= 40) healthStatus = 'Risk';
 
+  const dangerZone = userSettings?.liquidityDangerZone ?? 30000;
+  const safeZone = userSettings?.liquiditySafeZone ?? 70000;
+
+  const cashflowAccounts = assetsByAccount
+    .filter(acc => acc.tag === 'Cashflow')
+    .map(acc => ({
+      id: acc.id,
+      name: acc.name,
+      balance: acc.balance,
+      status: acc.balance <= dangerZone ? 'DANGER' as const
+        : acc.balance >= safeZone ? 'SAFE' as const
+        : 'WATCH' as const
+    }));
+
   return {
     currency: '฿',
     summary: {
@@ -257,11 +271,11 @@ async function calculateFinancialStats(
       monthlySaving: currentMonthData.saving,
       monthlyIncome: currentMonthData.income,
       monthlyExpense: currentMonthData.expense,
-      liquidityDangerZone: userSettings?.liquidityDangerZone ?? 30000,
-      liquiditySafeZone: userSettings?.liquiditySafeZone ?? 70000,
-      cashflowStatus: (currentMonthData.income - currentMonthData.expense) <= (userSettings?.liquidityDangerZone ?? 30000) 
-        ? 'DANGER' 
-        : (currentMonthData.income - currentMonthData.expense) >= (userSettings?.liquiditySafeZone ?? 70000)
+      liquidityDangerZone: dangerZone,
+      liquiditySafeZone: safeZone,
+      cashflowStatus: (currentMonthData.income - currentMonthData.expense) <= dangerZone
+        ? 'DANGER'
+        : (currentMonthData.income - currentMonthData.expense) >= safeZone
           ? 'SAFE'
           : 'WATCH',
       savingRate: Number.isFinite(savingRate) ? Math.round(savingRate * 1000) / 10 : 0,
@@ -292,6 +306,7 @@ async function calculateFinancialStats(
     monthlyCashflow,
     assetsByAccount,
     liabilitiesByAccount,
+    cashflowAccounts,
     goalTracking
   };
 }

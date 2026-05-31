@@ -3,11 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 
-import { Edit2, Trash2, Tag, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, AlertCircle, CheckCircle } from 'lucide-react';
+import { Edit2, Trash2, Tag, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, AlertCircle, CheckCircle, LayoutGrid, List } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { TransactionCategory, TransactionType } from '@/types/models';
 import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
+import { clsx } from 'clsx';
 
 export default function CategoriesManagementPage() {
   const [categories, setCategories] = useState<TransactionCategory[]>([]);

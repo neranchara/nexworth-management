@@ -60,6 +60,7 @@ export interface Account {
   bank?: Bank | null;
   user?: User;
   balance?: number;
+  tag?: string | null;
 }
 
 export interface TransactionType {
