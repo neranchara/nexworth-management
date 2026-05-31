@@ -73,14 +73,24 @@ export default function AccountsManagementPage() {
   const [currentAccountId, setCurrentAccountId] = useState<string | null>(null);
   
   // Form fields
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    accountNumber: string;
+    type: string;
+    bankId: string;
+    isActive: boolean;
+    isPersonal: boolean;
+    tag: string;
+    targetAmount: number | null;
+  }>({
     name: '',
     accountNumber: '',
-    type: 'BANK', // BANK, STOCK, GOLD
+    type: 'BANK',
     bankId: '',
     isActive: true,
     isPersonal: true,
-    tag: ''
+    tag: '',
+    targetAmount: null
   });
 
   const { user } = useAuthStore();
@@ -142,7 +152,8 @@ export default function AccountsManagementPage() {
       bankId: banks.length > 0 ? banks[0].id : '',
       isActive: true,
       isPersonal: true,
-      tag: ''
+      tag: '',
+      targetAmount: null
     });
     setIsEditing(false);
     setCurrentAccountId(null);
@@ -161,7 +172,8 @@ export default function AccountsManagementPage() {
       bankId: a?.bankId || (banks && banks.length > 0 ? banks[0].id : ''),
       isActive: a?.isActive ?? true,
       isPersonal: a?.isPersonal ?? true,
-      tag: a?.tag || ''
+      tag: a?.tag || '',
+      targetAmount: a?.targetAmount ?? null
     });
     setIsEditing(true);
     setCurrentAccountId(a?.id || null);
@@ -532,7 +544,14 @@ export default function AccountsManagementPage() {
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.type}</label>
                         <select 
-                        required value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
+                        required value={formData.type} onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({
+                            ...formData,
+                            type: val,
+                            targetAmount: val === 'GOAL' ? formData.targetAmount : null
+                          });
+                        }}
                         data-testid="accounts-form-sel-type"
                         className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 appearance-none transition-all"
                       >
@@ -565,6 +584,22 @@ export default function AccountsManagementPage() {
                       className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 transition-all" 
                     />
                  </div>
+
+                 {formData.type === 'GOAL' && (
+                   <div className="space-y-1.5 animate-fade-in-up">
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">เป้าหมายเงินออม (บาท)</label>
+                      <input 
+                        type="number" 
+                        value={formData.targetAmount !== null ? formData.targetAmount : ''} 
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({...formData, targetAmount: val === '' ? null : parseFloat(val)});
+                        }}
+                        placeholder="ระบุยอดเงินเป้าหมาย เช่น 100000"
+                        className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 transition-all" 
+                      />
+                   </div>
+                 )}
 
                  <div className="flex flex-col gap-4 pt-4 border-t border-white/5">
                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">

@@ -150,12 +150,13 @@ async function calculateFinancialStats(
     accountsRaw.forEach(acc => {
       if (acc.type === 'GOAL') {
         const balance = acc.asset?.amount ?? 0;
+        const target = acc.targetAmount || balance || 1;
         goalTracking.push({
           id: acc.id,
           name: acc.name,
           currentAmount: balance,
-          targetAmount: balance || 1,
-          percentage: 100, // 100% saved since no target is defined
+          targetAmount: target,
+          percentage: target > 0 ? (balance / target) * 100 : 0,
           color: 'Blue'
         });
       }

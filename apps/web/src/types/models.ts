@@ -61,6 +61,7 @@ export interface Account {
   user?: User;
   balance?: number;
   tag?: string | null;
+  targetAmount?: number | null;
 }
 
 export interface TransactionType {

@@ -12,6 +12,7 @@ const accountSchema = z.object({
   isPersonal: z.boolean().default(true),
   actualDate: z.string().datetime().optional().nullable(),
   tag: z.string().optional().nullable(),
+  targetAmount: z.number().optional().nullable(),
 });
 
 export const listAccountsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
@@ -63,6 +64,7 @@ export const createAccountHandler = async (request: FastifyRequest, reply: Fasti
         isPersonal: body.isPersonal,
         actualDate: body.actualDate ? new Date(body.actualDate) : null,
         tag: body.tag,
+        targetAmount: body.targetAmount,
       },
       include: { bank: true }
     });
@@ -109,6 +111,7 @@ export const updateAccountHandler = async (request: FastifyRequest<{ Params: { i
         isPersonal: body.isPersonal,
         actualDate: body.actualDate ? new Date(body.actualDate) : null,
         tag: body.tag,
+        targetAmount: body.targetAmount,
       },
       include: { bank: true }
     });
