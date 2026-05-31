@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
+import { SYSTEM_ADMIN_EMAIL, SUPER_ADMIN_ROLE, SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
 
 const permissionSchema = z.object({
   resource: z.string(),
@@ -65,8 +66,8 @@ export const updateRolePermissionsHandler = async (request: FastifyRequest, repl
 export const listAllRolesHandler = async (request: FastifyRequest, reply: FastifyReply) => {
     try {
         const user = request.user as any;
-        const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
-        const isSuperAdmin = user.role === 'Super Admin' || user.email === 'superadmin@nexworth.cc';
+        const isSystemAdmin = user.isSystemAdmin || user.email === SYSTEM_ADMIN_EMAIL || user.orgName === SYSTEM_ORG_NAME;
+        const isSuperAdmin = user.role === SUPER_ADMIN_ROLE || user.email === SYSTEM_ADMIN_EMAIL;
 
         const { orgId } = request.query as { orgId?: string };
         const targetOrgId = (isSystemAdmin && orgId) ? orgId : user.organizationId;
@@ -76,7 +77,7 @@ export const listAllRolesHandler = async (request: FastifyRequest, reply: Fastif
         
         // Hide Super Admin role from non-Super Admins
         if (!isSuperAdmin) {
-            roleWhereClause.name = { not: 'Super Admin' };
+            roleWhereClause.name = { not: SUPER_ADMIN_ROLE };
         }
 
         const roles = await prisma.role.findMany({
@@ -107,7 +108,7 @@ const roleSchema = z.object({
 export const createRoleHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === SYSTEM_ADMIN_EMAIL || user.orgName === SYSTEM_ORG_NAME;
     
     const { name, description, organizationId } = request.body as any;
     
@@ -133,7 +134,7 @@ export const createRoleHandler = async (request: FastifyRequest, reply: FastifyR
 export const updateRoleHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as any;
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === SYSTEM_ADMIN_EMAIL || user.orgName === SYSTEM_ORG_NAME;
     
     const { roleId } = request.params as { roleId: string };
     const { name, description } = request.body as any;

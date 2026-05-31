@@ -3,6 +3,7 @@ import { prisma } from '@nexworth/database';
 import { setupOrganizationDefaults } from '../services/organization.service.js';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
+import { SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
 
 const createOrgSchema = z.object({
   name: z.string().min(1),
@@ -108,7 +109,7 @@ export const updateOrganizationHandler = async (request: FastifyRequest<{ Params
     }
 
     // 1. Lock System Management
-    if (org.name === 'System Management') {
+    if (org.name === SYSTEM_ORG_NAME) {
       return reply.status(403).send({ error: 'System Management organization cannot be modified or disabled.' });
     }
 

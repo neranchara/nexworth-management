@@ -28,6 +28,12 @@ export interface Stats {
     monthlyExpense: number;
     liquidityDangerZone: number;
     liquiditySafeZone: number;
+    benchmarks?: {
+      savingRateTarget: number;
+      investmentRateTarget: number;
+      debtRatioTarget: number;
+      emergencyMonthsTarget: number;
+    };
     cashflowStatus: 'DANGER' | 'WATCH' | 'SAFE';
     savingRate?: number;
     investmentRatio?: number;

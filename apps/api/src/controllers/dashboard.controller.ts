@@ -1,5 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
+import { REAL_ASSET_TYPES, LIQUID_TYPES, INVESTMENT_TYPES } from '../constants/accountTypes.js';
+import { SYSTEM_ADMIN_EMAIL, SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
 
 export const getDashboardStatsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -7,7 +9,7 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
     request.log.info({ user: user.email, orgId: user.organizationId }, '🚀 [DEBUG] Dashboard Stats Request Received!');
     const query = request.query as { year?: string, month?: string };
     
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === SYSTEM_ADMIN_EMAIL || user.orgName === SYSTEM_ORG_NAME;
 
     if (isSystemAdmin) {
       // ---------------------------------------------------------
@@ -37,10 +39,17 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
 
     const userSettings = await prisma.user.findUnique({
       where: { id: user.sub },
-      select: { liquidityDangerZone: true, liquiditySafeZone: true }
+      select: {
+        liquidityDangerZone: true,
+        liquiditySafeZone: true,
+        savingRateTarget: true,
+        investmentRateTarget: true,
+        debtRatioTarget: true,
+        emergencyMonthsTarget: true,
+      }
     });
 
-    const stats = await calculateFinancialStats(user.organizationId, query.year, query.month, userSettings);
+    const stats = await calculateFinancialStats(user.organizationId, query.year, query.month, userSettings as UserSettings | null);
     return reply.send(stats);
   } catch (error) {
     request.log.error(error);
@@ -48,14 +57,20 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
   }
 };
 
-/**
- * Shared calculation engine for financial metrics
- */
+interface UserSettings {
+  liquidityDangerZone: number;
+  liquiditySafeZone: number;
+  savingRateTarget: number;
+  investmentRateTarget: number;
+  debtRatioTarget: number;
+  emergencyMonthsTarget: number;
+}
+
 async function calculateFinancialStats(
-  organizationId: string, 
-  yearStr?: string, 
+  organizationId: string,
+  yearStr?: string,
   monthStr?: string,
-  userSettings?: { liquidityDangerZone: number, liquiditySafeZone: number } | null
+  userSettings?: UserSettings | null
 ) {
   const now = new Date();
   const currentYear = yearStr ? parseInt(yearStr) : now.getFullYear();
@@ -89,9 +104,6 @@ async function calculateFinancialStats(
   let totalLiabilities = 0;
   let liquidAssets = 0;
 
-  const REAL_ASSET_TYPES = ['BANK', 'STOCK', 'GOLD', 'CASHFLOW', 'EMERGENCY', 'INVESTMENT', 'SAVING', 'FAMILY', 'GOAL'];
-  const LIQUID_TYPES = ['BANK', 'CASHFLOW', 'SAVING', 'EMERGENCY', 'GOAL'];
-  const INVESTMENT_TYPES = ['STOCK', 'GOLD', 'INVESTMENT'];
 
   const assetsByAccount: any[] = [];
   const liabilitiesByAccount: any[] = [];
@@ -237,23 +249,28 @@ async function calculateFinancialStats(
     net: acc.net + m.net
   }), { income: 0, expense: 0, saving: 0, goalSaving: 0, invest: 0, debt: 0, net: 0 });
 
+  const savingTarget     = userSettings?.savingRateTarget     ?? 0.20;
+  const investTarget     = userSettings?.investmentRateTarget  ?? 0.15;
+  const debtTarget       = userSettings?.debtRatioTarget       ?? 0.30;
+  const emergencyTarget  = userSettings?.emergencyMonthsTarget ?? 6.0;
+
   const currentMonthData = monthlyCashflow[currentMonth];
   const savingRate = currentMonthData.income > 0 ? (currentMonthData.saving / currentMonthData.income) : 0;
-  const savingScore = Math.min(25, (savingRate / 0.2) * 25);
+  const savingScore = Math.min(25, (savingRate / savingTarget) * 25);
   const goalRate = currentMonthData.income > 0 ? (currentMonthData.goalSaving / currentMonthData.income) : 0;
 
   const avgExpense = monthlyCashflow.reduce((sum, m) => sum + m.expense, 0) / (currentMonth + 1);
   const effectiveExpense = avgExpense || recentExpenses || 1;
   const emergencyMonths = liquidAssets / effectiveExpense;
-  const emergencyScore = Math.min(25, (emergencyMonths / 6) * 25);
+  const emergencyScore = Math.min(25, (emergencyMonths / emergencyTarget) * 25);
 
   const debtRatio = totalRealAssets > 0 ? (totalLiabilities / totalRealAssets) : (totalLiabilities > 0 ? 1 : 0);
-  const debtScore = Math.max(0, 25 * (1 - (debtRatio / 0.3)));
+  const debtScore = Math.max(0, 25 * (1 - (debtRatio / debtTarget)));
 
   const globalInvestRatio = totalRealAssets > 0 ? (investmentAssets / totalRealAssets) : 0;
   const monthlyInvestRatio = currentMonthData.income > 0 ? (currentMonthData.invest / currentMonthData.income) : 0;
   const investmentRatio = (globalInvestRatio * 0.7) + (monthlyInvestRatio * 0.3);
-  const investmentScore = Math.min(25, (investmentRatio / 0.2) * 25);
+  const investmentScore = Math.min(25, (investmentRatio / investTarget) * 25);
 
   const scores = {
     saving: Number.isFinite(savingScore) ? Math.round(savingScore * 10) / 10 : 0,
@@ -303,6 +320,12 @@ async function calculateFinancialStats(
       monthlyExpense: currentMonthData.expense,
       liquidityDangerZone: dangerZone,
       liquiditySafeZone: safeZone,
+      benchmarks: {
+        savingRateTarget:     savingTarget,
+        investmentRateTarget: investTarget,
+        debtRatioTarget:      debtTarget,
+        emergencyMonthsTarget: emergencyTarget,
+      },
       cashflowStatus: (currentMonthData.income - currentMonthData.expense) <= dangerZone
         ? 'DANGER'
         : (currentMonthData.income - currentMonthData.expense) >= safeZone
@@ -350,14 +373,19 @@ export const getDashboardCockpitHandler = async (request: FastifyRequest, reply:
     const user = request.user as { sub: string, organizationId: string };
     const query = request.query as { year?: string, month?: string };
     
-    // Fetch user settings for liquidity thresholds
     const userSettings = await prisma.user.findUnique({
       where: { id: user.sub },
-      select: { liquidityDangerZone: true, liquiditySafeZone: true }
+      select: {
+        liquidityDangerZone: true,
+        liquiditySafeZone: true,
+        savingRateTarget: true,
+        investmentRateTarget: true,
+        debtRatioTarget: true,
+        emergencyMonthsTarget: true,
+      }
     });
 
-    // Aggregator Pattern: Use shared calculation engine
-    const stats = await calculateFinancialStats(user.organizationId, query.year, query.month, userSettings);
+    const stats = await calculateFinancialStats(user.organizationId, query.year, query.month, userSettings as UserSettings | null);
     
     return reply.send(stats);
   } catch (error) {

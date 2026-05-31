@@ -1,6 +1,7 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
 import { updateRoleHandler } from '../controllers/permission.controller.js';
 import { prisma } from '@nexworth/database';
+import { SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
 
 vi.mock('@nexworth/database', () => ({
   prisma: {
@@ -30,7 +31,7 @@ describe('Permission Management Logic Tests', () => {
   });
 
   it('should allow System Admin to update role in a different organization', async () => {
-    mockRequest.user = { isSystemAdmin: true, organizationId: 'sys-org-id', orgName: 'System Management' };
+    mockRequest.user = { isSystemAdmin: true, organizationId: 'sys-org-id', orgName: SYSTEM_ORG_NAME };
     mockRequest.params = { roleId: 'other-org-role-id' };
     mockRequest.body = { name: 'Updated Role' };
 

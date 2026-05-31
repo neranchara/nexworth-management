@@ -11,6 +11,7 @@ import {
 import { Permission } from '@/types/auth';
 import { usePermissions } from '@/hooks/usePermissions';
 import { clsx } from 'clsx';
+import { SYSTEM_ORG_ID } from '@/config/systemConfig';
 
 const RESOURCES = [
   { id: 'dashboard', name: 'Dashboard' },
@@ -56,7 +57,7 @@ export default function ManagePermissionsPage({ params }: { params: Promise<{ ro
       const res = await api.get(`/roles/${roleId}/permissions`);
       const existing = res.data.permissions;
 
-      const isTargetSystemOrg = foundRole.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' || foundRole.isSystemRole;
+      const isTargetSystemOrg = foundRole.organizationId === SYSTEM_ORG_ID || foundRole.isSystemRole;
       const availableResources = RESOURCES.filter(r => r.id !== 'organizations' || isTargetSystemOrg);
 
       const merged = availableResources.map(resDef => {

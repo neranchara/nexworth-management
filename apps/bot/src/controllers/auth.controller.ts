@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@nexworth/database';
 import bcrypt from 'bcrypt';
 import { z } from 'zod';
+import { SYSTEM_ADMIN_EMAIL, SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
 
 const loginSchema = z.object({
   email: z.string().email(),
@@ -33,7 +34,7 @@ export const loginHandler = async (request: FastifyRequest, reply: FastifyReply)
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24); // 1 day expiry
 
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.organization?.name === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === SYSTEM_ADMIN_EMAIL || user.organization?.name === SYSTEM_ORG_NAME;
 
     const tokenPayload = {
       sub: user.id,
@@ -96,7 +97,7 @@ export const meHandler = async (request: FastifyRequest, reply: FastifyReply) =>
 
     if (!user) return reply.status(404).send({ error: 'User not found' });
 
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.organization?.name === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === SYSTEM_ADMIN_EMAIL || user.organization?.name === SYSTEM_ORG_NAME;
 
     return reply.send({ 
       user: {

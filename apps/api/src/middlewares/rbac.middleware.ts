@@ -1,20 +1,21 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { authenticate } from './auth.middleware.js';
+import { SYSTEM_ADMIN_EMAIL, SUPER_ADMIN_ROLE } from '../constants/systemConfig.js';
 
 export const requireRole = (allowedRoles: string[]) => {
   return async (request: FastifyRequest, reply: FastifyReply) => {
     try {
       // 1. First run centralized authentication (JWT + Session check)
       await authenticate(request, reply);
-      
+
       // If authenticate sent a reply (401), we stop here
       if (reply.sent) return;
 
       const decoded = request.user as { sub: string; email: string; role: string; isSystemAdmin?: boolean };
 
-      // Global bypass for superadmin@nexworth.cc or Super Admin role or isSystemAdmin flag
-      const isSuper = decoded.email === 'superadmin@nexworth.cc' || decoded.role === 'Super Admin' || decoded.isSystemAdmin === true;
+      // Global bypass for system admin email, Super Admin role, or isSystemAdmin flag
+      const isSuper = decoded.email === SYSTEM_ADMIN_EMAIL || decoded.role === SUPER_ADMIN_ROLE || decoded.isSystemAdmin === true;
       if (isSuper) return;
 
       if (!decoded.role) {

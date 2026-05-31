@@ -57,8 +57,12 @@ model User {
   transactions     Transaction[]
   organization     Organization?              @relation(fields: [organizationId], references: [id])
   role             Role?                      @relation(fields: [roleId], references: [id])
-  liquidityDangerZone Float                      @default(30000)
-  liquiditySafeZone   Float                      @default(70000)
+  liquidityDangerZone  Float @default(30000)
+  liquiditySafeZone    Float @default(70000)
+  savingRateTarget     Float @default(0.20)
+  investmentRateTarget Float @default(0.15)
+  debtRatioTarget      Float @default(0.30)
+  emergencyMonthsTarget Float @default(6.0)
   sentInvitations     Invitation[]               @relation("InvitedBy")
 }
 
@@ -409,6 +413,17 @@ enum TransactionBehavior {
   LOAN_REPAY
   GOAL
   EMERGENCY
+}
+
+model FeatureFlag {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  enabled     Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  @@index([name])
 }
 
 model SystemLog {
