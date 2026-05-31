@@ -415,6 +415,17 @@ enum TransactionBehavior {
   EMERGENCY
 }
 
+model FeatureFlag {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  enabled     Boolean  @default(false)
+  description String?
+  updatedAt   DateTime @updatedAt
+  updatedBy   String?
+
+  @@index([name])
+}
+
 model SystemLog {
   id        String   @id @default(uuid())
   type      String   // e.g., "telemetry", "performance", "error"
