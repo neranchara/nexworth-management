@@ -451,7 +451,7 @@ export default function AccountsManagementPage() {
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-2">
                       {getAccountIcon(account.type)}
-                      <span className="text-xs font-black text-white truncate max-w-[140px]">{account.name}</span>
+                      <span className="text-xs font-black text-white">{account.name}</span>
                     </div>
                   </td>
                   <td className="px-4 py-3">
