@@ -89,8 +89,8 @@ async function calculateFinancialStats(
   let totalLiabilities = 0;
   let liquidAssets = 0;
 
-  const REAL_ASSET_TYPES = ['BANK', 'STOCK', 'GOLD', 'CASHFLOW', 'EMERGENCY', 'INVESTMENT', 'SAVING', 'FAMILY'];
-  const LIQUID_TYPES = ['BANK', 'CASHFLOW', 'SAVING', 'EMERGENCY'];
+  const REAL_ASSET_TYPES = ['BANK', 'STOCK', 'GOLD', 'CASHFLOW', 'EMERGENCY', 'INVESTMENT', 'SAVING', 'FAMILY', 'GOAL'];
+  const LIQUID_TYPES = ['BANK', 'CASHFLOW', 'SAVING', 'EMERGENCY', 'GOAL'];
   const INVESTMENT_TYPES = ['STOCK', 'GOLD', 'INVESTMENT'];
 
   const assetsByAccount: any[] = [];
@@ -144,6 +144,23 @@ async function calculateFinancialStats(
       });
     }
   });
+
+  // Dynamic fallback for Goal type Accounts if no target-based Goals exist
+  if (goalTracking.length === 0) {
+    accountsRaw.forEach(acc => {
+      if (acc.type === 'GOAL') {
+        const balance = acc.asset?.amount ?? 0;
+        goalTracking.push({
+          id: acc.id,
+          name: acc.name,
+          currentAmount: balance,
+          targetAmount: balance || 1,
+          percentage: 100, // 100% saved since no target is defined
+          color: 'Blue'
+        });
+      }
+    });
+  }
 
   const netWorth = totalRealAssets - totalLiabilities;
 
