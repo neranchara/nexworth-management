@@ -3,7 +3,7 @@ import { Prompt } from "next/font/google";
 // @ts-ignore
 import "./globals.css";
 import PrewarmDB from "../components/PrewarmDB";
-import { Analytics } from "@vercel/analytics/react";
+import { Analytics } from "@vercel/analytics/next";
 
 const prompt = Prompt({
   variable: "--font-prompt",
