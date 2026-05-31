@@ -98,7 +98,13 @@ async function calculateFinancialStats(
   const goalTracking: any[] = [];
 
   accountsRaw.forEach(acc => {
-    const balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
+    let balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
+    
+    // Absolute threshold validation to convert negative zero (-0) into exact positive 0
+    if (Math.abs(balance) < 0.005) {
+      balance = 0;
+    }
+    
     const shouldIncludeInNetWorth = acc.isPersonal || acc.type === 'INVESTMENT';
 
     if (acc.type === 'LIABILITY') {
@@ -249,16 +255,22 @@ async function calculateFinancialStats(
   const dangerZone = userSettings?.liquidityDangerZone ?? 30000;
   const safeZone = userSettings?.liquiditySafeZone ?? 70000;
 
-  const cashflowAccounts = assetsByAccount
+  const cashflowAccounts = accountsRaw
     .filter(acc => acc.tag === 'Cashflow')
-    .map(acc => ({
-      id: acc.id,
-      name: acc.name,
-      balance: acc.balance,
-      status: acc.balance <= dangerZone ? 'DANGER' as const
-        : acc.balance >= safeZone ? 'SAFE' as const
-        : 'WATCH' as const
-    }));
+    .map(acc => {
+      let balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
+      if (Math.abs(balance) < 0.005) {
+        balance = 0;
+      }
+      return {
+        id: acc.id,
+        name: acc.name,
+        balance,
+        status: balance <= dangerZone ? 'DANGER' as const
+          : balance >= safeZone ? 'SAFE' as const
+          : 'WATCH' as const
+      };
+    });
 
   return {
     currency: '฿',
