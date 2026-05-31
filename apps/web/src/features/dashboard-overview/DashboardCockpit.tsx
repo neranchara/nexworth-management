@@ -45,6 +45,7 @@ import CashflowHealthWidget from './components/CashflowHealthWidget';
 import LiquiditySettingsModal from './components/LiquiditySettingsModal';
 import WidgetConfigDropdown from './components/WidgetConfigDropdown';
 import KpiCard from './components/KpiCard';
+import BenchmarkSettingsModal from './components/BenchmarkSettingsModal';
 
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
@@ -77,6 +78,7 @@ export default function DashboardCockpit() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isScanning, setIsScanning] = useState(false);
   const [isLiquidityModalOpen, setIsLiquidityModalOpen] = useState(false);
+  const [isBenchmarkModalOpen, setIsBenchmarkModalOpen] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Meta Data
@@ -266,6 +268,19 @@ export default function DashboardCockpit() {
   const debtRatio     = stats?.summary?.debtRatio     || 0;
   const emergencyMos  = stats?.summary?.emergencyMonths || 0;
 
+  const bm = stats?.summary?.benchmarks;
+  const savingTarget    = bm?.savingRateTarget     ?? 0.20;
+  const investTarget    = bm?.investmentRateTarget  ?? 0.15;
+  const debtTarget      = bm?.debtRatioTarget       ?? 0.30;
+  const emergencyTarget = bm?.emergencyMonthsTarget ?? 6.0;
+
+  const defaultBenchmarks = {
+    savingRateTarget:      savingTarget,
+    investmentRateTarget:  investTarget,
+    debtRatioTarget:       debtTarget,
+    emergencyMonthsTarget: emergencyTarget,
+  };
+
   const allocationData = (stats?.assetsByAccount || [])
     .map((acc) => ({ name: acc.name as string, value: acc.balance as number }))
     .sort((a, b) => b.value - a.value).slice(0, 5);
@@ -376,34 +391,44 @@ export default function DashboardCockpit() {
       </div>
 
       {/* ── Row 2: KPI Cards ── */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 shrink-0">
+      <div className="flex items-center justify-between shrink-0">
+        <span className="text-[9px] font-black text-slate uppercase tracking-[0.2em]">Financial Health KPIs</span>
+        <button
+          onClick={() => setIsBenchmarkModalOpen(true)}
+          className="flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-black text-slate uppercase tracking-widest bg-white/5 border border-white/5 rounded-lg hover:text-white hover:bg-white/10 transition-all"
+        >
+          <Settings2 size={10} />
+          ตั้งค่าเป้าหมาย
+        </button>
+      </div>
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 shrink-0 -mt-3">
         <KpiCard
           label="Saving Rate"
           value={`${savingRate.toFixed(1)}%`}
-          target="เป้า: ≥ 20%"
-          status={savingRate >= 20 ? 'good' : savingRate >= 10 ? 'warning' : 'danger'}
+          target={`เป้า: ≥ ${(savingTarget * 100).toFixed(0)}%`}
+          status={savingRate >= savingTarget * 100 ? 'good' : savingRate >= savingTarget * 50 ? 'warning' : 'danger'}
           icon={<PiggyBank size={16} />}
         />
         <KpiCard
           label="Investment Rate"
           value={`${investRatio.toFixed(1)}%`}
-          target="เป้า: ≥ 15%"
-          status={investRatio >= 15 ? 'good' : investRatio >= 5 ? 'warning' : 'danger'}
+          target={`เป้า: ≥ ${(investTarget * 100).toFixed(0)}%`}
+          status={investRatio >= investTarget * 100 ? 'good' : investRatio >= investTarget * 50 ? 'warning' : 'danger'}
           icon={<BarChart3 size={16} />}
         />
         <KpiCard
           label="Debt Ratio"
           value={`${debtRatio.toFixed(1)}%`}
-          target="เป้า: ≤ 30%"
-          status={debtRatio <= 30 ? 'good' : debtRatio <= 50 ? 'warning' : 'danger'}
+          target={`เป้า: ≤ ${(debtTarget * 100).toFixed(0)}%`}
+          status={debtRatio <= debtTarget * 100 ? 'good' : debtRatio <= debtTarget * 150 ? 'warning' : 'danger'}
           icon={<ShieldAlert size={16} />}
           higherIsBetter={false}
         />
         <KpiCard
           label="Emergency Fund"
           value={`${emergencyMos.toFixed(1)} เดือน`}
-          target="เป้า: ≥ 6 เดือน"
-          status={emergencyMos >= 6 ? 'good' : emergencyMos >= 3 ? 'warning' : 'danger'}
+          target={`เป้า: ≥ ${emergencyTarget.toFixed(0)} เดือน`}
+          status={emergencyMos >= emergencyTarget ? 'good' : emergencyMos >= emergencyTarget / 2 ? 'warning' : 'danger'}
           icon={<Ambulance size={16} />}
         />
       </div>
@@ -645,11 +670,18 @@ export default function DashboardCockpit() {
         </div>
       </GlassModal>
       {/* Liquidity Settings Modal */}
-      <LiquiditySettingsModal 
+      <LiquiditySettingsModal
         isOpen={isLiquidityModalOpen}
         onClose={() => setIsLiquidityModalOpen(false)}
         initialDanger={stats?.summary?.liquidityDangerZone || 30000}
         initialSafe={stats?.summary?.liquiditySafeZone || 70000}
+        onSaveSuccess={() => fetchDashboardData()}
+      />
+      {/* Benchmark Settings Modal */}
+      <BenchmarkSettingsModal
+        isOpen={isBenchmarkModalOpen}
+        onClose={() => setIsBenchmarkModalOpen(false)}
+        initialBenchmarks={defaultBenchmarks}
         onSaveSuccess={() => fetchDashboardData()}
       />
     </div>
