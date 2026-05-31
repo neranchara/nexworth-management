@@ -25,7 +25,7 @@ const PortfolioDoughnut = dynamic(() => import('../asset-allocation/PortfolioDou
 
 const GlassModal = dynamic(() => import('@/components/ui/GlassModal'), { ssr: false });
 
-import { 
+import {
   TrendingUp,
   Activity,
   Target,
@@ -33,23 +33,39 @@ import {
   Loader2,
   Plus,
   Wallet,
-  CreditCard
+  CreditCard,
+  PiggyBank,
+  BarChart3,
+  ShieldAlert,
+  Ambulance,
+  Settings2,
 } from 'lucide-react';
 
 import CashflowHealthWidget from './components/CashflowHealthWidget';
 import LiquiditySettingsModal from './components/LiquiditySettingsModal';
+import WidgetConfigDropdown from './components/WidgetConfigDropdown';
+import KpiCard from './components/KpiCard';
+
+const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
 export default function DashboardCockpit() {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<'annual' | 'monthly'>('annual');
   // const { user } = useAuthStore(); - Removed as unused
-  const { 
-    stats, 
-    isLoading, 
-    fetchDashboardData, 
-    selectedYear, 
+  const {
+    stats,
+    isLoading,
+    fetchDashboardData,
+    selectedYear,
     selectedMonth,
-    setFilters
+    setFilters,
+    widgetConfig,
   } = useDashboardStore();
+
+  const handleViewModeChange = (mode: 'annual' | 'monthly') => {
+    setViewMode(mode);
+    setFilters(selectedYear, new Date().getMonth());
+  };
 
   // Transaction Form State
   const [txType, setTxType] = useState<'EXPENSE' | 'INCOME' | 'TRANSFER'>('EXPENSE');
@@ -245,157 +261,225 @@ export default function DashboardCockpit() {
   const assets = stats?.summary?.totalAssets || 0;
   const liabilities = stats?.summary?.totalLiabilities || 0;
 
-  // Process data for Doughnut chart
-  const allocationData = (stats?.assetsByAccount || []).map((acc) => ({
-    name: acc.name as string,
-    value: acc.balance as number,
-  })).sort((a, b) => b.value - a.value).slice(0, 5); // Show top 5
+  const savingRate    = stats?.summary?.savingRate    || 0;
+  const investRatio   = stats?.summary?.investmentRatio || 0;
+  const debtRatio     = stats?.summary?.debtRatio     || 0;
+  const emergencyMos  = stats?.summary?.emergencyMonths || 0;
+
+  const allocationData = (stats?.assetsByAccount || [])
+    .map((acc) => ({ name: acc.name as string, value: acc.balance as number }))
+    .sort((a, b) => b.value - a.value).slice(0, 5);
+
+  const showRow3 = widgetConfig.velocity || widgetConfig.allocation;
+  const bothRow3 = widgetConfig.velocity && widgetConfig.allocation;
+  const showRow4 = widgetConfig.goals    || widgetConfig.radar;
+  const bothRow4 = widgetConfig.goals    && widgetConfig.radar;
 
   return (
-    <div className="flex-1 flex flex-col min-h-0">
-      {/* Header Info */}
-      <div className="flex items-center justify-between mb-6 shrink-0 gap-8">
+    <div className="flex-1 flex flex-col min-h-0 overflow-y-auto gap-5 pr-1 custom-scrollbar">
+
+      {/* ── Header ── */}
+      <div className="flex items-center justify-between shrink-0 gap-4 flex-wrap">
         <div className="shrink-0">
           <h2 className="text-2xl font-bold text-white tracking-tight">สรุปสถานะการเงิน</h2>
           <p className="text-[10px] text-slate tracking-[0.3em] uppercase font-bold">Wealth & Performance Metrics</p>
         </div>
 
-        <div className="hidden sm:flex items-center gap-6 shrink-0">
-          {/* Cashflow Health Indicator */}
-          <CashflowHealthWidget 
+        <div className="flex items-center gap-3 flex-wrap justify-end w-full sm:w-auto sm:ml-auto">
+          {/* Add Transaction */}
+          <button
+            data-testid="add-transaction-btn"
+            onClick={() => { setIsTransactionModalOpen(true); void fetchMeta(); }}
+            className="flex items-center gap-2 px-5 py-2 bg-emerald text-navy font-black text-xs uppercase tracking-widest rounded-full shadow-[0_0_16px_rgba(80,200,120,0.3)] hover:shadow-[0_0_24px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 transition-all active:scale-95 group relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Plus size={15} className="relative z-10" />
+            <span className="relative z-10 hidden sm:inline">บันทึกรายการ</span>
+          </button>
+
+          <WidgetConfigDropdown />
+
+          <CashflowHealthWidget
             remaining={(stats?.summary?.monthlyIncome || 0) - (stats?.summary?.monthlyExpense || 0)}
             status={stats?.summary?.cashflowStatus || 'WATCH'}
             onOpenSettings={() => setIsLiquidityModalOpen(true)}
+            accounts={stats?.cashflowAccounts}
           />
 
-          <select 
+          <select
             value={selectedYear}
             onChange={(e) => setFilters(Number(e.target.value), selectedMonth)}
             className="px-3 py-1 bg-white/5 rounded-lg border border-white/5 text-[9px] font-black text-emerald uppercase tracking-widest outline-none focus:border-emerald/50 cursor-pointer transition-all hover:bg-white/10"
           >
-            {[0, 1, 2, 3, 4].map(offset => {
+            {[0,1,2,3,4].map(offset => {
               const year = new Date().getFullYear() - offset;
-              return <option key={year} value={year} className="bg-navy text-white">{year} VIEW</option>
+              return <option key={year} value={year} className="bg-navy text-white">{year}</option>;
             })}
           </select>
+
+          <div className="flex bg-white/5 border border-white/5 rounded-lg p-0.5">
+            {(['annual','monthly'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => handleViewModeChange(mode)}
+                className={clsx(
+                  'px-3 py-1 text-[9px] font-black uppercase tracking-widest rounded-md transition-all',
+                  viewMode === mode ? 'bg-emerald/20 text-emerald' : 'text-slate hover:text-white'
+                )}
+              >
+                {mode === 'annual' ? 'ปีทั้งปี' : 'รายเดือน'}
+              </button>
+            ))}
+          </div>
+
+          {viewMode === 'monthly' && (
+            <select
+              value={selectedMonth}
+              onChange={(e) => setFilters(selectedYear, Number(e.target.value))}
+              className="px-3 py-1 bg-white/5 rounded-lg border border-white/5 text-[9px] font-black text-blue-400 uppercase tracking-widest outline-none focus:border-blue-400/50 cursor-pointer transition-all hover:bg-white/10"
+            >
+              {MONTHS_TH.map((m, i) => (
+                <option key={i} value={i} className="bg-navy text-white">{m}</option>
+              ))}
+            </select>
+          )}
         </div>
       </div>
 
-      {/* Main Cockpit Grid */}
-      <div className="grid grid-cols-12 gap-6 flex-1 min-h-0 overflow-hidden">
-        
-        {/* Left Column: Financial Pillars */}
-        <div className="col-span-12 lg:col-span-4 flex flex-col gap-6 overflow-hidden">
-          
-          {/* Net Worth Pillar */}
-          <GlassCard interactive borderAccent="emerald" className="p-5 h-32 shrink-0 flex flex-col justify-between group cursor-pointer">
-            <span className="text-[10px] font-black text-slate uppercase tracking-[0.2em]">Net Worth (สินทรัพย์สุทธิ)</span>
-            <div className="flex items-baseline gap-2">
-               <h3 className="text-3xl font-black text-white tracking-tighter">
-                 ฿{netWorth.toLocaleString()}
-               </h3>
-            </div>
-            <div className="text-xs text-emerald font-bold flex items-center gap-1.5">
-              <TrendingUp size={14} /> 
-              <span>+5.4%</span> 
-              <span className="text-slate font-normal ml-1">เทียบกับเดือนที่แล้ว</span>
-            </div>
-          </GlassCard>
-
-          {/* Quick Stats Grid */}
-          <div className="grid grid-cols-2 gap-6 shrink-0">
-            <GlassCard interactive className="p-4 bg-navy/20">
-              <p className="text-[9px] font-black text-slate uppercase tracking-widest">Total Assets</p>
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-lg font-black text-white">฿{assets.toLocaleString()}</p>
-                <Wallet size={14} className="text-emerald/50" />
-              </div>
-            </GlassCard>
-            <GlassCard interactive className="p-4 bg-navy/20">
-              <p className="text-[9px] font-black text-slate uppercase tracking-widest">Liabilities</p>
-              <div className="flex items-center justify-between mt-2">
-                <p className="text-lg font-black text-rose">฿{liabilities.toLocaleString()}</p>
-                <CreditCard size={14} className="text-rose/50" />
-              </div>
-            </GlassCard>
+      {/* ── Row 1: Core Metrics ── */}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 shrink-0">
+        <GlassCard interactive borderAccent="emerald" className="p-5 flex flex-col justify-between gap-3 group cursor-pointer">
+          <span className="text-[9px] font-black text-slate uppercase tracking-[0.2em]">Net Worth (สินทรัพย์สุทธิ)</span>
+          <h3 className="text-3xl font-black text-white tracking-tighter">฿{netWorth.toLocaleString()}</h3>
+          <div className="text-[10px] text-emerald font-bold flex items-center gap-1.5">
+            <TrendingUp size={12} /><span>สินทรัพย์สุทธิ</span>
           </div>
+        </GlassCard>
 
-          {/* Radar Health Chart */}
-          <GlassCard interactive className="p-5 flex-1 flex flex-col items-center min-h-0" data-testid="cockpit-radar-card">
-            <div className="w-full flex items-center justify-between mb-4 shrink-0">
-              <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">Capital Health Radar</h3>
-              <Activity size={14} className="text-emerald animate-pulse" />
-            </div>
-            <div className="relative w-full flex-1 min-h-0">
-               <HealthRadar scores={stats?.health?.scores || { saving: 0, emergency: 0, debt: 0, investment: 0 }} />
-            </div>
-            <div className="mt-4 w-full pt-4 border-t border-white/5 flex justify-between items-center">
-               <span className="text-[9px] font-bold text-slate uppercase">System Score</span>
-               <span className="text-xl font-black text-emerald">{stats?.health?.score || 0}<span className="text-[10px] text-slate-500 ml-1">pts</span></span>
-            </div>
-          </GlassCard>
-        </div>
+        <GlassCard interactive className="p-5 flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-black text-slate uppercase tracking-widest">Total Assets</span>
+            <Wallet size={14} className="text-emerald/50" />
+          </div>
+          <p className="text-3xl font-black text-white tracking-tighter">฿{assets.toLocaleString()}</p>
+          <p className="text-[9px] text-slate font-bold">สินทรัพย์ทั้งหมด</p>
+        </GlassCard>
 
-        {/* Right Column: Performance & Actions */}
-        <div className="col-span-12 lg:col-span-8 flex flex-col gap-6">
-          
-          {/* Main Velocity Chart */}
-          <GlassCard interactive className="p-6 flex-1 flex flex-col" data-testid="cockpit-velocity-card">
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                 <h3 className="text-sm font-black text-white uppercase tracking-widest">Performance Velocity</h3>
-                 <p className="text-[9px] text-slate mt-1 uppercase tracking-tighter">Income vs Expense Tracking</p>
+        <GlassCard interactive className="p-5 flex flex-col justify-between gap-3">
+          <div className="flex items-center justify-between">
+            <span className="text-[9px] font-black text-slate uppercase tracking-widest">Total Liabilities</span>
+            <CreditCard size={14} className="text-rose/50" />
+          </div>
+          <p className="text-3xl font-black text-rose tracking-tighter">฿{liabilities.toLocaleString()}</p>
+          <p className="text-[9px] text-slate font-bold">หนี้สินทั้งหมด</p>
+        </GlassCard>
+      </div>
+
+      {/* ── Row 2: KPI Cards ── */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 shrink-0">
+        <KpiCard
+          label="Saving Rate"
+          value={`${savingRate.toFixed(1)}%`}
+          target="เป้า: ≥ 20%"
+          status={savingRate >= 20 ? 'good' : savingRate >= 10 ? 'warning' : 'danger'}
+          icon={<PiggyBank size={16} />}
+        />
+        <KpiCard
+          label="Investment Rate"
+          value={`${investRatio.toFixed(1)}%`}
+          target="เป้า: ≥ 15%"
+          status={investRatio >= 15 ? 'good' : investRatio >= 5 ? 'warning' : 'danger'}
+          icon={<BarChart3 size={16} />}
+        />
+        <KpiCard
+          label="Debt Ratio"
+          value={`${debtRatio.toFixed(1)}%`}
+          target="เป้า: ≤ 30%"
+          status={debtRatio <= 30 ? 'good' : debtRatio <= 50 ? 'warning' : 'danger'}
+          icon={<ShieldAlert size={16} />}
+          higherIsBetter={false}
+        />
+        <KpiCard
+          label="Emergency Fund"
+          value={`${emergencyMos.toFixed(1)} เดือน`}
+          target="เป้า: ≥ 6 เดือน"
+          status={emergencyMos >= 6 ? 'good' : emergencyMos >= 3 ? 'warning' : 'danger'}
+          icon={<Ambulance size={16} />}
+        />
+      </div>
+
+      {/* ── Row 3: Velocity + Allocation ── */}
+      {showRow3 && (
+        <div className="grid grid-cols-12 gap-5 shrink-0">
+          {widgetConfig.velocity && (
+            <GlassCard
+              interactive
+              className={clsx('p-6 flex flex-col h-80', bothRow3 ? 'col-span-12 lg:col-span-8' : 'col-span-12')}
+              data-testid="cockpit-velocity-card"
+            >
+              <div className="flex justify-between items-center mb-4 shrink-0">
+                <div>
+                  <h3 className="text-sm font-black text-white uppercase tracking-widest">Performance Velocity</h3>
+                  <p className="text-[9px] text-slate mt-0.5 uppercase tracking-tighter">Income vs Expense Tracking</p>
+                </div>
+                <div className="flex flex-wrap gap-3 justify-end">
+                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald" /> INCOME</span>
+                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-white/10" /> EXPENSE</span>
+                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400" /> SAVING</span>
+                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-400" /> INVEST</span>
+                </div>
               </div>
-              <div className="flex flex-wrap gap-4 justify-end">
-                <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald"></span> INCOME</span>
-                <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-white/10"></span> EXPENSE</span>
-                <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400"></span> SAVING</span>
-                <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-400"></span> INVESTMENT</span>
+              <div className="flex-1 min-h-0">
+                <VelocityChart data={stats?.monthlyCashflow || []} />
               </div>
-            </div>
-            <div className="flex-1 min-h-0">
-              <VelocityChart data={stats?.monthlyCashflow || []} />
-            </div>
-          </GlassCard>
+            </GlassCard>
+          )}
 
-          {/* Bottom Grid: Allocation & Goals & Insights */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 h-48 shrink-0">
-            
-            {/* Asset Allocation */}
-            <GlassCard className="p-5 flex flex-col relative overflow-hidden group" data-testid="cockpit-allocation-card">
+          {widgetConfig.allocation && (
+            <GlassCard
+              className={clsx('p-5 flex flex-col relative overflow-hidden group h-80', bothRow3 ? 'col-span-12 lg:col-span-4' : 'col-span-12')}
+              data-testid="cockpit-allocation-card"
+            >
               <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald/5 rounded-full blur-2xl group-hover:bg-emerald/10 transition-colors duration-500 pointer-events-none" />
-              <div className="flex justify-between items-center mb-2 z-10">
+              <div className="flex justify-between items-center mb-3 z-10 shrink-0">
                 <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">Asset Allocation</h3>
                 <span className="text-[9px] text-emerald bg-emerald/10 px-2 py-0.5 rounded-full">Top 5</span>
               </div>
-              <div className="flex-1 min-h-0 w-full relative z-10 pb-2">
-                 {allocationData.length > 0 ? (
-                   <PortfolioDoughnut data={allocationData} />
-                 ) : (
-                   <div className="w-full h-full flex items-center justify-center text-[10px] text-slate font-medium">No asset data available</div>
-                 )}
+              <div className="flex-1 min-h-0 w-full relative z-10">
+                {allocationData.length > 0
+                  ? <PortfolioDoughnut data={allocationData} />
+                  : <div className="w-full h-full flex items-center justify-center text-[10px] text-slate font-medium">No asset data available</div>
+                }
               </div>
             </GlassCard>
+          )}
+        </div>
+      )}
 
-            {/* Goals Progress */}
-            <GlassCard className="p-5 flex flex-col relative overflow-hidden group">
+      {/* ── Row 4: Goals + Radar ── */}
+      {showRow4 && (
+        <div className="grid grid-cols-12 gap-5 shrink-0">
+          {widgetConfig.goals && (
+            <GlassCard
+              className={clsx('p-5 flex flex-col relative overflow-hidden group h-72', bothRow4 ? 'col-span-12 lg:col-span-8' : 'col-span-12')}
+            >
               <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-400/5 rounded-full blur-2xl group-hover:bg-blue-400/10 transition-colors duration-500 pointer-events-none" />
-              <div className="flex justify-between items-center mb-4 z-10">
+              <div className="flex justify-between items-center mb-4 z-10 shrink-0">
                 <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">Financial Goals</h3>
                 <Target size={14} className="text-blue-400" />
               </div>
               <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 custom-scrollbar">
-                {(stats?.goalTracking || []).slice(0, 2).map((goal) => (
+                {(stats?.goalTracking || []).map((goal) => (
                   <div key={goal.id} className="flex flex-col gap-1.5">
                     <div className="flex justify-between items-center">
-                      <span className="text-[10px] font-bold text-white truncate max-w-[120px]">{goal.name}</span>
+                      <span className="text-[10px] font-bold text-white truncate max-w-[200px]">{goal.name}</span>
                       <span className="text-[10px] font-black text-blue-400">{Math.round(goal.percentage)}%</span>
                     </div>
                     <div className="w-full bg-navy/50 h-1.5 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-blue-400 shadow-[0_0_8px_rgba(96,165,250,0.4)] transition-all duration-1000"
                         style={{ width: `${Math.min(goal.percentage, 100)}%` }}
-                      ></div>
+                      />
                     </div>
                   </div>
                 ))}
@@ -406,27 +490,30 @@ export default function DashboardCockpit() {
                 )}
               </div>
             </GlassCard>
+          )}
 
-            <div className="flex flex-col gap-5">
-              {/* AI Financial Insight hidden as requested */}
-              <div className="flex-1" /> 
-              
-              <button 
-                data-testid="add-transaction-btn"
-                onClick={() => {
-                  setIsTransactionModalOpen(true);
-                  void fetchMeta();
-                }}
-                className="w-full p-4 flex items-center justify-center gap-3 bg-emerald text-navy font-black shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 transition-all active:scale-95 group rounded-full shrink-0 overflow-hidden relative"
-              >
-                <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-                <Plus size={20} className="relative z-10" />
-                <span className="text-xs uppercase tracking-[0.1em] relative z-10">บันทึกรายการใหม่</span>
-              </button>
-            </div>
-          </div>
+          {widgetConfig.radar && (
+            <GlassCard
+              interactive
+              className={clsx('p-5 flex flex-col items-center h-72', bothRow4 ? 'col-span-12 lg:col-span-4' : 'col-span-12')}
+              data-testid="cockpit-radar-card"
+            >
+              <div className="w-full flex items-center justify-between mb-3 shrink-0">
+                <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">Capital Health Radar</h3>
+                <Activity size={14} className="text-emerald animate-pulse" />
+              </div>
+              <div className="relative w-full flex-1 min-h-0">
+                <HealthRadar scores={stats?.health?.scores || { saving: 0, emergency: 0, debt: 0, investment: 0 }} />
+              </div>
+              <div className="w-full pt-3 border-t border-white/5 flex justify-between items-center shrink-0">
+                <span className="text-[9px] font-bold text-slate uppercase">System Score</span>
+                <span className="text-xl font-black text-emerald">{stats?.health?.score || 0}<span className="text-[10px] text-slate-500 ml-1">pts</span></span>
+              </div>
+            </GlassCard>
+          )}
         </div>
-      </div>
+      )}
+
 
       {/* Quick Add Transaction Modal */}
       <GlassModal 

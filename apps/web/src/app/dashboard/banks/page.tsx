@@ -3,10 +3,12 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, Plus, Loader2 } from 'lucide-react';
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, Plus, Loader2, LayoutGrid, List } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Bank } from '@/types/models';
 import GlassCard from '@/components/ui/GlassCard';
+import BankIcon from '@/components/ui/BankIcon';
+import { clsx } from 'clsx';
 
 
 export default function BanksManagementPage() {
@@ -14,6 +16,13 @@ export default function BanksManagementPage() {
   const { hasPermission } = usePermissions();
   const [loading, setLoading] = useState(true);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(() =>
+    (typeof window !== 'undefined' ? localStorage.getItem('viewMode_banks') as 'grid' | 'table' : null) || 'table'
+  );
+  const toggleViewMode = (mode: 'grid' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('viewMode_banks', mode);
+  };
   
   // Alert state
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -205,105 +214,116 @@ export default function BanksManagementPage() {
           </p>
         </div>
         
-        {hasPermission('banks', 'canCreate') && (
-          <button 
-            onClick={openAddModal}
-            data-testid="banks-list-btn-add-bank"
-            className="flex items-center justify-center gap-3 px-8 py-3 bg-emerald text-navy font-black rounded-full transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 group relative overflow-hidden"
-          >
-            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-            <Plus size={18} className="relative z-10" />
-            <span className="text-xs uppercase tracking-[0.1em] relative z-10">Add New Bank</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          <div className="flex bg-white/5 border border-white/5 rounded-lg p-0.5">
+            {(['grid', 'table'] as const).map((mode) => (
+              <button key={mode} onClick={() => toggleViewMode(mode)}
+                className={clsx('p-1.5 rounded-md transition-all', viewMode === mode ? 'bg-emerald/20 text-emerald' : 'text-slate hover:text-white')}>
+                {mode === 'grid' ? <LayoutGrid size={14} /> : <List size={14} />}
+              </button>
+            ))}
+          </div>
+          {hasPermission('banks', 'canCreate') && (
+            <button onClick={openAddModal} data-testid="banks-list-btn-add-bank"
+              className="flex items-center justify-center gap-3 px-8 py-3 bg-emerald text-navy font-black rounded-full transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 group relative overflow-hidden">
+              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Plus size={18} className="relative z-10" />
+              <span className="text-xs uppercase tracking-[0.1em] relative z-10">Add New Bank</span>
+            </button>
+          )}
+        </div>
       </div>
       
-      {/* Table Card */}
-      <GlassCard className="overflow-hidden bg-navy/40">
-        <div className="overflow-x-auto px-4 py-2 custom-scrollbar">
-          <table className="w-full text-left text-xs border-separate border-spacing-y-2">
-            <thead>
-              <tr className="text-slate-400 uppercase font-bold text-[10px]">
-                <th 
-                  scope="col" 
-                  className="px-6 py-4 cursor-pointer hover:text-white transition-colors"
-                  onClick={() => handleSort('name')}
-                >
-                  <div className="flex items-center">Bank Name <SortIcon column="name" /></div>
-                </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-4 cursor-pointer hover:text-white transition-colors"
-                  onClick={() => handleSort('code')}
-                >
-                  <div className="flex items-center">Code <SortIcon column="code" /></div>
-                </th>
-                <th 
-                  scope="col" 
-                  className="px-6 py-4 cursor-pointer hover:text-white transition-colors"
-                  onClick={() => handleSort('color')}
-                >
-                  <div className="flex items-center">Color Mark <SortIcon column="color" /></div>
-                </th>
-                <th scope="col" className="px-6 py-4 text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {sortedBanks.length === 0 ? (
-                <tr>
-                  <td colSpan={4} className="py-8 text-center text-slate font-bold">No banks defined in system.</td>
-                </tr>
-              ) : sortedBanks.map((bank) => (
-                <tr key={bank.id} className="bg-white/[0.02] hover:bg-white/[0.06] transition-all group">
-                  <td className="whitespace-nowrap py-3 px-6 text-sm font-bold text-white rounded-l-xl">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-white/[0.02]" style={{ color: bank.color }}>
-                        <Building2 className="w-4 h-4" />
-                      </div>
-                      {bank.name}
-                    </div>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-3 text-xs text-slate-300">
-                    <span className="font-mono bg-white/5 border border-white/5 px-2 py-0.5 rounded text-[10px] text-emerald font-bold">
-                      {bank.code}
-                    </span>
-                  </td>
-                  <td className="whitespace-nowrap px-6 py-3 text-xs">
-                     <div className="flex items-center gap-2">
-                       <div className="w-3.5 h-3.5 rounded shadow-sm border border-white/10" style={{ backgroundColor: bank.color }}></div>
-                       <span className="text-slate-400 font-mono text-[10px]">{bank.color}</span>
-                     </div>
-                  </td>
-                  <td className="relative whitespace-nowrap py-3 px-6 text-right text-xs font-medium rounded-r-xl">
-                    <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                      {hasPermission('banks', 'canUpdate') && (
-                        <button 
-                          onClick={() => openEditModal(bank)} 
-                          data-testid={`banks-list-btn-edit-${bank.code}`}
-                          className="text-slate-400 hover:text-blue-400 transition-colors" 
-                          title="Edit"
-                        >
-                          <Edit2 className="w-4 h-4 inline" />
-                        </button>
-                      )}
-                      {hasPermission('banks', 'canDelete') && (
-                        <button 
-                          onClick={() => handleDelete(bank.id)} 
-                          data-testid={`banks-list-btn-delete-${bank.code}`}
-                          className="text-slate-400 hover:text-rose transition-colors" 
-                          title="Delete"
-                        >
-                          <Trash2 className="w-4 h-4 inline" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+      {/* Banks View */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {sortedBanks.map((bank) => (
+            <GlassCard key={bank.id} interactive className="p-3 group">
+              <div className="flex items-center gap-2 mb-2">
+                <BankIcon code={bank.code} name={bank.name} color={bank.color || '#3B82F6'} size={36} className="shrink-0" />
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xs font-black text-white group-hover:text-emerald transition-colors truncate uppercase tracking-tight leading-tight">{bank.name}</h3>
+                  <span className="font-mono text-[9px] text-emerald bg-emerald/5 px-1.5 py-0.5 rounded border border-emerald/10 font-bold">{bank.code}</span>
+                </div>
+                <div className="flex gap-0.5 shrink-0">
+                  {hasPermission('banks', 'canUpdate') && (
+                    <button onClick={() => openEditModal(bank)} data-testid={`banks-list-btn-edit-${bank.code}`} className="p-1 text-slate hover:text-white transition-colors">
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                  )}
+                  {hasPermission('banks', 'canDelete') && (
+                    <button onClick={() => handleDelete(bank.id)} data-testid={`banks-list-btn-delete-${bank.code}`} className="p-1 text-slate hover:text-rose transition-colors">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  )}
+                </div>
+              </div>
+              <div className="flex items-center gap-2 pt-2 border-t border-white/5">
+                <div className="w-3.5 h-3.5 rounded border border-white/10 shrink-0" style={{ backgroundColor: bank.color }} />
+                <span className="text-[9px] text-slate font-mono">{bank.color}</span>
+              </div>
+            </GlassCard>
+          ))}
         </div>
-      </GlassCard>
+      ) : (
+        <GlassCard className="overflow-hidden bg-navy/40">
+          <div className="overflow-x-auto px-4 py-2 custom-scrollbar">
+            <table className="w-full text-left text-xs border-separate border-spacing-y-2">
+              <thead>
+                <tr className="text-slate-400 uppercase font-bold text-[10px]">
+                  <th scope="col" className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('name')}>
+                    <div className="flex items-center">Bank Name <SortIcon column="name" /></div>
+                  </th>
+                  <th scope="col" className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('code')}>
+                    <div className="flex items-center">Code <SortIcon column="code" /></div>
+                  </th>
+                  <th scope="col" className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('color')}>
+                    <div className="flex items-center">Color Mark <SortIcon column="color" /></div>
+                  </th>
+                  <th scope="col" className="px-6 py-4 text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                {sortedBanks.length === 0 ? (
+                  <tr><td colSpan={4} className="py-8 text-center text-slate font-bold">No banks defined in system.</td></tr>
+                ) : sortedBanks.map((bank) => (
+                  <tr key={bank.id} className="bg-white/[0.02] hover:bg-white/[0.06] transition-all group">
+                    <td className="whitespace-nowrap py-3 px-6 text-sm font-bold text-white rounded-l-xl">
+                      <div className="flex items-center gap-3">
+                        <BankIcon code={bank.code} name={bank.name} color={bank.color || '#3B82F6'} size={36} />
+                        {bank.name}
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-3">
+                      <span className="font-mono bg-white/5 border border-white/5 px-2 py-0.5 rounded text-[10px] text-emerald font-bold">{bank.code}</span>
+                    </td>
+                    <td className="whitespace-nowrap px-6 py-3">
+                      <div className="flex items-center gap-2">
+                        <div className="w-3.5 h-3.5 rounded border border-white/10" style={{ backgroundColor: bank.color }} />
+                        <span className="text-slate-400 font-mono text-[10px]">{bank.color}</span>
+                      </div>
+                    </td>
+                    <td className="whitespace-nowrap py-3 px-6 text-right rounded-r-xl">
+                      <div className="flex items-center justify-end gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {hasPermission('banks', 'canUpdate') && (
+                          <button onClick={() => openEditModal(bank)} data-testid={`banks-list-btn-edit-${bank.code}`} className="text-slate-400 hover:text-blue-400 transition-colors">
+                            <Edit2 className="w-4 h-4" />
+                          </button>
+                        )}
+                        {hasPermission('banks', 'canDelete') && (
+                          <button onClick={() => handleDelete(bank.id)} data-testid={`banks-list-btn-delete-${bank.code}`} className="text-slate-400 hover:text-rose transition-colors">
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </GlassCard>
+      )}
 
       {/* Modal for Create/Edit */}
       {isModalOpen && (

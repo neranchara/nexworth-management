@@ -128,6 +128,8 @@ model Account {
   updatedAt        DateTime          @updatedAt
   accountNumber    String            @default("-")
   actualDate       DateTime?
+  tag              String?
+  targetAmount     Float?
   bank             Bank?             @relation(fields: [bankId], references: [id])
   organization     Organization?     @relation(fields: [organizationId], references: [id])
   user             User              @relation(fields: [userId], references: [id], onDelete: Cascade)
@@ -215,7 +217,7 @@ model TransactionCategory {
   updatedAt      DateTime        @updatedAt
   transactions   Transaction[]
   organization   Organization?   @relation(fields: [organizationId], references: [id])
-  type           TransactionType @relation(fields: [typeId], references: [id])
+  type           TransactionType @relation(fields: [typeId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, name, typeId])
 }

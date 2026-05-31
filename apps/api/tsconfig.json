@@ -4,7 +4,9 @@
     "outDir": "./dist",
     "rootDir": "../../",
     "module": "CommonJS",
-    "moduleResolution": "node"
+    "moduleResolution": "node",
+    "ignoreDeprecations": "6.0",
+    "types": ["node", "nodemailer"]
   },
 
   "include": ["src/**/*.ts", "../../packages/**/*.ts"],

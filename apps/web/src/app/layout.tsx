@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Prompt } from "next/font/google";
 // @ts-ignore
 import "./globals.css";
+import PrewarmDB from "../components/PrewarmDB";
+import { Analytics } from "@vercel/analytics/react";
 
 const prompt = Prompt({
   variable: "--font-prompt",
@@ -31,7 +33,9 @@ export default function RootLayout({
       <body
         className={`${prompt.variable} ${prompt.className} font-sans antialiased bg-midnight text-slate-100`}
       >
+        <PrewarmDB />
         {children}
+        <Analytics />
       </body>
     </html>
   );

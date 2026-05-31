@@ -89,8 +89,8 @@ async function calculateFinancialStats(
   let totalLiabilities = 0;
   let liquidAssets = 0;
 
-  const REAL_ASSET_TYPES = ['BANK', 'STOCK', 'GOLD', 'CASHFLOW', 'EMERGENCY', 'INVESTMENT', 'SAVING', 'FAMILY'];
-  const LIQUID_TYPES = ['BANK', 'CASHFLOW', 'SAVING', 'EMERGENCY'];
+  const REAL_ASSET_TYPES = ['BANK', 'STOCK', 'GOLD', 'CASHFLOW', 'EMERGENCY', 'INVESTMENT', 'SAVING', 'FAMILY', 'GOAL'];
+  const LIQUID_TYPES = ['BANK', 'CASHFLOW', 'SAVING', 'EMERGENCY', 'GOAL'];
   const INVESTMENT_TYPES = ['STOCK', 'GOLD', 'INVESTMENT'];
 
   const assetsByAccount: any[] = [];
@@ -98,7 +98,13 @@ async function calculateFinancialStats(
   const goalTracking: any[] = [];
 
   accountsRaw.forEach(acc => {
-    const balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
+    let balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
+    
+    // Absolute threshold validation to convert negative zero (-0) into exact positive 0
+    if (Math.abs(balance) < 0.005) {
+      balance = 0;
+    }
+    
     const shouldIncludeInNetWorth = acc.isPersonal || acc.type === 'INVESTMENT';
 
     if (acc.type === 'LIABILITY') {
@@ -112,7 +118,7 @@ async function calculateFinancialStats(
       if (LIQUID_TYPES.includes(acc.type)) liquidAssets += balance;
       if (INVESTMENT_TYPES.includes(acc.type)) investmentAssets += balance;
       if (balance !== 0) {
-        assetsByAccount.push({ id: acc.id, name: acc.name, type: acc.type, balance });
+        assetsByAccount.push({ id: acc.id, name: acc.name, type: acc.type, tag: acc.tag, balance });
       }
     }
   });
@@ -138,6 +144,24 @@ async function calculateFinancialStats(
       });
     }
   });
+
+  // Dynamic fallback for Goal type Accounts if no target-based Goals exist
+  if (goalTracking.length === 0) {
+    accountsRaw.forEach(acc => {
+      if (acc.type === 'GOAL') {
+        const balance = acc.asset?.amount ?? 0;
+        const target = acc.targetAmount || balance || 1;
+        goalTracking.push({
+          id: acc.id,
+          name: acc.name,
+          currentAmount: balance,
+          targetAmount: target,
+          percentage: target > 0 ? (balance / target) * 100 : 0,
+          color: 'Blue'
+        });
+      }
+    });
+  }
 
   const netWorth = totalRealAssets - totalLiabilities;
 
@@ -246,6 +270,26 @@ async function calculateFinancialStats(
   else if (totalHealthScore >= 60) healthStatus = 'Good';
   else if (totalHealthScore >= 40) healthStatus = 'Risk';
 
+  const dangerZone = userSettings?.liquidityDangerZone ?? 30000;
+  const safeZone = userSettings?.liquiditySafeZone ?? 70000;
+
+  const cashflowAccounts = accountsRaw
+    .filter(acc => acc.tag === 'Cashflow')
+    .map(acc => {
+      let balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
+      if (Math.abs(balance) < 0.005) {
+        balance = 0;
+      }
+      return {
+        id: acc.id,
+        name: acc.name,
+        balance,
+        status: balance <= dangerZone ? 'DANGER' as const
+          : balance >= safeZone ? 'SAFE' as const
+          : 'WATCH' as const
+      };
+    });
+
   return {
     currency: '฿',
     summary: {
@@ -257,11 +301,11 @@ async function calculateFinancialStats(
       monthlySaving: currentMonthData.saving,
       monthlyIncome: currentMonthData.income,
       monthlyExpense: currentMonthData.expense,
-      liquidityDangerZone: userSettings?.liquidityDangerZone ?? 30000,
-      liquiditySafeZone: userSettings?.liquiditySafeZone ?? 70000,
-      cashflowStatus: (currentMonthData.income - currentMonthData.expense) <= (userSettings?.liquidityDangerZone ?? 30000) 
-        ? 'DANGER' 
-        : (currentMonthData.income - currentMonthData.expense) >= (userSettings?.liquiditySafeZone ?? 70000)
+      liquidityDangerZone: dangerZone,
+      liquiditySafeZone: safeZone,
+      cashflowStatus: (currentMonthData.income - currentMonthData.expense) <= dangerZone
+        ? 'DANGER'
+        : (currentMonthData.income - currentMonthData.expense) >= safeZone
           ? 'SAFE'
           : 'WATCH',
       savingRate: Number.isFinite(savingRate) ? Math.round(savingRate * 1000) / 10 : 0,
@@ -292,6 +336,7 @@ async function calculateFinancialStats(
     monthlyCashflow,
     assetsByAccount,
     liabilitiesByAccount,
+    cashflowAccounts,
     goalTracking
   };
 }

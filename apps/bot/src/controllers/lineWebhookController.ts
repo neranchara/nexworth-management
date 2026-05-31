@@ -36,7 +36,14 @@ export const handleWebhook = async (request: FastifyRequest, reply: FastifyReply
 
   if (channelSecret && signature && request.rawBody) {
     if (!verifySignature(request.rawBody as string, signature)) {
-      request.log.error('❌ [LINE-DEBUG] Signature validation failed but proceeding for debug...');
+      request.log.error({
+        channelSecretLength: channelSecret?.length || 0,
+        channelSecretMasked: channelSecret ? `${channelSecret.slice(0, 4)}...${channelSecret.slice(-4)}` : 'empty',
+        channelAccessTokenLength: channelAccessToken?.length || 0,
+        channelAccessTokenMasked: channelAccessToken ? `${channelAccessToken.slice(0, 6)}...${channelAccessToken.slice(-6)}` : 'empty',
+        signature,
+        rawBodyLength: (request.rawBody as string)?.length || 0
+      }, '❌ [LINE-DEBUG] Signature validation failed but proceeding for debug...');
       // return reply.status(401).send('Unauthorized'); // Commented out for debug
     }
   } else {
@@ -113,6 +120,13 @@ const processEvent = async (event: webhook.Event) => {
   if (!event.source || !event.source.userId) return;
 
   const lineUserId = event.source.userId;
+  
+  // Gracefully bypass dummy verification events from LINE Developer Console
+  if (lineUserId === 'U00000000000000000000000000000000') {
+    console.log('✅ [LINE-DEBUG] Bypassing LINE Developers Console Verification dummy event.');
+    return;
+  }
+
   const replyToken = (event as any).replyToken || '';
   
   if (event.type !== 'message') return;
@@ -149,10 +163,10 @@ const processEvent = async (event: webhook.Event) => {
             data: { lineUserId, pairingCode: null }
           })
         ]);
-        await replyToUser(replyToken, '🔄 สลับบัญชี Nexworth สำเร็จแล้ว! ตอนนี้บอทผูกกับบัญชีใหม่ของคุณเรียบร้อยครับ');
+        await replyToUser(replyToken, lineUserId, '🔄 สลับบัญชี Nexworth สำเร็จแล้ว! ตอนนี้บอทผูกกับบัญชีใหม่ของคุณเรียบร้อยครับ');
         return;
       } else if (!user) {
-        await replyToUser(replyToken, '❌ รหัสเชื่อมต่อไม่ถูกต้อง หรือหมดอายุครับ');
+        await replyToUser(replyToken, lineUserId, '❌ รหัสเชื่อมต่อไม่ถูกต้อง หรือหมดอายุครับ');
         return;
       }
       // If already linked and code is wrong, just fall through to normal processing or ignore
@@ -160,7 +174,7 @@ const processEvent = async (event: webhook.Event) => {
   }
 
   if (!user) {
-    await replyToUser(replyToken, 'สวัสดีครับ! คุณยังไม่ได้เชื่อมต่อบัญชี Nexworth กรุณานำรหัสจากหน้าเว็บ (เช่น LINK-1234) มาพิมพ์ที่นี่เพื่อเชื่อมต่อครับ');
+    await replyToUser(replyToken, lineUserId, 'สวัสดีครับ! คุณยังไม่ได้เชื่อมต่อบัญชี Nexworth กรุณานำรหัสจากหน้าเว็บ (เช่น LINK-1234) มาพิมพ์ที่นี่เพื่อเชื่อมต่อครับ');
     return;
   }
 
@@ -181,24 +195,21 @@ const processEvent = async (event: webhook.Event) => {
     }
 
     if (text === '⚙️ ตั้งค่าบัญชี') {
-      await client.replyMessage({
-        replyToken,
-        messages: [{
-          type: 'text',
-          text: `⚙️ ตั้งค่าบัญชี Nexworth\n\nบัญชีปัจจุบัน: ${user.email}\nLINE ID: ${lineUserId.slice(0, 5)}...`,
-          quickReply: {
-            items: [
-              { type: 'action', action: { type: 'message', label: '🔗 เชื่อมต่อใหม่', text: 'อยากเชื่อมต่อบัญชีใหม่' } as any },
-              { type: 'action', action: { type: 'postback', label: '🚫 เลิกเชื่อมต่อ', data: 'action=unlink', displayText: 'ขอยกเลิกการเชื่อมต่อ LINE ครับ' } as any }
-            ]
-          }
-        }]
+      await safeReply(replyToken, lineUserId, {
+        type: 'text',
+        text: `⚙️ ตั้งค่าบัญชี Nexworth\n\nบัญชีปัจจุบัน: ${user.email}\nLINE ID: ${lineUserId.slice(0, 5)}...`,
+        quickReply: {
+          items: [
+            { type: 'action', action: { type: 'message', label: '🔗 เชื่อมต่อใหม่', text: 'อยากเชื่อมต่อบัญชีใหม่' } as any },
+            { type: 'action', action: { type: 'postback', label: '🚫 เลิกเชื่อมต่อ', data: 'action=unlink', displayText: 'ขอยกเลิกการเชื่อมต่อ LINE ครับ' } as any }
+          ]
+        }
       });
       return;
     }
 
     if (text === '📝 วิธีบันทึกรายการ') {
-      await replyToUser(replyToken, '📝 วิธีบันทึกง่ายๆ:\n1. พิมพ์ "ชื่อรายการ จำนวน บัญชี" เช่น "ข้าวแกง 50 กระเป๋า"\n2. หรือส่งรูปสลิปโอนเงินมาได้เลยครับ!');
+      await replyToUser(replyToken, lineUserId, '📝 วิธีบันทึกง่ายๆ:\n1. พิมพ์ "ชื่อรายการ จำนวน บัญชี" เช่น "ข้าวแกง 50 กระเป๋า"\n2. หรือส่งรูปสลิปโอนเงินมาได้เลยครับ!');
       return;
     }
 
@@ -242,7 +253,7 @@ const processEvent = async (event: webhook.Event) => {
    - จัดการการเชื่อมต่อบัญชีของคุณ
 
 💡 เคล็ดลับ: คุณไม่จำเป็นต้องพิมพ์ชื่อบัญชีให้ตรงเป๊ะ บอทจะพยายามเดาใจคุณเองครับ!`;
-      await replyToUser(replyToken, helpText);
+      await replyToUser(replyToken, lineUserId, helpText);
       return;
     }
 
@@ -256,7 +267,7 @@ const processEvent = async (event: webhook.Event) => {
 📊 ตลาดหุ้นไทย (SET): 1,480.25 (-0.45%)
 
 💡 ข้อมูลราคาทองคำอ้างอิงจากสมาคมค้าทองคำ (อัปเดตล่าสุด 17:20 น.)`;
-      await replyToUser(replyToken, marketText);
+      await replyToUser(replyToken, lineUserId, marketText);
       return;
     }
 
@@ -294,18 +305,15 @@ const processEvent = async (event: webhook.Event) => {
         } as any
       }));
 
-      await client.replyMessage({
-        replyToken,
-        messages: [{
-          type: 'text',
-          text: `🔍 สกัดข้อมูลได้:\nจำนวน: ${extracted.amount.toLocaleString()} บาท\nรายการ: ${extracted.description || extracted.categoryName}\n\nกรุณาเลือกบัญชีที่ต้องการบันทึกครับ:`,
-          quickReply: { items: quickReplyItems }
-        }]
+      await safeReply(replyToken, lineUserId, {
+        type: 'text',
+        text: `🔍 สกัดข้อมูลได้:\nจำนวน: ${extracted.amount.toLocaleString()} บาท\nรายการ: ${extracted.description || extracted.categoryName}\n\nกรุณาเลือกบัญชีที่ต้องการบันทึกครับ:`,
+        quickReply: { items: quickReplyItems }
       });
     }
 
   } else if (message.type === 'image') {
-    await replyToUser(replyToken, 'ได้รับรูปสลิปแล้ว กำลังวิเคราะห์ข้อมูล...');
+    await replyToUser(replyToken, lineUserId, 'ได้รับรูปสลิปแล้ว กำลังวิเคราะห์ข้อมูล...');
     
     const imageContent = await getLineContent(message.id);
     if (!imageContent) {
@@ -321,26 +329,23 @@ const processEvent = async (event: webhook.Event) => {
     const extracted = imageExtractionResult.data;
 
     // For image, we usually don't have account name, so ask as well if no obvious match
-    await client.replyMessage({
-      replyToken,
-      messages: [{
-        type: 'text',
-        text: `🔍 สลิปจำนวน: ${extracted.amount.toLocaleString()} บาท\nลงบัญชีไหนดีครับ?`,
-        quickReply: {
-          items: user.accounts.slice(0, 13).map((acc: any) => ({
-            type: 'action',
-            action: {
-              type: 'postback',
-              label: (acc.name as string).slice(0, 20),
-              data: `action=record&amt=${extracted.amount}&desc=${encodeURIComponent(extracted.description || '')}&cat=${encodeURIComponent(extracted.categoryName || '')}&exp=${extracted.isExpense}&date=${extracted.date || ''}&accId=${acc.id}`,
-              displayText: `ลงบัญชี: ${acc.name}`
-            } as any
-          }))
-        }
-      }]
+    await safeReply(replyToken, lineUserId, {
+      type: 'text',
+      text: `🔍 สลิปจำนวน: ${extracted.amount.toLocaleString()} บาท\nลงบัญชีไหนดีครับ?`,
+      quickReply: {
+        items: user.accounts.slice(0, 13).map((acc: any) => ({
+          type: 'action',
+          action: {
+            type: 'postback',
+            label: (acc.name as string).slice(0, 20),
+            data: `action=record&amt=${extracted.amount}&desc=${encodeURIComponent(extracted.description || '')}&cat=${encodeURIComponent(extracted.categoryName || '')}&exp=${extracted.isExpense}&date=${extracted.date || ''}&accId=${acc.id}`,
+            displayText: `ลงบัญชี: ${acc.name}`
+          } as any
+        }))
+      }
     });
   } else {
-    await replyToUser(replyToken, 'ระบบรองรับเฉพาะข้อความและรูปภาพสลิปครับ');
+    await replyToUser(replyToken, lineUserId, 'ระบบรองรับเฉพาะข้อความและรูปภาพสลิปครับ');
   }
 };
 
@@ -436,15 +441,29 @@ const recordTransactionAndNotify = async (lineUserId: string, user: any, extract
   }
 };
 
-const replyToUser = async (replyToken: string, text: string) => {
+const safeReply = async (replyToken: string, userId: string, messagePayload: any) => {
   try {
     await client.replyMessage({
       replyToken,
-      messages: [{ type: 'text', text }]
+      messages: Array.isArray(messagePayload) ? messagePayload : [messagePayload]
     });
-  } catch (e) {
-    console.error('LINE Reply Error:', e);
+  } catch (e: any) {
+    console.error('LINE Reply Error, attempting push fallback:', e);
+    if (userId) {
+      try {
+        await client.pushMessage({
+          to: userId,
+          messages: Array.isArray(messagePayload) ? messagePayload : [messagePayload]
+        });
+      } catch (pushErr) {
+        console.error('LINE Push Fallback Error:', pushErr);
+      }
+    }
   }
+};
+
+const replyToUser = async (replyToken: string, userId: string, text: string) => {
+  await safeReply(replyToken, userId, { type: 'text', text });
 };
 
 const pushToUser = async (to: string, text: string) => {

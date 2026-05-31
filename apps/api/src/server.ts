@@ -69,8 +69,19 @@ export const buildServer = async (): Promise<FastifyInstance> => {
       };
     });
 
-  server.get('/health', async () => {
-    return { status: 'ok' };
+  server.get('/health', async (request, reply) => {
+    try {
+      const { prisma } = await import('./lib/prisma');
+      await prisma.$queryRaw`SELECT 1`;
+      return { status: 'ok', database: 'connected' };
+    } catch (err: any) {
+      // Return 200 to keep health checks green but notify database state/wake-up trigger
+      return reply.code(200).send({
+        status: 'ok',
+        database: 'waking_up_or_error',
+        message: err.message
+      });
+    }
   });
 
   // ISP Policy: Global UTF-8 Enforcement for Thai Language Support
@@ -160,9 +171,6 @@ const start = async () => {
   }
 };
 
-// Using process.argv to detect if the file is being executed directly
-import { fileURLToPath } from 'url';
-// @ts-ignore
-if (process.argv[1] === fileURLToPath(import.meta.url)) {
+if (process.env.NODE_ENV !== 'test') {
   start();
 }

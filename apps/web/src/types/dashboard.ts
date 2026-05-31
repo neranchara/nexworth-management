@@ -29,6 +29,10 @@ export interface Stats {
     liquidityDangerZone: number;
     liquiditySafeZone: number;
     cashflowStatus: 'DANGER' | 'WATCH' | 'SAFE';
+    savingRate?: number;
+    investmentRatio?: number;
+    debtRatio?: number;
+    emergencyMonths?: number;
     totalOrganizations?: number;
     totalUsers?: number;
     totalTransactions?: number;
@@ -62,6 +66,7 @@ export interface Stats {
   goalTracking: GoalTracking[];
   assetsByAccount?: any[];
   liabilitiesByAccount?: any[];
+  cashflowAccounts?: { id: string; name: string; balance: number; status: 'DANGER' | 'WATCH' | 'SAFE' }[];
   isSystemAdmin?: boolean;
   recentOrganizations?: any[];
 }

@@ -4,8 +4,9 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { TransactionType } from '@/types/models';
-import { Edit2, Trash2, X, CheckCircle, AlertCircle, Layers, Plus } from 'lucide-react';
+import { Edit2, Trash2, X, CheckCircle, AlertCircle, Layers, Plus, LayoutGrid, List } from 'lucide-react';
 import GlassCard from '@/components/ui/GlassCard';
+import { clsx } from 'clsx';
 
 const DEFAULT_BEHAVIORS = [
   { value: 'INCOME', label: 'รายรับ (Income)', color: 'text-emerald' },
@@ -56,6 +57,14 @@ export default function TransactionTypesPage() {
 
   const [behaviors, setBehaviors] = useState<any[]>(DEFAULT_BEHAVIORS);
   const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(() =>
+    (typeof window !== 'undefined' ? localStorage.getItem('viewMode_types') as 'grid' | 'table' : null) || 'grid'
+  );
+
+  const toggleViewMode = (mode: 'grid' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('viewMode_types', mode);
+  };
 
   const fetchTypes = useCallback(async () => {
     try {
@@ -175,69 +184,136 @@ export default function TransactionTypesPage() {
           <p className="text-[10px] text-slate mt-1 uppercase font-black tracking-[0.2em]">{labels.subtitle}</p>
         </div>
         
-        <button 
-          onClick={openAddModal}
-          data-testid="types-list-btn-add-type"
-          className="flex items-center justify-center gap-3 px-8 py-3 bg-emerald text-navy font-black rounded-full transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 group relative overflow-hidden"
-        >
-          <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-          <Plus size={18} className="relative z-10" />
-          <span className="text-xs uppercase tracking-[0.1em] relative z-10">{labels.addNew}</span>
-        </button>
+        <div className="flex items-center gap-3">
+          <div className="flex bg-white/5 border border-white/5 rounded-lg p-0.5">
+            {(['grid', 'table'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => toggleViewMode(mode)}
+                className={clsx(
+                  'p-1.5 rounded-md transition-all',
+                  viewMode === mode ? 'bg-emerald/20 text-emerald' : 'text-slate hover:text-white'
+                )}
+              >
+                {mode === 'grid' ? <LayoutGrid size={14} /> : <List size={14} />}
+              </button>
+            ))}
+          </div>
+
+          <button
+            onClick={openAddModal}
+            data-testid="types-list-btn-add-type"
+            className="flex items-center justify-center gap-3 px-8 py-3 bg-emerald text-navy font-black rounded-full transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 group relative overflow-hidden"
+          >
+            <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+            <Plus size={18} className="relative z-10" />
+            <span className="text-xs uppercase tracking-[0.1em] relative z-10">{labels.addNew}</span>
+          </button>
+        </div>
       </div>
 
-      {/* Behaviors Grid */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-        {types.map((t, i) => {
-          const behaviorInfo = behaviors.find(b => b.value === t.behavior);
-          const behaviorColor = behaviorInfo?.color.replace('text-', 'bg-') || 'bg-slate';
-          
-          return (
-            <GlassCard 
-              key={t.id} 
-              interactive
-              className={`p-4 group stagger-${(i % 4) + 1}`}
-              borderAccent={t.behavior === 'INCOME' ? 'emerald' : t.behavior === 'EXPENSE' ? 'rose' : 'none'}
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className={`p-2 rounded-lg ${behaviorColor}/10 ${behaviorInfo?.color}`}>
-                  <Layers className="w-5 h-5" />
+      {/* Behaviors View */}
+      {viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+          {types.map((t, i) => {
+            const behaviorInfo = behaviors.find(b => b.value === t.behavior);
+            const behaviorColor = behaviorInfo?.color.replace('text-', 'bg-') || 'bg-slate';
+            return (
+              <GlassCard
+                key={t.id}
+                interactive
+                className={`p-3 group stagger-${(i % 4) + 1}`}
+                borderAccent={t.behavior === 'INCOME' ? 'emerald' : t.behavior === 'EXPENSE' ? 'rose' : 'none'}
+              >
+                {/* Row 1: Icon + Name + Actions */}
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`p-1.5 rounded-lg ${behaviorColor}/10 ${behaviorInfo?.color} shrink-0`}>
+                    <Layers className="w-5 h-5" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h3 className="text-xs font-black text-white group-hover:text-emerald transition-colors uppercase tracking-tight truncate leading-tight">
+                      {t.name}
+                    </h3>
+                    <code className="text-[9px] text-emerald bg-emerald/5 px-1.5 py-0.5 rounded border border-emerald/10 font-bold">
+                      {t.behavior}
+                    </code>
+                  </div>
+                  <div className="flex gap-0.5 shrink-0">
+                    <button onClick={() => openEditModal(t)} className="p-1 text-slate hover:text-white transition-colors">
+                      <Edit2 className="w-5 h-5" />
+                    </button>
+                    <button onClick={() => handleDelete(t.id)} className="p-1 text-slate hover:text-rose transition-colors">
+                      <Trash2 className="w-5 h-5" />
+                    </button>
+                  </div>
                 </div>
-                <div className="flex gap-2">
-                  <button onClick={() => openEditModal(t)} className="p-1.5 text-slate hover:text-white transition-colors">
-                    <Edit2 className="w-3.5 h-3.5" />
-                  </button>
-                  <button onClick={() => handleDelete(t.id)} className="p-1.5 text-slate hover:text-rose transition-colors">
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                {/* Row 2: Status + Behavior label */}
+                <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                  <div className="flex items-center gap-1.5 text-[8px] font-black text-slate uppercase tracking-widest">
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.isActive ? 'bg-emerald animate-pulse' : 'bg-slate-700'}`} />
+                    {t.isActive ? labels.active : labels.inactive}
+                  </div>
+                  <span className={`text-[9px] font-bold italic opacity-70 ${behaviorInfo?.color || 'text-slate'}`}>
+                    {behaviorInfo?.label}
+                  </span>
                 </div>
-              </div>
-
-              <div className="mb-4">
-                <h3 className="text-base font-black text-white group-hover:text-emerald transition-colors uppercase tracking-tight truncate">
-                  {t.name}
-                </h3>
-                <div className="mt-1 space-y-1">
-                  <p className="text-[8px] uppercase tracking-widest text-slate/40 font-black">{labels.logic}</p>
-                  <code className="text-[9px] text-emerald bg-emerald/5 px-2 py-0.5 rounded border border-emerald/10 font-bold">
-                    {t.behavior}
-                  </code>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between pt-3 border-t border-white/5">
-                <div className="flex items-center gap-2 text-[8px] font-black text-slate uppercase tracking-widest">
-                  <span className={`w-1.5 h-1.5 rounded-full ${t.isActive ? 'bg-emerald animate-pulse shadow-[0_0_8px_rgba(80,200,120,0.6)]' : 'bg-slate-700'}`} />
-                  {t.isActive ? labels.active : labels.inactive}
-                </div>
-                <div className="text-[9px] text-slate font-bold italic opacity-60">
-                  {behaviorInfo?.label}
-                </div>
-              </div>
-            </GlassCard>
-          );
-        })}
-      </div>
+              </GlassCard>
+            );
+          })}
+        </div>
+      ) : (
+        <GlassCard className="overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/5">
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">ชื่อประเภท</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">ตรรกะระบบ</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">พฤติกรรม</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">สถานะ</th>
+                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {types.map((t) => {
+                const behaviorInfo = behaviors.find(b => b.value === t.behavior);
+                return (
+                  <tr key={t.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                    <td className="px-4 py-3">
+                      <span className="text-xs font-black text-white">{t.name}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <code className="text-[9px] text-emerald bg-emerald/5 px-2 py-0.5 rounded border border-emerald/10 font-bold">
+                        {t.behavior}
+                      </code>
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={`text-[10px] font-bold ${behaviorInfo?.color || 'text-slate'}`}>{behaviorInfo?.label || t.behavior}</span>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <span className={`w-1.5 h-1.5 rounded-full ${t.isActive ? 'bg-emerald animate-pulse' : 'bg-slate-700'}`} />
+                        <span className={`text-[9px] font-bold ${t.isActive ? 'text-emerald' : 'text-slate'}`}>
+                          {t.isActive ? labels.active : labels.inactive}
+                        </span>
+                      </div>
+                    </td>
+                    <td className="px-4 py-3">
+                      <div className="flex justify-end gap-1">
+                        <button onClick={() => openEditModal(t)} className="p-1.5 text-slate hover:text-white transition-colors">
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                        <button onClick={() => handleDelete(t.id)} className="p-1.5 text-slate hover:text-rose transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </GlassCard>
+      )}
 
       {/* Modal for Create/Edit */}
       {isModalOpen && (

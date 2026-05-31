@@ -1,26 +1,28 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
-import { 
-  Edit2, 
-  Trash2, 
-  X, 
-  CheckCircle, 
-  AlertCircle, 
-  Building2, 
-  TrendingUp, 
-  Coins, 
-  ArrowUpCircle, 
-  ArrowDownCircle, 
-  MoreHorizontal, 
+import {
+  Edit2,
+  Trash2,
+  X,
+  CheckCircle,
+  AlertCircle,
+  Building2,
+  TrendingUp,
+  Coins,
   User,
   Plus,
+  LayoutGrid,
+  List,
 } from 'lucide-react';
+import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Account, Bank } from '@/types/models';
 import GlassCard from '@/components/ui/GlassCard';
+import BankIcon from '@/components/ui/BankIcon';
 
 
 const DEFAULT_LABELS = {
@@ -52,6 +54,14 @@ export default function AccountsManagementPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(() =>
+    (typeof window !== 'undefined' ? localStorage.getItem('viewMode_accounts') as 'grid' | 'table' : null) || 'grid'
+  );
+
+  const toggleViewMode = (mode: 'grid' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('viewMode_accounts', mode);
+  };
   
   // Alert state
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
@@ -63,13 +73,24 @@ export default function AccountsManagementPage() {
   const [currentAccountId, setCurrentAccountId] = useState<string | null>(null);
   
   // Form fields
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<{
+    name: string;
+    accountNumber: string;
+    type: string;
+    bankId: string;
+    isActive: boolean;
+    isPersonal: boolean;
+    tag: string;
+    targetAmount: number | null;
+  }>({
     name: '',
     accountNumber: '',
-    type: 'BANK', // BANK, STOCK, GOLD
+    type: 'BANK',
     bankId: '',
     isActive: true,
-    isPersonal: true
+    isPersonal: true,
+    tag: '',
+    targetAmount: null
   });
 
   const { user } = useAuthStore();
@@ -130,7 +151,9 @@ export default function AccountsManagementPage() {
       type: 'BANK',
       bankId: banks.length > 0 ? banks[0].id : '',
       isActive: true,
-      isPersonal: true
+      isPersonal: true,
+      tag: '',
+      targetAmount: null
     });
     setIsEditing(false);
     setCurrentAccountId(null);
@@ -148,7 +171,9 @@ export default function AccountsManagementPage() {
       type: a?.type || 'BANK',
       bankId: a?.bankId || (banks && banks.length > 0 ? banks[0].id : ''),
       isActive: a?.isActive ?? true,
-      isPersonal: a?.isPersonal ?? true
+      isPersonal: a?.isPersonal ?? true,
+      tag: a?.tag || '',
+      targetAmount: a?.targetAmount ?? null
     });
     setIsEditing(true);
     setCurrentAccountId(a?.id || null);
@@ -284,17 +309,35 @@ export default function AccountsManagementPage() {
           <p className="text-[10px] text-slate mt-1 uppercase font-black tracking-[0.2em]">{labels.subtitle}</p>
         </div>
         
-        {hasPermission('accounts', 'canCreate') && (
-          <button 
-            onClick={openAddModal}
-            data-testid="accounts-list-btn-add-account"
-            className="flex items-center justify-center gap-3 px-8 py-3 bg-emerald text-navy font-black rounded-full transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 group relative overflow-hidden"
-          >
-             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-             <Plus size={18} className="relative z-10" />
-             <span className="text-xs uppercase tracking-[0.1em] relative z-10">{labels.addNew}</span>
-          </button>
-        )}
+        <div className="flex items-center gap-3">
+          {/* View Toggle */}
+          <div className="flex bg-white/5 border border-white/5 rounded-lg p-0.5">
+            {(['grid', 'table'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => toggleViewMode(mode)}
+                className={clsx(
+                  'p-1.5 rounded-md transition-all',
+                  viewMode === mode ? 'bg-emerald/20 text-emerald' : 'text-slate hover:text-white'
+                )}
+              >
+                {mode === 'grid' ? <LayoutGrid size={14} /> : <List size={14} />}
+              </button>
+            ))}
+          </div>
+
+          {hasPermission('accounts', 'canCreate') && (
+            <button
+              onClick={openAddModal}
+              data-testid="accounts-list-btn-add-account"
+              className="flex items-center justify-center gap-3 px-8 py-3 bg-emerald text-navy font-black rounded-full transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 group relative overflow-hidden"
+            >
+              <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
+              <Plus size={18} className="relative z-10" />
+              <span className="text-xs uppercase tracking-[0.1em] relative z-10">{labels.addNew}</span>
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Summary Stats */}
@@ -317,68 +360,154 @@ export default function AccountsManagementPage() {
         ))}
       </div>
 
-      {/* Accounts Grid */}
+      {/* Accounts View */}
       {sortedAccounts.length === 0 ? (
         <GlassCard className="p-12 text-center rounded-[1.25rem]">
           <Building2 className="w-12 h-12 text-slate/20 mx-auto mb-4" />
           <p className="text-slate font-bold uppercase text-[10px] tracking-widest">{labels.noData}</p>
         </GlassCard>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      ) : viewMode === 'grid' ? (
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
           {sortedAccounts.map((account, i) => (
-            <GlassCard 
-              key={account.id} 
+            <GlassCard
+              key={account.id}
               interactive
-              className={`p-4 stagger-${(i % 4) + 1}`}
+              className={`p-3 stagger-${(i % 4) + 1}`}
               borderAccent={account.type === 'LIABILITY' ? 'rose' : 'emerald'}
             >
-              <div className="flex justify-between items-start mb-3">
-                <div className="p-2 rounded-lg bg-white/5">
+              {/* Row 1: Icon + Name + Actions */}
+              <div className="flex items-center gap-2 mb-2">
+                <div className="p-1.5 rounded-lg bg-white/5 shrink-0">
                   {getAccountIcon(account.type)}
                 </div>
-                <div className="flex gap-1.5">
+                <div className="flex-1 min-w-0">
+                  <h3 className="text-xs font-black text-white group-hover:text-emerald transition-colors truncate uppercase tracking-tight leading-tight">
+                    {account.name}
+                  </h3>
+                  <p className="text-[9px] text-slate font-mono opacity-60 truncate leading-tight">
+                    {account.accountNumber || '•••• ••••'}
+                  </p>
+                </div>
+                <div className="flex gap-0.5 shrink-0">
                   {hasPermission('accounts', 'canUpdate') && (
-                    <button onClick={() => openEditModal(account)} className="p-1.5 text-slate hover:text-white transition-colors" title="Edit">
-                      <Edit2 className="w-3.5 h-3.5" />
+                    <button onClick={() => openEditModal(account)} className="p-1 text-slate hover:text-white transition-colors" title="Edit">
+                      <Edit2 className="w-5 h-5" />
                     </button>
                   )}
                   {hasPermission('accounts', 'canDelete') && (
-                    <button onClick={() => handleDelete(account.id)} className="p-1.5 text-slate hover:text-rose transition-colors" title="Delete">
-                      <Trash2 className="w-3.5 h-3.5" />
+                    <button onClick={() => handleDelete(account.id)} className="p-1 text-slate hover:text-rose transition-colors" title="Delete">
+                      <Trash2 className="w-5 h-5" />
                     </button>
                   )}
                 </div>
               </div>
-
-              <div className="mb-4">
-                <h3 className="text-base font-black text-white group-hover:text-emerald transition-colors truncate uppercase tracking-tight">
-                  {account.name}
-                </h3>
-                <p className="text-[10px] text-slate font-bold font-mono mt-0.5 opacity-60">
-                  {account.accountNumber || '•••• •••• ••••'}
-                </p>
-              </div>
-
-              <div className="flex items-center justify-between mt-auto pt-3 border-t border-white/5">
-                <div className="flex items-center gap-1.5 text-[8px] font-black text-slate uppercase tracking-widest">
-                  <span className={`w-1.5 h-1.5 rounded-full ${account.isActive ? 'bg-emerald animate-pulse shadow-[0_0_8px_rgba(80,200,120,0.6)]' : 'bg-slate-700'}`} />
-                  {accountTypes.find(t => t.value === account.type)?.label || account.type}
+              {/* Row 2: Status + Bank */}
+              <div className="flex items-center justify-between pt-2 border-t border-white/5">
+                <div className="flex items-center gap-1 text-[8px] font-black text-slate uppercase tracking-widest">
+                  <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${account.isActive ? 'bg-emerald animate-pulse' : 'bg-slate-700'}`} />
+                  <span className="truncate max-w-[80px]">{accountTypes.find(t => t.value === account.type)?.label || account.type}</span>
+                  {account.tag && (
+                    <span className="ml-1.5 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[7px] font-bold uppercase tracking-tight">
+                      #{account.tag}
+                    </span>
+                  )}
                 </div>
                 {account.bank && (
-                   <span className="text-[8px] text-emerald font-black uppercase px-2 py-0.5 rounded-md bg-emerald/10 border border-emerald/20">
-                      {account.bank?.name}
-                   </span>
+                  <BankIcon code={account.bank.code} name={account.bank.name} color={account.bank.color || '#50C878'} size={20} />
                 )}
               </div>
             </GlassCard>
           ))}
         </div>
+      ) : (
+        <GlassCard className="overflow-hidden">
+          <table className="w-full">
+            <thead>
+              <tr className="border-b border-white/5">
+                {[
+                  { key: 'name', label: 'ชื่อบัญชี' },
+                  { key: 'accountNumber', label: 'เลขบัญชี' },
+                  { key: 'type', label: 'ประเภท' },
+                  { key: 'bank', label: 'ธนาคาร' },
+                  { key: 'isActive', label: 'สถานะ' },
+                ].map(col => (
+                  <th
+                    key={col.key}
+                    onClick={() => handleSort(col.key)}
+                    className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest cursor-pointer hover:text-white transition-colors select-none"
+                  >
+                    {col.label}
+                    {sortConfig?.key === col.key && (
+                      <span className="ml-1 text-emerald">{sortConfig.direction === 'asc' ? '↑' : '↓'}</span>
+                    )}
+                  </th>
+                ))}
+                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {sortedAccounts.map((account) => (
+                <tr key={account.id} className="border-b border-white/5 hover:bg-white/5 transition-colors">
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      {getAccountIcon(account.type)}
+                      <span className="text-xs font-black text-white">{account.name}</span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <span className="font-mono text-[10px] text-slate">{account.accountNumber || '—'}</span>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-2">
+                      <span className="text-[10px] text-slate">{accountTypes.find(t => t.value === account.type)?.label || account.type}</span>
+                      {account.tag && (
+                        <span className="px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[7px] font-bold uppercase tracking-tight">
+                          #{account.tag}
+                        </span>
+                      )}
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    {account.bank
+                      ? <div className="flex items-center gap-1.5">
+                          <BankIcon code={account.bank.code} name={account.bank.name} color={account.bank.color || '#50C878'} size={22} />
+                          <span className="text-[10px] font-bold text-white">{account.bank.name}</span>
+                        </div>
+                      : <span className="text-slate">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex items-center gap-1.5">
+                      <span className={`w-1.5 h-1.5 rounded-full ${account.isActive ? 'bg-emerald animate-pulse' : 'bg-slate-700'}`} />
+                      <span className={`text-[9px] font-bold ${account.isActive ? 'text-emerald' : 'text-slate'}`}>
+                        {account.isActive ? 'Active' : 'Inactive'}
+                      </span>
+                    </div>
+                  </td>
+                  <td className="px-4 py-3">
+                    <div className="flex justify-end gap-1">
+                      {hasPermission('accounts', 'canUpdate') && (
+                        <button onClick={() => openEditModal(account)} className="p-1.5 text-slate hover:text-white transition-colors">
+                          <Edit2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                      {hasPermission('accounts', 'canDelete') && (
+                        <button onClick={() => handleDelete(account.id)} className="p-1.5 text-slate hover:text-rose transition-colors">
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      )}
+                    </div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </GlassCard>
       )}
 
       {/* Modal for Create/Edit */}
-      {isModalOpen && (
-        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md px-4 py-8 overflow-y-auto animate-scale-in">
-           <div className="bg-navy/90 border border-white/10 rounded-[1.25rem] shadow-2xl w-full max-w-lg overflow-hidden">
+      {isModalOpen && createPortal(
+        <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-md px-4 animate-scale-in">
+           <div className="bg-navy/90 border border-white/10 rounded-[1.25rem] shadow-2xl w-full max-w-lg max-h-[90vh] overflow-y-auto">
               <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
                  <h2 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
                    {isEditing ? <Edit2 className="w-5 h-5 text-emerald" /> : <Building2 className="w-5 h-5 text-emerald" />}
@@ -415,7 +544,14 @@ export default function AccountsManagementPage() {
                     <div className="space-y-1.5">
                       <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.type}</label>
                         <select 
-                        required value={formData.type} onChange={(e) => setFormData({...formData, type: e.target.value})}
+                        required value={formData.type} onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({
+                            ...formData,
+                            type: val,
+                            targetAmount: val === 'GOAL' ? formData.targetAmount : null
+                          });
+                        }}
                         data-testid="accounts-form-sel-type"
                         className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 appearance-none transition-all"
                       >
@@ -439,6 +575,31 @@ export default function AccountsManagementPage() {
                       </select>
                     </div>
                  </div>
+
+                 <div className="space-y-1.5">
+                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">Tag (ป้ายกำกับ)</label>
+                    <input 
+                      type="text" value={formData.tag} onChange={(e) => setFormData({...formData, tag: e.target.value})}
+                      placeholder="เช่น Cashflow (ระบุเพื่อนำบัญชีนี้ไปแสดงบนหน้ารวมแดชบอร์ด)"
+                      className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 transition-all" 
+                    />
+                 </div>
+
+                 {formData.type === 'GOAL' && (
+                   <div className="space-y-1.5 animate-fade-in-up">
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">เป้าหมายเงินออม (บาท)</label>
+                      <input 
+                        type="number" 
+                        value={formData.targetAmount !== null ? formData.targetAmount : ''} 
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setFormData({...formData, targetAmount: val === '' ? null : parseFloat(val)});
+                        }}
+                        placeholder="ระบุยอดเงินเป้าหมาย เช่น 100000"
+                        className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 transition-all" 
+                      />
+                   </div>
+                 )}
 
                  <div className="flex flex-col gap-4 pt-4 border-t border-white/5">
                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
@@ -479,7 +640,8 @@ export default function AccountsManagementPage() {
                  </div>
               </form>
            </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
