@@ -20,7 +20,13 @@
     "migrate:stg": "prisma migrate dev --schema packages/database/schema.prisma --name",
     "start:api": "npm run start --workspace=@nexworth/api",
     "start:bot": "npm run start --workspace=@nexworth/bot",
-    "start:web": "npm run start --workspace=frontend"
+    "start:web": "npm run start --workspace=frontend",
+    "test": "npm run test --workspaces --if-present",
+    "test:api": "npm run test --workspace=@nexworth/api",
+    "test:web": "npm run test --workspace=frontend",
+    "report:api": "npx vite preview --outDir apps/api/html --port 4173",
+    "report:web": "npx vite preview --outDir apps/web/html --port 4174",
+    "report": "concurrently -n API,WEB -c blue,green \"npm run report:api\" \"npm run report:web\""
   },
   "devDependencies": {
     "@types/bcrypt": "^6.0.0",
