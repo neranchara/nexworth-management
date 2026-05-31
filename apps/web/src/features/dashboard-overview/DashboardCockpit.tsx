@@ -64,11 +64,7 @@ export default function DashboardCockpit() {
 
   const handleViewModeChange = (mode: 'annual' | 'monthly') => {
     setViewMode(mode);
-    if (mode === 'annual') {
-      setFilters(selectedYear, 0);
-    } else {
-      setFilters(selectedYear, new Date().getMonth());
-    }
+    setFilters(selectedYear, new Date().getMonth());
   };
 
   // Transaction Form State
