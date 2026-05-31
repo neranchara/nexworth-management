@@ -13,6 +13,7 @@ import {
 import { usePermissions } from '@/hooks/usePermissions';
 import { User, Organization } from '@/types/models';
 import { clsx } from 'clsx';
+import { SUPER_ADMIN_ROLE, SYSTEM_ORG_ID } from '@/config/systemConfig';
 
 interface Role {
   id: string;
@@ -140,7 +141,7 @@ export default function UsersManagementPage() {
 
   const toggleStatus = async (u: User) => {
     if (!user?.isSystemAdmin && u.organizationId !== user?.organizationId) return;
-    if (u.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' && u.role?.name === 'Super Admin' && !user?.isSystemAdmin) return;
+    if (u.organizationId === SYSTEM_ORG_ID && u.role?.name === SUPER_ADMIN_ROLE && !user?.isSystemAdmin) return;
 
     try {
       await api.put(`/users/${u.id}`, { isActive: !u.isActive });
@@ -308,7 +309,7 @@ export default function UsersManagementPage() {
                   <td className="px-4 py-4 text-center">
                     <span className={clsx(
                       "inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border",
-                      person.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7'
+                      person.organizationId === SYSTEM_ORG_ID
                         ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
                         : 'bg-emerald/10 text-emerald border-emerald/20'
                     )}>
@@ -322,11 +323,11 @@ export default function UsersManagementPage() {
                     <button
                       onClick={() => toggleStatus(person)}
                       data-testid={`users-list-toggle-status-${person.email}`}
-                      disabled={(!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' || person.isSystemAdmin)}
+                      disabled={(!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === SYSTEM_ORG_ID || person.isSystemAdmin)}
                       className={clsx(
                         "inline-block w-2.5 h-2.5 rounded-full border-2 transition-all shadow-sm",
                         person.isActive ? 'bg-emerald border-emerald/40 shadow-emerald/30' : 'bg-rose border-rose/40',
-                        ((!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === '7f4b8f80-dfb7-4492-9a06-28dad5691dd7' || person.isSystemAdmin))
+                        ((!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === SYSTEM_ORG_ID || person.isSystemAdmin))
                           ? 'cursor-default opacity-40'
                           : 'cursor-pointer hover:scale-125'
                       )}
@@ -380,7 +381,7 @@ export default function UsersManagementPage() {
               <h2 className="text-sm font-black text-white uppercase tracking-widest">
                 {currentUserId === user?.id
                   ? 'My Account Details'
-                  : (isEditing && formData.organizationId !== '7f4b8f80-dfb7-4492-9a06-28dad5691dd7'
+                  : (isEditing && formData.organizationId !== SYSTEM_ORG_ID
                     ? 'View User Details'
                     : (isEditing ? 'Edit Profile' : 'New User'))}
               </h2>

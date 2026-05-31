@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { clsx } from 'clsx';
+import { SYSTEM_ADMIN_EMAIL, SUPER_ADMIN_ROLE, SYSTEM_ORG_NAME } from '@/config/systemConfig';
 
 interface Role {
   id: string;
@@ -124,11 +125,11 @@ export default function RolesListPage() {
 
   const filteredRoles = roles.filter(r => {
     const targetOrg = organizations.find(o => o.id === (orgId || user?.organizationId));
-    const isSuperAdmin = user?.role === 'Super Admin' || user?.email === 'superadmin@nexworth.cc';
+    const isSuperAdmin = user?.role === SUPER_ADMIN_ROLE || user?.email === SYSTEM_ADMIN_EMAIL;
 
-    if (targetOrg?.name === 'System Management' || user?.orgName === 'System Management' && !orgId) {
+    if (targetOrg?.name === SYSTEM_ORG_NAME || user?.orgName === SYSTEM_ORG_NAME && !orgId) {
       if (!r.isSystemRole) return false;
-      if (!isSuperAdmin && r.name === 'Super Admin') return false;
+      if (!isSuperAdmin && r.name === SUPER_ADMIN_ROLE) return false;
       return true;
     }
     return true;

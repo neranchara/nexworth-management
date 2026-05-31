@@ -5,6 +5,7 @@ import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { Building2, Plus, Users, Receipt, Wallet, ArrowRight, ShieldCheck, Search, Loader2, ChevronDown, ChevronRight } from 'lucide-react';
+import { SYSTEM_ORG_NAME } from '@/config/systemConfig';
 
 interface Organization {
   id: string;
@@ -143,7 +144,7 @@ export default function OrganizationsPage() {
                 </div>
               </div>
               
-              {org.name === 'System Management' ? (
+              {org.name === SYSTEM_ORG_NAME ? (
                 <div className="p-1.5 bg-gray-100 dark:bg-gray-700 rounded-lg text-gray-400" title="Locked">
                   <ShieldCheck className="w-4 h-4" />
                 </div>

@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { REAL_ASSET_TYPES, LIQUID_TYPES, INVESTMENT_TYPES } from '../constants/accountTypes.js';
+import { SYSTEM_ADMIN_EMAIL, SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
 
 export const getDashboardStatsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -8,7 +9,7 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
     request.log.info({ user: user.email, orgId: user.organizationId }, '🚀 [DEBUG] Dashboard Stats Request Received!');
     const query = request.query as { year?: string, month?: string };
     
-    const isSystemAdmin = user.isSystemAdmin || user.email === 'superadmin@nexworth.cc' || user.orgName === 'System Management';
+    const isSystemAdmin = user.isSystemAdmin || user.email === SYSTEM_ADMIN_EMAIL || user.orgName === SYSTEM_ORG_NAME;
 
     if (isSystemAdmin) {
       // ---------------------------------------------------------
