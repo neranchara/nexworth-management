@@ -72,7 +72,7 @@ export const listAllRolesHandler = async (request: FastifyRequest, reply: Fastif
         const targetOrgId = (isSystemAdmin && orgId) ? orgId : user.organizationId;
 
         // 1. Fetch Roles
-        const roleWhereClause: any = { organizationId: targetOrgId };
+        const roleWhereClause: any = { organizationId: targetOrgId, isActive: true };
         
         // Hide Super Admin role from non-Super Admins
         if (!isSuperAdmin) {

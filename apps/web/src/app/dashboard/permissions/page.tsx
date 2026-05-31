@@ -95,9 +95,12 @@ export default function RolesListPage() {
     if (!window.confirm(`Delete "${name}"?`)) return;
     try {
       await api.delete(`/roles/${id}`);
+      setMessage({ text: `Role "${name}" deleted`, type: 'success' });
+      setTimeout(() => setMessage(null), 3000);
       fetchRoles();
     } catch (err: any) {
-      setMessage({ text: 'Delete failed', type: 'error' });
+      setMessage({ text: err.response?.data?.error || 'Delete failed', type: 'error' });
+      setTimeout(() => setMessage(null), 5000);
     }
   };
 
