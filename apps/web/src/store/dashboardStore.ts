@@ -10,6 +10,7 @@ export const WIDGET_LIST = [
 ] as const;
 
 export type WidgetKey = typeof WIDGET_LIST[number]['key'];
+export type ViewMode = 'annual' | 'monthly';
 
 const DEFAULT_WIDGET_CONFIG: Record<WidgetKey, boolean> = {
   radar: true,
@@ -27,6 +28,27 @@ function loadWidgetConfig(): Record<WidgetKey, boolean> {
   return { ...DEFAULT_WIDGET_CONFIG };
 }
 
+function loadViewMode(): ViewMode {
+  if (typeof window === 'undefined') return 'annual';
+  try {
+    const stored = localStorage.getItem('dashboardViewMode');
+    if (stored === 'annual' || stored === 'monthly') return stored;
+  } catch {}
+  return 'annual';
+}
+
+function loadSelectedYear(): number {
+  if (typeof window === 'undefined') return new Date().getFullYear();
+  try {
+    const stored = localStorage.getItem('dashboardSelectedYear');
+    if (stored) {
+      const year = parseInt(stored);
+      if (!isNaN(year) && year >= 2000 && year <= 2100) return year;
+    }
+  } catch {}
+  return new Date().getFullYear();
+}
+
 interface DashboardState {
   stats: Stats | null;
   isLoading: boolean;
@@ -37,11 +59,15 @@ interface DashboardState {
   selectedYear: number;
   selectedMonth: number;
 
+  // View mode (persisted)
+  viewMode: ViewMode;
+
   // Widget visibility config
   widgetConfig: Record<WidgetKey, boolean>;
 
   fetchDashboardData: (year?: number, month?: number) => Promise<void>;
   setFilters: (year: number, month: number) => void;
+  setViewMode: (mode: ViewMode) => void;
   setWidgetConfig: (key: WidgetKey, visible: boolean) => void;
 }
 
@@ -51,13 +77,24 @@ export const useDashboardStore = create<DashboardState>((set, get) => ({
   error: null,
   lastUpdated: null,
 
-  selectedYear: new Date().getFullYear(),
+  selectedYear: loadSelectedYear(),
   selectedMonth: new Date().getMonth(),
+  viewMode: loadViewMode(),
 
   widgetConfig: loadWidgetConfig(),
 
   setFilters: (year, month) => {
     set({ selectedYear: year, selectedMonth: month });
+    try {
+      localStorage.setItem('dashboardSelectedYear', String(year));
+    } catch {}
+  },
+
+  setViewMode: (mode) => {
+    set({ viewMode: mode });
+    try {
+      localStorage.setItem('dashboardViewMode', mode);
+    } catch {}
   },
 
   setWidgetConfig: (key, visible) => {

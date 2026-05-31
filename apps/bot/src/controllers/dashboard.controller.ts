@@ -1,5 +1,6 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@nexworth/database';
+import { REAL_ASSET_TYPES, LIQUID_TYPES, INVESTMENT_TYPES } from '../constants/accountTypes.js';
 
 export const getDashboardStatsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -65,9 +66,6 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
     let totalLiabilities = 0;
     let liquidAssets = 0;
 
-    const REAL_ASSET_TYPES = ['BANK', 'STOCK', 'GOLD', 'CASHFLOW', 'EMERGENCY', 'INVESTMENT', 'SAVING', 'FAMILY'];
-    const LIQUID_TYPES = ['BANK', 'CASHFLOW', 'SAVING', 'EMERGENCY'];
-    const INVESTMENT_TYPES = ['STOCK', 'GOLD', 'INVESTMENT'];
 
     const assetsByAccount: any[] = [];
     const liabilitiesByAccount: any[] = [];

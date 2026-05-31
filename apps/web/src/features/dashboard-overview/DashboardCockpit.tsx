@@ -50,15 +50,15 @@ const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.',
 
 export default function DashboardCockpit() {
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
-  const [viewMode, setViewMode] = useState<'annual' | 'monthly'>('annual');
-  // const { user } = useAuthStore(); - Removed as unused
   const {
     stats,
     isLoading,
     fetchDashboardData,
     selectedYear,
     selectedMonth,
+    viewMode,
     setFilters,
+    setViewMode,
     widgetConfig,
   } = useDashboardStore();
 
