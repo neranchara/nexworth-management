@@ -9,6 +9,7 @@ dist/
 out/
 build/
 **/html/
+**/*.tsbuildinfo
 
 # IDE & OS
 .vscode/
@@ -16,6 +17,7 @@ build/
 .DS_Store
 Thumbs.db
 *.swp
+.claude/settings.local.json
 
 # Logs
 *.log
