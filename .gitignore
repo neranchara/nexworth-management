@@ -79,3 +79,4 @@ build_output.txt
 
 # Training data (OCR)
 *.traineddata
+docs/standards
