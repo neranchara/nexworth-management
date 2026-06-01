@@ -5,7 +5,8 @@ const nodeEnv = process.env.NODE_ENV || 'local';
 const envFile = path.resolve(process.cwd(), `.env.${nodeEnv}`);
 
 dotenv.config({ path: envFile });
-console.log(`[Config] Environment: ${nodeEnv} | Loaded: ${envFile}`);
+dotenv.config({ path: path.resolve(process.cwd(), '.env') });
+console.log(`[Config] Environment: ${nodeEnv} | Loaded envFile: ${envFile} (with fallback .env)`);
 
 const isLocal = nodeEnv === 'local';
 const isStaging = nodeEnv === 'staging';

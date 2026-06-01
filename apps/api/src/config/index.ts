@@ -9,10 +9,11 @@ import * as dotenv from 'dotenv';
 // ============================================================
 const nodeEnv = process.env.NODE_ENV || 'local';
 const envFile = `.env.${nodeEnv}`;
-// Only load dotenv if not on Render (Render uses Dashboard env vars)
 if (!process.env.RENDER) {
   dotenv.config({ path: envFile });
   dotenv.config({ path: `../../${envFile}` });
+  dotenv.config({ path: '.env' });
+  dotenv.config({ path: '../../.env' });
 }
 console.log(`[Config] Environment: ${nodeEnv} | RENDER: ${!!process.env.RENDER}`);
 
