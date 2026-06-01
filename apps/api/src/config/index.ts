@@ -15,7 +15,8 @@ if (!process.env.RENDER) {
   dotenv.config({ path: '.env', quiet: true } as any);
   dotenv.config({ path: '../../.env', quiet: true } as any);
 }
-if (nodeEnv !== 'test') {
+const isTestRun = !!process.env.VITEST || nodeEnv === 'test';
+if (!isTestRun) {
   console.log(`[Config] Environment: ${nodeEnv} | RENDER: ${!!process.env.RENDER}`);
 }
 

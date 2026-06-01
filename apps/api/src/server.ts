@@ -12,8 +12,9 @@ import { performanceRequestHook, performanceResponseHook } from './middlewares/p
 import { contextRequestHook } from './middlewares/context.middleware';
 
 export const buildServer = async (): Promise<FastifyInstance> => {
+  const isTestEnv = !!process.env.VITEST || process.env.NODE_ENV === 'test';
   const server = Fastify({
-    logger: process.env.NODE_ENV !== 'test',
+    logger: !isTestEnv,
     routerOptions: { ignoreTrailingSlash: true },
   });
 

@@ -1,7 +1,7 @@
 import { PrismaClient } from '@prisma/client';
 import { getContext } from './context';
 
-const isTest = process.env.NODE_ENV === 'test';
+const isTest = !!process.env.VITEST || process.env.NODE_ENV === 'test';
 const prisma = new PrismaClient({
   log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : isTest ? [] : ['error'],
 });

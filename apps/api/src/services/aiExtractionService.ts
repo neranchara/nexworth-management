@@ -28,6 +28,7 @@ const logTelemetry = async (telemetry: any, userId?: string, error?: any) => {
 };
 
 const isMockEnv = () =>
+  !!process.env.VITEST ||
   process.env.NODE_ENV === 'test' ||
   process.env.NODE_ENV === 'local' ||
   process.env.NODE_ENV === 'staging' ||

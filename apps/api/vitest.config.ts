@@ -1,6 +1,13 @@
 import { defineConfig } from 'vitest/config';
 import path from 'path';
 
+// Suppress Fastify FSTDEP022 deprecation warning (ignoreTrailingSlash internal access)
+process.removeAllListeners('warning');
+process.on('warning', (warning) => {
+  if (warning.code === 'FSTDEP022') return;
+  console.warn(warning.name, warning.message);
+});
+
 export default defineConfig({
   test: {
     globals: true,
