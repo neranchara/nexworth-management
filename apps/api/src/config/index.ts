@@ -15,7 +15,9 @@ if (!process.env.RENDER) {
   dotenv.config({ path: '.env', quiet: true } as any);
   dotenv.config({ path: '../../.env', quiet: true } as any);
 }
-console.log(`[Config] Environment: ${nodeEnv} | RENDER: ${!!process.env.RENDER}`);
+if (nodeEnv !== 'test') {
+  console.log(`[Config] Environment: ${nodeEnv} | RENDER: ${!!process.env.RENDER}`);
+}
 
 const isLocal = nodeEnv === 'local' && !process.env.RENDER;
 const isStaging = nodeEnv === 'staging';
