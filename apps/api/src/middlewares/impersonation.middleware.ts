@@ -15,7 +15,7 @@ export async function impersonationGuard(request: FastifyRequest, reply: Fastify
 
     if (forbiddenMethods.includes(request.method)) {
       const alertMsg = `Admin ${user.impersonatorId} attempted ${request.method} on User ${user.id} at ${request.url}`;
-      console.warn(`[ImpersonationGuard] Blocked: ${alertMsg}`);
+      if (process.env.NODE_ENV !== 'test') console.warn(`[ImpersonationGuard] Blocked: ${alertMsg}`);
       
       // Async trigger alert
       notificationService.sendSecurityAlert(alertMsg);

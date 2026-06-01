@@ -12,9 +12,9 @@ import { performanceRequestHook, performanceResponseHook } from './middlewares/p
 import { contextRequestHook } from './middlewares/context.middleware';
 
 export const buildServer = async (): Promise<FastifyInstance> => {
-  const server = Fastify({ 
-    logger: true,
-    ignoreTrailingSlash: true
+  const server = Fastify({
+    logger: process.env.NODE_ENV !== 'test',
+    routerOptions: { ignoreTrailingSlash: true },
   });
 
   await server.register(fastifyRawBody, {
