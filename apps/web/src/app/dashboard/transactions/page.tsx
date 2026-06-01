@@ -386,21 +386,31 @@ export default function TransactionsPage() {
         </div>
       </header>
 
-      <GlassCard className="p-3 flex gap-3 items-center shrink-0 bg-navy/40">
-         <div className="relative flex-1">
+      <GlassCard className="p-3 flex flex-wrap gap-3 items-center shrink-0 bg-navy/40">
+         <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
             <input 
               type="text" placeholder={labels.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-navy/50 border border-white/5 rounded-lg py-1.5 pl-9 text-xs text-white outline-none"
             />
          </div>
-         <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300">
-            <option value="">{labels.allCategories}</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+         <select value={filterMonth} onChange={(e) => setFilterMonth(parseInt(e.target.value))} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+            {['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'].map((m, idx) => (
+              <option key={idx + 1} value={idx + 1} className="bg-navy">{m}</option>
+            ))}
          </select>
-         <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300">
-            <option value="">{labels.allAccounts}</option>
-            {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+         <select value={filterYear} onChange={(e) => setFilterYear(parseInt(e.target.value))} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
+              <option key={y} value={y} className="bg-navy">{y + 543} ({y})</option>
+            ))}
+         </select>
+         <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+            <option value="" className="bg-navy">{labels.allCategories}</option>
+            {categories.map(c => <option key={c.id} value={c.id} className="bg-navy">{c.name}</option>)}
+         </select>
+         <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+            <option value="" className="bg-navy">{labels.allAccounts}</option>
+            {accounts.map(a => <option key={a.id} value={a.id} className="bg-navy">{a.name}</option>)}
          </select>
       </GlassCard>
 
