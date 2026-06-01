@@ -1,6 +1,32 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@nexworth/database';
 import { z } from 'zod';
+import { SYSTEM_CATEGORY_KEYS, BEHAVIOR_METADATA, getAssetMultiplier } from '../constants/transactionConfig.js';
+
+async function getSystemCategory(db: any, systemKey: string, fallbackName: string, behavior: string, orgId: string) {
+  let cat = await db.transactionCategory.findFirst({
+    where: { systemKey, organizationId: orgId },
+    include: { type: true }
+  });
+  if (!cat) {
+    cat = await db.transactionCategory.findFirst({
+      where: { name: fallbackName, organizationId: orgId, type: { behavior } },
+      include: { type: true }
+    });
+    if (cat) await db.transactionCategory.update({ where: { id: cat.id }, data: { systemKey } });
+  }
+  if (!cat) {
+    let type = await db.transactionType.findFirst({ where: { organizationId: orgId, behavior } });
+    if (!type) type = await db.transactionType.findFirst({ where: { behavior } });
+    if (type) {
+      cat = await db.transactionCategory.create({
+        data: { name: fallbackName, organizationId: orgId, typeId: type.id, systemKey, isActive: true },
+        include: { type: true }
+      });
+    }
+  }
+  return cat;
+}
 
 const transactionSchema = z.object({
   accountId: z.string().uuid().optional().nullable(),
@@ -28,27 +54,7 @@ export const adjustAccountBalance = async (accountId: string, amount: number, ty
   const isLiability = account.type === 'LIABILITY';
   let multiplier = 0;
 
-  // NEW LOGIC: Priority to Direction
-  if (direction === 'TO') {
-    multiplier = isLiability ? -1 : 1; // TO Liability = Decrease Debt, TO Asset = Increase Balance
-  } else if (direction === 'FROM') {
-    multiplier = isLiability ? 1 : -1; // FROM Liability = Increase Debt, FROM Asset = Decrease Balance
-  } else {
-    // FALLBACK: Old behavior-based logic for legacy transactions without direction
-    if (isLiability) {
-      if (['EXPENSE', 'DEBT', 'LOAN_BORROW'].includes(behavior)) {
-        multiplier = 1;
-      } else if (['INCOME', 'LOAN_REPAY', 'INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT'].includes(behavior)) {
-        multiplier = -1;
-      }
-    } else {
-      if (['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'INTERNAL_TRANSFER', 'LOAN_BORROW'].includes(behavior)) {
-        multiplier = 1;
-      } else if (['EXPENSE', 'DEBT', 'LOAN_REPAY'].includes(behavior)) {
-        multiplier = -1;
-      }
-    }
-  }
+  multiplier = getAssetMultiplier(behavior, isLiability, direction) as 1 | -1 | 0;
 
   const finalAdjustment = isRemoval ? -(amount * multiplier) : (amount * multiplier);
 
@@ -134,31 +140,16 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
     });
     if (!category) return reply.status(400).send({ error: 'Category not found or unauthorized' });
     
-    const transferBehaviors = ['INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL_SAVING', 'DEBT', 'EXPENSE', 'INCOME'];
-    const isTransfer = (fromAccountId && toAccountId) && transferBehaviors.includes(category.type.behavior);
-    
-    // Explicit direction from body or determined by behavior for single-leg transactions
+    const isTransfer = !!(fromAccountId && toAccountId) && !!(category.type.behavior);
+
     let direction = body.direction;
     if (!isTransfer && !direction) {
         const behavior = category.type.behavior;
-        const catName = category.name.toLowerCase();
-        
-        // Correct Logic:
-        // Outbound (From): Expense, Debt, Loan Repay, Saving, Investment
-        // Inbound (To): Income, Loan Borrow
-        const isOutbound = ['EXPENSE', 'DEBT', 'LOAN_REPAY', 'SAVING', 'INVESTMENT'].includes(behavior) || 
-                          catName.includes('ออก') || catName.includes('คืน');
-        const isInbound = ['INCOME', 'LOAN_BORROW'].includes(behavior) || 
-                          catName.includes('เข้า') || catName.includes('ยืม') || catName.includes('กู้');
-        
-        if (isOutbound && !isInbound) {
-            direction = 'FROM';
-        } else if (isInbound && !isOutbound) {
-            direction = 'TO';
-        } else {
-            // Default to FROM for single account if still ambiguous (most common)
-            direction = 'FROM';
-        }
+        const dbDirection = (category.type as any).defaultDirection;
+        const resolvedDir = dbDirection ?? BEHAVIOR_METADATA[behavior]?.defaultDirection ?? 'NEUTRAL';
+        if (resolvedDir === 'OUTBOUND') direction = 'FROM';
+        else if (resolvedDir === 'INBOUND') direction = 'TO';
+        else direction = 'FROM';
     }
 
     const processSingleLeg = async (accId: string, catId: string, tId: string, linkedId: string | null, legDirection: string | null = null) => {
@@ -277,44 +268,32 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
             behaviorToUse = 'EXPENSE';
         }
 
-        const isRequestedExpenseLike = ['EXPENSE', 'DEBT'].includes(behaviorToUse);
-        
+        const typeMeta = BEHAVIOR_METADATA[behaviorToUse];
+        const isRequestedExpenseLike = (category.type as any).isExpenseLike ?? typeMeta?.isExpenseLike ?? false;
+
         if (isRequestedExpenseLike) {
-            // --- EXPENSE TRANSFER (e.g. Salary for Mother, Debt Repayment) ---
-            // The Source (From) is the primary leg that gets the user's category.
             const sourceTx = await processSingleLeg(fromAccountId as string, body.categoryId, baseTypeId as string, null, 'FROM');
-            
-            // The Destination (To) gets a generic "Transfer In" (Income) category.
-            let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'INCOME' }});
-            if (!incomeType) incomeType = await prisma.transactionType.findFirst({ where: { behavior: 'INCOME' }});
-            
-            let transferInCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนเข้าภายใน' } });
-            if (!transferInCat) {
-                transferInCat = await prisma.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.organizationId, typeId: incomeType!.id, isActive: true } });
-            }
-            
-            const destTx = await processSingleLeg(toAccountId as string, transferInCat.id, incomeType!.id, sourceTx.id, 'TO');
-            
+
+            const transferInCat = await getSystemCategory(prisma, SYSTEM_CATEGORY_KEYS.TRANSFER_IN, 'โอนเข้าภายใน', 'INCOME', user.organizationId);
+            if (!transferInCat) throw new Error('Cannot find or create TRANSFER_IN category');
+
+            const destTx = await processSingleLeg(toAccountId as string, transferInCat.id, transferInCat.typeId, sourceTx.id, 'TO');
+
             const finalSourceTx = await prisma.transaction.update({
                where: { id: sourceTx.id },
                data: { linkedTransactionId: destTx.id },
                include: { category: { include: { type: true } }, account: true, type: true }
             });
- 
+
             await syncLoanRecord(finalSourceTx);
             return reply.status(201).send({ message: 'Expense transfer created successfully', transaction: finalSourceTx });
         } else {
             const destTx = await processSingleLeg(toAccountId as string, body.categoryId, baseTypeId as string, null, 'TO');
-            
-            let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE' }});
-            if (!expenseType) expenseType = await prisma.transactionType.findFirst({ where: { behavior: 'EXPENSE' }});
-            
-            let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนออกภายใน' } });
-            if (!transferOutCat) {
-                transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.organizationId, typeId: expenseType!.id, isActive: true } });
-            }
- 
-            const sourceTx = await processSingleLeg(fromAccountId as string, transferOutCat.id, expenseType!.id, destTx.id, 'FROM');
+
+            const transferOutCat = await getSystemCategory(prisma, SYSTEM_CATEGORY_KEYS.TRANSFER_OUT, 'โอนออกภายใน', 'EXPENSE', user.organizationId);
+            if (!transferOutCat) throw new Error('Cannot find or create TRANSFER_OUT category');
+
+            const sourceTx = await processSingleLeg(fromAccountId as string, transferOutCat.id, transferOutCat.typeId, destTx.id, 'FROM');
             
             const finalDestTx = await prisma.transaction.update({
                where: { id: destTx.id },
@@ -383,8 +362,8 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
 
     const existingType = await prisma.transactionType.findUnique({ where: { id: existing.typeId } });
     const behavior = existingType?.behavior;
-    const isExistingExpense = behavior === 'EXPENSE' || behavior === 'DEBT';
-    
+    const isExistingExpense = (existingType as any)?.isExpenseLike ?? (behavior === 'EXPENSE' || behavior === 'DEBT');
+
     const isTransferIntent = !!(fromAccountId && toAccountId) && (
       ['INTERNAL_TRANSFER', 'SAVING', 'INVESTMENT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL_SAVING', 'DEBT', 'EXPENSE', 'INCOME'].includes(categoryBehavior)
     );
@@ -409,67 +388,40 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
         behaviorToUse = 'EXPENSE';
       }
 
-      const isRequestedExpenseLike = ['EXPENSE', 'DEBT'].includes(behaviorToUse);
+      const catMeta = categoryBehavior ? BEHAVIOR_METADATA[categoryBehavior] : null;
+      const isRequestedExpenseLike = (category as any)?.type?.isExpenseLike ?? catMeta?.isExpenseLike ?? false;
 
       if (isExistingExpense) {
-        // --- WE ARE UPDATING THE "FROM" LEG (Primary for Expenses) ---
         if (isRequestedExpenseLike) {
            primaryCategoryId = categoryId;
            primaryTypeId = typeId;
-           
-           // Destination stays/becomes generic "Transfer In"
-           let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'INCOME' }});
-           if (!incomeType) incomeType = await prisma.transactionType.findFirst({ where: { behavior: 'INCOME' }});
-
-           let transferInCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนเข้าภายใน' } });
-           if (!transferInCat) transferInCat = await prisma.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.organizationId, typeId: incomeType!.id, isActive: true } });
-           
+           const transferInCat = await getSystemCategory(prisma, SYSTEM_CATEGORY_KEYS.TRANSFER_IN, 'โอนเข้าภายใน', 'INCOME', user.organizationId);
+           if (!transferInCat) throw new Error('Cannot find or create TRANSFER_IN category');
            linkedCategoryId = transferInCat.id;
-           linkedTypeId = incomeType!.id;
+           linkedTypeId = transferInCat.typeId;
         } else {
-           // USER CHANGED TYPE FROM EXPENSE TO INVESTMENT/SAVING/INCOME.
-           // Source (Primary) must now become generic "Transfer Out", Destination (Linked) becomes user's category.
-           let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE' }});
-           if (!expenseType) expenseType = await prisma.transactionType.findFirst({ where: { behavior: 'EXPENSE' }});
-
-           let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนออกภายใน' } });
-           if (!transferOutCat) transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.organizationId, typeId: expenseType!.id, isActive: true } });
-
+           const transferOutCat = await getSystemCategory(prisma, SYSTEM_CATEGORY_KEYS.TRANSFER_OUT, 'โอนออกภายใน', 'EXPENSE', user.organizationId);
+           if (!transferOutCat) throw new Error('Cannot find or create TRANSFER_OUT category');
            primaryCategoryId = transferOutCat.id;
-           primaryTypeId = expenseType!.id;
-
+           primaryTypeId = transferOutCat.typeId;
            linkedCategoryId = categoryId;
            linkedTypeId = typeId;
         }
       } else {
-        // --- WE ARE UPDATING THE "TO" LEG (Primary for Income/Investments) ---
         if (isRequestedExpenseLike) {
-           // USER CHANGED TYPE FROM INVESTMENT/INCOME TO EXPENSE.
-           // Source (Linked) must now become user's category, Destination (Primary) becomes generic "Transfer In".
-           let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'INCOME' }});
-           if (!incomeType) incomeType = await prisma.transactionType.findFirst({ where: { behavior: 'INCOME' }});
-
-           let transferInCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนเข้าภายใน' } });
-           if (!transferInCat) transferInCat = await prisma.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.organizationId, typeId: incomeType!.id, isActive: true } });
-
+           const transferInCat = await getSystemCategory(prisma, SYSTEM_CATEGORY_KEYS.TRANSFER_IN, 'โอนเข้าภายใน', 'INCOME', user.organizationId);
+           if (!transferInCat) throw new Error('Cannot find or create TRANSFER_IN category');
            primaryCategoryId = transferInCat.id;
-           primaryTypeId = incomeType!.id;
-
+           primaryTypeId = transferInCat.typeId;
            linkedCategoryId = categoryId;
            linkedTypeId = typeId;
         } else {
            primaryCategoryId = categoryId;
            primaryTypeId = typeId;
-           
-           // Source stays/becomes generic "Transfer Out"
-           let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE' }});
-           if (!expenseType) expenseType = await prisma.transactionType.findFirst({ where: { behavior: 'EXPENSE' }});
-
-           let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนออกภายใน' } });
-           if (!transferOutCat) transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.organizationId, typeId: expenseType!.id, isActive: true } });
-           
+           const transferOutCat = await getSystemCategory(prisma, SYSTEM_CATEGORY_KEYS.TRANSFER_OUT, 'โอนออกภายใน', 'EXPENSE', user.organizationId);
+           if (!transferOutCat) throw new Error('Cannot find or create TRANSFER_OUT category');
            linkedCategoryId = transferOutCat.id;
-           linkedTypeId = expenseType!.id;
+           linkedTypeId = transferOutCat.typeId;
         }
       }
     }
