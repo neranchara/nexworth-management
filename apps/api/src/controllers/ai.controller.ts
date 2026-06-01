@@ -24,7 +24,7 @@ export const extractTransaction = async (request: FastifyRequest, reply: Fastify
 
 export const scanSlipHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
-    console.log('[AI Controller] Incoming headers:', JSON.stringify(request.headers));
+    if (process.env.NODE_ENV !== 'test') console.log('[AI Controller] Incoming headers:', JSON.stringify(request.headers));
     let fileBuffer: Buffer | null = null;
     let mimeType = 'image/png';
 
@@ -34,13 +34,13 @@ export const scanSlipHandler = async (request: FastifyRequest, reply: FastifyRep
       if (part.type === 'file') {
         fileBuffer = await part.toBuffer();
         mimeType = part.mimetype;
-        console.log(`[AI Controller] Received file: ${part.filename} (${mimeType}, ${fileBuffer.length} bytes)`);
+        if (process.env.NODE_ENV !== 'test') console.log(`[AI Controller] Received file: ${part.filename} (${mimeType}, ${fileBuffer.length} bytes)`);
         break; // Take the first file
       }
     }
     
     if (!fileBuffer || fileBuffer.length === 0) {
-      console.warn('[AI Controller] No file content detected in multipart request.');
+      if (process.env.NODE_ENV !== 'test') console.warn('[AI Controller] No file content detected in multipart request.');
       return reply.status(400).send({ success: false, error: 'No slip image content detected.' });
     }
 
