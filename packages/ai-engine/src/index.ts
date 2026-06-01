@@ -42,9 +42,9 @@ export class NexworthAIEngine {
     }
 
     const configurations = [
-      { model: 'gemini-1.5-pro', apiVersion: 'v1' },
-      { model: 'gemini-1.5-flash-latest', apiVersion: 'v1' },
-      { model: 'gemini-2.0-flash', apiVersion: 'v1' }
+      { model: 'gemini-2.0-flash', apiVersion: 'v1' },
+      { model: 'gemini-2.0-flash-lite', apiVersion: 'v1' },
+      { model: 'gemini-1.5-flash', apiVersion: 'v1' },
     ];
 
     const startTime = Date.now();
@@ -98,10 +98,9 @@ export class NexworthAIEngine {
     }
 
     const configurations = [
-      { model: 'gemini-1.5-pro', apiVersion: 'v1' },
+      { model: 'gemini-2.0-flash', apiVersion: 'v1' },
+      { model: 'gemini-2.0-flash-lite', apiVersion: 'v1' },
       { model: 'gemini-1.5-flash', apiVersion: 'v1' },
-      { model: 'gemini-1.5-flash-latest', apiVersion: 'v1' },
-      { model: 'gemini-2.0-flash', apiVersion: 'v1' }
     ];
 
     const startTime = Date.now();
@@ -180,7 +179,7 @@ export class NexworthAIEngine {
     }
 
     try {
-      const modelName = 'gemini-1.5-flash-latest';
+      const modelName = 'gemini-2.0-flash';
       const model = this.genAI.getGenerativeModel({ model: modelName });
 
       const prompt = `
@@ -222,7 +221,7 @@ export class NexworthAIEngine {
     }
     return { 
       data: null, 
-      telemetry: { model: 'gemini-1.5-flash-latest', latencyMs: Date.now() - startTime, success: false } 
+      telemetry: { model: 'gemini-2.0-flash', latencyMs: Date.now() - startTime, success: false } 
     };
   }
 }
