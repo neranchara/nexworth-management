@@ -524,26 +524,23 @@ export const updateTransactionHandler = async (request: FastifyRequest, reply: F
       let newLegTypeId: string;
       let newLegCategoryId: string;
 
+      const catMeta2 = categoryBehavior ? BEHAVIOR_METADATA[categoryBehavior] : null;
+      const isReqExpenseLike2 = (category as any)?.type?.isExpenseLike ?? catMeta2?.isExpenseLike ?? false;
+
       if (isExistingExpense) {
-        const isRequestedExpenseLike = ['EXPENSE', 'DEBT'].includes(categoryBehavior);
-        if (isRequestedExpenseLike) {
-           let incomeType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'INCOME' }});
-           let transferInCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนเข้าภายใน' } });
-           if (!transferInCat) transferInCat = await prisma.transactionCategory.create({ data: { name: 'โอนเข้าภายใน', organizationId: user.organizationId, typeId: incomeType!.id, isActive: true } });
-           newLegTypeId = incomeType!.id;
-           newLegCategoryId = transferInCat.id;
+        if (isReqExpenseLike2) {
+          const transferInCat = await getSystemCategory(prisma, SYSTEM_CATEGORY_KEYS.TRANSFER_IN, 'โอนเข้าภายใน', 'INCOME', user.organizationId);
+          if (!transferInCat) throw new Error('Cannot find or create TRANSFER_IN category');
+          newLegTypeId = transferInCat.typeId;
+          newLegCategoryId = transferInCat.id;
         } else {
-           let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE', name: 'รายจ่าย' }}) || await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE' }});
-           let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนออกภายใน' } });
-           if (!transferOutCat) transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.organizationId, typeId: expenseType!.id, isActive: true } });
-           newLegCategoryId = categoryId;
-           newLegTypeId = typeId;
+          newLegCategoryId = categoryId;
+          newLegTypeId = typeId;
         }
       } else {
-        let expenseType = await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE', name: 'รายจ่าย' }}) || await prisma.transactionType.findFirst({ where: { organizationId: user.organizationId, behavior: 'EXPENSE' }});
-        let transferOutCat = await prisma.transactionCategory.findFirst({ where: { organizationId: user.organizationId, name: 'โอนออกภายใน' } });
-        if (!transferOutCat) transferOutCat = await prisma.transactionCategory.create({ data: { name: 'โอนออกภายใน', organizationId: user.organizationId, typeId: expenseType!.id, isActive: true } });
-        newLegTypeId = expenseType!.id;
+        const transferOutCat = await getSystemCategory(prisma, SYSTEM_CATEGORY_KEYS.TRANSFER_OUT, 'โอนออกภายใน', 'EXPENSE', user.organizationId);
+        if (!transferOutCat) throw new Error('Cannot find or create TRANSFER_OUT category');
+        newLegTypeId = transferOutCat.typeId;
         newLegCategoryId = transferOutCat.id;
       }
 
