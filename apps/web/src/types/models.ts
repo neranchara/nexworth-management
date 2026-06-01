@@ -1,15 +1,4 @@
-export type AccountType = 
-  | 'BANK' 
-  | 'STOCK' 
-  | 'GOLD' 
-  | 'CASHFLOW' 
-  | 'INTERNAL' 
-  | 'EMERGENCY' 
-  | 'GOAL' 
-  | 'INVESTMENT' 
-  | 'SAVING' 
-  | 'FAMILY' 
-  | 'LIABILITY';
+export type AccountType = string;
 
 export interface Bank {
   id: string;

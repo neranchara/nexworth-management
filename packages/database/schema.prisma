@@ -124,7 +124,7 @@ model Account {
   organizationId   String?
   userId           String
   name             String
-  type             AccountType
+  type             String
   bankId           String?
   isActive         Boolean           @default(true)
   isPersonal       Boolean           @default(true)

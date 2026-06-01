@@ -89,8 +89,14 @@ export default function AssetsPage() {
       }
 
       const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
+      let currentAllowedAssetTypes = ALLOWED_ASSET_TYPES;
+      let currentNonCountedTypes = NON_COUNTED_TYPES;
+
       if (typesConfig) {
         setAccountTypes(typesConfig.value);
+        const types = typesConfig.value || [];
+        currentAllowedAssetTypes = types.filter((t: any) => t.category === 'ASSET' && t.subCategory !== 'NONE').map((t: any) => t.value);
+        currentNonCountedTypes = types.filter((t: any) => t.category === 'ASSET' && t.subCategory === 'NONE').map((t: any) => t.value);
       }
 
       const allFetchedRecords = recordsRes.data.records || [];
@@ -115,17 +121,17 @@ export default function AssetsPage() {
       const completeRecordsList = [...allFetchedRecords, ...dummyRecords];
 
       const filteredRecords = completeRecordsList.filter((r: FinancialRecord) => 
-        ALLOWED_ASSET_TYPES.includes(r.account?.type || '') && (r.account?.isPersonal || r.account?.type === 'INVESTMENT')
+        currentAllowedAssetTypes.includes(r.account?.type || '') && (r.account?.isPersonal || r.account?.type === 'INVESTMENT')
       );
       const filteredNonCounted = completeRecordsList.filter((r: FinancialRecord) =>
-        NON_COUNTED_TYPES.includes(r.account?.type || '') && r.account?.isPersonal
+        currentNonCountedTypes.includes(r.account?.type || '') && r.account?.isPersonal
       );
 
       const filteredAccounts = allFetchedAccounts.filter((acc: Account) => 
-        ALLOWED_ASSET_TYPES.includes(acc.type) && (acc.isPersonal || acc.type === 'INVESTMENT')
+        currentAllowedAssetTypes.includes(acc.type) && (acc.isPersonal || acc.type === 'INVESTMENT')
       );
       const filteredNonCountedAccounts = allFetchedAccounts.filter((acc: Account) =>
-        NON_COUNTED_TYPES.includes(acc.type) && acc.isPersonal
+        currentNonCountedTypes.includes(acc.type) && acc.isPersonal
       );
 
       setRecords(filteredRecords);
@@ -303,9 +309,16 @@ export default function AssetsPage() {
     let cash = 0, investments = 0, others = 0;
     records.forEach(r => {
       const type = r.account?.type || '';
-      if (['BANK', 'SAVING', 'CASHFLOW'].includes(type)) cash += r.amount;
-      else if (['INVESTMENT', 'STOCK'].includes(type)) investments += r.amount;
-      else others += r.amount;
+      const typeMeta = accountTypes.find((t: any) => t.value === type);
+      if (typeMeta) {
+        if (typeMeta.subCategory === 'LIQUID') cash += r.amount;
+        else if (typeMeta.subCategory === 'INVESTMENT') investments += r.amount;
+        else others += r.amount;
+      } else {
+        if (['BANK', 'SAVING', 'CASHFLOW'].includes(type)) cash += r.amount;
+        else if (['INVESTMENT', 'STOCK'].includes(type)) investments += r.amount;
+        else others += r.amount;
+      }
     });
     const total = totalAssets || 1;
     return {

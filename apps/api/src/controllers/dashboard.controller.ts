@@ -77,7 +77,7 @@ async function calculateFinancialStats(
   const currentYear = yearStr ? parseInt(yearStr) : now.getFullYear();
   const currentMonth = monthStr !== undefined ? parseInt(monthStr) : now.getMonth();
   
-  const [accountsRaw, transactions, goalsRaw] = await Promise.all([
+  const [accountsRaw, transactions, goalsRaw, configRecord] = await Promise.all([
     prisma.account.findMany({ 
       where: { organizationId },
       include: { asset: true, liability: true }
@@ -95,8 +95,13 @@ async function calculateFinancialStats(
     prisma.goal.findMany({
       where: { organizationId },
       include: { allocations: true }
+    }),
+    prisma.systemConfig.findUnique({
+      where: { key: 'ACCOUNT_TYPES' }
     })
   ]);
+
+  const accountTypesMetadata = (configRecord?.value as any) || [];
 
   let totalRealAssets = 0;
   let totalGoalTarget = 0;
@@ -105,31 +110,41 @@ async function calculateFinancialStats(
   let totalLiabilities = 0;
   let liquidAssets = 0;
 
-
   const assetsByAccount: any[] = [];
   const liabilitiesByAccount: any[] = [];
   const goalTracking: any[] = [];
 
+  const getTypeMeta = (type: string) => {
+    return accountTypesMetadata.find((t: any) => t.value === type);
+  };
+
   accountsRaw.forEach(acc => {
-    let balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
+    const typeMeta = getTypeMeta(acc.type);
+    const isLiability = typeMeta?.category === 'LIABILITY' || acc.type === 'LIABILITY';
+
+    let balance = isLiability ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
     
     // Absolute threshold validation to convert negative zero (-0) into exact positive 0
     if (Math.abs(balance) < 0.005) {
       balance = 0;
     }
     
-    const shouldIncludeInNetWorth = acc.isPersonal || acc.type === 'INVESTMENT';
+    const isAsset = typeMeta ? typeMeta.category === 'ASSET' : REAL_ASSET_TYPES.includes(acc.type);
+    const isLiquid = typeMeta ? (typeMeta.subCategory === 'LIQUID' || typeMeta.subCategory === 'EMERGENCY' || typeMeta.subCategory === 'GOAL') : LIQUID_TYPES.includes(acc.type);
+    const isInvestment = typeMeta ? typeMeta.subCategory === 'INVESTMENT' : INVESTMENT_TYPES.includes(acc.type);
 
-    if (acc.type === 'LIABILITY') {
+    const shouldIncludeInNetWorth = acc.isPersonal || isInvestment;
+
+    if (isLiability) {
       const absBalance = Math.abs(balance);
       totalLiabilities += absBalance;
       if (absBalance !== 0) {
         liabilitiesByAccount.push({ id: acc.id, name: acc.name, type: acc.type, balance: absBalance });
       }
-    } else if (REAL_ASSET_TYPES.includes(acc.type) && shouldIncludeInNetWorth) {
+    } else if (isAsset && shouldIncludeInNetWorth) {
       totalRealAssets += balance;
-      if (LIQUID_TYPES.includes(acc.type)) liquidAssets += balance;
-      if (INVESTMENT_TYPES.includes(acc.type)) investmentAssets += balance;
+      if (isLiquid) liquidAssets += balance;
+      if (isInvestment) investmentAssets += balance;
       if (balance !== 0) {
         assetsByAccount.push({ id: acc.id, name: acc.name, type: acc.type, tag: acc.tag, balance });
       }

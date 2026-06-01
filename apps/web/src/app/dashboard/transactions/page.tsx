@@ -400,7 +400,7 @@ export default function TransactionsPage() {
             ))}
          </select>
          <select value={filterYear} onChange={(e) => setFilterYear(parseInt(e.target.value))} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
-            {Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - i).map(y => (
+            {Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - i).map(y => (
               <option key={y} value={y} className="bg-navy">{y + 543} ({y})</option>
             ))}
          </select>

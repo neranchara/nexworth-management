@@ -86,12 +86,16 @@ export default function LiabilitiesPage() {
       }
 
       const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
+      let liabilityTypes = ['LIABILITY'];
       if (typesConfig) {
         setAccountTypes(typesConfig.value);
+        liabilityTypes = typesConfig.value.filter((t: any) => t.category === 'LIABILITY').map((t: any) => t.value);
       }
 
       setRecords(recordsRes.data.records);
-      setAccounts(accountsRes.data.accounts);
+      const allAccounts = accountsRes.data.accounts || [];
+      const liabilityAccounts = allAccounts.filter((acc: Account) => liabilityTypes.includes(acc.type));
+      setAccounts(liabilityAccounts);
       setBanks(banksRes.data.banks);
       setDashboardStats(statsRes.data);
     } catch {

@@ -1,7 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
-import { FinancialRecordType, AccountType } from '@prisma/client';
+import { FinancialRecordType } from '@prisma/client';
 
 const financialRecordSchema = z.object({
   accountId: z.string().uuid().optional().nullable(),
@@ -78,7 +78,7 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
       const newAccount = await prisma.account.create({
         data: {
           name: body.newAccountName,
-          type: body.newAccountType as AccountType,
+          type: body.newAccountType,
           bankId: body.bankId,
           userId: user.sub,
           organizationId: user.organizationId,
