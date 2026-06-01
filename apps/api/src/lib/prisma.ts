@@ -1,8 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { getContext } from './context';
 
+const isTest = process.env.NODE_ENV === 'test';
 const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : isTest ? [] : ['error'],
 });
 
 // Audit Log Middleware
@@ -32,32 +33,30 @@ prisma.$use(async (params, next) => {
   // Record AuditLog asynchronously
   const recordLog = async () => {
     const entityId = result?.id || params.args?.where?.id || 'BATCH';
-    const orgId = result?.organizationId || oldValue?.organizationId || null;
+    const rawOrgId = result?.organizationId || oldValue?.organizationId || null;
 
-    const logData = {
-      action: params.action.toUpperCase(),
-      entity: params.model || 'Unknown',
-      entityId: String(entityId),
-      organizationId: orgId,
-      oldValue: oldValue ? JSON.parse(JSON.stringify(oldValue)) : null,
-      newValue: result && !['delete', 'deleteMany'].includes(params.action) ? JSON.parse(JSON.stringify(result)) : null,
-      performedBy: context?.userId || 'SYSTEM',
-      ipAddress: context?.ip || null,
-      userAgent: null,
-    };
+    // Pre-validate organizationId to prevent FK violation — cheaper than a retry
+    let resolvedOrgId: string | null = null;
+    if (rawOrgId) {
+      const orgExists = await prisma.organization.count({ where: { id: rawOrgId } }).catch(() => 0);
+      resolvedOrgId = orgExists > 0 ? rawOrgId : null;
+    }
 
     try {
-      await prisma.auditLog.create({ data: logData });
-    } catch (err: any) {
-      // FK violation on organizationId (org deleted/not found) — retry with null
-      if (err?.code === 'P2003' && err?.meta?.field_name?.includes('organizationId')) {
-        try {
-          await prisma.auditLog.create({ data: { ...logData, organizationId: null } });
-        } catch (retryErr) {
-          console.error('[AuditLog] Failed to record log (retry):', retryErr);
-        }
-        return;
-      }
+      await prisma.auditLog.create({
+        data: {
+          action: params.action.toUpperCase(),
+          entity: params.model || 'Unknown',
+          entityId: String(entityId),
+          organizationId: resolvedOrgId,
+          oldValue: oldValue ? JSON.parse(JSON.stringify(oldValue)) : null,
+          newValue: result && !['delete', 'deleteMany'].includes(params.action) ? JSON.parse(JSON.stringify(result)) : null,
+          performedBy: context?.userId || 'SYSTEM',
+          ipAddress: context?.ip || null,
+          userAgent: null,
+        },
+      });
+    } catch (err) {
       console.error('[AuditLog] Error recording log:', err);
     }
   };
