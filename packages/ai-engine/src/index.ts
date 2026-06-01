@@ -42,6 +42,7 @@ export class NexworthAIEngine {
     }
 
     const configurations = [
+      { model: 'gemini-1.5-pro', apiVersion: 'v1' },
       { model: 'gemini-1.5-flash-latest', apiVersion: 'v1' },
       { model: 'gemini-2.0-flash', apiVersion: 'v1' }
     ];
@@ -97,9 +98,9 @@ export class NexworthAIEngine {
     }
 
     const configurations = [
+      { model: 'gemini-1.5-pro', apiVersion: 'v1' },
       { model: 'gemini-1.5-flash', apiVersion: 'v1' },
       { model: 'gemini-1.5-flash-latest', apiVersion: 'v1' },
-      { model: 'gemini-1.5-pro', apiVersion: 'v1' },
       { model: 'gemini-2.0-flash', apiVersion: 'v1' }
     ];
 

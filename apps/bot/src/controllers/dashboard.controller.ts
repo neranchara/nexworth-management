@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@nexworth/database';
 import { REAL_ASSET_TYPES, LIQUID_TYPES, INVESTMENT_TYPES } from '../constants/accountTypes.js';
 import { SYSTEM_ADMIN_EMAIL, SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
+import { SYSTEM_CATEGORY_KEYS, getCashflowBucket } from '../constants/transactionConfig.js';
 
 export const getDashboardStatsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -133,43 +134,44 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
         const mIdx = txDate.getMonth();
         const accType = tx.account?.type || tx.asset?.account?.type || tx.liability?.account?.type;
         
-        const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName?.includes('โอน');
-        
-        // 1. Primary Cashflow (Strict Income & Expense)
+        const catSystemKey = (tx.category as any)?.systemKey;
+        const isInternalTransfer = behavior === 'INTERNAL_TRANSFER'
+          || catSystemKey === SYSTEM_CATEGORY_KEYS.TRANSFER_IN
+          || catSystemKey === SYSTEM_CATEGORY_KEYS.TRANSFER_OUT;
+
+        const bucket = getCashflowBucket(behavior, (tx.type as any).cashflowBucket);
+
         if (!isInternalTransfer) {
-          if (behavior === 'INCOME') {
-            monthlyCashflow[mIdx].income += amount;
-          } else if (behavior === 'EXPENSE') {
-            monthlyCashflow[mIdx].expense += amount;
-          }
+          if (bucket === 'income') monthlyCashflow[mIdx].income += amount;
+          else if (bucket === 'expense') monthlyCashflow[mIdx].expense += amount;
         }
 
-        // 2. Loans (Internal Movements)
-        if (behavior === 'LOAN_BORROW' || behavior === 'LOAN_REPAY') {
+        if (bucket === 'loan') {
           monthlyCashflow[mIdx].internalLoan += amount;
         }
 
-        // 3. Buckets (Savings, Investment, Debt Repayment, Goals)
-        if (accType === 'GOAL' || behavior === 'GOAL_SAVING') {
+        if (accType === 'GOAL' || (bucket === 'saving' && behavior === 'GOAL_SAVING')) {
           monthlyCashflow[mIdx].goalSaving += amount;
-        } else if (INVESTMENT_TYPES.includes(accType) || behavior === 'INVESTMENT') {
+        } else if (INVESTMENT_TYPES.includes(accType) || bucket === 'invest') {
           monthlyCashflow[mIdx].invest += amount;
-        } else if (accType === 'LIABILITY' || behavior === 'DEBT') {
+        } else if (accType === 'LIABILITY' || bucket === 'debt') {
           monthlyCashflow[mIdx].debt += amount;
-        } else if (accType === 'SAVING' || accType === 'EMERGENCY' || behavior === 'SAVING' || behavior === 'EMERGENCY') {
-          // If it's a transfer to these accounts OR specifically marked as saving/emergency
-          if (isInternalTransfer || behavior === 'SAVING' || behavior === 'EMERGENCY') {
+        } else if (accType === 'SAVING' || accType === 'EMERGENCY' || bucket === 'saving') {
+          if (isInternalTransfer || bucket === 'saving') {
             monthlyCashflow[mIdx].saving += amount;
           }
         }
-        
+
         monthlyCashflow[mIdx].records += 1;
       }
 
-      // Recent Expenses (Current Month only) - Also exclude internal transfers
       if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
-        const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName === 'โอนเข้าภายใน' || categoryName === 'โอนออกภายใน';
-        if (!isInternalTransfer && (behavior === 'EXPENSE' || behavior === 'DEBT' || behavior === 'LOAN_REPAY')) {
+        const catSysKey = (tx.category as any)?.systemKey;
+        const isInternalTransfer2 = behavior === 'INTERNAL_TRANSFER'
+          || catSysKey === SYSTEM_CATEGORY_KEYS.TRANSFER_IN
+          || catSysKey === SYSTEM_CATEGORY_KEYS.TRANSFER_OUT;
+        const bucket2 = getCashflowBucket(behavior, (tx.type as any).cashflowBucket);
+        if (!isInternalTransfer2 && (bucket2 === 'expense' || bucket2 === 'debt' || bucket2 === 'loan')) {
           recentExpenses += amount;
         }
       }

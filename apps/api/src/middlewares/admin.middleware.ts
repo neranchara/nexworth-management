@@ -17,7 +17,7 @@ export const adminGuard = async (request: FastifyRequest, reply: FastifyReply) =
 
     // 2. Strict Role Check
     const allowedAdminRoles = [...ADMIN_ROLES];
-    const hasAdminAccess = allowedAdminRoles.includes(user.role) || user.isSystemAdmin === true;
+    const hasAdminAccess = (allowedAdminRoles as readonly string[]).includes(user.role) || user.isSystemAdmin === true;
 
     if (!hasAdminAccess) {
       // Security through obscurity: We could return 404 instead of 403 to hide admin routes

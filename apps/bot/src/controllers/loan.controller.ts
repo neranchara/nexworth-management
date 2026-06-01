@@ -1,6 +1,7 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@nexworth/database';
 import { z } from 'zod';
+import { SYSTEM_CATEGORY_KEYS, BEHAVIOR_METADATA } from '../constants/transactionConfig.js';
 
 const createLoanSchema = z.object({
   name: z.string().min(1),
@@ -26,29 +27,34 @@ const addTransactionSchema = z.object({
 });
 
 const getCategory = async (behavior: 'LOAN_BORROW' | 'LOAN_REPAY', organizationId: string) => {
-  const name = behavior === 'LOAN_BORROW' ? 'ยืมเงินภายใน' : 'คืนเงินภายใน';
-  
-  // First find the type by behavior
-  let type = await prisma.transactionType.findFirst({
-    where: { behavior, organizationId: organizationId }
+  const systemKey = behavior === 'LOAN_BORROW' ? SYSTEM_CATEGORY_KEYS.LOAN_BORROW_SYS : SYSTEM_CATEGORY_KEYS.LOAN_REPAY_SYS;
+  const fallbackName = behavior === 'LOAN_BORROW' ? 'ยืมเงินภายใน' : 'คืนเงินภายใน';
+  const meta = BEHAVIOR_METADATA[behavior];
+
+  let cat = await prisma.transactionCategory.findFirst({
+    where: { systemKey, organizationId },
+    include: { type: true }
   });
-  
-  if (!type) {
-    type = await prisma.transactionType.create({
-      data: { name, behavior, organizationId: organizationId }
+  if (!cat) {
+    cat = await prisma.transactionCategory.findFirst({
+      where: { name: fallbackName, organizationId, type: { behavior } },
+      include: { type: true }
+    });
+    if (cat) await prisma.transactionCategory.update({ where: { id: cat.id }, data: { systemKey } });
+  }
+  if (!cat) {
+    let type = await prisma.transactionType.findFirst({ where: { behavior, organizationId } });
+    if (!type) {
+      type = await prisma.transactionType.create({
+        data: { name: fallbackName, behavior, organizationId, defaultDirection: meta.defaultDirection, isExpenseLike: meta.isExpenseLike, cashflowBucket: meta.cashflowBucket }
+      });
+    }
+    cat = await prisma.transactionCategory.create({
+      data: { name: fallbackName, typeId: type.id, organizationId, systemKey },
+      include: { type: true }
     });
   }
-
-  let category = await prisma.transactionCategory.findFirst({
-    where: { typeId: type.id, name, organizationId: organizationId }
-  });
-
-  if (!category) {
-    category = await prisma.transactionCategory.create({
-      data: { name, typeId: type.id, organizationId: organizationId }
-    });
-  }
-  return { ...category, type };
+  return { ...cat, type: cat.type };
 };
 
 /**

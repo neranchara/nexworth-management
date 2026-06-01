@@ -16,6 +16,7 @@ import { Transaction, Account, TransactionCategory, TransactionType } from '@/ty
 import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
 import { mergePageLabels } from '@/utils/uiLabels';
+import { SYSTEM_CATEGORY_KEYS } from '@/config/systemConfig';
 
 const DEFAULT_LABELS = {
   title: 'ประวัติธุรกรรม',
@@ -167,12 +168,12 @@ export default function TransactionsPage() {
     if (tx.linkedTransactionId) {
       const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
       if (linkedTx) {
-        const isCurrentFrom = ['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
-        const isLinkedTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedTx.type?.behavior || '') || linkedTx.category?.name === 'โอนเข้าภายใน';
+        const isSystemCat = (sysKey?: string | null) => sysKey === SYSTEM_CATEGORY_KEYS.TRANSFER_IN || sysKey === SYSTEM_CATEGORY_KEYS.TRANSFER_OUT;
+        const isCurrentFrom = (tx.type as any)?.isExpenseLike || tx.category?.systemKey === SYSTEM_CATEGORY_KEYS.TRANSFER_OUT;
+        const isLinkedTo = !(linkedTx.type as any)?.isExpenseLike || linkedTx.category?.systemKey === SYSTEM_CATEGORY_KEYS.TRANSFER_IN;
         if (isCurrentFrom && isLinkedTo) { fromAccId = tx.accountId; toAccId = linkedTx.accountId; }
         else { fromAccId = linkedTx.accountId; toAccId = tx.accountId; }
-        const isGeneric = (catName?: string) => ['โอนออกภายใน', 'โอนเข้าภายใน'].includes(catName || '');
-        if (isGeneric(tx.category?.name) && !isGeneric(linkedTx.category?.name)) {
+        if (isSystemCat(tx.category?.systemKey) && !isSystemCat(linkedTx.category?.systemKey)) {
             displayTypeId = linkedTx.typeId;
             displayCategoryId = linkedTx.categoryId;
         }
