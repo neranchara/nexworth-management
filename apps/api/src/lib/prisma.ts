@@ -31,25 +31,34 @@ prisma.$use(async (params, next) => {
 
   // Record AuditLog asynchronously
   const recordLog = async () => {
+    const entityId = result?.id || params.args?.where?.id || 'BATCH';
+    const orgId = result?.organizationId || oldValue?.organizationId || null;
+
+    const logData = {
+      action: params.action.toUpperCase(),
+      entity: params.model || 'Unknown',
+      entityId: String(entityId),
+      organizationId: orgId,
+      oldValue: oldValue ? JSON.parse(JSON.stringify(oldValue)) : null,
+      newValue: result && !['delete', 'deleteMany'].includes(params.action) ? JSON.parse(JSON.stringify(result)) : null,
+      performedBy: context?.userId || 'SYSTEM',
+      ipAddress: context?.ip || null,
+      userAgent: null,
+    };
+
     try {
-      const entityId = result?.id || params.args?.where?.id || 'BATCH';
-      
-      await prisma.auditLog.create({
-        data: {
-          action: params.action.toUpperCase(),
-          entity: params.model || 'Unknown',
-          entityId: String(entityId),
-          organizationId: result?.organizationId || oldValue?.organizationId || null,
-          oldValue: oldValue ? JSON.parse(JSON.stringify(oldValue)) : null,
-          newValue: result && !['delete', 'deleteMany'].includes(params.action) ? JSON.parse(JSON.stringify(result)) : null,
-          performedBy: context?.userId || 'SYSTEM',
-          ipAddress: context?.ip || null,
-          userAgent: null, // Can be added to context later if needed
-        },
-      });
-    } catch (err) {
-      // Don't crash the main request if logging fails
-      console.error("[AuditLog] Error recording log:", err);
+      await prisma.auditLog.create({ data: logData });
+    } catch (err: any) {
+      // FK violation on organizationId (org deleted/not found) — retry with null
+      if (err?.code === 'P2003' && err?.meta?.field_name?.includes('organizationId')) {
+        try {
+          await prisma.auditLog.create({ data: { ...logData, organizationId: null } });
+        } catch (retryErr) {
+          console.error('[AuditLog] Failed to record log (retry):', retryErr);
+        }
+        return;
+      }
+      console.error('[AuditLog] Error recording log:', err);
     }
   };
 
