@@ -72,5 +72,10 @@ mock/
 test-results/
 **/test-results/
 
+# Build & lint artifacts
+build_output.txt
+**/lint_output.txt
+**/tables_to_sort.txt
+
 # Training data (OCR)
 *.traineddata
