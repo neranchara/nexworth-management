@@ -1,12 +1,10 @@
 import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '@nexworth/database';
 import { z } from 'zod';
-import { AccountType } from '@prisma/client';
-
 const accountSchema = z.object({
   name: z.string().min(1, 'Account name is required'),
   accountNumber: z.string().optional().nullable(),
-  type: z.nativeEnum(AccountType),
+  type: z.string().min(1),
   bankId: z.string().optional().nullable(),
   isActive: z.boolean().default(true),
   isPersonal: z.boolean().default(true),
