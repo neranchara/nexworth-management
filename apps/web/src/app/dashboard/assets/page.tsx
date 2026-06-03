@@ -9,7 +9,7 @@ import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
 import PortfolioDoughnut from '@/features/asset-allocation/PortfolioDoughnut';
 
-const ALLOWED_ASSET_TYPES = ['SAVING', 'GOAL', 'INVESTMENT', 'EMERGENCY', 'STOCK', 'GOLD', 'FAMILY'];
+const ALLOWED_ASSET_TYPES = ['SAVING', 'GOAL', 'GOAL_SAVING', 'INVESTMENT', 'EMERGENCY', 'STOCK', 'GOLD', 'FAMILY'];
 const NON_COUNTED_TYPES = ['CASHFLOW', 'BANK', 'INTERNAL'];
 
 const DEFAULT_LABELS = {
@@ -242,7 +242,8 @@ export default function AssetsPage() {
       case 'STOCK':
       case 'INVESTMENT': return <TrendingUp className="w-4 h-4" />;
       case 'GOLD': return <Coins className="w-4 h-4" />;
-      case 'GOAL': return <CheckCircle className="w-4 h-4" />;
+      case 'GOAL':
+      case 'GOAL_SAVING': return <CheckCircle className="w-4 h-4" />;
       case 'EMERGENCY': return <AlertCircle className="w-4 h-4" />;
       case 'FAMILY': return <CheckCircle className="w-4 h-4" />;
       default: return <Building2 className="w-4 h-4" />;
