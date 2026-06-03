@@ -157,6 +157,10 @@ export const buildServer = async (): Promise<FastifyInstance> => {
     const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes')).default;
     await server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
 
+    // One-time setup endpoint (remove after production seed is done)
+    const setupRoutes = (await import('./routes/setup.routes')).default;
+    await server.register(setupRoutes, { prefix: '/api/v1/setup' });
+
   return server;
 };
 
