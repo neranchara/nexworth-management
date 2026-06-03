@@ -160,6 +160,48 @@ export const buildServer = async (): Promise<FastifyInstance> => {
   return server;
 };
 
+const runSchemaMigrations = async () => {
+  const { prisma } = await import('./lib/prisma.js');
+  const run = (sql: string) => prisma.$executeRawUnsafe(sql).catch((e: any) => {
+    if (!e.message?.includes('already exists') && !e.message?.includes('already of type')) {
+      console.warn('[migration] warning:', e.message);
+    }
+  });
+
+  // Convert Account.type from enum to text (safe — keeps all data)
+  await run(`ALTER TABLE "Account" ALTER COLUMN "type" TYPE TEXT USING "type"::TEXT`);
+
+  // New User columns (with defaults — no data loss)
+  await run(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "savingRateTarget" DOUBLE PRECISION NOT NULL DEFAULT 0.20`);
+  await run(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "investmentRateTarget" DOUBLE PRECISION NOT NULL DEFAULT 0.15`);
+  await run(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "debtRatioTarget" DOUBLE PRECISION NOT NULL DEFAULT 0.30`);
+  await run(`ALTER TABLE "User" ADD COLUMN IF NOT EXISTS "emergencyMonthsTarget" DOUBLE PRECISION NOT NULL DEFAULT 6.0`);
+
+  // New TransactionType columns
+  await run(`ALTER TABLE "TransactionType" ADD COLUMN IF NOT EXISTS "defaultDirection" TEXT`);
+  await run(`ALTER TABLE "TransactionType" ADD COLUMN IF NOT EXISTS "isExpenseLike" BOOLEAN NOT NULL DEFAULT false`);
+  await run(`ALTER TABLE "TransactionType" ADD COLUMN IF NOT EXISTS "cashflowBucket" TEXT`);
+
+  // New TransactionCategory column + index
+  await run(`ALTER TABLE "TransactionCategory" ADD COLUMN IF NOT EXISTS "systemKey" TEXT`);
+  await run(`CREATE INDEX IF NOT EXISTS "TransactionCategory_organizationId_systemKey_idx" ON "TransactionCategory"("organizationId", "systemKey")`);
+
+  // New FeatureFlag table
+  await run(`CREATE TABLE IF NOT EXISTS "FeatureFlag" (
+    "id" TEXT NOT NULL,
+    "name" TEXT NOT NULL,
+    "enabled" BOOLEAN NOT NULL DEFAULT false,
+    "description" TEXT,
+    "updatedAt" TIMESTAMP(3) NOT NULL DEFAULT NOW(),
+    "updatedBy" TEXT,
+    CONSTRAINT "FeatureFlag_pkey" PRIMARY KEY ("id")
+  )`);
+  await run(`CREATE UNIQUE INDEX IF NOT EXISTS "FeatureFlag_name_key" ON "FeatureFlag"("name")`);
+  await run(`CREATE INDEX IF NOT EXISTS "FeatureFlag_name_idx" ON "FeatureFlag"("name")`);
+
+  console.log('[boot] Schema migrations applied');
+};
+
 const seedAccountTypes = async () => {
   const { prisma } = await import('./lib/prisma.js');
   const ACCOUNT_TYPES_VALUE = [
@@ -190,6 +232,7 @@ const start = async () => {
   try {
     await server.listen({ port, host: '0.0.0.0' });
     console.log(`Server listening on port ${port}`);
+    await runSchemaMigrations();
     await seedAccountTypes();
 
     // Start Discord Bot ONLY in local and ONLY if this is the bot service
