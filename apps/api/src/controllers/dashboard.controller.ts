@@ -176,7 +176,7 @@ async function calculateFinancialStats(
   // Dynamic fallback for Goal type Accounts if no target-based Goals exist
   if (goalTracking.length === 0) {
     accountsRaw.forEach(acc => {
-      if (acc.type === 'GOAL') {
+      if (acc.type === 'GOAL' || acc.type === 'GOAL_SAVING') {
         const balance = acc.asset?.amount ?? 0;
         const target = acc.targetAmount || balance || 1;
         goalTracking.push({
@@ -235,7 +235,7 @@ async function calculateFinancialStats(
         monthlyCashflow[mIdx].internalLoan += amount;
       }
 
-      if (accType === 'GOAL' || bucket === 'saving' && behavior === 'GOAL_SAVING') {
+      if (accType === 'GOAL' || accType === 'GOAL_SAVING' || bucket === 'saving' && behavior === 'GOAL_SAVING') {
         monthlyCashflow[mIdx].goalSaving += amount;
       } else if (INVESTMENT_TYPES.includes(accType) || bucket === 'invest') {
         monthlyCashflow[mIdx].invest += amount;
