@@ -8,6 +8,8 @@ dist/
 .next/
 out/
 build/
+**/html/
+**/*.tsbuildinfo
 
 # IDE & OS
 .vscode/
@@ -15,6 +17,7 @@ build/
 .DS_Store
 Thumbs.db
 *.swp
+.claude/settings.local.json
 
 # Logs
 *.log
@@ -69,5 +72,11 @@ mock/
 test-results/
 **/test-results/
 
+# Build & lint artifacts
+build_output.txt
+**/lint_output.txt
+**/tables_to_sort.txt
+
 # Training data (OCR)
 *.traineddata
+docs/standards

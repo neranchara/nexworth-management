@@ -1,15 +1,4 @@
-export type AccountType = 
-  | 'BANK' 
-  | 'STOCK' 
-  | 'GOLD' 
-  | 'CASHFLOW' 
-  | 'INTERNAL' 
-  | 'EMERGENCY' 
-  | 'GOAL' 
-  | 'INVESTMENT' 
-  | 'SAVING' 
-  | 'FAMILY' 
-  | 'LIABILITY';
+export type AccountType = string;
 
 export interface Bank {
   id: string;
@@ -69,6 +58,9 @@ export interface TransactionType {
   name: string;
   behavior: string;
   isActive: boolean;
+  defaultDirection?: string | null;
+  isExpenseLike?: boolean;
+  cashflowBucket?: string | null;
 }
 
 export interface TransactionCategory {
@@ -76,6 +68,7 @@ export interface TransactionCategory {
   name: string;
   typeId: string;
   isActive: boolean;
+  systemKey?: string | null;
   type?: TransactionType;
 }
 

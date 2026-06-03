@@ -7,6 +7,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Load environment variables
 dotenv.config({ path: path.join(__dirname, '../.env.local') });
+dotenv.config({ path: path.join(__dirname, '../.env') });
 
 const TOKEN = process.env.DISCORD_BOT_TOKEN;
 const AUTHORIZED_USER_ID = process.env.DISCORD_ADMIN_ID;

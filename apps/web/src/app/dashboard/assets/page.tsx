@@ -9,8 +9,8 @@ import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
 import PortfolioDoughnut from '@/features/asset-allocation/PortfolioDoughnut';
 
-const ALLOWED_ASSET_TYPES = ['SAVING', 'GOAL', 'INVESTMENT', 'EMERGENCY'];
-const NON_COUNTED_TYPES = ['CASHFLOW', 'BANK'];
+const ALLOWED_ASSET_TYPES = ['SAVING', 'GOAL', 'GOAL_SAVING', 'INVESTMENT', 'EMERGENCY', 'STOCK', 'GOLD', 'FAMILY'];
+const NON_COUNTED_TYPES = ['CASHFLOW', 'BANK', 'INTERNAL'];
 
 const DEFAULT_LABELS = {
   title: 'สินทรัพย์ (Assets)',
@@ -89,8 +89,14 @@ export default function AssetsPage() {
       }
 
       const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
+      let currentAllowedAssetTypes = ALLOWED_ASSET_TYPES;
+      let currentNonCountedTypes = NON_COUNTED_TYPES;
+
       if (typesConfig) {
         setAccountTypes(typesConfig.value);
+        const types = typesConfig.value || [];
+        currentAllowedAssetTypes = types.filter((t: any) => t.category === 'ASSET' && t.subCategory !== 'NONE').map((t: any) => t.value);
+        currentNonCountedTypes = types.filter((t: any) => t.category === 'ASSET' && t.subCategory === 'NONE').map((t: any) => t.value);
       }
 
       const allFetchedRecords = recordsRes.data.records || [];
@@ -115,17 +121,17 @@ export default function AssetsPage() {
       const completeRecordsList = [...allFetchedRecords, ...dummyRecords];
 
       const filteredRecords = completeRecordsList.filter((r: FinancialRecord) => 
-        ALLOWED_ASSET_TYPES.includes(r.account?.type || '') && (r.account?.isPersonal || r.account?.type === 'INVESTMENT')
+        currentAllowedAssetTypes.includes(r.account?.type || '') && (r.account?.isPersonal || r.account?.type === 'INVESTMENT')
       );
       const filteredNonCounted = completeRecordsList.filter((r: FinancialRecord) =>
-        NON_COUNTED_TYPES.includes(r.account?.type || '') && r.account?.isPersonal
+        currentNonCountedTypes.includes(r.account?.type || '') && r.account?.isPersonal
       );
 
       const filteredAccounts = allFetchedAccounts.filter((acc: Account) => 
-        ALLOWED_ASSET_TYPES.includes(acc.type) && (acc.isPersonal || acc.type === 'INVESTMENT')
+        currentAllowedAssetTypes.includes(acc.type) && (acc.isPersonal || acc.type === 'INVESTMENT')
       );
       const filteredNonCountedAccounts = allFetchedAccounts.filter((acc: Account) =>
-        NON_COUNTED_TYPES.includes(acc.type) && acc.isPersonal
+        currentNonCountedTypes.includes(acc.type) && acc.isPersonal
       );
 
       setRecords(filteredRecords);
@@ -236,7 +242,8 @@ export default function AssetsPage() {
       case 'STOCK':
       case 'INVESTMENT': return <TrendingUp className="w-4 h-4" />;
       case 'GOLD': return <Coins className="w-4 h-4" />;
-      case 'GOAL': return <CheckCircle className="w-4 h-4" />;
+      case 'GOAL':
+      case 'GOAL_SAVING': return <CheckCircle className="w-4 h-4" />;
       case 'EMERGENCY': return <AlertCircle className="w-4 h-4" />;
       case 'FAMILY': return <CheckCircle className="w-4 h-4" />;
       default: return <Building2 className="w-4 h-4" />;
@@ -303,9 +310,16 @@ export default function AssetsPage() {
     let cash = 0, investments = 0, others = 0;
     records.forEach(r => {
       const type = r.account?.type || '';
-      if (['BANK', 'SAVING', 'CASHFLOW'].includes(type)) cash += r.amount;
-      else if (['INVESTMENT', 'STOCK'].includes(type)) investments += r.amount;
-      else others += r.amount;
+      const typeMeta = accountTypes.find((t: any) => t.value === type);
+      if (typeMeta) {
+        if (typeMeta.subCategory === 'LIQUID') cash += r.amount;
+        else if (typeMeta.subCategory === 'INVESTMENT') investments += r.amount;
+        else others += r.amount;
+      } else {
+        if (['BANK', 'SAVING', 'CASHFLOW'].includes(type)) cash += r.amount;
+        else if (['INVESTMENT', 'STOCK'].includes(type)) investments += r.amount;
+        else others += r.amount;
+      }
     });
     const total = totalAssets || 1;
     return {
@@ -424,96 +438,26 @@ export default function AssetsPage() {
         </div>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4 pt-0 custom-scrollbar relative">
-          <table className="w-full text-left text-xs border-separate border-spacing-y-2">
-            <thead className="sticky top-0 z-[60]">
-              <tr>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('name')}>{labels.table.account} <SortIcon column="name" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('type')}>{labels.table.type} <SortIcon column="type" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('bank')}>{labels.table.institution} <SortIcon column="bank" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('amount')}>{labels.table.amount} <SortIcon column="amount" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">{labels.table.action}</th>
-              </tr>
-            </thead>
-            {searchedRecords.length === 0 ? (
-              <tbody>
+          <div className="overflow-x-auto w-full custom-scrollbar">
+            <table className="w-full text-left text-xs border-separate border-spacing-y-2 min-w-[600px] sm:min-w-0">
+              <thead className="sticky top-0 z-[60]">
                 <tr>
-                  <td colSpan={5} className="py-8 text-center text-slate-400">No asset records found.</td>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('name')}>{labels.table.account} <SortIcon column="name" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] hidden sm:table-cell" onClick={() => handleSort('type')}>{labels.table.type} <SortIcon column="type" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] hidden sm:table-cell" onClick={() => handleSort('bank')}>{labels.table.institution} <SortIcon column="bank" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('amount')}>{labels.table.amount} <SortIcon column="amount" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">{labels.table.action}</th>
                 </tr>
-              </tbody>
-            ) : viewMode === 'list' ? (
-              <tbody>
-                {searchedRecords.map((record) => {
-                  const account = record.account;
-                  if (!account) return null;
-                  const isNonCounted = nonCountedIds.has(record.id);
-                  const displayAmount = Math.abs(record.amount) < 0.005 ? 0 : record.amount;
-                  const isPositive = displayAmount >= 0;
-                  const styling = getTypeBadgeColor(account.type);
-                  
-                  return (
-                    <tr key={record.id} className={`bg-white/[0.02] hover:bg-white/[0.06] transition-all group ${isNonCounted ? 'opacity-50' : ''}`}>
-                      <td className="px-6 py-3 rounded-l-xl">
-                        <div className="flex items-center gap-3">
-                          <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${styling.iconBg}`}>
-                            {getAccountIcon(account.type)}
-                          </div>
-                          <div>
-                            <p className="font-bold text-white text-sm flex items-center gap-2">
-                              {account.name}
-                              {isNonCounted && <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-wider text-slate-400">Hidden</span>}
-                            </p>
-                            <p className="text-[9px] text-slate-400">Updated: {record.date ? new Date(record.date).toLocaleDateString() : '-'}</p>
-                            {record.note && <p className="text-[10px] text-emerald/60 mt-0.5 italic line-clamp-1">"{record.note}"</p>}
-                          </div>
-                        </div>
-                      </td>
-                      <td className="px-6 py-3">
-                        <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${styling.badge}`}>
-                          {accountTypes.find(t => t.value === account.type)?.label || account.type}
-                        </span>
-                      </td>
-                      <td className="px-6 py-3 text-slate-300">
-                        {account.bank ? (
-                          <div className="flex items-center gap-2">
-                            {account.bank.color && <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: account.bank.color }} />}
-                            {account.bank.name}
-                          </div>
-                        ) : '-'}
-                      </td>
-                      <td className={`px-6 py-3 text-right font-bold text-sm ${isPositive ? 'text-emerald' : 'text-rose-500'}`}>
-                        {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(displayAmount)}
-                      </td>
-                      <td className="px-6 py-3 text-center rounded-r-xl">
-                        <div className="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
-                          {hasPermission('assets', 'canUpdate') && (
-                            <button onClick={() => openEditModal(record)} className="text-slate-400 hover:text-blue-400 transition-colors" title="Edit">
-                              <Edit2 size={14} />
-                            </button>
-                          )}
-                          {hasPermission('assets', 'canDelete') && (
-                            <button onClick={() => handleDelete(record.id)} className="text-slate-400 hover:text-rose-500 transition-colors" title="Delete">
-                              <Trash2 size={14} />
-                            </button>
-                          )}
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
-              </tbody>
-            ) : (
-              Object.entries(groupedRecords).sort((a,b) => a[0].localeCompare(b[0])).map(([type, groupRecords]) => (
-                <tbody key={type}>
+              </thead>
+              {searchedRecords.length === 0 ? (
+                <tbody>
                   <tr>
-                    <td colSpan={5} className="px-6 py-3 bg-[#001229]/60 font-black text-emerald tracking-widest text-[10px] uppercase border-y border-white/5 shadow-inner">
-                      <div className="flex items-center gap-2">
-                         <div className="w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(80,200,120,0.8)]"></div>
-                         {type} ACCOUNTS
-                         <span className="text-slate-400 font-normal normal-case ml-2">- {groupRecords.length} items</span>
-                      </div>
-                    </td>
+                    <td colSpan={5} className="py-8 text-center text-slate-400">No asset records found.</td>
                   </tr>
-                  {groupRecords.map((record) => {
+                </tbody>
+              ) : viewMode === 'list' ? (
+                <tbody>
+                  {searchedRecords.map((record) => {
                     const account = record.account;
                     if (!account) return null;
                     const isNonCounted = nonCountedIds.has(record.id);
@@ -534,15 +478,16 @@ export default function AssetsPage() {
                                 {isNonCounted && <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-wider text-slate-400">Hidden</span>}
                               </p>
                               <p className="text-[9px] text-slate-400">Updated: {record.date ? new Date(record.date).toLocaleDateString() : '-'}</p>
+                              {record.note && <p className="text-[10px] text-emerald/60 mt-0.5 italic line-clamp-1">"{record.note}"</p>}
                             </div>
                           </div>
                         </td>
-                        <td className="px-6 py-3">
+                        <td className="px-6 py-3 hidden sm:table-cell">
                           <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${styling.badge}`}>
                             {accountTypes.find(t => t.value === account.type)?.label || account.type}
                           </span>
                         </td>
-                        <td className="px-6 py-3 text-slate-300">
+                        <td className="px-6 py-3 text-slate-300 hidden sm:table-cell">
                           {account.bank ? (
                             <div className="flex items-center gap-2">
                               {account.bank.color && <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: account.bank.color }} />}
@@ -571,9 +516,80 @@ export default function AssetsPage() {
                     );
                   })}
                 </tbody>
-              ))
-            )}
-          </table>
+              ) : (
+                Object.entries(groupedRecords).sort((a,b) => a[0].localeCompare(b[0])).map(([type, groupRecords]) => (
+                  <tbody key={type}>
+                    <tr>
+                      <td colSpan={5} className="px-6 py-3 bg-[#001229]/60 font-black text-emerald tracking-widest text-[10px] uppercase border-y border-white/5 shadow-inner">
+                        <div className="flex items-center gap-2">
+                           <div className="w-1.5 h-1.5 rounded-full bg-emerald shadow-[0_0_8px_rgba(80,200,120,0.8)]"></div>
+                           {type} ACCOUNTS
+                           <span className="text-slate-400 font-normal normal-case ml-2">- {groupRecords.length} items</span>
+                        </div>
+                      </td>
+                    </tr>
+                    {groupRecords.map((record) => {
+                      const account = record.account;
+                      if (!account) return null;
+                      const isNonCounted = nonCountedIds.has(record.id);
+                      const displayAmount = Math.abs(record.amount) < 0.005 ? 0 : record.amount;
+                      const isPositive = displayAmount >= 0;
+                      const styling = getTypeBadgeColor(account.type);
+                      
+                      return (
+                        <tr key={record.id} className={`bg-white/[0.02] hover:bg-white/[0.06] transition-all group ${isNonCounted ? 'opacity-50' : ''}`}>
+                          <td className="px-6 py-3 rounded-l-xl">
+                            <div className="flex items-center gap-3">
+                              <div className={`w-9 h-9 rounded-xl flex items-center justify-center border ${styling.iconBg}`}>
+                                {getAccountIcon(account.type)}
+                              </div>
+                              <div>
+                                <p className="font-bold text-white text-sm flex items-center gap-2">
+                                  {account.name}
+                                  {isNonCounted && <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-wider text-slate-400">Hidden</span>}
+                                </p>
+                                <p className="text-[9px] text-slate-400">Updated: {record.date ? new Date(record.date).toLocaleDateString() : '-'}</p>
+                              </div>
+                            </div>
+                          </td>
+                          <td className="px-6 py-3 hidden sm:table-cell">
+                            <span className={`px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${styling.badge}`}>
+                              {accountTypes.find(t => t.value === account.type)?.label || account.type}
+                            </span>
+                          </td>
+                          <td className="px-6 py-3 text-slate-300 hidden sm:table-cell">
+                            {account.bank ? (
+                              <div className="flex items-center gap-2">
+                                {account.bank.color && <div className="w-2 h-2 rounded-full shadow-sm" style={{ backgroundColor: account.bank.color }} />}
+                                {account.bank.name}
+                              </div>
+                            ) : '-'}
+                          </td>
+                          <td className={`px-6 py-3 text-right font-bold text-sm ${isPositive ? 'text-emerald' : 'text-rose-500'}`}>
+                            {new Intl.NumberFormat('th-TH', { style: 'currency', currency: 'THB' }).format(displayAmount)}
+                          </td>
+                          <td className="px-6 py-3 text-center rounded-r-xl">
+                            <div className="flex justify-center gap-3 opacity-0 group-hover:opacity-100 transition-opacity">
+                              {hasPermission('assets', 'canUpdate') && (
+                                <button onClick={() => openEditModal(record)} className="text-slate-400 hover:text-blue-400 transition-colors" title="Edit">
+                                  <Edit2 size={14} />
+                                </button>
+                              )}
+                              {hasPermission('assets', 'canDelete') && (
+                                <button onClick={() => handleDelete(record.id)} className="text-slate-400 hover:text-rose-500 transition-colors" title="Delete">
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                ))
+              )}
+            </table>
+          </div>
         </div>
       </GlassCard>
 

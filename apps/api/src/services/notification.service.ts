@@ -16,7 +16,7 @@ export class NotificationService {
   async sendSecurityAlert(message: string) {
     const groupId = config.line.adminGroupId;
     if (!groupId) {
-      console.warn('[NotificationService] Skipping Security Alert: LINE_ADMIN_GROUP_ID not set');
+      if (process.env.NODE_ENV !== 'test') console.warn('[NotificationService] Skipping Security Alert: LINE_ADMIN_GROUP_ID not set');
       return;
     }
 

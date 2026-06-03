@@ -8,12 +8,14 @@ import { useRouter } from 'next/navigation';
 import {
   Edit2, Trash2, X, CheckCircle, AlertCircle,
   ArrowUpCircle, ArrowDownCircle, MoreHorizontal,
-  Users, Plus, RefreshCw, Loader2, Search, UserPlus, ChevronRight
+  Users, Plus, RefreshCw, Loader2, Search, UserPlus, ChevronRight,
+  LayoutGrid, List
 } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
 import { User, Organization } from '@/types/models';
 import { clsx } from 'clsx';
 import { SUPER_ADMIN_ROLE, SYSTEM_ORG_ID } from '@/config/systemConfig';
+import GlassCard from '@/components/ui/GlassCard';
 
 interface Role {
   id: string;
@@ -31,6 +33,15 @@ export default function UsersManagementPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'firstName', direction: 'asc' });
+
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>(() =>
+    (typeof window !== 'undefined' ? localStorage.getItem('viewMode_users') as 'grid' | 'table' : null) || 'table'
+  );
+
+  const toggleViewMode = (mode: 'grid' | 'table') => {
+    setViewMode(mode);
+    localStorage.setItem('viewMode_users', mode);
+  };
 
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -262,6 +273,23 @@ export default function UsersManagementPage() {
               data-testid="users-list-input-search"
             />
           </div>
+          
+          {/* View Toggle */}
+          <div className="flex bg-white/5 border border-white/5 rounded-lg p-0.5 shrink-0">
+            {(['table', 'grid'] as const).map((mode) => (
+              <button
+                key={mode}
+                onClick={() => toggleViewMode(mode)}
+                className={clsx(
+                  'p-1.5 rounded-md transition-all',
+                  viewMode === mode ? 'bg-emerald/20 text-emerald' : 'text-slate hover:text-white'
+                )}
+              >
+                {mode === 'grid' ? <LayoutGrid size={14} /> : <List size={14} />}
+              </button>
+            ))}
+          </div>
+
           {hasPermission('users', 'canCreate') && (
             <button
               onClick={openAddModal}
@@ -275,103 +303,191 @@ export default function UsersManagementPage() {
         </div>
       </div>
 
-      {/* Table */}
-      <div className="bg-navy/40 backdrop-blur-xl rounded-[1.25rem] border border-white/5 overflow-hidden flex-1">
-        <div className="overflow-x-auto h-full">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-white/5 border-b border-white/5">
-                <th className="px-6 py-4 text-[10px] font-black text-slate uppercase tracking-widest cursor-pointer" onClick={() => handleSort('name')}>
-                  <div className="flex items-center">Name <SortIcon column="name" /></div>
-                </th>
-                <th className="px-4 py-4 text-[10px] font-black text-slate uppercase tracking-widest cursor-pointer" onClick={() => handleSort('email')}>
-                  <div className="flex items-center">Email <SortIcon column="email" /></div>
-                </th>
-                <th className="px-4 py-4 text-[10px] font-black text-slate uppercase tracking-widest text-center">Role</th>
-                <th className="px-4 py-4 text-[10px] font-black text-slate uppercase tracking-widest">Organization</th>
-                <th className="px-4 py-4 text-[10px] font-black text-slate uppercase tracking-widest text-center">Status</th>
-                <th className="px-6 py-4 text-[10px] font-black text-slate uppercase tracking-widest text-right">Actions</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-white/5">
-              {loading ? (
-                <tr><td colSpan={6} className="p-16 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald" /></td></tr>
-              ) : filteredUsers.length === 0 ? (
-                <tr><td colSpan={6} className="p-16 text-center text-xs font-bold text-slate uppercase tracking-widest">No users found.</td></tr>
-              ) : filteredUsers.map((person) => (
-                <tr key={person.id} className="hover:bg-white/5 transition-colors group">
-                  <td className="px-6 py-4">
-                    <span className="text-sm font-bold text-white">{person.firstName} {person.lastName}</span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="text-xs text-slate">{person.email}</span>
-                  </td>
-                  <td className="px-4 py-4 text-center">
-                    <span className={clsx(
-                      "inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border",
-                      person.organizationId === SYSTEM_ORG_ID
-                        ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
-                        : 'bg-emerald/10 text-emerald border-emerald/20'
-                    )}>
-                      {person.role?.name || 'User'}
-                    </span>
-                  </td>
-                  <td className="px-4 py-4">
-                    <span className="text-xs font-bold text-slate">{person.organization?.name || '—'}</span>
-                  </td>
-                  <td className="px-4 py-4 text-center">
+      {/* Users View */}
+      {viewMode === 'table' ? (
+        <div className="bg-navy/40 backdrop-blur-xl rounded-[1.25rem] border border-white/5 overflow-hidden flex-1">
+          <div className="overflow-x-auto h-full">
+            <table className="w-full text-left">
+              <thead>
+                <tr className="bg-white/5 border-b border-white/5">
+                  <th className="px-6 py-4 text-[10px] font-black text-slate uppercase tracking-widest cursor-pointer" onClick={() => handleSort('name')}>
+                    <div className="flex items-center">Name <SortIcon column="name" /></div>
+                  </th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate uppercase tracking-widest cursor-pointer" onClick={() => handleSort('email')}>
+                    <div className="flex items-center">Email <SortIcon column="email" /></div>
+                  </th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate uppercase tracking-widest text-center">Role</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate uppercase tracking-widest">Organization</th>
+                  <th className="px-4 py-4 text-[10px] font-black text-slate uppercase tracking-widest text-center">Status</th>
+                  <th className="px-6 py-4 text-[10px] font-black text-slate uppercase tracking-widest text-right">Actions</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {loading ? (
+                  <tr><td colSpan={6} className="p-16 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald" /></td></tr>
+                ) : filteredUsers.length === 0 ? (
+                  <tr><td colSpan={6} className="p-16 text-center text-xs font-bold text-slate uppercase tracking-widest">No users found.</td></tr>
+                ) : filteredUsers.map((person) => (
+                  <tr key={person.id} className="hover:bg-white/5 transition-colors group">
+                    <td className="px-6 py-4">
+                      <span className="text-sm font-bold text-white">{person.firstName} {person.lastName}</span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="text-xs text-slate">{person.email}</span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <span className={clsx(
+                        "inline-block px-2.5 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border",
+                        person.organizationId === SYSTEM_ORG_ID
+                          ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                          : 'bg-emerald/10 text-emerald border-emerald/20'
+                      )}>
+                        {person.role?.name || 'User'}
+                      </span>
+                    </td>
+                    <td className="px-4 py-4">
+                      <span className="text-xs font-bold text-slate">{person.organization?.name || '—'}</span>
+                    </td>
+                    <td className="px-4 py-4 text-center">
+                      <button
+                        onClick={() => toggleStatus(person)}
+                        data-testid={`users-list-toggle-status-${person.email}`}
+                        disabled={(!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === SYSTEM_ORG_ID || person.isSystemAdmin)}
+                        className={clsx(
+                          "inline-block w-2.5 h-2.5 rounded-full border-2 transition-all shadow-sm",
+                          person.isActive ? 'bg-emerald border-emerald/40 shadow-emerald/30' : 'bg-rose border-rose/40',
+                          ((!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === SYSTEM_ORG_ID || person.isSystemAdmin))
+                            ? 'cursor-default opacity-40'
+                            : 'cursor-pointer hover:scale-125'
+                        )}
+                        title={person.isActive ? 'Active' : 'Inactive'}
+                      />
+                    </td>
+                    <td className="px-6 py-4 text-right">
+                      <div className="flex items-center justify-end gap-1.5">
+                        {user?.isSystemAdmin && person.organizationId !== user.organizationId && !person.isSystemAdmin && (
+                          <button
+                            onClick={() => handleResetPassword(person.id)}
+                            data-testid={`users-list-btn-reset-pw-${person.email}`}
+                            className="p-2 text-slate hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors border border-transparent hover:border-amber-500/20"
+                            title="Reset Password"
+                          >
+                            <RefreshCw className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {(person.id === user?.id || (!person.isSystemAdmin && (hasPermission('users', 'canUpdate') || (user?.isSystemAdmin && person.organizationId !== user.organizationId)))) && (
+                          <button
+                            onClick={() => openEditModal(person)}
+                            data-testid={`users-list-btn-edit-${person.email}`}
+                            className="p-2 text-slate hover:text-emerald hover:bg-emerald/10 rounded-lg transition-colors border border-transparent hover:border-emerald/20"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {hasPermission('users', 'canDelete') && (user?.isSystemAdmin && person.organizationId === user.organizationId) && person.id !== user?.id && !person.isSystemAdmin && (
+                          <button
+                            onClick={() => handleDelete(person.id)}
+                            data-testid={`users-list-btn-delete-${person.email}`}
+                            className="p-2 text-slate hover:text-rose hover:bg-rose/10 rounded-lg transition-colors border border-transparent hover:border-rose/20"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ) : (
+        <div className="flex-1 overflow-y-auto pr-2 custom-scrollbar">
+          {loading ? (
+            <div className="p-16 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto text-emerald" /></div>
+          ) : filteredUsers.length === 0 ? (
+            <div className="p-16 text-center text-xs font-bold text-slate uppercase tracking-widest">No users found.</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+              {filteredUsers.map((person) => (
+                <GlassCard
+                  key={person.id}
+                  className="p-5 flex flex-col justify-between rounded-[1.25rem] bg-navy/40 border border-white/5 relative group hover:border-emerald/30 transition-all duration-300"
+                >
+                  <div className="flex items-start justify-between gap-3 mb-3">
+                    <div className="min-w-0">
+                      <h3 className="text-sm font-bold text-white group-hover:text-emerald transition-colors truncate">
+                        {person.firstName} {person.lastName}
+                      </h3>
+                      <p className="text-[10px] text-slate truncate mt-0.5">{person.email}</p>
+                    </div>
                     <button
                       onClick={() => toggleStatus(person)}
-                      data-testid={`users-list-toggle-status-${person.email}`}
+                      data-testid={`users-grid-toggle-status-${person.email}`}
                       disabled={(!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === SYSTEM_ORG_ID || person.isSystemAdmin)}
                       className={clsx(
-                        "inline-block w-2.5 h-2.5 rounded-full border-2 transition-all shadow-sm",
-                        person.isActive ? 'bg-emerald border-emerald/40 shadow-emerald/30' : 'bg-rose border-rose/40',
+                        "w-2.5 h-2.5 rounded-full border-2 transition-all shadow-sm shrink-0",
+                        person.isActive ? 'bg-emerald border-emerald/40 shadow-emerald/30 animate-pulse' : 'bg-rose border-rose/40',
                         ((!user?.isSystemAdmin && person.organizationId !== user?.organizationId) || (person.organizationId === SYSTEM_ORG_ID || person.isSystemAdmin))
                           ? 'cursor-default opacity-40'
                           : 'cursor-pointer hover:scale-125'
                       )}
                       title={person.isActive ? 'Active' : 'Inactive'}
                     />
-                  </td>
-                  <td className="px-6 py-4 text-right">
-                    <div className="flex items-center justify-end gap-1.5">
-                      {user?.isSystemAdmin && person.organizationId !== user.organizationId && !person.isSystemAdmin && (
-                        <button
-                          onClick={() => handleResetPassword(person.id)}
-                          data-testid={`users-list-btn-reset-pw-${person.email}`}
-                          className="p-2 text-slate hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors border border-transparent hover:border-amber-500/20"
-                          title="Reset Password"
-                        >
-                          <RefreshCw className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      {(person.id === user?.id || (!person.isSystemAdmin && (hasPermission('users', 'canUpdate') || (user?.isSystemAdmin && person.organizationId !== user.organizationId)))) && (
-                        <button
-                          onClick={() => openEditModal(person)}
-                          data-testid={`users-list-btn-edit-${person.email}`}
-                          className="p-2 text-slate hover:text-emerald hover:bg-emerald/10 rounded-lg transition-colors border border-transparent hover:border-emerald/20"
-                        >
-                          <Edit2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                      {hasPermission('users', 'canDelete') && (user?.isSystemAdmin && person.organizationId === user.organizationId) && person.id !== user?.id && !person.isSystemAdmin && (
-                        <button
-                          onClick={() => handleDelete(person.id)}
-                          data-testid={`users-list-btn-delete-${person.email}`}
-                          className="p-2 text-slate hover:text-rose hover:bg-rose/10 rounded-lg transition-colors border border-transparent hover:border-rose/20"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                        </button>
-                      )}
-                    </div>
-                  </td>
-                </tr>
+                  </div>
+
+                  <div className="flex flex-wrap gap-2 items-center mb-4">
+                    <span className={clsx(
+                      "px-2.5 py-0.5 rounded-lg text-[9px] font-black uppercase tracking-wider border shrink-0",
+                      person.organizationId === SYSTEM_ORG_ID
+                        ? 'bg-orange-500/10 text-orange-400 border-orange-500/20'
+                        : 'bg-emerald/10 text-emerald border-emerald/20'
+                    )}>
+                      {person.role?.name || 'User'}
+                    </span>
+                    {person.organization?.name && (
+                      <span className="text-[9px] font-bold text-slate/80 bg-white/5 border border-white/5 px-2 py-0.5 rounded-lg truncate max-w-[150px]">
+                        {person.organization.name}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center justify-end gap-1.5 pt-3 border-t border-white/5 mt-auto">
+                    {user?.isSystemAdmin && person.organizationId !== user.organizationId && !person.isSystemAdmin && (
+                      <button
+                        onClick={() => handleResetPassword(person.id)}
+                        data-testid={`users-grid-btn-reset-pw-${person.email}`}
+                        className="p-1.5 text-slate hover:text-amber-400 hover:bg-amber-500/10 rounded-lg transition-colors border border-transparent hover:border-amber-500/20"
+                        title="Reset Password"
+                      >
+                        <RefreshCw className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {(person.id === user?.id || (!person.isSystemAdmin && (hasPermission('users', 'canUpdate') || (user?.isSystemAdmin && person.organizationId !== user.organizationId)))) && (
+                      <button
+                        onClick={() => openEditModal(person)}
+                        data-testid={`users-grid-btn-edit-${person.email}`}
+                        className="p-1.5 text-slate hover:text-emerald hover:bg-emerald/10 rounded-lg transition-colors border border-transparent hover:border-emerald/20"
+                      >
+                        <Edit2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                    {hasPermission('users', 'canDelete') && (user?.isSystemAdmin && person.organizationId === user.organizationId) && person.id !== user?.id && !person.isSystemAdmin && (
+                      <button
+                        onClick={() => handleDelete(person.id)}
+                        data-testid={`users-grid-btn-delete-${person.email}`}
+                        className="p-1.5 text-slate hover:text-rose hover:bg-rose/10 rounded-lg transition-colors border border-transparent hover:border-rose/20"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                </GlassCard>
               ))}
-            </tbody>
-          </table>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* Modal — New User / View User Details / Edit Profile */}
       {isModalOpen && (

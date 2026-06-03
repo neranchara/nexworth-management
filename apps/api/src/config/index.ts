@@ -9,12 +9,16 @@ import * as dotenv from 'dotenv';
 // ============================================================
 const nodeEnv = process.env.NODE_ENV || 'local';
 const envFile = `.env.${nodeEnv}`;
-// Only load dotenv if not on Render (Render uses Dashboard env vars)
 if (!process.env.RENDER) {
-  dotenv.config({ path: envFile });
-  dotenv.config({ path: `../../${envFile}` });
+  dotenv.config({ path: envFile, quiet: true } as any);
+  dotenv.config({ path: `../../${envFile}`, quiet: true } as any);
+  dotenv.config({ path: '.env', quiet: true } as any);
+  dotenv.config({ path: '../../.env', quiet: true } as any);
 }
-console.log(`[Config] Environment: ${nodeEnv} | RENDER: ${!!process.env.RENDER}`);
+const isTestRun = !!process.env.VITEST || nodeEnv === 'test';
+if (!isTestRun) {
+  console.log(`[Config] Environment: ${nodeEnv} | RENDER: ${!!process.env.RENDER}`);
+}
 
 const isLocal = nodeEnv === 'local' && !process.env.RENDER;
 const isStaging = nodeEnv === 'staging';

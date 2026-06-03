@@ -2,6 +2,7 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { REAL_ASSET_TYPES, LIQUID_TYPES, INVESTMENT_TYPES } from '../constants/accountTypes.js';
 import { SYSTEM_ADMIN_EMAIL, SYSTEM_ORG_NAME } from '../constants/systemConfig.js';
+import { SYSTEM_CATEGORY_KEYS, getCashflowBucket } from '../constants/transactionConfig.js';
 
 export const getDashboardStatsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -76,7 +77,7 @@ async function calculateFinancialStats(
   const currentYear = yearStr ? parseInt(yearStr) : now.getFullYear();
   const currentMonth = monthStr !== undefined ? parseInt(monthStr) : now.getMonth();
   
-  const [accountsRaw, transactions, goalsRaw] = await Promise.all([
+  const [accountsRaw, transactions, goalsRaw, configRecord] = await Promise.all([
     prisma.account.findMany({ 
       where: { organizationId },
       include: { asset: true, liability: true }
@@ -94,8 +95,13 @@ async function calculateFinancialStats(
     prisma.goal.findMany({
       where: { organizationId },
       include: { allocations: true }
+    }),
+    prisma.systemConfig.findUnique({
+      where: { key: 'ACCOUNT_TYPES' }
     })
   ]);
+
+  const accountTypesMetadata = (configRecord?.value as any) || [];
 
   let totalRealAssets = 0;
   let totalGoalTarget = 0;
@@ -104,31 +110,41 @@ async function calculateFinancialStats(
   let totalLiabilities = 0;
   let liquidAssets = 0;
 
-
   const assetsByAccount: any[] = [];
   const liabilitiesByAccount: any[] = [];
   const goalTracking: any[] = [];
 
+  const getTypeMeta = (type: string) => {
+    return accountTypesMetadata.find((t: any) => t.value === type);
+  };
+
   accountsRaw.forEach(acc => {
-    let balance = acc.type === 'LIABILITY' ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
+    const typeMeta = getTypeMeta(acc.type);
+    const isLiability = typeMeta?.category === 'LIABILITY' || acc.type === 'LIABILITY';
+
+    let balance = isLiability ? (acc.liability?.amount ?? 0) : (acc.asset?.amount ?? 0);
     
     // Absolute threshold validation to convert negative zero (-0) into exact positive 0
     if (Math.abs(balance) < 0.005) {
       balance = 0;
     }
     
-    const shouldIncludeInNetWorth = acc.isPersonal || acc.type === 'INVESTMENT';
+    const isAsset = typeMeta ? typeMeta.category === 'ASSET' : REAL_ASSET_TYPES.includes(acc.type);
+    const isLiquid = typeMeta ? (typeMeta.subCategory === 'LIQUID' || typeMeta.subCategory === 'EMERGENCY' || typeMeta.subCategory === 'GOAL') : LIQUID_TYPES.includes(acc.type);
+    const isInvestment = typeMeta ? typeMeta.subCategory === 'INVESTMENT' : INVESTMENT_TYPES.includes(acc.type);
 
-    if (acc.type === 'LIABILITY') {
+    const shouldIncludeInNetWorth = acc.isPersonal || isInvestment;
+
+    if (isLiability) {
       const absBalance = Math.abs(balance);
       totalLiabilities += absBalance;
       if (absBalance !== 0) {
         liabilitiesByAccount.push({ id: acc.id, name: acc.name, type: acc.type, balance: absBalance });
       }
-    } else if (REAL_ASSET_TYPES.includes(acc.type) && shouldIncludeInNetWorth) {
+    } else if (isAsset && shouldIncludeInNetWorth) {
       totalRealAssets += balance;
-      if (LIQUID_TYPES.includes(acc.type)) liquidAssets += balance;
-      if (INVESTMENT_TYPES.includes(acc.type)) investmentAssets += balance;
+      if (isLiquid) liquidAssets += balance;
+      if (isInvestment) investmentAssets += balance;
       if (balance !== 0) {
         assetsByAccount.push({ id: acc.id, name: acc.name, type: acc.type, tag: acc.tag, balance });
       }
@@ -160,7 +176,7 @@ async function calculateFinancialStats(
   // Dynamic fallback for Goal type Accounts if no target-based Goals exist
   if (goalTracking.length === 0) {
     accountsRaw.forEach(acc => {
-      if (acc.type === 'GOAL') {
+      if (acc.type === 'GOAL' || acc.type === 'GOAL_SAVING') {
         const balance = acc.asset?.amount ?? 0;
         const target = acc.targetAmount || balance || 1;
         goalTracking.push({
@@ -202,25 +218,31 @@ async function calculateFinancialStats(
     if (txDate.getFullYear() === currentYear) {
       const mIdx = txDate.getMonth();
       const accType = tx.account?.type || tx.asset?.account?.type || tx.liability?.account?.type || 'UNKNOWN';
-      const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName?.includes('โอน');
-      
+      const catSystemKey = tx.category?.systemKey;
+      const isInternalTransfer = behavior === 'INTERNAL_TRANSFER'
+        || catSystemKey === SYSTEM_CATEGORY_KEYS.TRANSFER_IN
+        || catSystemKey === SYSTEM_CATEGORY_KEYS.TRANSFER_OUT;
+
+      // Use DB cashflowBucket if available, fallback to getCashflowBucket()
+      const bucket = getCashflowBucket(behavior, tx.type.cashflowBucket);
+
       if (!isInternalTransfer) {
-        if (behavior === 'INCOME') monthlyCashflow[mIdx].income += amount;
-        else if (behavior === 'EXPENSE') monthlyCashflow[mIdx].expense += amount;
+        if (bucket === 'income') monthlyCashflow[mIdx].income += amount;
+        else if (bucket === 'expense') monthlyCashflow[mIdx].expense += amount;
       }
 
-      if (behavior === 'LOAN_BORROW' || behavior === 'LOAN_REPAY') {
+      if (bucket === 'loan') {
         monthlyCashflow[mIdx].internalLoan += amount;
       }
 
-      if (accType === 'GOAL' || behavior === 'GOAL_SAVING') {
+      if (accType === 'GOAL' || accType === 'GOAL_SAVING' || bucket === 'saving' && behavior === 'GOAL_SAVING') {
         monthlyCashflow[mIdx].goalSaving += amount;
-      } else if (INVESTMENT_TYPES.includes(accType) || behavior === 'INVESTMENT') {
+      } else if (INVESTMENT_TYPES.includes(accType) || bucket === 'invest') {
         monthlyCashflow[mIdx].invest += amount;
-      } else if (accType === 'LIABILITY' || behavior === 'DEBT') {
+      } else if (accType === 'LIABILITY' || bucket === 'debt') {
         monthlyCashflow[mIdx].debt += amount;
-      } else if (accType === 'SAVING' || accType === 'EMERGENCY' || behavior === 'SAVING' || behavior === 'EMERGENCY') {
-        if (isInternalTransfer || behavior === 'SAVING' || behavior === 'EMERGENCY') {
+      } else if (accType === 'SAVING' || accType === 'EMERGENCY' || bucket === 'saving') {
+        if (isInternalTransfer || bucket === 'saving') {
           monthlyCashflow[mIdx].saving += amount;
         }
       }
@@ -228,8 +250,12 @@ async function calculateFinancialStats(
     }
 
     if (txDate.getMonth() === currentMonth && txDate.getFullYear() === currentYear) {
-      const isInternalTransfer = behavior === 'INTERNAL_TRANSFER' || categoryName === 'โอนเข้าภายใน' || categoryName === 'โอนออกภายใน';
-      if (!isInternalTransfer && (behavior === 'EXPENSE' || behavior === 'DEBT' || behavior === 'LOAN_REPAY')) {
+      const catSysKey = tx.category?.systemKey;
+      const isInternalTransfer = behavior === 'INTERNAL_TRANSFER'
+        || catSysKey === SYSTEM_CATEGORY_KEYS.TRANSFER_IN
+        || catSysKey === SYSTEM_CATEGORY_KEYS.TRANSFER_OUT;
+      const bucket2 = getCashflowBucket(behavior, tx.type.cashflowBucket);
+      if (!isInternalTransfer && (bucket2 === 'expense' || bucket2 === 'debt' || bucket2 === 'loan')) {
         recentExpenses += amount;
       }
     }

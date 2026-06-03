@@ -124,7 +124,7 @@ model Account {
   organizationId   String?
   userId           String
   name             String
-  type             AccountType
+  type             String
   bankId           String?
   isActive         Boolean           @default(true)
   isPersonal       Boolean           @default(true)
@@ -197,16 +197,19 @@ model FinancialRecord {
 }
 
 model TransactionType {
-  id             String                @id @default(uuid())
-  organizationId String?
-  name           String
-  behavior       TransactionBehavior
-  isActive       Boolean               @default(true)
-  createdAt      DateTime              @default(now())
-  updatedAt      DateTime              @updatedAt
-  transactions   Transaction[]
-  categories     TransactionCategory[]
-  organization   Organization?         @relation(fields: [organizationId], references: [id])
+  id               String                @id @default(uuid())
+  organizationId   String?
+  name             String
+  behavior         TransactionBehavior
+  isActive         Boolean               @default(true)
+  createdAt        DateTime              @default(now())
+  updatedAt        DateTime              @updatedAt
+  defaultDirection String?               // 'INBOUND' | 'OUTBOUND' | 'NEUTRAL'
+  isExpenseLike    Boolean               @default(false)
+  cashflowBucket   String?               // 'income' | 'expense' | 'saving' | 'debt' | 'invest' | 'loan'
+  transactions     Transaction[]
+  categories       TransactionCategory[]
+  organization     Organization?         @relation(fields: [organizationId], references: [id])
 
   @@unique([organizationId, name])
 }
@@ -219,11 +222,13 @@ model TransactionCategory {
   isActive       Boolean         @default(true)
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
+  systemKey      String?         // 'TRANSFER_IN' | 'TRANSFER_OUT' | 'LOAN_BORROW_SYS' | 'LOAN_REPAY_SYS'
   transactions   Transaction[]
   organization   Organization?   @relation(fields: [organizationId], references: [id])
   type           TransactionType @relation(fields: [typeId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, name, typeId])
+  @@index([organizationId, systemKey])
 }
 
 model Transaction {

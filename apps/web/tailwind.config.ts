@@ -16,9 +16,25 @@ const config: Config = {
       colors: {
         midnight: '#000B18',
         navy: '#001F3F',
-        emerald: '#50C878',
-        rose: '#E11D48',
-        blue: '#60A5FA',
+        emerald: {
+          DEFAULT: '#50C878',
+          '400': '#66D18B',
+          '500': '#50C878',
+          '600': '#3EB867',
+        },
+        rose: {
+          DEFAULT: '#E11D48',
+          '400': '#F43F5E',
+          '500': '#E11D48',
+          '600': '#BE123C',
+        },
+        blue: {
+          DEFAULT: '#60A5FA',
+          '400': '#60A5FA',
+          '500': '#3B82F6',
+          '600': '#2563EB',
+          '900': '#1E3A8A',
+        },
         slate: '#708090',
         brand: {
           primary: '#001F3F',

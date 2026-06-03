@@ -1,8 +1,9 @@
 import { PrismaClient } from '@prisma/client';
 import { getContext } from './context';
 
+const isTest = !!process.env.VITEST || process.env.NODE_ENV === 'test';
 const prisma = new PrismaClient({
-  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : ['error'],
+  log: process.env.NODE_ENV === 'development' ? ['query', 'error', 'warn'] : isTest ? [] : ['error'],
 });
 
 // Audit Log Middleware
@@ -31,25 +32,32 @@ prisma.$use(async (params, next) => {
 
   // Record AuditLog asynchronously
   const recordLog = async () => {
+    const entityId = result?.id || params.args?.where?.id || 'BATCH';
+    const rawOrgId = result?.organizationId || oldValue?.organizationId || null;
+
+    // Pre-validate organizationId to prevent FK violation — cheaper than a retry
+    let resolvedOrgId: string | null = null;
+    if (rawOrgId) {
+      const orgExists = await prisma.organization.count({ where: { id: rawOrgId } }).catch(() => 0);
+      resolvedOrgId = orgExists > 0 ? rawOrgId : null;
+    }
+
     try {
-      const entityId = result?.id || params.args?.where?.id || 'BATCH';
-      
       await prisma.auditLog.create({
         data: {
           action: params.action.toUpperCase(),
           entity: params.model || 'Unknown',
           entityId: String(entityId),
-          organizationId: result?.organizationId || oldValue?.organizationId || null,
+          organizationId: resolvedOrgId,
           oldValue: oldValue ? JSON.parse(JSON.stringify(oldValue)) : null,
           newValue: result && !['delete', 'deleteMany'].includes(params.action) ? JSON.parse(JSON.stringify(result)) : null,
           performedBy: context?.userId || 'SYSTEM',
           ipAddress: context?.ip || null,
-          userAgent: null, // Can be added to context later if needed
+          userAgent: null,
         },
       });
     } catch (err) {
-      // Don't crash the main request if logging fails
-      console.error("[AuditLog] Error recording log:", err);
+      console.error('[AuditLog] Error recording log:', err);
     }
   };
 

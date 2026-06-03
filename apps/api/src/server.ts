@@ -12,9 +12,10 @@ import { performanceRequestHook, performanceResponseHook } from './middlewares/p
 import { contextRequestHook } from './middlewares/context.middleware';
 
 export const buildServer = async (): Promise<FastifyInstance> => {
-  const server = Fastify({ 
-    logger: true,
-    ignoreTrailingSlash: true
+  const isTestEnv = !!process.env.VITEST || process.env.NODE_ENV === 'test';
+  const server = Fastify({
+    logger: !isTestEnv,
+    routerOptions: { ignoreTrailingSlash: true },
   });
 
   await server.register(fastifyRawBody, {
@@ -150,9 +151,6 @@ export const buildServer = async (): Promise<FastifyInstance> => {
     const configRoutes = (await import('./routes/config.routes')).default;
     await server.register(configRoutes, { prefix: '/api/v1' });
 
-    // Admin Routes (New Gen Nexworth Support Tools)
-    const adminRoutes = (await import('./routes/admin.routes')).default;
-    await server.register(adminRoutes, { prefix: '/api/v1/admin' });
     await server.register(alertRoutes, { prefix: '/api/v1/admin/alerts' });
 
     // LINE Webhook Routes (to support both API and Bot services handling)

@@ -16,6 +16,7 @@ import { Transaction, Account, TransactionCategory, TransactionType } from '@/ty
 import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
 import { mergePageLabels } from '@/utils/uiLabels';
+import { SYSTEM_CATEGORY_KEYS } from '@/config/systemConfig';
 
 const DEFAULT_LABELS = {
   title: 'ประวัติธุรกรรม',
@@ -167,12 +168,12 @@ export default function TransactionsPage() {
     if (tx.linkedTransactionId) {
       const linkedTx = transactions.find(t => t.id === tx.linkedTransactionId);
       if (linkedTx) {
-        const isCurrentFrom = ['EXPENSE', 'DEBT'].includes(behavior) || tx.category?.name === 'โอนออกภายใน';
-        const isLinkedTo = ['INCOME', 'SAVING', 'INVESTMENT', 'GOAL_SAVING', 'EMERGENCY'].includes(linkedTx.type?.behavior || '') || linkedTx.category?.name === 'โอนเข้าภายใน';
+        const isSystemCat = (sysKey?: string | null) => sysKey === SYSTEM_CATEGORY_KEYS.TRANSFER_IN || sysKey === SYSTEM_CATEGORY_KEYS.TRANSFER_OUT;
+        const isCurrentFrom = (tx.type as any)?.isExpenseLike || tx.category?.systemKey === SYSTEM_CATEGORY_KEYS.TRANSFER_OUT;
+        const isLinkedTo = !(linkedTx.type as any)?.isExpenseLike || linkedTx.category?.systemKey === SYSTEM_CATEGORY_KEYS.TRANSFER_IN;
         if (isCurrentFrom && isLinkedTo) { fromAccId = tx.accountId; toAccId = linkedTx.accountId; }
         else { fromAccId = linkedTx.accountId; toAccId = tx.accountId; }
-        const isGeneric = (catName?: string) => ['โอนออกภายใน', 'โอนเข้าภายใน'].includes(catName || '');
-        if (isGeneric(tx.category?.name) && !isGeneric(linkedTx.category?.name)) {
+        if (isSystemCat(tx.category?.systemKey) && !isSystemCat(linkedTx.category?.systemKey)) {
             displayTypeId = linkedTx.typeId;
             displayCategoryId = linkedTx.categoryId;
         }
@@ -385,21 +386,31 @@ export default function TransactionsPage() {
         </div>
       </header>
 
-      <GlassCard className="p-3 flex gap-3 items-center shrink-0 bg-navy/40">
-         <div className="relative flex-1">
+      <GlassCard className="p-3 flex flex-wrap gap-3 items-center shrink-0 bg-navy/40">
+         <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
             <input 
               type="text" placeholder={labels.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-navy/50 border border-white/5 rounded-lg py-1.5 pl-9 text-xs text-white outline-none"
             />
          </div>
-         <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300">
-            <option value="">{labels.allCategories}</option>
-            {categories.map(c => <option key={c.id} value={c.id}>{c.name}</option>)}
+         <select value={filterMonth} onChange={(e) => setFilterMonth(parseInt(e.target.value))} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+            {['มกราคม', 'กุมภาพันธ์', 'มีนาคม', 'เมษายน', 'พฤษภาคม', 'มิถุนายน', 'กรกฎาคม', 'สิงหาคม', 'กันยายน', 'ตุลาคม', 'พฤศจิกายน', 'ธันวาคม'].map((m, idx) => (
+              <option key={idx + 1} value={idx + 1} className="bg-navy">{m}</option>
+            ))}
          </select>
-         <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300">
-            <option value="">{labels.allAccounts}</option>
-            {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+         <select value={filterYear} onChange={(e) => setFilterYear(parseInt(e.target.value))} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+            {Array.from({ length: 11 }, (_, i) => new Date().getFullYear() - i).map(y => (
+              <option key={y} value={y} className="bg-navy">{y + 543} ({y})</option>
+            ))}
+         </select>
+         <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+            <option value="" className="bg-navy">{labels.allCategories}</option>
+            {categories.map(c => <option key={c.id} value={c.id} className="bg-navy">{c.name}</option>)}
+         </select>
+         <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+            <option value="" className="bg-navy">{labels.allAccounts}</option>
+            {accounts.map(a => <option key={a.id} value={a.id} className="bg-navy">{a.name}</option>)}
          </select>
       </GlassCard>
 

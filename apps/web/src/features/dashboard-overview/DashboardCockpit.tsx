@@ -326,9 +326,9 @@ export default function DashboardCockpit() {
             onChange={(e) => setFilters(Number(e.target.value), selectedMonth)}
             className="px-3 py-1 bg-white/5 rounded-lg border border-white/5 text-[9px] font-black text-emerald uppercase tracking-widest outline-none focus:border-emerald/50 cursor-pointer transition-all hover:bg-white/10"
           >
-            {[0,1,2,3,4].map(offset => {
+            {Array.from({ length: 11 }, (_, i) => i).map(offset => {
               const year = new Date().getFullYear() - offset;
-              return <option key={year} value={year} className="bg-navy text-white">{year}</option>;
+              return <option key={year} value={year} className="bg-navy text-white">{year + 543} ({year})</option>;
             })}
           </select>
 

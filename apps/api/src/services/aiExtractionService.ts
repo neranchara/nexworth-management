@@ -27,7 +27,34 @@ const logTelemetry = async (telemetry: any, userId?: string, error?: any) => {
   }
 };
 
+const isMockEnv = () =>
+  !!process.env.VITEST ||
+  process.env.NODE_ENV === 'test' ||
+  process.env.NODE_ENV === 'local' ||
+  process.env.NODE_ENV === 'staging' ||
+  process.env.USE_AI_MOCK === 'true';
+
+const MOCK_EXTRACT_RESULT = {
+  data: {
+    amount: 500,
+    description: 'Mock Transaction',
+    isExpense: true,
+    transactionType: 'EXPENSE' as const,
+    categoryName: undefined,
+    accountName: undefined,
+    bankName: undefined,
+    date: undefined,
+    taxAmount: undefined,
+    taxType: undefined,
+  },
+  telemetry: { model: 'mock-engine', latencyMs: 0, success: true },
+};
+
 export const extractFromText = async (text: string) => {
+  if (isMockEnv()) {
+    await logTelemetry(MOCK_EXTRACT_RESULT.telemetry);
+    return MOCK_EXTRACT_RESULT;
+  }
   const result = await aiEngine.extractFromText(text);
   await logTelemetry(result.telemetry);
   return result;
@@ -67,7 +94,7 @@ export const extractFromImage = async (imageBuffer: Buffer, mimeType: string) =>
 export const diagnoseUserHealth = async (metrics: any[], findings: any[]): Promise<any> => {
   const startTime = Date.now();
   // QA Requirement: Provide mock fallback for stable E2E testing in staging/local
-  const isMockMode = process.env.NODE_ENV === 'local' || process.env.NODE_ENV === 'staging' || process.env.USE_AI_MOCK === 'true';
+  const isMockMode = isMockEnv();
 
   try {
     // If NOT in mock mode, try to use the real Gemini engine

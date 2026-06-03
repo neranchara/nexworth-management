@@ -227,6 +227,7 @@ export default function AccountsManagementPage() {
       case 'GOLD':
         return <Coins className="w-5 h-5 text-yellow-500" />;
       case 'GOAL':
+      case 'GOAL_SAVING':
         return <CheckCircle className="w-5 h-5 text-purple-500" />;
       case 'EMERGENCY':
         return <AlertCircle className="w-5 h-5 text-red-500" />;
