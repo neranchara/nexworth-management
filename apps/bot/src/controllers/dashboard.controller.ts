@@ -132,7 +132,7 @@ export const getDashboardStatsHandler = async (request: FastifyRequest, reply: F
       // Current Year Cashflow
       if (txDate.getFullYear() === currentYear) {
         const mIdx = txDate.getMonth();
-        const accType = tx.account?.type || tx.asset?.account?.type || tx.liability?.account?.type;
+        const accType = tx.account?.type || tx.asset?.account?.type || tx.liability?.account?.type || '';
         
         const catSystemKey = (tx.category as any)?.systemKey;
         const isInternalTransfer = behavior === 'INTERNAL_TRANSFER'
