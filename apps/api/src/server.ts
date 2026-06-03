@@ -151,9 +151,6 @@ export const buildServer = async (): Promise<FastifyInstance> => {
     const configRoutes = (await import('./routes/config.routes')).default;
     await server.register(configRoutes, { prefix: '/api/v1' });
 
-    // Admin Routes (New Gen Nexworth Support Tools)
-    const adminRoutes = (await import('./routes/admin.routes')).default;
-    await server.register(adminRoutes, { prefix: '/api/v1/admin' });
     await server.register(alertRoutes, { prefix: '/api/v1/admin/alerts' });
 
     // LINE Webhook Routes (to support both API and Bot services handling)
