@@ -157,11 +157,31 @@ export const buildServer = async (): Promise<FastifyInstance> => {
     const lineWebhookRoutes = (await import('./routes/lineWebhookRoutes')).default;
     await server.register(lineWebhookRoutes, { prefix: '/api/webhook/line' });
 
-    // One-time setup endpoint (remove after production seed is done)
-    const setupRoutes = (await import('./routes/setup.routes')).default;
-    await server.register(setupRoutes, { prefix: '/api/v1/setup' });
-
   return server;
+};
+
+const seedAccountTypes = async () => {
+  const { prisma } = await import('./lib/prisma.js');
+  const ACCOUNT_TYPES_VALUE = [
+    { value: 'BANK',        label: 'ธนาคาร',         category: 'ASSET',     subCategory: 'NONE' },
+    { value: 'CASHFLOW',    label: 'กระแสเงินสด',    category: 'ASSET',     subCategory: 'NONE' },
+    { value: 'INTERNAL',    label: 'ภายใน',           category: 'ASSET',     subCategory: 'NONE' },
+    { value: 'SAVING',      label: 'เงินออม',         category: 'ASSET',     subCategory: 'LIQUID' },
+    { value: 'EMERGENCY',   label: 'เงินฉุกเฉิน',     category: 'ASSET',     subCategory: 'LIQUID' },
+    { value: 'GOAL',        label: 'เป้าหมาย',        category: 'ASSET',     subCategory: 'LIQUID' },
+    { value: 'GOAL_SAVING', label: 'เงินมีเป้าหมาย', category: 'ASSET',     subCategory: 'LIQUID' },
+    { value: 'FAMILY',      label: 'ครอบครัว',        category: 'ASSET',     subCategory: 'LIQUID' },
+    { value: 'STOCK',       label: 'หุ้น',             category: 'ASSET',     subCategory: 'INVESTMENT' },
+    { value: 'GOLD',        label: 'ทอง',             category: 'ASSET',     subCategory: 'INVESTMENT' },
+    { value: 'INVESTMENT',  label: 'การลงทุน',        category: 'ASSET',     subCategory: 'INVESTMENT' },
+    { value: 'LIABILITY',   label: 'หนี้สิน',         category: 'LIABILITY', subCategory: 'NONE' },
+  ];
+  await prisma.systemConfig.upsert({
+    where: { key: 'ACCOUNT_TYPES' },
+    update: { value: ACCOUNT_TYPES_VALUE as any, category: 'DROPDOWNS', updatedBy: 'SERVER_BOOT' },
+    create: { key: 'ACCOUNT_TYPES', value: ACCOUNT_TYPES_VALUE as any, category: 'DROPDOWNS', updatedBy: 'SERVER_BOOT' },
+  });
+  console.log('[boot] ACCOUNT_TYPES seeded');
 };
 
 const start = async () => {
@@ -170,6 +190,7 @@ const start = async () => {
   try {
     await server.listen({ port, host: '0.0.0.0' });
     console.log(`Server listening on port ${port}`);
+    await seedAccountTypes();
 
     // Start Discord Bot ONLY in local and ONLY if this is the bot service
     // (We will handle this in apps/bot/src/server.ts instead)

@@ -5,8 +5,8 @@
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "scripts": {
-    "db:generate": "prisma generate",
-    "db:push": "prisma db push",
+    "db:generate": "npx prisma generate",
+    "db:push": "npx prisma db push --accept-data-loss",
     "build": "tsc"
   },
   "dependencies": {
