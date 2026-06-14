@@ -1,11 +1,10 @@
 'use client';
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
-import { Plus, ArrowUpCircle, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal, Search, FileText, CircleAlert, HandCoins, PenLine, Info, Eye, EyeOff, Users } from 'lucide-react';
+import { Plus, ArrowUpCircle, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal, Search, FileText, CircleAlert, HandCoins, PenLine, Eye, EyeOff, Users } from 'lucide-react';
 import api from '@/lib/api';
 import { format } from 'date-fns';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Account } from '@/types/models';
-import Link from 'next/link';
 import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
 
@@ -242,10 +241,19 @@ export default function LoanTrackerPage() {
           </p>
         </div>
         <div className="flex items-center gap-4">
-          <p className="hidden md:block text-[10px] text-slate-500 italic mr-2">ต้องการบันทึกการยืมเงินเพิ่ม?</p>
-          <Link href="/dashboard/transactions" className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95">
-            <Plus className="w-4 h-4" /> ไปหน้าธุรกรรม
-          </Link>
+          {!isLend && hasPermission('loan-tracker', 'canCreate') && (
+            <button
+              onClick={() => {
+                setIsEditing(false);
+                setCurrentLoanId(null);
+                setNewLoanForm({ name: '', borrowerName: '', accountId: '', initialAmount: '', actualDate: '' });
+                setShowNewLoanModal(true);
+              }}
+              className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95"
+            >
+              <Plus className="w-4 h-4" /> เพิ่มรายการยืม
+            </button>
+          )}
         </div>
       </header>
 
@@ -357,6 +365,19 @@ export default function LoanTrackerPage() {
                 <Plus size={12} /> เพิ่มลูกหนี้
               </button>
             )}
+            {!isLend && hasPermission('loan-tracker', 'canCreate') && (
+              <button
+                onClick={() => {
+                  setIsEditing(false);
+                  setCurrentLoanId(null);
+                  setNewLoanForm({ name: '', borrowerName: '', accountId: '', initialAmount: '', actualDate: '' });
+                  setShowNewLoanModal(true);
+                }}
+                className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-all"
+              >
+                <Plus size={12} /> เพิ่มรายการยืม
+              </button>
+            )}
           </div>
         </div>
 
@@ -453,12 +474,6 @@ export default function LoanTrackerPage() {
         title={isEditing ? 'แก้ไขรายการ' : (isLend ? 'เพิ่มลูกหนี้ใหม่' : 'สร้างรายการยืมใหม่')}
       >
         <form onSubmit={handleCreateLoan} className="flex flex-col gap-4">
-          {!isEditing && (
-            <div className="bg-orange-500/10 border border-orange-500/20 p-3 rounded-lg flex items-start gap-2 text-orange-400 text-xs mb-2">
-              <Info size={14} className="shrink-0 mt-0.5" />
-              <p>การสร้างรายการควรสร้างจากหน้า Transaction เพื่อให้ระบบบัญชีครบถ้วน หน้านี้เหมาะสำหรับยอดยกมาเท่านั้น</p>
-            </div>
-          )}
 
           {(isLend || (isEditing && selectedLoan?.direction === 'LEND')) && (
             <div className="flex flex-col gap-2">
