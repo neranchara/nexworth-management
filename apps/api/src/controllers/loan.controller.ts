@@ -106,6 +106,18 @@ export const listLoansHandler = async (request: FastifyRequest, reply: FastifyRe
       orderBy: { createdAt: 'desc' }
     });
 
+    const orphanedIds = loans
+      .filter(l => !l.asset?.account && !l.liability?.account)
+      .map(l => l.accountId);
+
+    const directAccounts = orphanedIds.length > 0
+      ? await prisma.account.findMany({
+          where: { id: { in: orphanedIds } },
+          select: { id: true, name: true }
+        })
+      : [];
+    const directAccountMap = new Map(directAccounts.map(a => [a.id, a.name]));
+
     const parsedLoans = loans.map(loan => {
       let borrowed = 0;
       let repaid = 0;
@@ -128,13 +140,13 @@ export const listLoansHandler = async (request: FastifyRequest, reply: FastifyRe
       });
 
       const accountInfo = loan.asset?.account || loan.liability?.account;
-      
+
       return {
         id: loan.id,
         code: loan.code,
         name: loan.name,
         accountId: loan.accountId,
-        accountName: accountInfo?.name || 'บัญชีที่ถูกลบ',
+        accountName: accountInfo?.name || directAccountMap.get(loan.accountId) || 'บัญชีที่ถูกลบ',
         date: loan.date,
         actualDate: loan.actualDate,
         status: borrowed <= repaid ? 'PAID' : 'ACTIVE',
