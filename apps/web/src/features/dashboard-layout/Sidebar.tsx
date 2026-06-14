@@ -6,7 +6,6 @@ import { ChevronLeft, ChevronRight, Settings, LogOut } from 'lucide-react';
 import api from '@/lib/api';
 import { clsx } from 'clsx';
 import Logo from '@/components/common/Logo';
-import LanguageToggle from '@/components/common/LanguageToggle';
 import { SETUP_LINK } from './navConfig';
 import { useDashboardNav } from './useDashboardNav';
 
@@ -46,16 +45,9 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         {isCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
-      <div className="h-20 flex items-center justify-between px-6 shrink-0 overflow-hidden">
+      <div className="h-20 flex items-center px-6 shrink-0 overflow-hidden">
         <Logo showText={!isCollapsed} />
-        {!isCollapsed && <LanguageToggle collapsed={false} />}
       </div>
-
-      {isCollapsed && (
-        <div className="px-2 pb-1">
-          <LanguageToggle collapsed={true} />
-        </div>
-      )}
 
       <nav className="flex-1 mt-4 space-y-6 px-3 overflow-y-auto overflow-x-hidden custom-scrollbar">
         <div className="space-y-1">
