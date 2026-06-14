@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import api from '@/lib/api';
 
 import { Edit2, Trash2, X, CheckCircle, AlertCircle, Building2, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, Plus, Loader2, LayoutGrid, List } from 'lucide-react';
@@ -12,6 +13,7 @@ import { clsx } from 'clsx';
 
 
 export default function BanksManagementPage() {
+  const t = useTranslations('banks');
   const [banks, setBanks] = useState<Bank[]>([]);
   const { hasPermission } = usePermissions();
   const [loading, setLoading] = useState(true);
@@ -91,14 +93,14 @@ export default function BanksManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this bank? It will fail if any accounts are using it.")) return;
+    if (!window.confirm(t('confirm.delete'))) return;
     try {
       await api.delete(`/banks/${id}`);
-      showAlert('Bank deleted successfully', 'success');
+      showAlert(t('alert.deleted'), 'success');
       fetchBanks();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
+      showAlert(errorResponse.response?.data?.error || t('alert.deleteFailed'), 'error');
     }
   };
 
@@ -107,10 +109,10 @@ export default function BanksManagementPage() {
     try {
       if (isEditing && currentBankId) {
         await api.put(`/banks/${currentBankId}`, formData);
-        showAlert('Bank updated successfully', 'success');
+        showAlert(t('alert.updated'), 'success');
       } else {
         await api.post('/banks', formData);
-        showAlert('Bank created successfully', 'success');
+        showAlert(t('alert.created'), 'success');
       }
       setIsModalOpen(false);
       fetchBanks();
@@ -119,7 +121,7 @@ export default function BanksManagementPage() {
       const errorData = errorResponse.response?.data?.error;
       const message = (typeof errorData === 'object' && errorData?.issues?.[0]?.message)
         || (typeof errorData === 'string' ? errorData : null)
-        || 'Save failed';
+        || t('alert.saveFailed');
       showAlert(message, 'error');
     }
   };
@@ -207,10 +209,10 @@ export default function BanksManagementPage() {
         <div>
           <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3 uppercase">
             <Building2 className="w-8 h-8 text-emerald" />
-            Bank Master Data
+            {t('title')}
           </h1>
           <p className="text-[10px] text-slate mt-1 uppercase font-black tracking-[0.2em]">
-            A list of supported banks in the system for account creation
+            {t('subtitle')}
           </p>
         </div>
         
@@ -228,7 +230,7 @@ export default function BanksManagementPage() {
               className="flex items-center justify-center gap-3 px-8 py-3 bg-emerald text-navy font-black rounded-full transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 group relative overflow-hidden">
               <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
               <Plus size={18} className="relative z-10" />
-              <span className="text-xs uppercase tracking-[0.1em] relative z-10">Add New Bank</span>
+              <span className="text-xs uppercase tracking-[0.1em] relative z-10">{t('addNew')}</span>
             </button>
           )}
         </div>
@@ -272,20 +274,20 @@ export default function BanksManagementPage() {
               <thead>
                 <tr className="text-slate-400 uppercase font-bold text-[10px]">
                   <th scope="col" className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('name')}>
-                    <div className="flex items-center">Bank Name <SortIcon column="name" /></div>
+                    <div className="flex items-center">{t('table.name')} <SortIcon column="name" /></div>
                   </th>
                   <th scope="col" className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('code')}>
-                    <div className="flex items-center">Code <SortIcon column="code" /></div>
+                    <div className="flex items-center">{t('table.code')} <SortIcon column="code" /></div>
                   </th>
                   <th scope="col" className="px-6 py-4 cursor-pointer hover:text-white transition-colors" onClick={() => handleSort('color')}>
-                    <div className="flex items-center">Color Mark <SortIcon column="color" /></div>
+                    <div className="flex items-center">{t('table.color')} <SortIcon column="color" /></div>
                   </th>
-                  <th scope="col" className="px-6 py-4 text-right">Actions</th>
+                  <th scope="col" className="px-6 py-4 text-right">{t('table.actions')}</th>
                 </tr>
               </thead>
               <tbody>
                 {sortedBanks.length === 0 ? (
-                  <tr><td colSpan={4} className="py-8 text-center text-slate font-bold">No banks defined in system.</td></tr>
+                  <tr><td colSpan={4} className="py-8 text-center text-slate font-bold">{t('empty')}</td></tr>
                 ) : sortedBanks.map((bank) => (
                   <tr key={bank.id} className="bg-white/[0.02] hover:bg-white/[0.06] transition-all group">
                     <td className="whitespace-nowrap py-3 px-6 text-sm font-bold text-white rounded-l-xl">
@@ -332,7 +334,7 @@ export default function BanksManagementPage() {
               <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
                  <h2 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
                    {isEditing ? <Edit2 className="w-5 h-5 text-emerald" /> : <Building2 className="w-5 h-5 text-emerald" />}
-                   {isEditing ? 'Edit Bank' : 'Create New Bank'}
+                   {isEditing ? t('modal.edit') : t('modal.create')}
                  </h2>
                  <button onClick={() => setIsModalOpen(false)} className="text-slate hover:text-white transition-colors">
                     <X className="w-6 h-6" />
@@ -340,7 +342,7 @@ export default function BanksManagementPage() {
               </div>
               <form onSubmit={handleFormSubmit} className="p-8 space-y-6">
                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">Bank Name</label>
+                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('form.name')}</label>
                     <input 
                       type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                       placeholder="e.g. Kasikornbank"
@@ -350,7 +352,7 @@ export default function BanksManagementPage() {
                  </div>
                  
                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">Bank Code (Unique)</label>
+                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('form.code')}</label>
                     <input 
                       type="text" required value={formData.code} onChange={(e) => setFormData({...formData, code: e.target.value.toUpperCase()})}
                       placeholder="e.g. KBANK"
@@ -360,7 +362,7 @@ export default function BanksManagementPage() {
                  </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">Brand Color</label>
+                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('form.color')}</label>
                     <div className="flex flex-wrap gap-2 mb-3 bg-white/5 p-3 rounded-xl border border-white/5">
                       {[
                         { name: 'KBANK', color: '#00A950' },
@@ -395,8 +397,8 @@ export default function BanksManagementPage() {
                   </div>
 
                  <div className="flex justify-end gap-4 pt-4 border-t border-white/5">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors">Cancel</button>
-                    <button type="submit" data-testid="banks-form-btn-save" className="px-8 py-3 bg-emerald text-navy font-black text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] active:scale-95 transition-all">Save Bank</button>
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors">{t('form.cancel')}</button>
+                    <button type="submit" data-testid="banks-form-btn-save" className="px-8 py-3 bg-emerald text-navy font-black text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] active:scale-95 transition-all">{t('form.save')}</button>
                  </div>
               </form>
            </div>

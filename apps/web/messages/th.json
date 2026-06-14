@@ -539,6 +539,82 @@
       "saveFailed": "บันทึกไม่สำเร็จ"
     }
   },
+  "categories": {
+    "loading": "กำลังโหลดข้อมูล...",
+    "title": "หมวดหมู่รายการ",
+    "subtitle": "จัดการข้อมูลหลักสำหรับหมวดหมู่รายรับและรายจ่าย แบ่งตามประเภทรายการ",
+    "addNew": "เพิ่มหมวดหมู่ใหม่",
+    "active": "ใช้งาน",
+    "inactive": "ปิดใช้งาน",
+    "empty": "ยังไม่มีหมวดหมู่ในระบบ",
+    "table": { "name": "ชื่อหมวดหมู่", "type": "ประเภท", "status": "สถานะ", "actions": "จัดการ" },
+    "modal": { "create": "สร้างหมวดหมู่ใหม่", "edit": "แก้ไขหมวดหมู่" },
+    "form": { "name": "ชื่อหมวดหมู่", "type": "ประเภทรายการ", "status": "สถานะ", "statusHint": "เปิด/ปิดในรายการเลือก", "selectType": "เลือกประเภท", "cancel": "ยกเลิก", "save": "บันทึกหมวดหมู่" },
+    "confirm": { "delete": "แน่ใจหรือไม่? ต้องการลบหมวดหมู่นี้" },
+    "alert": { "deleted": "ลบหมวดหมู่สำเร็จ", "deleteFailed": "ลบไม่สำเร็จ", "updated": "อัปเดตหมวดหมู่สำเร็จ", "created": "สร้างหมวดหมู่สำเร็จ", "saveFailed": "บันทึกไม่สำเร็จ" }
+  },
+  "banks": {
+    "title": "ข้อมูลธนาคาร",
+    "subtitle": "รายชื่อธนาคารที่รองรับในระบบสำหรับการสร้างบัญชี",
+    "addNew": "เพิ่มธนาคารใหม่",
+    "empty": "ยังไม่มีธนาคารในระบบ",
+    "table": { "name": "ชื่อธนาคาร", "code": "รหัส", "color": "สีแบรนด์", "actions": "จัดการ" },
+    "modal": { "create": "สร้างธนาคารใหม่", "edit": "แก้ไขธนาคาร" },
+    "form": { "name": "ชื่อธนาคาร", "code": "รหัสธนาคาร (ไม่ซ้ำ)", "color": "สีแบรนด์", "cancel": "ยกเลิก", "save": "บันทึกธนาคาร" },
+    "confirm": { "delete": "แน่ใจหรือไม่? ถ้ามีบัญชีที่ใช้ธนาคารนี้จะไม่สามารถลบได้" },
+    "alert": { "deleted": "ลบธนาคารสำเร็จ", "deleteFailed": "ลบไม่สำเร็จ", "updated": "อัปเดตธนาคารสำเร็จ", "created": "สร้างธนาคารสำเร็จ", "saveFailed": "บันทึกไม่สำเร็จ" }
+  },
+  "users": {
+    "title": "ผู้ใช้งาน",
+    "searchPlaceholder": "ค้นหา...",
+    "addNew": "เพิ่มผู้ใช้",
+    "empty": "ไม่พบผู้ใช้งาน",
+    "table": { "name": "ชื่อ", "email": "อีเมล", "role": "บทบาท", "organization": "องค์กร", "status": "สถานะ", "actions": "จัดการ" },
+    "modal": { "myAccount": "ข้อมูลบัญชีของฉัน", "viewDetails": "ดูรายละเอียดผู้ใช้", "editProfile": "แก้ไขโปรไฟล์", "newUser": "ผู้ใช้ใหม่" },
+    "form": { "firstName": "ชื่อ", "lastName": "นามสกุล", "email": "อีเมล", "password": "รหัสผ่าน", "passwordOptional": "(ไม่บังคับ)", "role": "บทบาท", "org": "องค์กร", "activeAccount": "บัญชีใช้งานอยู่", "resetPassword": "รีเซ็ตรหัสผ่าน", "save": "บันทึกผู้ใช้", "select": "เลือก..." },
+    "confirm": { "resetPassword": "สร้างรหัสผ่านใหม่แบบสุ่มและส่งไปยังอีเมลผู้ใช้?", "delete": "ลบผู้ใช้นี้?" },
+    "alert": { "deleted": "ลบสำเร็จ", "statusUpdated": "อัปเดตสถานะสำเร็จ", "updated": "อัปเดตสำเร็จ", "created": "สร้างสำเร็จ", "saveFailed": "บันทึกไม่สำเร็จ", "deleteFailed": "ลบไม่สำเร็จ", "resetFailed": "รีเซ็ตไม่สำเร็จ", "updateFailed": "อัปเดตไม่สำเร็จ" }
+  },
+  "team": {
+    "title": "ทีมและสิทธิ์",
+    "subtitle": "สมาชิกในองค์กร",
+    "memberCount": "สมาชิกที่ใช้งาน",
+    "activeMembers": "สมาชิกที่ใช้งาน",
+    "activeMembersDesc": "ผู้ใช้ที่อยู่ในองค์กรขณะนี้",
+    "you": "คุณ",
+    "noMembers": "ไม่พบสมาชิกที่ใช้งาน",
+    "pendingInvitations": "คำเชิญที่รอดำเนินการ",
+    "pendingInvitationsDesc": "รอการตอบรับจากผู้ใช้",
+    "invite": "เชิญสมาชิก",
+    "inviteDesc": "ส่งคำเชิญเข้าใช้งาน",
+    "comingSoon": "Coming Soon",
+    "comingSoonDesc": "ระบบเชิญสมาชิกอยู่ระหว่างพัฒนา จะเปิดใช้งานในเวอร์ชันถัดไป",
+    "confirm": { "revoke": "แน่ใจหรือไม่? ต้องการยกเลิกคำเชิญนี้" },
+    "alert": { "invited": "ส่งคำเชิญสำเร็จ", "inviteFailed": "ส่งคำเชิญไม่สำเร็จ", "revoked": "ยกเลิกคำเชิญสำเร็จ", "revokeFailed": "ยกเลิกคำเชิญไม่สำเร็จ" }
+  },
+  "permissions": {
+    "title": "สิทธิ์บทบาท",
+    "subtitle": "จัดการบทบาทและระดับการเข้าถึง",
+    "newRole": "บทบาทใหม่",
+    "userCount": "{count} ผู้ใช้",
+    "configure": "ตั้งค่า",
+    "config": "ตั้งค่า",
+    "systemRole": "บทบาทระบบ",
+    "table": { "role": "บทบาท", "description": "คำอธิบาย", "type": "ประเภท", "users": "ผู้ใช้", "actions": "จัดการ" },
+    "modal": { "create": "บทบาทใหม่", "edit": "แก้ไขบทบาท" },
+    "form": { "name": "ชื่อบทบาท", "description": "คำอธิบาย", "systemRole": "บทบาทจัดการระบบ", "save": "บันทึก" },
+    "confirm": { "delete": "ลบ \"{name}\"?" }
+  },
+  "organizations": {
+    "title": "องค์กร",
+    "subtitle": "จัดการและติดตามองค์กรทั้งหมดในระบบ",
+    "searchPlaceholder": "ค้นหา...",
+    "create": "สร้างองค์กร",
+    "viewHub": "ดูรายละเอียด",
+    "stats": { "users": "ผู้ใช้", "accounts": "บัญชี", "txs": "รายการ" },
+    "modal": { "title": "สร้างองค์กรใหม่", "adminSection": "บัญชีแอดมินเริ่มต้น" },
+    "form": { "orgName": "ชื่อองค์กร", "firstName": "ชื่อ", "lastName": "นามสกุล", "email": "อีเมล", "password": "รหัสผ่านเริ่มต้น", "cancel": "ยกเลิก", "submit": "สร้างองค์กร" }
+  },
   "auth": {
     "loadingPortal": "กำลังโหลดระบบ...",
     "login": {
