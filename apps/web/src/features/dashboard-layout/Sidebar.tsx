@@ -6,6 +6,7 @@ import { ChevronLeft, ChevronRight, Settings, LogOut } from 'lucide-react';
 import api from '@/lib/api';
 import { clsx } from 'clsx';
 import Logo from '@/components/common/Logo';
+import LanguageToggle from '@/components/common/LanguageToggle';
 import { SETUP_LINK } from './navConfig';
 import { useDashboardNav } from './useDashboardNav';
 
@@ -121,6 +122,10 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           </div>
         )}
       </nav>
+
+      <div className="border-t border-slate/10">
+        <LanguageToggle collapsed={isCollapsed} />
+      </div>
 
       <div className="p-4 border-t border-slate/10">
         <Link
