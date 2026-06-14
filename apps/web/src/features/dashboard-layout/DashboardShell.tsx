@@ -9,6 +9,7 @@ import { useDashboardNav } from './useDashboardNav';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { useImpersonation } from '@/context/ImpersonationContext';
+import LanguageToggle from '@/components/common/LanguageToggle';
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
@@ -140,6 +141,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               <span className="font-bold text-lg tracking-tight">NEXWORTH</span>
            </div>
                       <div className="flex items-center gap-4 ml-auto">
+               <LanguageToggle collapsed={false} />
                <div className="hidden sm:flex flex-col items-end mr-2">
                   <span className="text-xs font-bold text-white leading-none">
                      {user.firstName

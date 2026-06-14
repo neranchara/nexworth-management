@@ -4,6 +4,8 @@ import { Prompt } from "next/font/google";
 import "./globals.css";
 import PrewarmDB from "../components/PrewarmDB";
 import { Analytics } from "@vercel/analytics/react";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 
 const prompt = Prompt({
   variable: "--font-prompt",
@@ -16,15 +18,17 @@ export const metadata: Metadata = {
   description: "Next-generation wealth tracking dashboard",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="th">
+    <html lang={locale}>
       <head>
-        {/* Preconnect and DNS prefetch for Google Fonts and API Host */}
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="dns-prefetch" href="https://nexworth-management.onrender.com" />
@@ -33,9 +37,11 @@ export default function RootLayout({
       <body
         className={`${prompt.variable} ${prompt.className} font-sans antialiased bg-midnight text-slate-100`}
       >
-        <PrewarmDB />
-        {children}
-        <Analytics />
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          <PrewarmDB />
+          {children}
+          <Analytics />
+        </NextIntlClientProvider>
       </body>
     </html>
   );
