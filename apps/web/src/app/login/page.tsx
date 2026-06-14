@@ -8,15 +8,17 @@ import api from '../../lib/api';
 import Logo from '@/components/common/Logo';
 import { encryptPassword } from '../../lib/crypto';
 import { APP_CONFIG } from '@/config/app.config';
+import { useTranslations } from 'next-intl';
 
 function LoginForm() {
+  const t = useTranslations('auth');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [viewMode, setViewMode] = useState<'login' | 'forgot_password' | 'otp'>('login');
-  
+
   const login = useAuthStore((state) => state.login);
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -41,22 +43,13 @@ function LoginForm() {
     setIsLoading(true);
 
     try {
-      // 1. Fetch RSA Public Key for this session
       const { data: keyData } = await api.get('/auth/public-key');
       const { publicKey, keyId } = keyData;
-
-      // 2. Encrypt password using Web Crypto API
       const encryptedPassword = await encryptPassword(password, publicKey);
-
-      // 3. Send encrypted payload to login
-      const payload = { 
-        email, 
-        encryptedPassword, 
-        keyId 
-      };
+      const payload = { email, encryptedPassword, keyId };
       const { data } = await api.post('/auth/login', payload);
       login(data.token, data.user);
-      
+
       if (redirectUrl) {
         router.push(redirectUrl);
       } else if (data.user.isSystemAdmin) {
@@ -78,13 +71,13 @@ function LoginForm() {
         <div className="flex flex-col items-center">
           <Logo className="mb-2" textColor="text-white" />
           <p className="mt-6 text-center text-[10px] pillar-text-bold text-brand-secondary tracking-[0.2em]">
-            Login to your secure financial portal
+            {t('login.subtitle')}
           </p>
           <p className="mt-1 text-center text-xs text-slate-400 font-medium">
-            สื่อถึงความโปร่งใส ความชัดเจน
+            {t('login.tagline')}
           </p>
         </div>
-        
+
         <form className="mt-10 space-y-6" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-xl bg-rose-500/10 p-4 border border-rose-500/30">
@@ -94,13 +87,13 @@ function LoginForm() {
               </div>
             </div>
           )}
-          
+
           {viewMode === 'login' ? (
             <>
               <div className="space-y-5">
                 <div>
                   <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-                    Username / Email
+                    {t('login.emailLabel')}
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -119,7 +112,7 @@ function LoginForm() {
 
                 <div>
                   <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-                    Password
+                    {t('login.passwordLabel')}
                   </label>
                   <div className="relative group">
                     <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -143,7 +136,7 @@ function LoginForm() {
                   </div>
                   <div className="mt-2 text-right">
                     <button type="button" onClick={() => setViewMode('forgot_password')} className="text-[10px] font-bold text-slate-400 hover:text-brand-accent transition-colors uppercase tracking-tight">
-                      Forgot Password?
+                      {t('login.forgotPassword')}
                     </button>
                   </div>
                 </div>
@@ -156,20 +149,20 @@ function LoginForm() {
                   disabled={isLoading}
                   className="w-full flex justify-center py-3.5 px-4 bg-brand-accent hover:bg-brand-accent/90 text-brand-primary text-[11px] pillar-text-bold rounded-xl transition-all shadow-lg emerald-glow disabled:opacity-50"
                 >
-                  {isLoading ? 'Processing...' : 'LOGIN'}
+                  {isLoading ? t('login.processing') : t('login.loginBtn')}
                 </button>
               </div>
             </>
           ) : viewMode === 'forgot_password' ? (
             <div className="space-y-6 animate-in fade-in slide-in-from-right-4 duration-500">
               <div className="text-center mb-6">
-                <h2 className="text-lg font-black text-white uppercase tracking-widest">Reset Security Key</h2>
-                <p className="text-xs text-slate-400 mt-2">Enter your email address to receive reset instructions.</p>
+                <h2 className="text-lg font-black text-white uppercase tracking-widest">{t('forgotPassword.heading')}</h2>
+                <p className="text-xs text-slate-400 mt-2">{t('forgotPassword.subtitle')}</p>
               </div>
-              
+
               <div>
                 <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-                  Registered Email
+                  {t('forgotPassword.emailLabel')}
                 </label>
                 <div className="relative group">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -193,14 +186,14 @@ function LoginForm() {
                   disabled={isLoading || !email}
                   className="w-full flex justify-center py-3.5 px-4 bg-brand-accent hover:bg-brand-accent/90 text-brand-primary text-[11px] pillar-text-bold rounded-xl transition-all shadow-lg emerald-glow disabled:opacity-50"
                 >
-                  {isLoading ? 'Sending Request...' : 'SEND RESET LINK'}
+                  {isLoading ? t('forgotPassword.sending') : t('forgotPassword.sendBtn')}
                 </button>
                 <button
                   type="button"
                   onClick={() => setViewMode('login')}
                   className="w-full flex justify-center py-3.5 px-4 bg-white/5 hover:bg-white/10 text-white text-[11px] pillar-text-bold rounded-xl transition-all border border-white/10"
                 >
-                  BACK TO LOGIN
+                  {t('forgotPassword.backToLogin')}
                 </button>
               </div>
             </div>
@@ -209,9 +202,9 @@ function LoginForm() {
               <div className="w-16 h-16 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-4 border border-emerald-500/20">
                 <Lock className="w-8 h-8 text-emerald-500" />
               </div>
-              <h2 className="text-lg font-black text-white uppercase tracking-widest">Check Your Inbox</h2>
+              <h2 className="text-lg font-black text-white uppercase tracking-widest">{t('inbox.heading')}</h2>
               <p className="text-xs text-slate-400 mt-2">
-                We have sent a secure link to reset your password to <br/><span className="text-white font-bold">{email}</span>.
+                {t('inbox.message', { email })}
               </p>
               <div className="pt-6">
                 <button
@@ -219,19 +212,19 @@ function LoginForm() {
                   onClick={() => setViewMode('login')}
                   className="w-full flex justify-center py-3.5 px-4 bg-white/5 hover:bg-white/10 text-white text-[11px] pillar-text-bold rounded-xl transition-all border border-white/10"
                 >
-                  RETURN TO LOGIN
+                  {t('inbox.returnBtn')}
                 </button>
               </div>
             </div>
           )}
 
           <div className="text-center pt-2">
-            <button 
-              type="button" 
+            <button
+              type="button"
               onClick={() => router.push(redirectUrl ? `/register?redirect=${encodeURIComponent(redirectUrl)}` : '/register')}
               className="text-[10px] font-bold text-slate-400 hover:text-brand-accent transition-colors uppercase tracking-widest border-b border-transparent hover:border-brand-accent/20 pb-1"
             >
-              Don't have an account? Create one
+              {t('login.noAccount')}
             </button>
           </div>
         </form>
@@ -247,12 +240,13 @@ function LoginForm() {
 }
 
 export default function LoginPage() {
+  const t = useTranslations('auth');
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-brand-primary font-sans text-white">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent"></div>
-          <p className="text-slate-400 text-xs uppercase tracking-widest font-bold">Loading Secure Portal...</p>
+          <p className="text-slate-400 text-xs uppercase tracking-widest font-bold">{t('loadingPortal')}</p>
         </div>
       </div>
     }>

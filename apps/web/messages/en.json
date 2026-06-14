@@ -66,5 +66,73 @@
     "th": "ไทย",
     "en": "English",
     "switchTo": "Switch language"
+  },
+  "auth": {
+    "loadingPortal": "Loading Secure Portal...",
+    "login": {
+      "subtitle": "Login to your secure financial portal",
+      "tagline": "Transparency and Clarity in Wealth Management",
+      "emailLabel": "Username / Email",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot Password?",
+      "loginBtn": "LOGIN",
+      "processing": "Processing...",
+      "noAccount": "Don't have an account? Create one"
+    },
+    "forgotPassword": {
+      "heading": "Reset Security Key",
+      "subtitle": "Enter your email address to receive reset instructions.",
+      "emailLabel": "Registered Email",
+      "sendBtn": "SEND RESET LINK",
+      "sending": "Sending Request...",
+      "backToLogin": "BACK TO LOGIN"
+    },
+    "inbox": {
+      "heading": "Check Your Inbox",
+      "message": "We have sent a secure link to reset your password to {email}.",
+      "returnBtn": "RETURN TO LOGIN"
+    },
+    "register": {
+      "subtitle": "Join Nexworth Financial Ecosystem",
+      "tagline": "Start managing your wealth with clarity",
+      "firstNameLabel": "First Name",
+      "lastNameLabel": "Last Name",
+      "emailLabel": "Email Address",
+      "passwordLabel": "Password",
+      "createBtn": "CREATE ACCOUNT",
+      "creating": "Creating Account...",
+      "hasAccount": "Already have an account? Login",
+      "successHeading": "Welcome to Nexworth",
+      "successMessage": "Your account and organization have been successfully created.",
+      "redirecting": "Redirecting to login..."
+    },
+    "resetPassword": {
+      "pageSubtitle": "Security Credential Recovery",
+      "verifying": "Verifying Security Token...",
+      "initializing": "Initialising Security Protocol...",
+      "heading": "Set New Password",
+      "subheading": "Resetting security credentials for {email}",
+      "newPasswordLabel": "New Password",
+      "confirmPasswordLabel": "Confirm New Password",
+      "updateBtn": "Update Password",
+      "processing": "Processing Security Update...",
+      "successHeading": "Password Updated",
+      "successMessage": "Your credentials have been securely updated. Redirecting you to the login portal...",
+      "errorMismatch": "Passwords do not match.",
+      "errorInvalidToken": "Invalid or missing reset token."
+    },
+    "invite": {
+      "subtitle": "Team Invitation",
+      "invalidHeading": "Invalid Link",
+      "invitedHeading": "You've been invited!",
+      "invitedMessage": "Please log in or create an account to accept the invitation and join the workspace.",
+      "loginBtn": "LOGIN TO ACCEPT",
+      "createAccountBtn": "CREATE ACCOUNT",
+      "processing": "Processing Invitation...",
+      "successHeading": "Welcome Aboard",
+      "errorHeading": "Action Failed",
+      "goToDashboard": "GO TO DASHBOARD",
+      "returnToDashboard": "RETURN TO DASHBOARD"
+    }
   }
 }
