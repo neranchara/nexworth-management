@@ -1,0 +1,22 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git add *)",
+      "Bash(git commit -m ' *)",
+      "Bash(git push *)",
+      "Bash(gh pr create --title 'improve: loan tracker fix + accounts hide inactive' --body ' *)",
+      "Bash(git fetch *)",
+      "Bash(git checkout *)",
+      "Bash(git pull *)",
+      "Bash(git branch *)",
+      "PowerShell(git add apps/api/src/server.ts apps/web/src/app/dashboard/transactions/page.tsx apps/web/src/app/dashboard/types/page.tsx apps/web/src/config/systemConfig.ts apps/api/src/scripts/migrate-ploy-ku-to-lend-loans.ts)",
+      "PowerShell(git push origin feat/loan-tracker-lendings)",
+      "PowerShell(npm run db:generate)",
+      "PowerShell(git add apps/api/src/scripts/migrate-ploy-ku-to-lend-loans.ts)",
+      "PowerShell(git add apps/web/src/app/dashboard/transactions/page.tsx)",
+      "PowerShell(git add apps/web/src/app/dashboard/loan-tracker/page.tsx)",
+      "PowerShell(Get-ChildItem -Path \"d:\\\\Project\\\\MyProject\\\\Nexworth\\\\apps\\\\web\\\\src\\\\tests\" -Recurse | Where-Object { $_.Name -match \"Admin|Diagnostic\" } | Select-Object FullName)",
+      "PowerShell(git add -A)"
+    ]
+  }
+}
