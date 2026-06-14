@@ -197,8 +197,28 @@ export default function LoanTrackerPage() {
   const totalRepaid = tabLoans.reduce((s, l) => s + l.totalRepaid, 0);
   const remaining   = totalLent - totalRepaid;
   const repayPct    = totalLent > 0 ? Math.round((totalRepaid / totalLent) * 100) : 0;
-  const isLend      = activeTab === 'LEND';
-  const pendingLendCount = loans.filter(l => l.direction === 'LEND' && l.balance > 0).length;
+  const isLend = activeTab === 'LEND';
+
+  const getTabCount = (direction: 'BORROW' | 'LEND') =>
+    loans
+      .filter(l => l.direction === direction)
+      .filter(loan => {
+        const q = searchQuery.toLowerCase();
+        const matchesSearch = !q ||
+          loan.name.toLowerCase().includes(q) ||
+          loan.accountName.toLowerCase().includes(q) ||
+          (loan.borrowerName || '').toLowerCase().includes(q) ||
+          (loan.code || '').toLowerCase().includes(q);
+        const isPending = loan.balance > 0;
+        const matchesStatus =
+          statusFilter === 'all' ||
+          (statusFilter === 'pending' && isPending) ||
+          (statusFilter === 'settled' && !isPending);
+        return matchesSearch && matchesStatus;
+      }).length;
+
+  const borrowCount = getTabCount('BORROW');
+  const lendCount   = getTabCount('LEND');
 
   const CircularProgress = ({ percentage }: { percentage: number }) => {
     const r = 36, c = 2 * Math.PI * r;
@@ -261,13 +281,18 @@ export default function LoanTrackerPage() {
       <div className="flex items-center gap-1 shrink-0 bg-white/[0.03] border border-white/5 rounded-xl p-1 w-fit">
         <button
           onClick={() => { setActiveTab('BORROW'); setSearchQuery(''); setStatusFilter('pending'); }}
-          className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all ${
+          className={`px-5 py-2 rounded-lg text-xs font-bold uppercase tracking-widest transition-all flex items-center gap-2 ${
             activeTab === 'BORROW'
               ? 'bg-orange-500/20 text-orange-400 border border-orange-500/30'
               : 'text-slate-500 hover:text-white'
           }`}
         >
           ยืมภายใน
+          {borrowCount > 0 && (
+            <span className="bg-orange-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
+              {borrowCount}
+            </span>
+          )}
         </button>
         <button
           onClick={() => { setActiveTab('LEND'); setSearchQuery(''); setStatusFilter('pending'); }}
@@ -278,9 +303,9 @@ export default function LoanTrackerPage() {
           }`}
         >
           <Users size={12} /> ลูกหนี้
-          {pendingLendCount > 0 && (
+          {lendCount > 0 && (
             <span className="bg-blue-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
-              {pendingLendCount}
+              {lendCount}
             </span>
           )}
         </button>
