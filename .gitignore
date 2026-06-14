@@ -55,12 +55,16 @@ docs/
 !CONFIG_POLICY.md
 !PROD_CONFIG_GUIDE.md
 
-# Test results and logs
+# Test results, coverage and logs
 **/test_output.txt
 **/test_results.txt
 **/single_test_output.txt
 test-results/
 **/test-results/
+coverage/
+**/coverage/
+.vitest/
+**/.vitest/
 
 # Build & lint artifacts
 build_output.txt
