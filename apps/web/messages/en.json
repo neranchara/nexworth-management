@@ -539,6 +539,82 @@
       "saveFailed": "Save failed"
     }
   },
+  "categories": {
+    "loading": "Loading master data...",
+    "title": "Transaction Categories",
+    "subtitle": "Manage master data for income and expense categories. Categorized by dynamic transaction types.",
+    "addNew": "Add New Category",
+    "active": "Active",
+    "inactive": "Inactive",
+    "empty": "No categories defined in system.",
+    "table": { "name": "Category Name", "type": "Type", "status": "Status", "actions": "Actions" },
+    "modal": { "create": "Create New Category", "edit": "Edit Category" },
+    "form": { "name": "Category Name", "type": "Transaction Type", "status": "Status", "statusHint": "Enable/Disable in dropdowns", "selectType": "Select Type", "cancel": "Cancel", "save": "Save Category" },
+    "confirm": { "delete": "Are you sure you want to delete this category?" },
+    "alert": { "deleted": "Category deleted successfully", "deleteFailed": "Delete failed", "updated": "Category updated successfully", "created": "Category created successfully", "saveFailed": "Save failed" }
+  },
+  "banks": {
+    "title": "Bank Master Data",
+    "subtitle": "A list of supported banks in the system for account creation",
+    "addNew": "Add New Bank",
+    "empty": "No banks defined in system.",
+    "table": { "name": "Bank Name", "code": "Code", "color": "Color Mark", "actions": "Actions" },
+    "modal": { "create": "Create New Bank", "edit": "Edit Bank" },
+    "form": { "name": "Bank Name", "code": "Bank Code (Unique)", "color": "Brand Color", "cancel": "Cancel", "save": "Save Bank" },
+    "confirm": { "delete": "Are you sure you want to delete this bank? It will fail if any accounts are using it." },
+    "alert": { "deleted": "Bank deleted successfully", "deleteFailed": "Delete failed", "updated": "Bank updated successfully", "created": "Bank created successfully", "saveFailed": "Save failed" }
+  },
+  "users": {
+    "title": "Users",
+    "searchPlaceholder": "Search...",
+    "addNew": "Add User",
+    "empty": "No users found.",
+    "table": { "name": "Name", "email": "Email", "role": "Role", "organization": "Organization", "status": "Status", "actions": "Actions" },
+    "modal": { "myAccount": "My Account Details", "viewDetails": "View User Details", "editProfile": "Edit Profile", "newUser": "New User" },
+    "form": { "firstName": "First Name", "lastName": "Last Name", "email": "Email Address", "password": "Password", "passwordOptional": "(optional)", "role": "Role", "org": "Org", "activeAccount": "Active Account", "resetPassword": "Reset Password", "save": "Save User", "select": "Select..." },
+    "confirm": { "resetPassword": "Generate a new random password and send it to the user's email?", "delete": "Delete this user?" },
+    "alert": { "deleted": "Deleted", "statusUpdated": "Status updated", "updated": "Updated", "created": "Created", "saveFailed": "Save failed", "deleteFailed": "Delete failed", "resetFailed": "Reset failed", "updateFailed": "Update failed" }
+  },
+  "team": {
+    "title": "Team & Permissions",
+    "subtitle": "Organization Members",
+    "memberCount": "Active Members",
+    "activeMembers": "Active Members",
+    "activeMembersDesc": "Users currently in the organization",
+    "you": "You",
+    "noMembers": "No active members found",
+    "pendingInvitations": "Pending Invitations",
+    "pendingInvitationsDesc": "Awaiting user acceptance",
+    "invite": "Invite Member",
+    "inviteDesc": "Send access invitation",
+    "comingSoon": "Coming Soon",
+    "comingSoonDesc": "The invite member feature is currently in development and will be available in the next version.",
+    "confirm": { "revoke": "Are you sure you want to revoke this invitation?" },
+    "alert": { "invited": "Invitation sent successfully", "inviteFailed": "Failed to send invitation", "revoked": "Invitation revoked successfully", "revokeFailed": "Failed to revoke invitation" }
+  },
+  "permissions": {
+    "title": "Role Permissions",
+    "subtitle": "Manage roles and access levels",
+    "newRole": "New Role",
+    "userCount": "{count} Users",
+    "configure": "Configure",
+    "config": "Config",
+    "systemRole": "System Role",
+    "table": { "role": "Role", "description": "Description", "type": "Type", "users": "Users", "actions": "Actions" },
+    "modal": { "create": "New Role", "edit": "Edit Role" },
+    "form": { "name": "Role Name", "description": "Description", "systemRole": "System Management Role", "save": "Save" },
+    "confirm": { "delete": "Delete \"{name}\"?" }
+  },
+  "organizations": {
+    "title": "Organizations",
+    "subtitle": "Manage and monitor all system organizations.",
+    "searchPlaceholder": "Search...",
+    "create": "Create Org",
+    "viewHub": "View Hub",
+    "stats": { "users": "Users", "accounts": "Accounts", "txs": "TXs" },
+    "modal": { "title": "Create New Organization", "adminSection": "Default Admin Account" },
+    "form": { "orgName": "Organization Name", "firstName": "First Name", "lastName": "Last Name", "email": "Email Address", "password": "Default Password", "cancel": "Cancel", "submit": "Create Organization" }
+  },
   "auth": {
     "loadingPortal": "Loading Secure Portal...",
     "login": {

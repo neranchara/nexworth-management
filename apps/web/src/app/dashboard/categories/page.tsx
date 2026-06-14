@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import api from '@/lib/api';
 
 import { Edit2, Trash2, Tag, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, AlertCircle, CheckCircle, LayoutGrid, List } from 'lucide-react';
@@ -11,6 +12,7 @@ import GlassModal from '@/components/ui/GlassModal';
 import { clsx } from 'clsx';
 
 export default function CategoriesManagementPage() {
+  const t = useTranslations('categories');
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
   const { hasPermission } = usePermissions();
   const [types, setTypes] = useState<TransactionType[]>([]);
@@ -91,14 +93,14 @@ export default function CategoriesManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this category?")) return;
+    if (!window.confirm(t('confirm.delete'))) return;
     try {
       await api.delete(`/categories/${id}`);
-      showAlert('Category deleted successfully', 'success');
+      showAlert(t('alert.deleted'), 'success');
       fetchInitialData();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
+      showAlert(errorResponse.response?.data?.error || t('alert.deleteFailed'), 'error');
     }
   };
 
@@ -107,16 +109,16 @@ export default function CategoriesManagementPage() {
     try {
       if (isEditing && currentCategoryId) {
         await api.put(`/categories/${currentCategoryId}`, formData);
-        showAlert('Category updated successfully', 'success');
+        showAlert(t('alert.updated'), 'success');
       } else {
         await api.post('/categories', formData);
-        showAlert('Category created successfully', 'success');
+        showAlert(t('alert.created'), 'success');
       }
       setIsModalOpen(false);
       fetchInitialData();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Save failed', 'error');
+      showAlert(errorResponse.response?.data?.error || t('alert.saveFailed'), 'error');
     }
   };
 
@@ -168,7 +170,7 @@ export default function CategoriesManagementPage() {
       <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
   };
 
-  if (loading && categories.length === 0) return <div className="p-6 text-slate-400">Loading master data...</div>;
+  if (loading && categories.length === 0) return <div className="p-6 text-slate-400">{t('loading')}</div>;
   
   if (!hasPermission('categories', 'canView')) {
     return (
@@ -194,9 +196,9 @@ export default function CategoriesManagementPage() {
 
       <header className="flex items-center justify-between shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-white">Transaction Categories</h2>
+          <h2 className="text-xl font-bold text-white">{t('title')}</h2>
           <p className="text-[10px] text-slate-400 uppercase tracking-widest">
-            Manage master data for income and expense categories. Categorized by dynamic transaction types.
+            {t('subtitle')}
           </p>
         </div>
         <div className="flex items-center gap-3">
@@ -206,7 +208,7 @@ export default function CategoriesManagementPage() {
               data-testid="categories-list-btn-add-cat"
               className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95"
             >
-              Add New Category
+              {t('addNew')}
             </button>
           )}
         </div>
@@ -218,21 +220,21 @@ export default function CategoriesManagementPage() {
             <thead className="sticky top-0 z-[60] bg-[#001229]">
               <tr>
                 <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] cursor-pointer" onClick={() => handleSort('name')}>
-                  <div className="flex items-center">Category Name <SortIcon column="name" /></div>
+                  <div className="flex items-center">{t('table.name')} <SortIcon column="name" /></div>
                 </th>
                 <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] cursor-pointer" onClick={() => handleSort('type')}>
-                  <div className="flex items-center">Type <SortIcon column="type" /></div>
+                  <div className="flex items-center">{t('table.type')} <SortIcon column="type" /></div>
                 </th>
                 <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] cursor-pointer" onClick={() => handleSort('isActive')}>
-                  <div className="flex items-center">Status <SortIcon column="isActive" /></div>
+                  <div className="flex items-center">{t('table.status')} <SortIcon column="isActive" /></div>
                 </th>
-                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] text-right">Actions</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] text-right">{t('table.actions')}</th>
               </tr>
             </thead>
             <tbody>
               {sortedCategories.length === 0 ? (
                 <tr>
-                  <td colSpan={4} className="py-8 text-center text-xs font-bold text-slate-400">No categories defined in system.</td>
+                  <td colSpan={4} className="py-8 text-center text-xs font-bold text-slate-400">{t('empty')}</td>
                 </tr>
               ) : sortedCategories.map((cat) => (
                 <tr key={cat.id} className="bg-white/[0.02] hover:bg-white/[0.06] transition-all group">
@@ -257,7 +259,7 @@ export default function CategoriesManagementPage() {
                     <span className={`px-2 py-0.5 rounded text-[9px] font-bold ${
                       cat.isActive ? 'bg-emerald/10 text-emerald' : 'bg-rose-500/10 text-rose-400'
                     }`}>
-                      {cat.isActive ? 'Active' : 'Inactive'}
+                      {cat.isActive ? t('active') : t('inactive')}
                     </span>
                   </td>
                   <td className="px-6 py-3 text-right rounded-r-xl">
@@ -293,11 +295,11 @@ export default function CategoriesManagementPage() {
       <GlassModal 
         isOpen={isModalOpen} 
         onClose={() => setIsModalOpen(false)} 
-        title={isEditing ? 'Edit Category' : 'Create New Category'}
+        title={isEditing ? t('modal.edit') : t('modal.create')}
       >
         <form onSubmit={handleFormSubmit} className="space-y-4">
            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Category Name</label>
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{t('form.name')}</label>
               <input 
                 type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                 placeholder="e.g. อาหาร, เงินเดือน"
@@ -307,13 +309,13 @@ export default function CategoriesManagementPage() {
            </div>
            
            <div>
-              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">Transaction Type</label>
-              <select 
+              <label className="block text-[10px] font-black text-slate-400 uppercase tracking-widest mb-1.5">{t('form.type')}</label>
+              <select
                 required value={formData.typeId} onChange={(e) => setFormData({...formData, typeId: e.target.value})}
                 data-testid="categories-form-sel-type"
                 className="w-full bg-navy/80 border border-white/5 rounded-lg py-2 px-3 text-xs text-slate-300 outline-none focus:border-white/20 transition-all"
               >
-                <option value="" disabled>Select Type</option>
+                <option value="" disabled>{t('form.selectType')}</option>
                 {types.map(t => (
                   <option key={t.id} value={t.id} className="bg-[#001229]">{t.name} ({t.behavior})</option>
                 ))}
@@ -322,8 +324,8 @@ export default function CategoriesManagementPage() {
 
            <div className="flex items-center justify-between p-3 rounded-xl bg-white/[0.02] border border-white/5">
               <label className="text-[11px] font-bold text-slate-400 flex flex-col">
-                <span>Status</span>
-                <span className="text-[9px] font-normal text-slate-500">Enable/Disable in dropdowns</span>
+                <span>{t('form.status')}</span>
+                <span className="text-[9px] font-normal text-slate-500">{t('form.statusHint')}</span>
               </label>
               <button 
                 type="button"
@@ -335,8 +337,8 @@ export default function CategoriesManagementPage() {
            </div>
 
            <div className="pt-4 border-t border-white/5 flex gap-3">
-              <button type="button" onClick={() => setIsModalOpen(false)} className="py-2 bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10 text-xs font-bold rounded-lg transition-all active:scale-95 flex-1">Cancel</button>
-              <button type="submit" data-testid="categories-form-btn-save" className="py-2 bg-emerald text-navy text-xs font-black uppercase tracking-widest rounded-lg hover:shadow-[0_0_20px_rgba(80,200,120,0.3)] transition-all active:scale-95 flex-1">Save Category</button>
+              <button type="button" onClick={() => setIsModalOpen(false)} className="py-2 bg-white/5 border border-white/5 text-slate-300 hover:bg-white/10 text-xs font-bold rounded-lg transition-all active:scale-95 flex-1">{t('form.cancel')}</button>
+              <button type="submit" data-testid="categories-form-btn-save" className="py-2 bg-emerald text-navy text-xs font-black uppercase tracking-widest rounded-lg hover:shadow-[0_0_20px_rgba(80,200,120,0.3)] transition-all active:scale-95 flex-1">{t('form.save')}</button>
            </div>
         </form>
       </GlassModal>
