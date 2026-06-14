@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import api from '@/lib/api';
 import { 
   Wallet, 
@@ -47,6 +48,7 @@ interface BackendCashflow {
 
 
 export default function MonthlySummaryPage() {
+  const t = useTranslations('monthly');
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const { hasPermission } = usePermissions();
   const [loading, setLoading] = useState(true);
@@ -104,8 +106,8 @@ export default function MonthlySummaryPage() {
     return (
       <div className="p-6 bg-white dark:bg-gray-800 rounded-lg shadow text-center">
          <Calendar className="w-12 h-12 text-red-500 mx-auto mb-4" />
-         <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">Access Denied</h1>
-         <p className="text-gray-600 dark:text-gray-400">You do not have permission to view the monthly summary.</p>
+         <h1 className="text-xl font-bold text-gray-900 dark:text-white mb-2">{t('accessDenied')}</h1>
+         <p className="text-gray-600 dark:text-gray-400">{t('accessDeniedDesc')}</p>
       </div>
     );
   }
@@ -115,8 +117,8 @@ export default function MonthlySummaryPage() {
       {/* Header & Year Selector */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Monthly Summary (Aggregated)</h1>
-          <p className="text-gray-500 dark:text-gray-400">High-level financial performance by month for {selectedYear}.</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-white">{t('title')}</h1>
+          <p className="text-gray-500 dark:text-gray-400">{t('subtitle', { year: selectedYear })}</p>
         </div>
         
         <div className="flex items-center bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-1 shadow-sm">
@@ -145,7 +147,7 @@ export default function MonthlySummaryPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm" data-testid="monthly-summary-card-annual-income">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Annual Income</span>
+            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('summary.annualIncome')}</span>
             <div className="bg-green-100 p-1.5 rounded-lg"><TrendingUp className="w-4 h-4 text-green-600" /></div>
           </div>
           <p className="text-2xl font-bold text-green-600">฿{totalYearStats.income.toLocaleString()}</p>
@@ -153,7 +155,7 @@ export default function MonthlySummaryPage() {
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm" data-testid="monthly-summary-card-annual-expense">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Annual Expense</span>
+            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('summary.annualExpense')}</span>
             <div className="bg-red-100 p-1.5 rounded-lg"><TrendingDown className="w-4 h-4 text-red-600" /></div>
           </div>
           <p className="text-2xl font-bold text-red-600">฿{totalYearStats.expense.toLocaleString()}</p>
@@ -161,7 +163,7 @@ export default function MonthlySummaryPage() {
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm" data-testid="monthly-summary-card-annual-savings">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Annual Savings</span>
+            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('summary.annualSavings')}</span>
             <div className="bg-blue-100 p-1.5 rounded-lg"><Wallet className="w-4 h-4 text-blue-600" /></div>
           </div>
           <p className="text-2xl font-bold text-blue-600">฿{totalYearStats.savings.toLocaleString()}</p>
@@ -169,7 +171,7 @@ export default function MonthlySummaryPage() {
 
         <div className="bg-white dark:bg-gray-800 p-6 rounded-xl border border-gray-100 dark:border-gray-700 shadow-sm" data-testid="monthly-summary-card-annual-net">
           <div className="flex items-center justify-between mb-2">
-            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">Annual Net</span>
+            <span className="text-sm font-medium text-gray-500 uppercase tracking-wider">{t('summary.annualNet')}</span>
             <div className={`p-1.5 rounded-lg ${totalYearStats.net >= 0 ? 'bg-green-50' : 'bg-red-50'}`}>
               <Minus className={`w-4 h-4 ${totalYearStats.net >= 0 ? 'text-green-600' : 'text-red-600'}`} />
             </div>
@@ -183,27 +185,27 @@ export default function MonthlySummaryPage() {
       {/* Monthly Summary Table */}
       <div className="bg-white dark:bg-gray-800 shadow-sm rounded-xl border border-gray-200 dark:border-gray-700 overflow-hidden">
         <div className="px-6 py-4 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center">
-           <h3 className="font-bold text-gray-900 dark:text-white">Monthly Breakdown ({selectedYear})</h3>
+           <h3 className="font-bold text-gray-900 dark:text-white">{t('table.title', { year: selectedYear })}</h3>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead className="bg-gray-50 dark:bg-gray-900/50 border-b border-gray-200 dark:border-gray-700">
               <tr>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">Month</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-green-600">Income</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-red-600">Expense</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-blue-600">Savings</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-purple-600">Goal Savings</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-cyan-600">Investments</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-orange-600">Debt Paid</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Net Balance</th>
-                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">Records</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider">{t('table.month')}</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-green-600">{t('table.income')}</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-red-600">{t('table.expense')}</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-blue-600">{t('table.savings')}</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-purple-600">{t('table.goalSavings')}</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-cyan-600">{t('table.investments')}</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right text-orange-600">{t('table.debtPaid')}</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">{t('table.netBalance')}</th>
+                <th className="px-6 py-4 text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider text-right">{t('table.records')}</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
               {loading ? (
                  <tr>
-                    <td colSpan={6} className="px-6 py-10 text-center text-gray-500">Loading yearly summary...</td>
+                    <td colSpan={6} className="px-6 py-10 text-center text-gray-500">{t('loading')}</td>
                  </tr>
               ) : monthlyStats.map((s) => {
                 const monthName = format(new Date(selectedYear, s.month, 1), 'MMMM');
@@ -240,7 +242,7 @@ export default function MonthlySummaryPage() {
                       ฿{s.net.toLocaleString()}
                     </td>
                     <td className="px-6 py-4 whitespace-nowrap text-xs text-right text-gray-500">
-                      {s.count} txs
+                      {s.count} {t('table.txs')}
                     </td>
                   </tr>
                 );
@@ -250,7 +252,7 @@ export default function MonthlySummaryPage() {
               <tfoot className="bg-gray-100 dark:bg-gray-900 border-t-2 border-gray-300 dark:border-gray-600 font-bold">
                 <tr>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white uppercase tracking-wider">
-                    Total (Annual)
+                    {t('table.totalAnnual')}
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-right text-green-600 font-mono">
                     ฿{annualSummary.annualIncome.toLocaleString()}

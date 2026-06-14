@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import { 
   Target, TrendingUp, AlertTriangle, CheckCircle, 
   Plus, Search, Info, ShieldAlert, Clock, Home, Plane, Settings
@@ -34,6 +35,7 @@ interface GoalsSummary {
 }
 
 export default function GoalsPage() {
+  const t = useTranslations('goals');
   const [goals, setGoals] = useState<Goal[]>([]);
   const [summary, setSummary] = useState<GoalsSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -107,7 +109,7 @@ export default function GoalsPage() {
   };
 
   const handleDeleteGoal = async (id: string) => {
-    if (!confirm('คุณต้องการลบเป้าหมายนี้ใช่หรือไม่? ข้อมูลการออมที่ผูกไว้จะถูกยกเลิกการเชื่อมต่อ')) return;
+    if (!confirm(t('confirm.delete'))) return;
     try {
       await api.delete(`/goals/${id}`);
       fetchData();
@@ -178,38 +180,38 @@ export default function GoalsPage() {
       {/* Header */}
       <header className="flex justify-between items-end mb-4 shrink-0 px-6 pt-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">เป้าหมาย (Goals)</h2>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">Tracking Dreams & Stability</p>
+          <h2 className="text-2xl font-bold text-white">{t('title')}</h2>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest mt-1">{t('subtitle')}</p>
         </div>
         <button 
           data-testid="goals-btn-add"
           onClick={() => setShowCreateModal(true)}
           className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95"
         >
-          <Plus className="w-4 h-4" /> สร้างเป้าหมายใหม่
+          <Plus className="w-4 h-4" /> {t('addNew')}
         </button>
       </header>
 
       <div className="px-6 pb-6 flex-1 flex flex-col overflow-hidden">
         <p className="text-xs text-slate-300 mb-6 shrink-0 bg-white/5 p-3 rounded-lg border border-white/10 leading-relaxed flex items-center gap-2">
           <Info className="w-4 h-4 text-emerald" /> 
-          <strong>Purpose:</strong> กำหนดและติดตามเป้าหมายระยะสั้น/ยาว พร้อมระบบ AI ช่วยพยากรณ์ระยะเวลาความสำเร็จโดยอิงจากอัตราการออมปัจจุบัน เพื่อสร้างแรงจูงใจทางการเงิน
+          {t('purpose')}
         </p>
 
         {/* Top Summary Pillars */}
         <div className="grid grid-cols-12 gap-6 shrink-0 mb-6">
           <GlassCard className="col-span-12 lg:col-span-3 p-5 flex flex-col justify-between h-36">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">ยอดรวมเป้าหมาย</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">{t('summary.total')}</span>
             <h3 className="text-3xl font-bold text-white">
               ฿{summary?.totalGoalsValue.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || 0}
             </h3>
             <div className="flex items-center gap-2 text-blue-400 text-[10px] font-bold">
-              <Target className="w-3 h-3" /> {summary?.goalCount || 0} เป้าหมายดำเนินการ
+              <Target className="w-3 h-3" /> {t('summary.activeGoals', { count: summary?.goalCount || 0 })}
             </div>
           </GlassCard>
 
           <GlassCard className="col-span-12 lg:col-span-3 p-5 flex flex-col justify-between h-36 border-l-4 border-emerald">
-            <span className="text-[10px] font-bold text-slate-400 uppercase">สะสมแล้ว</span>
+            <span className="text-[10px] font-bold text-slate-400 uppercase">{t('summary.collected')}</span>
             <h3 className="text-3xl font-bold text-emerald">
               ฿{summary?.totalCollected.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || 0}
             </h3>
@@ -257,10 +259,10 @@ export default function GoalsPage() {
         {/* Goal Cards Area */}
         <div className="flex-1 overflow-hidden flex flex-col">
           <div className="flex gap-4 mb-4 shrink-0">
-            <button onClick={() => setFilter('ALL')} className={`px-4 py-1.5 text-[10px] font-bold rounded-full border transition-all ${filter === 'ALL' ? 'bg-emerald/10 text-emerald border-emerald/20' : 'bg-white/5 text-slate-400 border-white/5'}`}>ทั้งหมด</button>
+            <button onClick={() => setFilter('ALL')} className={`px-4 py-1.5 text-[10px] font-bold rounded-full border transition-all ${filter === 'ALL' ? 'bg-emerald/10 text-emerald border-emerald/20' : 'bg-white/5 text-slate-400 border-white/5'}`}>{t('filter.all')}</button>
             <button onClick={() => setFilter('SECURITY')} className={`px-4 py-1.5 text-[10px] font-bold rounded-full border transition-all ${filter === 'SECURITY' ? 'bg-emerald/10 text-emerald border-emerald/20' : 'bg-white/5 text-slate-400 border-white/5'}`}>Security</button>
-            <button onClick={() => setFilter('SHORT_TERM')} className={`px-4 py-1.5 text-[10px] font-bold rounded-full border transition-all ${filter === 'SHORT_TERM' ? 'bg-emerald/10 text-emerald border-emerald/20' : 'bg-white/5 text-slate-400 border-white/5'}`}>ระยะสั้น</button>
-            <button onClick={() => setFilter('LONG_TERM')} className={`px-4 py-1.5 text-[10px] font-bold rounded-full border transition-all ${filter === 'LONG_TERM' ? 'bg-emerald/10 text-emerald border-emerald/20' : 'bg-white/5 text-slate-400 border-white/5'}`}>ระยะยาว</button>
+            <button onClick={() => setFilter('SHORT_TERM')} className={`px-4 py-1.5 text-[10px] font-bold rounded-full border transition-all ${filter === 'SHORT_TERM' ? 'bg-emerald/10 text-emerald border-emerald/20' : 'bg-white/5 text-slate-400 border-white/5'}`}>{t('filter.shortTerm')}</button>
+            <button onClick={() => setFilter('LONG_TERM')} className={`px-4 py-1.5 text-[10px] font-bold rounded-full border transition-all ${filter === 'LONG_TERM' ? 'bg-emerald/10 text-emerald border-emerald/20' : 'bg-white/5 text-slate-400 border-white/5'}`}>{t('filter.longTerm')}</button>
           </div>
           
           <div className="flex-1 overflow-y-auto scroll-area pr-2 pb-6">
@@ -301,7 +303,7 @@ export default function GoalsPage() {
                     </div>
                     <div className="mt-3 flex-1">
                       <h4 className="text-base font-bold text-white leading-tight">{goal.name}</h4>
-                      <p className="text-[10px] text-slate-400 mt-0.5">เป้าหมาย: ฿{goal.targetAmount.toLocaleString()}</p>
+                      <p className="text-[10px] text-slate-400 mt-0.5">{t('card.target')} ฿{goal.targetAmount.toLocaleString()}</p>
                       {goal.deadline && (
                         <p className="text-[9px] text-slate-500 mt-1 flex items-center gap-1">
                           <Clock className="w-3 h-3" /> Due: {new Date(goal.deadline).toLocaleDateString()}
@@ -332,7 +334,7 @@ export default function GoalsPage() {
               {filteredGoals.length === 0 && !loading && (
                 <div className="col-span-full py-12 text-center text-slate-500">
                   <Target className="w-12 h-12 mx-auto mb-4 opacity-50" />
-                  <p>ยังไม่มีเป้าหมายในหมวดหมู่นี้</p>
+                  <p>{t('empty')}</p>
                 </div>
               )}
             </div>
@@ -341,22 +343,22 @@ export default function GoalsPage() {
       </div>
 
       {/* Create Modal */}
-      <GlassModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title="สร้างเป้าหมายใหม่ (New Goal)">
+      <GlassModal isOpen={showCreateModal} onClose={() => setShowCreateModal(false)} title={t('modal.createTitle')}>
         <form onSubmit={handleCreateGoal} className="flex flex-col gap-4 mt-4">
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ชื่อเป้าหมาย (Goal Name)</label>
-            <input 
-              type="text" required 
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.name')}</label>
+            <input
+              type="text" required
               name="title"
               data-testid="goals-input-title"
-              placeholder="e.g. ดาวน์บ้าน, เที่ยวญี่ปุ่น"
+              placeholder={t('form.namePlaceholder')}
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all"
               value={newGoalForm.name} onChange={e => setNewGoalForm({...newGoalForm, name: e.target.value})}
             />
           </div>
           
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ยอดเงินเป้าหมาย (Target Amount)</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.targetAmount')}</label>
             <input 
               type="number" required min="0" step="0.01"
               name="targetAmount"
@@ -369,7 +371,7 @@ export default function GoalsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">หมวดหมู่ (Priority)</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.priority')}</label>
               <select 
                 className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
                 value={newGoalForm.priority} onChange={e => setNewGoalForm({...newGoalForm, priority: e.target.value as any})}
@@ -380,7 +382,7 @@ export default function GoalsPage() {
               </select>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">สี (Color Accent)</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.color')}</label>
               <select 
                 className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
                 value={newGoalForm.color} onChange={e => setNewGoalForm({...newGoalForm, color: e.target.value as any})}
@@ -393,23 +395,23 @@ export default function GoalsPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ผูกกับบัญชีสินทรัพย์ (Linked Asset)</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.linkedAsset')}</label>
             <select 
               name="linkedAssetId"
               data-testid="goals-select-linkedAssetId"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
               value={newGoalForm.accountId} onChange={e => setNewGoalForm({...newGoalForm, accountId: e.target.value})}
             >
-              <option value="">-- เลือกบัญชีที่ใช้เก็บเงิน (Optional) --</option>
+              <option value="">{t('form.selectAccount')}</option>
               {accounts.map(acc => (
                 <option key={acc.id} value={acc.id}>{acc.name} (฿{acc.balance?.toLocaleString()})</option>
               ))}
             </select>
-            <p className="text-[9px] text-slate-500 italic">เป้าหมายจะคำนวณความคืบหน้าจากเงินในบัญชีนี้</p>
+            <p className="text-[9px] text-slate-500 italic">{t('form.linkedDesc')}</p>
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">กำหนดเวลา (Deadline - Optional)</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.deadline')}</label>
             <input 
               type="date" 
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all [color-scheme:dark]"
@@ -419,20 +421,20 @@ export default function GoalsPage() {
 
           <div className="flex justify-end gap-3 mt-6">
             <button type="button" onClick={() => setShowCreateModal(false)} className="px-5 py-2.5 rounded-xl font-bold text-xs bg-white/5 text-slate-300 hover:bg-white/10 transition-all">
-              ยกเลิก
+              {t('form.cancel')}
             </button>
             <button type="submit" data-testid="goals-btn-submit" className="px-5 py-2.5 rounded-xl font-bold text-xs bg-emerald text-navy btn-glow">
-              สร้างเป้าหมาย
+              {t('form.submit')}
             </button>
           </div>
         </form>
       </GlassModal>
 
       {/* Edit Modal */}
-      <GlassModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title="แก้ไขเป้าหมาย (Edit Goal)">
+      <GlassModal isOpen={showEditModal} onClose={() => setShowEditModal(false)} title={t('modal.editTitle')}>
         <form onSubmit={handleUpdateGoal} className="flex flex-col gap-4 mt-4">
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ชื่อเป้าหมาย</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.name')}</label>
             <input 
               type="text" required 
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all"
@@ -441,7 +443,7 @@ export default function GoalsPage() {
           </div>
           
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">ยอดเงินเป้าหมาย</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.targetAmount')}</label>
             <input 
               type="number" required min="0" step="0.01"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all"
@@ -451,7 +453,7 @@ export default function GoalsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">สถานะ</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.status')}</label>
               <select 
                 className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
                 value={editGoalForm.status} onChange={e => setEditGoalForm({...editGoalForm, status: e.target.value as any})}
@@ -462,7 +464,7 @@ export default function GoalsPage() {
               </select>
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">หมวดหมู่</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.priority')}</label>
               <select 
                 className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
                 value={editGoalForm.priority} onChange={e => setEditGoalForm({...editGoalForm, priority: e.target.value as any})}
@@ -475,9 +477,9 @@ export default function GoalsPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">กำหนดเวลา</label>
-            <input 
-              type="date" 
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.deadline')}</label>
+            <input
+              type="date"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all [color-scheme:dark]"
               value={editGoalForm.deadline} onChange={e => setEditGoalForm({...editGoalForm, deadline: e.target.value})}
             />
@@ -485,10 +487,10 @@ export default function GoalsPage() {
 
           <div className="flex justify-end gap-3 mt-6">
             <button type="button" onClick={() => setShowEditModal(false)} className="px-5 py-2.5 rounded-xl font-bold text-xs bg-white/5 text-slate-300 hover:bg-white/10 transition-all">
-              ยกเลิก
+              {t('form.cancel')}
             </button>
             <button type="submit" className="px-5 py-2.5 rounded-xl font-bold text-xs bg-emerald text-navy btn-glow">
-              บันทึกการแก้ไข
+              {t('form.update')}
             </button>
           </div>
         </form>

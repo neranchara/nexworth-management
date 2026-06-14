@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useTranslations } from 'next-intl';
 import { User, Shield, Bell, CreditCard, ChevronRight, Users } from 'lucide-react';
 import { clsx } from 'clsx';
 import ProfilePage from '../profile/page';
@@ -10,12 +11,13 @@ import TeamPage from '../team/page';
 type SettingsTab = 'profile' | 'security' | 'team' | 'notifications' | 'billing';
 
 export default function AccountSetupPage() {
+  const t = useTranslations('setup');
   const [activeTab, setActiveTab] = useState<SettingsTab>('profile');
 
   const tabs = [
-    { id: 'profile', label: 'โปรไฟล์ & LINE', icon: User },
-    { id: 'security', label: 'ความปลอดภัย', icon: Shield },
-    { id: 'team', label: 'ทีมและสิทธิ์', icon: Users },
+    { id: 'profile', label: t('tabs.profile'), icon: User },
+    { id: 'security', label: t('tabs.security'), icon: Shield },
+    { id: 'team', label: t('tabs.team'), icon: Users },
     // { id: 'notifications', label: 'การแจ้งเตือน', icon: Bell },
     // { id: 'billing', label: 'การสมัครสมาชิก', icon: CreditCard },
   ];
@@ -23,8 +25,8 @@ export default function AccountSetupPage() {
   return (
     <div className="flex-1 flex flex-col min-h-0 animate-in fade-in duration-500">
       <header className="mb-8">
-        <h1 className="text-3xl font-black text-white tracking-tight">ตั้งค่าบัญชี</h1>
-        <p className="text-slate-400 text-sm mt-1 uppercase tracking-widest font-bold">Account Settings & Global Preferences</p>
+        <h1 className="text-3xl font-black text-white tracking-tight">{t('title')}</h1>
+        <p className="text-slate-400 text-sm mt-1 uppercase tracking-widest font-bold">{t('subtitle')}</p>
       </header>
 
       <div className="flex flex-col lg:flex-row gap-8 flex-1 min-h-0">
