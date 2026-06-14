@@ -66,5 +66,73 @@
     "th": "ไทย",
     "en": "English",
     "switchTo": "สลับภาษา"
+  },
+  "auth": {
+    "loadingPortal": "กำลังโหลดระบบ...",
+    "login": {
+      "subtitle": "เข้าสู่ระบบบริหารการเงินของคุณ",
+      "tagline": "สื่อถึงความโปร่งใส ความชัดเจน",
+      "emailLabel": "ชื่อผู้ใช้ / อีเมล",
+      "passwordLabel": "รหัสผ่าน",
+      "forgotPassword": "ลืมรหัสผ่าน?",
+      "loginBtn": "เข้าสู่ระบบ",
+      "processing": "กำลังดำเนินการ...",
+      "noAccount": "ยังไม่มีบัญชี? สร้างได้เลย"
+    },
+    "forgotPassword": {
+      "heading": "รีเซ็ตรหัสผ่าน",
+      "subtitle": "ใส่อีเมลที่ลงทะเบียนเพื่อรับลิงก์รีเซ็ต",
+      "emailLabel": "อีเมลที่ลงทะเบียน",
+      "sendBtn": "ส่งลิงก์รีเซ็ต",
+      "sending": "กำลังส่ง...",
+      "backToLogin": "กลับหน้าเข้าสู่ระบบ"
+    },
+    "inbox": {
+      "heading": "ตรวจสอบอีเมลของคุณ",
+      "message": "เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง {email} แล้ว",
+      "returnBtn": "กลับหน้าเข้าสู่ระบบ"
+    },
+    "register": {
+      "subtitle": "เริ่มต้นจัดการความมั่งคั่งกับ Nexworth",
+      "tagline": "เริ่มต้นจัดการความมั่งคั่งอย่างโปร่งใส",
+      "firstNameLabel": "ชื่อจริง",
+      "lastNameLabel": "นามสกุล",
+      "emailLabel": "อีเมล",
+      "passwordLabel": "รหัสผ่าน",
+      "createBtn": "สร้างบัญชี",
+      "creating": "กำลังสร้างบัญชี...",
+      "hasAccount": "มีบัญชีอยู่แล้ว? เข้าสู่ระบบ",
+      "successHeading": "ยินดีต้อนรับสู่ Nexworth",
+      "successMessage": "บัญชีและองค์กรของคุณถูกสร้างเรียบร้อยแล้ว",
+      "redirecting": "กำลังนำไปหน้าเข้าสู่ระบบ..."
+    },
+    "resetPassword": {
+      "pageSubtitle": "กู้คืนรหัสผ่าน",
+      "verifying": "กำลังตรวจสอบ...",
+      "initializing": "กำลังเริ่มต้นระบบ...",
+      "heading": "ตั้งรหัสผ่านใหม่",
+      "subheading": "รีเซ็ตข้อมูลสำหรับ {email}",
+      "newPasswordLabel": "รหัสผ่านใหม่",
+      "confirmPasswordLabel": "ยืนยันรหัสผ่านใหม่",
+      "updateBtn": "อัพเดตรหัสผ่าน",
+      "processing": "กำลังดำเนินการ...",
+      "successHeading": "อัพเดตรหัสผ่านสำเร็จ",
+      "successMessage": "ข้อมูลของคุณถูกอัพเดตเรียบร้อย กำลังนำไปหน้าเข้าสู่ระบบ...",
+      "errorMismatch": "รหัสผ่านไม่ตรงกัน",
+      "errorInvalidToken": "ลิงก์รีเซ็ตไม่ถูกต้องหรือหมดอายุแล้ว"
+    },
+    "invite": {
+      "subtitle": "คำเชิญเข้าทีม",
+      "invalidHeading": "ลิงก์ไม่ถูกต้อง",
+      "invitedHeading": "คุณได้รับคำเชิญ!",
+      "invitedMessage": "กรุณาเข้าสู่ระบบหรือสร้างบัญชีเพื่อยอมรับคำเชิญและเข้าร่วมทีม",
+      "loginBtn": "เข้าสู่ระบบเพื่อยอมรับ",
+      "createAccountBtn": "สร้างบัญชี",
+      "processing": "กำลังดำเนินการ...",
+      "successHeading": "ยินดีต้อนรับ",
+      "errorHeading": "ดำเนินการไม่สำเร็จ",
+      "goToDashboard": "ไปยังแดชบอร์ด",
+      "returnToDashboard": "กลับแดชบอร์ด"
+    }
   }
 }

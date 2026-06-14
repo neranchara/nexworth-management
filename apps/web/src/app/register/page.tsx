@@ -8,8 +8,10 @@ import api from '../../lib/api';
 import Logo from '@/components/common/Logo';
 import { encryptPassword } from '../../lib/crypto';
 import { APP_CONFIG } from '@/config/app.config';
+import { useTranslations } from 'next-intl';
 
 function RegisterForm() {
+  const t = useTranslations('auth');
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
@@ -18,7 +20,7 @@ function RegisterForm() {
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
-  
+
   const router = useRouter();
   const searchParams = useSearchParams();
   const redirectUrl = searchParams.get('redirect');
@@ -29,30 +31,17 @@ function RegisterForm() {
     setIsLoading(true);
 
     try {
-      // 1. Fetch RSA Public Key
       const { data: keyData } = await api.get('/auth/public-key');
       const { publicKey, keyId } = keyData;
-
-      // 2. Encrypt password
       const encryptedPassword = await encryptPassword(password, publicKey);
+      const payload = { email, encryptedPassword, firstName, lastName, keyId };
 
-      // 3. Send registration payload
-      const payload = { 
-        email, 
-        encryptedPassword, 
-        firstName,
-        lastName,
-        keyId 
-      };
-      
       await api.post('/auth/register', payload);
       setIsSuccess(true);
-      
-      // Auto-redirect to login after 3 seconds
+
       setTimeout(() => {
         router.push(redirectUrl ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login');
       }, 3000);
-      
     } catch (err: any) {
       setError(err.response?.data?.error || 'An error occurred during registration');
     } finally {
@@ -67,13 +56,11 @@ function RegisterForm() {
           <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center mx-auto mb-6 border border-emerald-500/20 animate-bounce">
             <UserIcon className="w-10 h-10 text-emerald-500" />
           </div>
-          <h2 className="text-2xl font-black text-white uppercase tracking-widest">Welcome to Nexworth</h2>
-          <p className="text-sm text-slate-400 mt-4">
-            Your account and organization have been successfully created.
-          </p>
+          <h2 className="text-2xl font-black text-white uppercase tracking-widest">{t('register.successHeading')}</h2>
+          <p className="text-sm text-slate-400 mt-4">{t('register.successMessage')}</p>
           <div className="mt-8 p-4 bg-emerald-500/10 rounded-xl border border-emerald-500/20">
             <p className="text-xs text-emerald-400 font-bold uppercase tracking-widest">
-              Redirecting to login...
+              {t('register.redirecting')}
             </p>
           </div>
         </div>
@@ -87,13 +74,13 @@ function RegisterForm() {
         <div className="flex flex-col items-center">
           <Logo className="mb-2" textColor="text-white" />
           <p className="mt-6 text-center text-[10px] pillar-text-bold text-brand-secondary tracking-[0.2em]">
-            Join Nexworth Financial Ecosystem
+            {t('register.subtitle')}
           </p>
           <p className="mt-1 text-center text-xs text-slate-400 font-medium">
-            เริ่มต้นจัดการความมั่งคั่งอย่างโปร่งใส
+            {t('register.tagline')}
           </p>
         </div>
-        
+
         <form className="mt-10 space-y-5" onSubmit={handleSubmit}>
           {error && (
             <div className="rounded-xl bg-rose-500/10 p-4 border border-rose-500/30 animate-in fade-in slide-in-from-top-2">
@@ -103,11 +90,11 @@ function RegisterForm() {
               </div>
             </div>
           )}
-          
+
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-                First Name
+                {t('register.firstNameLabel')}
               </label>
               <input
                 type="text"
@@ -120,7 +107,7 @@ function RegisterForm() {
             </div>
             <div>
               <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-                Last Name
+                {t('register.lastNameLabel')}
               </label>
               <input
                 type="text"
@@ -135,7 +122,7 @@ function RegisterForm() {
 
           <div>
             <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-              Email Address
+              {t('register.emailLabel')}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -154,7 +141,7 @@ function RegisterForm() {
 
           <div>
             <label className="block text-[10px] pillar-text-bold text-brand-secondary mb-2 tracking-widest">
-              Password
+              {t('register.passwordLabel')}
             </label>
             <div className="relative group">
               <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
@@ -184,9 +171,9 @@ function RegisterForm() {
               disabled={isLoading}
               className="w-full flex justify-center items-center gap-2 py-3.5 px-4 bg-brand-accent hover:bg-brand-accent/90 text-brand-primary text-[11px] pillar-text-bold rounded-xl transition-all shadow-lg emerald-glow disabled:opacity-50"
             >
-              {isLoading ? 'Creating Account...' : (
+              {isLoading ? t('register.creating') : (
                 <>
-                  CREATE ACCOUNT
+                  {t('register.createBtn')}
                   <ArrowRight className="w-4 h-4" />
                 </>
               )}
@@ -194,11 +181,11 @@ function RegisterForm() {
           </div>
 
           <div className="text-center pt-2">
-            <Link 
+            <Link
               href={redirectUrl ? `/login?redirect=${encodeURIComponent(redirectUrl)}` : '/login'}
               className="text-[10px] font-bold text-slate-400 hover:text-brand-accent transition-colors uppercase tracking-widest border-b border-transparent hover:border-brand-accent/20 pb-1"
             >
-              Already have an account? Login
+              {t('register.hasAccount')}
             </Link>
           </div>
         </form>
@@ -214,12 +201,13 @@ function RegisterForm() {
 }
 
 export default function RegisterPage() {
+  const t = useTranslations('auth');
   return (
     <Suspense fallback={
       <div className="min-h-screen flex items-center justify-center bg-brand-primary font-sans text-white">
         <div className="flex flex-col items-center space-y-4">
           <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-brand-accent"></div>
-          <p className="text-slate-400 text-xs uppercase tracking-widest font-bold">Loading Secure Portal...</p>
+          <p className="text-slate-400 text-xs uppercase tracking-widest font-bold">{t('loadingPortal')}</p>
         </div>
       </div>
     }>
