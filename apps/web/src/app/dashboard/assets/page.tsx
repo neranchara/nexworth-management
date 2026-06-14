@@ -8,39 +8,13 @@ import { Account, Bank, FinancialRecord } from '@/types/models';
 import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
 import PortfolioDoughnut from '@/features/asset-allocation/PortfolioDoughnut';
+import { useTranslations } from 'next-intl';
 
 const ALLOWED_ASSET_TYPES = ['SAVING', 'GOAL', 'GOAL_SAVING', 'INVESTMENT', 'EMERGENCY', 'STOCK', 'GOLD', 'FAMILY'];
 const NON_COUNTED_TYPES = ['CASHFLOW', 'BANK', 'INTERNAL'];
 
-const DEFAULT_LABELS = {
-  title: 'สินทรัพย์ (Assets)',
-  subtitle: 'ติดตามและอัปเดตมูลค่าทรัพย์สินทั้งหมด',
-  addNew: 'บันทึกมูลค่าใหม่',
-  search: 'ค้นหาบัญชี...',
-  totalAssets: 'มูลค่าสินทรัพย์รวม',
-  nonCounted: 'บัญชีที่ไม่นับรวม',
-  table: {
-    account: 'ชื่อบัญชี / ประเภท',
-    type: 'ประเภท',
-    institution: 'สถาบัน',
-    amount: 'มูลค่าปัจจุบัน',
-    action: 'จัดการ'
-  },
-  form: {
-    account: 'เลือกบัญชี',
-    newAccount: '+ สร้างบัญชีใหม่',
-    name: 'ชื่อบัญชีใหม่',
-    type: 'ประเภทบัญชี',
-    bank: 'สถาบันการเงิน',
-    amount: 'มูลค่า (บาท)',
-    note: 'บันทึกเพิ่มเติม',
-    date: 'วันที่อัปเดต',
-    cancel: 'ยกเลิก',
-    save: 'บันทึกมูลค่า'
-  }
-};
-
 export default function AssetsPage() {
+  const t = useTranslations('assets');
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [nonCountedRecords, setNonCountedRecords] = useState<FinancialRecord[]>([]);
   const [showNonCounted, setShowNonCounted] = useState(false);
@@ -51,7 +25,6 @@ export default function AssetsPage() {
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
   const [searchQuery, setSearchQuery] = useState('');
-  const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
   const [accountTypes, setAccountTypes] = useState<any[]>([]);
 
   const [alert, setAlert] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -76,17 +49,12 @@ export default function AssetsPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [recordsRes, accountsRes, banksRes, uiRes, configRes] = await Promise.all([
+      const [recordsRes, accountsRes, banksRes, configRes] = await Promise.all([
         api.get('/financial-records?type=ASSET'),
         api.get('/accounts'),
         api.get('/banks'),
-        api.get('/configs', { params: { key: 'UI_LABELS_ASSETS' } }),
         api.get('/configs', { params: { category: 'DROPDOWNS' } }),
       ]);
-
-      if (uiRes.data.data?.[0]?.value) {
-        setLabels(uiRes.data.data[0].value);
-      }
 
       const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
       let currentAllowedAssetTypes = ALLOWED_ASSET_TYPES;
@@ -192,10 +160,10 @@ export default function AssetsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to remove this asset record? (Account will NOT be deleted)')) return;
+    if (!window.confirm(t('confirm.delete'))) return;
     try {
       await api.delete(`/financial-records/${id}`);
-      showAlert('Asset record removed successfully', 'success');
+      showAlert(t('alert.removed'), 'success');
       fetchData();
     } catch (err: any) {
       showAlert(err.response?.data?.error || 'Remove failed', 'error');
@@ -217,10 +185,10 @@ export default function AssetsPage() {
 
       if (isEditing && currentRecordId) {
         await api.put(`/financial-records/${currentRecordId}`, payload);
-        showAlert('Asset record updated successfully', 'success');
+        showAlert(t('alert.updated'), 'success');
       } else {
         await api.post('/financial-records', payload);
-        showAlert('Asset record added successfully', 'success');
+        showAlert(t('alert.added'), 'success');
       }
       setIsModalOpen(false);
       fetchData();
@@ -336,7 +304,7 @@ export default function AssetsPage() {
     return sortConfig.direction === 'asc' ? <ArrowUpCircle className="w-3 h-3 ml-1 text-emerald inline" /> : <ArrowDownCircle className="w-3 h-3 ml-1 text-emerald inline" />;
   };
 
-  if (loading && records.length === 0) return <div className="p-6 text-white">Loading data...</div>;
+  if (loading && records.length === 0) return <div className="p-6 text-white">{t('loadingData')}</div>;
   if (error && records.length === 0) return <div className="p-6 text-rose-500">{error}</div>;
 
   return (
@@ -352,7 +320,7 @@ export default function AssetsPage() {
 
       {/* Header */}
       <header className="flex items-center justify-between shrink-0">
-        <h2 className="text-xl font-bold text-white">{labels.title}</h2>
+        <h2 className="text-xl font-bold text-white">{t('title')}</h2>
         <div className="flex items-center gap-4">
           <div className="flex bg-white/5 p-1 rounded-lg">
             <button 
@@ -370,7 +338,7 @@ export default function AssetsPage() {
               data-testid="assets-list-btn-add-asset"
               className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
             >
-              <Plus size={14} /> {labels.addNew}
+              <Plus size={14} /> {t('addNew')}
             </button>
           )}
         </div>
@@ -380,7 +348,7 @@ export default function AssetsPage() {
       <div className="grid grid-cols-12 gap-6 shrink-0">
         <GlassCard className="col-span-12 lg:col-span-4 p-6 flex items-center justify-between bg-navy/40">
           <div>
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.totalAssets}</p>
+            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('totalAssets')}</p>
             <h3 className="text-3xl font-bold text-white mt-1">฿{totalAssets.toLocaleString(undefined, {minimumFractionDigits: 2})}</h3>
           </div>
           <div className="w-12 h-12 bg-emerald/10 rounded-2xl flex items-center justify-center text-emerald shadow-lg shadow-emerald/5">
@@ -391,24 +359,24 @@ export default function AssetsPage() {
         <GlassCard className="col-span-12 lg:col-span-8 p-4 flex items-center gap-8 bg-navy/40">
           <div className="w-24 h-24 shrink-0">
             <PortfolioDoughnut data={[
-              { name: 'Cash & Banks', value: alloc.cash.val || 1, color: '#50C878' },
-              { name: 'Investments', value: alloc.investments.val || 1, color: '#60A5FA' },
-              { name: 'Others', value: alloc.others.val || 1, color: 'rgba(112, 128, 144, 0.4)' }
+              { name: t('chart.cash'), value: alloc.cash.val || 1, color: '#50C878' },
+              { name: t('chart.investments'), value: alloc.investments.val || 1, color: '#60A5FA' },
+              { name: t('chart.others'), value: alloc.others.val || 1, color: 'rgba(112, 128, 144, 0.4)' }
             ]} />
           </div>
           <div className="flex-1 grid grid-cols-3 gap-4">
             <div>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Cash & Banks</p>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{t('chart.cash')}</p>
               <p className="text-sm font-bold text-emerald mt-1">{alloc.cash.pct}%</p>
               <div className="w-full h-1 bg-white/5 rounded-full mt-2 overflow-hidden"><div className="bg-emerald h-full transition-all" style={{width: `${alloc.cash.pct}%`}}></div></div>
             </div>
             <div>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Investments</p>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{t('chart.investments')}</p>
               <p className="text-sm font-bold text-blue-400 mt-1">{alloc.investments.pct}%</p>
               <div className="w-full h-1 bg-white/5 rounded-full mt-2 overflow-hidden"><div className="bg-blue-400 h-full transition-all" style={{width: `${alloc.investments.pct}%`}}></div></div>
             </div>
             <div>
-              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">Others</p>
+              <p className="text-[9px] text-slate-400 font-bold uppercase tracking-widest">{t('chart.others')}</p>
               <p className="text-sm font-bold text-slate-400 mt-1">{alloc.others.pct}%</p>
               <div className="w-full h-1 bg-white/5 rounded-full mt-2 overflow-hidden"><div className="bg-slate-400 h-full transition-all" style={{width: `${alloc.others.pct}%`}}></div></div>
             </div>
@@ -420,16 +388,16 @@ export default function AssetsPage() {
       <GlassCard className="flex-1 flex flex-col overflow-hidden bg-navy/40">
         <div className="px-6 py-4 flex items-center justify-between border-b border-white/5 shrink-0">
           <div className="flex gap-4">
-            <span className="text-xs font-bold text-emerald border-b-2 border-emerald pb-1">All Accounts ({searchedRecords.length})</span>
+            <span className="text-xs font-bold text-emerald border-b-2 border-emerald pb-1">{t('allAccounts', { count: searchedRecords.length })}</span>
             <button onClick={() => setShowNonCounted(!showNonCounted)} className="text-xs font-bold text-slate-400 hover:text-white transition-colors flex items-center gap-1">
-              {showNonCounted ? <EyeOff size={12}/> : <Eye size={12}/>} {labels.nonCounted}
+              {showNonCounted ? <EyeOff size={12}/> : <Eye size={12}/>} {t('nonCounted')}
             </button>
           </div>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
             <input 
-              type="text" 
-              placeholder={labels.search}
+              type="text"
+              placeholder={t('search')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="bg-navy/50 border border-white/5 rounded-full py-1.5 pl-9 pr-4 text-[10px] text-white focus:outline-none focus:border-emerald w-48 lg:w-64 placeholder:text-slate-500 transition-all" 
@@ -442,17 +410,17 @@ export default function AssetsPage() {
             <table className="w-full text-left text-xs border-separate border-spacing-y-2 min-w-[600px] sm:min-w-0">
               <thead className="sticky top-0 z-[60]">
                 <tr>
-                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('name')}>{labels.table.account} <SortIcon column="name" /></th>
-                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] hidden sm:table-cell" onClick={() => handleSort('type')}>{labels.table.type} <SortIcon column="type" /></th>
-                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] hidden sm:table-cell" onClick={() => handleSort('bank')}>{labels.table.institution} <SortIcon column="bank" /></th>
-                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('amount')}>{labels.table.amount} <SortIcon column="amount" /></th>
-                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">{labels.table.action}</th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('name')}>{t('table.account')} <SortIcon column="name" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] hidden sm:table-cell" onClick={() => handleSort('type')}>{t('table.type')} <SortIcon column="type" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] hidden sm:table-cell" onClick={() => handleSort('bank')}>{t('table.institution')} <SortIcon column="bank" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('amount')}>{t('table.amount')} <SortIcon column="amount" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">{t('table.action')}</th>
                 </tr>
               </thead>
               {searchedRecords.length === 0 ? (
                 <tbody>
                   <tr>
-                    <td colSpan={5} className="py-8 text-center text-slate-400">No asset records found.</td>
+                    <td colSpan={5} className="py-8 text-center text-slate-400">{t('noData')}</td>
                   </tr>
                 </tbody>
               ) : viewMode === 'list' ? (
@@ -475,9 +443,9 @@ export default function AssetsPage() {
                             <div>
                               <p className="font-bold text-white text-sm flex items-center gap-2">
                                 {account.name}
-                                {isNonCounted && <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-wider text-slate-400">Hidden</span>}
+                                {isNonCounted && <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-wider text-slate-400">{t('hidden')}</span>}
                               </p>
-                              <p className="text-[9px] text-slate-400">Updated: {record.date ? new Date(record.date).toLocaleDateString() : '-'}</p>
+                              <p className="text-[9px] text-slate-400">{t('updated')} {record.date ? new Date(record.date).toLocaleDateString() : '-'}</p>
                               {record.note && <p className="text-[10px] text-emerald/60 mt-0.5 italic line-clamp-1">"{record.note}"</p>}
                             </div>
                           </div>
@@ -546,9 +514,9 @@ export default function AssetsPage() {
                               <div>
                                 <p className="font-bold text-white text-sm flex items-center gap-2">
                                   {account.name}
-                                  {isNonCounted && <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-wider text-slate-400">Hidden</span>}
+                                  {isNonCounted && <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-wider text-slate-400">{t('hidden')}</span>}
                                 </p>
-                                <p className="text-[9px] text-slate-400">Updated: {record.date ? new Date(record.date).toLocaleDateString() : '-'}</p>
+                                <p className="text-[9px] text-slate-400">{t('updated')} {record.date ? new Date(record.date).toLocaleDateString() : '-'}</p>
                               </div>
                             </div>
                           </td>
@@ -594,17 +562,17 @@ export default function AssetsPage() {
       </GlassCard>
 
       {/* GlassModal for Add/Edit */}
-      <GlassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? labels.form.titleEdit || 'Edit Asset' : labels.form.titleAdd || 'Add Asset'}>
+      <GlassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? t('form.titleEdit') : t('form.titleAdd')}>
         <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.account}</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.account')}</label>
             <select
               data-testid="assets-form-sel-account"
               required disabled={isEditing} value={formData.accountId}
               onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald/50 appearance-none disabled:opacity-50"
             >
-              <option value="new">{labels.form.newAccount}</option>
+              <option value="new">{t('form.newAccount')}</option>
               {accounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name} ({accountTypes.find(t => t.value === acc.type)?.label || acc.type})</option>)}
             </select>
           </div>
@@ -612,7 +580,7 @@ export default function AssetsPage() {
           {formData.accountId === 'new' && !isEditing && (
             <div className="p-4 bg-blue-500/5 border border-blue-500/20 rounded-xl flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{labels.form.name}</label>
+                <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{t('form.name')}</label>
                 <input
                   data-testid="accounts-form-input-name"
                   type="text" placeholder="e.g. SCB Saving" required={formData.accountId === 'new'}
@@ -622,7 +590,7 @@ export default function AssetsPage() {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{labels.form.type}</label>
+                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{t('form.type')}</label>
                   <select
                     data-testid="accounts-form-sel-type"
                     value={formData.newAccountType} onChange={(e) => setFormData({ ...formData, newAccountType: e.target.value })}
@@ -632,13 +600,13 @@ export default function AssetsPage() {
                   </select>
                 </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{labels.form.bank}</label>
+                  <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{t('form.bank')}</label>
                   <select
                     data-testid="accounts-form-sel-bank"
                     value={formData.bankId} onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
                     className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-400 appearance-none"
                   >
-                    <option value="">No Institution</option>
+                    <option value="">{t('form.noInstitution')}</option>
                     {banks.map(b => <option key={b.id} value={b.id}>{b.name}</option>)}
                   </select>
                 </div>
@@ -648,7 +616,7 @@ export default function AssetsPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-emerald uppercase tracking-widest">{labels.form.amount}</label>
+              <label className="text-[10px] font-black text-emerald uppercase tracking-widest">{t('form.amount')}</label>
               <input
                 data-testid="assets-form-input-amount"
                 type="number" step="0.01" required value={formData.amount || ''}
@@ -657,7 +625,7 @@ export default function AssetsPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.date}</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.date')}</label>
               <input
                 data-testid="assets-form-input-date"
                 type="date" required value={formData.date}
@@ -668,7 +636,7 @@ export default function AssetsPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.note}</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.note')}</label>
             <input
               type="text" placeholder="e.g. Current balance after monthly update"
               value={formData.note} onChange={(e) => setFormData({ ...formData, note: e.target.value })}
@@ -677,7 +645,7 @@ export default function AssetsPage() {
           </div>
 
           <button type="submit" data-testid="assets-form-btn-save" className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-2 hover:shadow-[0_0_20px_rgba(80,200,120,0.3)] transition-all active:scale-[0.98]">
-            {isEditing ? labels.form.update || 'Update' : labels.form.save || 'Save'}
+            {isEditing ? t('form.update') : t('form.save')}
           </button>
         </form>
       </GlassModal>

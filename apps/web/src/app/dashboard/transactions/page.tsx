@@ -3,9 +3,9 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import api from '@/lib/api';
 
-import { 
-  Plus, Search, MoreHorizontal, 
-  ArrowUpCircle, ArrowDownCircle, 
+import {
+  Plus, Search, MoreHorizontal,
+  ArrowUpCircle, ArrowDownCircle,
   Edit2, Trash2, CheckCircle, AlertCircle, Bot, CloudUpload, Loader2,
   Scan, X
 } from 'lucide-react';
@@ -15,38 +15,11 @@ import * as XLSX from 'xlsx';
 import { Transaction, Account, TransactionCategory, TransactionType } from '@/types/models';
 import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
-import { mergePageLabels } from '@/utils/uiLabels';
 import { SYSTEM_CATEGORY_KEYS } from '@/config/systemConfig';
-
-const DEFAULT_LABELS = {
-  title: 'ประวัติธุรกรรม',
-  subtitle: 'จัดการข้อมูลทางการเงิน',
-  addNew: 'บันทึกรายการใหม่',
-  search: 'ค้นหา...',
-  allCategories: 'ทุกหมวดหมู่',
-  allAccounts: 'ทุกบัญชี',
-  table: {
-    date: 'วันที่',
-    description: 'รายละเอียด',
-    category: 'หมวดหมู่',
-    account: 'บัญชี',
-    amount: 'จำนวนเงิน',
-    action: 'จัดการ'
-  },
-  form: {
-    titleAdd: 'บันทึกรายการใหม่',
-    titleEdit: 'แก้ไขรายการ',
-    amount: 'จำนวนเงิน (บาท)',
-    account: 'บัญชี',
-    category: 'หมวดหมู่',
-    note: 'บันทึกเพิ่มเติม',
-    date: 'วันที่',
-    save: 'บันทึกรายการ',
-    update: 'อัปเดตรายการ'
-  }
-};
+import { useTranslations } from 'next-intl';
 
 export default function TransactionsPage() {
+  const t = useTranslations('transactions');
   const [transactions, setTransactions] = useState<Transaction[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [categories, setCategories] = useState<TransactionCategory[]>([]);
@@ -54,7 +27,6 @@ export default function TransactionsPage() {
   const [loading, setLoading] = useState(true);
   const [isScanning, setIsScanning] = useState(false);
   const scanFileRef = useRef<HTMLInputElement>(null);
-  const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
   const [filterMonth, setFilterMonth] = useState(new Date().getMonth() + 1);
   const [filterYear, setFilterYear] = useState(new Date().getFullYear());
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
@@ -90,22 +62,17 @@ export default function TransactionsPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [txRes, accRes, catRes, typeRes, uiRes, configRes] = await Promise.all([
+      const [txRes, accRes, catRes, typeRes, configRes] = await Promise.all([
         api.get('/transactions', { params: { month: filterMonth, year: filterYear } }),
         api.get('/accounts'),
         api.get('/categories'),
         api.get('/types'),
-        api.get('/configs', { params: { key: 'UI_LABELS_TRANSACTIONS' } }),
         api.get('/configs', { params: { category: 'DROPDOWNS' } })
       ]);
       setTransactions(txRes.data.transactions);
       setAccounts(accRes.data.accounts);
       setCategories(catRes.data.categories);
       setTypes(typeRes.data.types);
-      
-      if (uiRes.data.data?.[0]?.value) {
-        setLabels(mergePageLabels(DEFAULT_LABELS, uiRes.data.data[0].value));
-      }
       const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
       if (typesConfig) {
         setAccountTypes(typesConfig.value);
@@ -201,10 +168,10 @@ export default function TransactionsPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this transaction?")) return;
+    if (!window.confirm(t('confirm.delete'))) return;
     try {
       await api.delete(`/transactions/${id}`);
-      showAlert('Transaction deleted successfully.', 'success');
+      showAlert(t('alert.deleted'), 'success');
       fetchData();
     } catch (err: any) { showAlert(`Delete failed: ${err.response?.data?.error || 'Unknown error'}`, 'error'); }
   };
@@ -212,7 +179,7 @@ export default function TransactionsPage() {
   const handleFormSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fromAccountId && !formData.toAccountId) {
-       showAlert('Please select either a From Account, a To Account, or both.', 'error');
+       showAlert(t('alert.selectAccount'), 'error');
        return;
     }
 
@@ -249,10 +216,10 @@ export default function TransactionsPage() {
     try {
       if (isEditing && currentTxId) {
         await api.put(`/transactions/${currentTxId}`, payload);
-        showAlert('Transaction updated successfully.', 'success');
+        showAlert(t('alert.updated'), 'success');
       } else {
         await api.post('/transactions', payload);
-        showAlert('Transaction created successfully.', 'success');
+        showAlert(t('alert.created'), 'success');
       }
       setIsModalOpen(false);
       fetchData();
@@ -342,8 +309,8 @@ export default function TransactionsPage() {
           categoryId: matchCat?.id || prev.categoryId,
           typeId: matchCat?.typeId || prev.typeId
       }));
-      showAlert('Slip scanned and auto-filled!', 'success');
-    } catch (err) { showAlert('Scan failed. Try a clearer image.', 'error'); } 
+      showAlert(t('alert.scanned'), 'success');
+    } catch (err) { showAlert(t('alert.scanFailed'), 'error'); } 
     finally { setIsScanning(false); if (scanFileRef.current) scanFileRef.current.value = ''; }
   };
 
@@ -362,8 +329,8 @@ export default function TransactionsPage() {
 
       <header className="flex items-center justify-between shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-white">{labels.title}</h2>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{labels.subtitle}</p>
+          <h2 className="text-xl font-bold text-white">{t('title')}</h2>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <button 
@@ -371,7 +338,7 @@ export default function TransactionsPage() {
             data-testid="transactions-header-btn-scan-slip"
             className="bg-white/5 border border-white/5 text-emerald px-6 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 hover:bg-emerald/10 hover:border-emerald/20"
           >
-            <Scan className="w-4 h-4" /> Scan Slip
+            <Scan className="w-4 h-4" /> {t('scanSlip')}
           </button>
           
           {hasPermission('transactions', 'canCreate') && (
@@ -380,7 +347,7 @@ export default function TransactionsPage() {
               data-testid="transactions-list-btn-add-tx"
               className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95"
             >
-              <Plus className="w-4 h-4" /> {labels.addNew}
+              <Plus className="w-4 h-4" /> {t('addNew')}
             </button>
           )}
         </div>
@@ -390,7 +357,7 @@ export default function TransactionsPage() {
          <div className="relative flex-1 min-w-[200px]">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
             <input 
-              type="text" placeholder={labels.search} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
+              type="text" placeholder={t('search')} value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full bg-navy/50 border border-white/5 rounded-lg py-1.5 pl-9 text-xs text-white outline-none"
             />
          </div>
@@ -405,11 +372,11 @@ export default function TransactionsPage() {
             ))}
          </select>
          <select value={filterCategory} onChange={(e) => setFilterCategory(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
-            <option value="" className="bg-navy">{labels.allCategories}</option>
+            <option value="" className="bg-navy">{t('allCategories')}</option>
             {categories.map(c => <option key={c.id} value={c.id} className="bg-navy">{c.name}</option>)}
          </select>
          <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
-            <option value="" className="bg-navy">{labels.allAccounts}</option>
+            <option value="" className="bg-navy">{t('allAccounts')}</option>
             {accounts.map(a => <option key={a.id} value={a.id} className="bg-navy">{a.name}</option>)}
          </select>
       </GlassCard>
@@ -419,12 +386,12 @@ export default function TransactionsPage() {
           <table className="w-full text-left text-xs border-separate border-spacing-y-2">
             <thead className="sticky top-0 z-[60] bg-[#001229]">
               <tr>
-                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{labels.table.date}</th>
-                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{labels.table.description}</th>
-                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{labels.table.category}</th>
-                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{labels.table.account}</th>
-                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] text-right">{labels.table.amount}</th>
-                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] text-center">{labels.table.action}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{t('table.date')}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{t('table.description')}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{t('table.category')}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px]">{t('table.account')}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] text-right">{t('table.amount')}</th>
+                <th className="px-6 py-4 text-slate-400 uppercase font-bold text-[10px] text-center">{t('table.action')}</th>
               </tr>
             </thead>
             <tbody>
@@ -467,7 +434,7 @@ export default function TransactionsPage() {
       </GlassCard>
 
       {/* Modern Record New Transaction Modal */}
-      <GlassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? labels.form.titleEdit : labels.form.titleAdd}>
+      <GlassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? t('form.titleEdit') : t('form.titleAdd')}>
         <div className="flex flex-col gap-6 max-h-[80vh] overflow-y-auto custom-scrollbar pr-2">
           
           {/* Smart Slip Scanner Section */}
@@ -478,8 +445,8 @@ export default function TransactionsPage() {
                   {isScanning ? <Loader2 className="w-6 h-6 animate-spin" /> : <Scan className="w-6 h-6" />}
                 </div>
                 <div>
-                  <h4 className="text-sm font-bold text-emerald uppercase tracking-wider">AI Slip Intelligence</h4>
-                  <p className="text-[10px] text-slate-400">Auto-fill details from bank slip</p>
+                  <h4 className="text-sm font-bold text-emerald uppercase tracking-wider">{t('ai.title')}</h4>
+                  <p className="text-[10px] text-slate-400">{t('ai.subtitle')}</p>
                 </div>
               </div>
               <button 
@@ -488,7 +455,7 @@ export default function TransactionsPage() {
                 disabled={isScanning}
                 className="bg-emerald text-navy px-4 py-2 rounded-lg text-[10px] font-black uppercase tracking-widest hover:shadow-[0_0_15px_rgba(80,200,120,0.4)] transition-all disabled:opacity-50"
               >
-                Select Slip
+                {t('ai.selectSlip')}
               </button>
               <input type="file" ref={scanFileRef} className="hidden" accept="image/*" onChange={handleScanSlip} data-testid="ai-scanner-input" />
             </div>
@@ -498,7 +465,7 @@ export default function TransactionsPage() {
           <form onSubmit={handleFormSubmit} className="flex flex-col gap-5">
             {/* Amount Field (Main Highlight) */}
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.form.amount}</label>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('form.amount')}</label>
               <div className="relative group">
                 <input 
                   type="number" step="0.01" required value={formData.amount} onChange={(e) => setFormData({...formData, amount: e.target.value})}
@@ -511,7 +478,7 @@ export default function TransactionsPage() {
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.form.category}</label>
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('form.category')}</label>
               <select 
                 required value={formData.categoryId} 
                 onChange={(e) => {
@@ -525,7 +492,7 @@ export default function TransactionsPage() {
                 }}
                 className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
               >
-                <option value="">Select Category</option>
+                <option value="">{t('form.selectCategory')}</option>
                 {categories
                   .filter(c => {
                     const behavior = types.find(t => t.id === c.typeId)?.behavior ?? '';
@@ -544,39 +511,39 @@ export default function TransactionsPage() {
 
             <div className="grid grid-cols-2 gap-4">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">จากบัญชี (From)</label>
-                <select 
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('form.fromAccount')}</label>
+                <select
                   required={!formData.toAccountId} value={formData.fromAccountId} onChange={(e) => setFormData({...formData, fromAccountId: e.target.value})}
                   className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
                 >
-                  <option value="">- ไม่มีบัญชีต้นทาง -</option>
+                  <option value="">{t('form.noSourceAccount')}</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">เข้าบัญชี (To)</label>
-                <select 
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('form.toAccount')}</label>
+                <select
                   required={!formData.fromAccountId} value={formData.toAccountId} onChange={(e) => setFormData({...formData, toAccountId: e.target.value})}
                   className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
                 >
-                  <option value="">- ไม่มีบัญชีปลายทาง -</option>
+                  <option value="">{t('form.noDestAccount')}</option>
                   {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
                 </select>
               </div>
             </div>
 
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.form.note}</label>
-              <textarea 
+              <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('form.note')}</label>
+              <textarea
                 value={formData.description} onChange={(e) => setFormData({...formData, description: e.target.value})}
-                placeholder="What was this for?"
+                placeholder={t('form.notePlaceholder')}
                 rows={2}
                 className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all resize-none placeholder:text-slate-700"
               />
             </div>
 
             <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{labels.form.date}</label>
+                <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('form.date')}</label>
                 <input type="date" required value={formData.date} onChange={(e) => setFormData({...formData, date: e.target.value})} className="bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white [color-scheme:dark]" />
             </div>
 
@@ -584,7 +551,7 @@ export default function TransactionsPage() {
               type="submit" 
               className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-widest py-4 rounded-xl mt-2 hover:shadow-[0_0_25px_rgba(80,200,120,0.4)] transition-all active:scale-[0.98]"
             >
-              {isEditing ? labels.form.update : labels.form.save}
+              {isEditing ? t('form.update') : t('form.save')}
             </button>
           </form>
         </div>
