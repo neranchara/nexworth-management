@@ -7,6 +7,7 @@ import { usePermissions } from '@/hooks/usePermissions';
 import { Account } from '@/types/models';
 import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
+import { useTranslations } from 'next-intl';
 
 interface Loan {
   id: string;
@@ -28,6 +29,7 @@ interface Loan {
 type TabType = 'BORROW' | 'LEND';
 
 export default function LoanTrackerPage() {
+  const t = useTranslations('loanTracker');
   const [loans, setLoans] = useState<Loan[]>([]);
   const [activeTab, setActiveTab] = useState<TabType>('BORROW');
   const { hasPermission } = usePermissions();
@@ -64,7 +66,7 @@ export default function LoanTrackerPage() {
       setLoans(loansRes.data.loans || []);
       setAccounts(accRes.data.accounts || []);
     } catch {
-      showAlert('Failed to load data', 'error');
+      showAlert(t('alert.loadFailed'), 'error');
     } finally {
       setIsLoading(false);
     }
@@ -88,10 +90,10 @@ export default function LoanTrackerPage() {
 
       if (isEditing && currentLoanId) {
         await api.put(`/loans/${currentLoanId}`, payload);
-        showAlert('อัพเดทรายการสำเร็จ', 'success');
+        showAlert(t('alert.updated'), 'success');
       } else {
         await api.post('/loans', payload);
-        showAlert('สร้างรายการสำเร็จ', 'success');
+        showAlert(t('alert.created'), 'success');
       }
 
       setShowNewLoanModal(false);
@@ -101,7 +103,7 @@ export default function LoanTrackerPage() {
       fetchData();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { error?: string } } };
-      showAlert(e.response?.data?.error || 'เกิดข้อผิดพลาด', 'error');
+      showAlert(e.response?.data?.error || t('alert.error'), 'error');
     }
   };
 
@@ -132,11 +134,11 @@ export default function LoanTrackerPage() {
       setShowRepayModal(false);
       setRepayForm({ amount: '', type: 'REPAY', note: '', actualDate: '', accountId: '' });
       setSelectedLoan(null);
-      showAlert('บันทึกรายการสำเร็จ', 'success');
+      showAlert(t('alert.repaid'), 'success');
       fetchData();
     } catch (err: unknown) {
       const e = err as { response?: { data?: { error?: string } } };
-      showAlert(e.response?.data?.error || 'เกิดข้อผิดพลาด', 'error');
+      showAlert(e.response?.data?.error || t('alert.error'), 'error');
     }
   };
 
@@ -191,7 +193,7 @@ export default function LoanTrackerPage() {
       : <ArrowDownCircle className="w-3 h-3 ml-1 text-blue-500" />;
   };
 
-  if (isLoading) return <div className="p-8">Loading Loan Tracker...</div>;
+  if (isLoading) return <div className="p-8">{t('loading')}</div>;
 
   const totalLent   = tabLoans.reduce((s, l) => s + l.totalBorrowed, 0);
   const totalRepaid = tabLoans.reduce((s, l) => s + l.totalRepaid, 0);
@@ -251,13 +253,13 @@ export default function LoanTrackerPage() {
       <header className="flex items-center justify-between shrink-0">
         <div>
           <h2 className="text-2xl font-bold text-white flex items-baseline gap-2">
-            Loan Tracker
+            {t('title')}
             <span className="text-slate-400 text-sm font-normal">
-              {isLend ? 'ลูกหนี้ / เงินให้ยืม' : 'สรุปสถานะการยืม (ภายใน)'}
+              {isLend ? t('header.lendSubtitle') : t('header.borrowSubtitle')}
             </span>
           </h2>
           <p className="text-[10px] text-slate-400 uppercase tracking-widest -mt-1">
-            {isLend ? 'Lending Management & Receivables' : 'Lending Management & Monitoring'}
+            {isLend ? t('header.lendDesc') : t('header.borrowDesc')}
           </p>
         </div>
         <div className="flex items-center gap-4">
@@ -271,7 +273,7 @@ export default function LoanTrackerPage() {
               }}
               className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all flex items-center gap-2 shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95"
             >
-              <Plus className="w-4 h-4" /> เพิ่มรายการยืม
+              <Plus className="w-4 h-4" /> {t('actions.addBorrow')}
             </button>
           )}
         </div>
@@ -287,7 +289,7 @@ export default function LoanTrackerPage() {
               : 'text-slate-500 hover:text-white'
           }`}
         >
-          ยืมภายใน
+          {t('tab.borrow')}
           {borrowCount > 0 && (
             <span className="bg-orange-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
               {borrowCount}
@@ -302,7 +304,7 @@ export default function LoanTrackerPage() {
               : 'text-slate-500 hover:text-white'
           }`}
         >
-          <Users size={12} /> ลูกหนี้
+          <Users size={12} /> {t('tab.lend')}
           {lendCount > 0 && (
             <span className="bg-blue-500 text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center">
               {lendCount}
@@ -315,22 +317,22 @@ export default function LoanTrackerPage() {
       <div className="grid grid-cols-12 gap-4 shrink-0">
         <GlassCard className={`col-span-12 lg:col-span-3 p-5 border-l-4 ${isLend ? 'border-blue-400' : 'border-orange-500'} flex flex-col justify-between h-32 hover:bg-white/[0.02] transition-colors`}>
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            {isLend ? 'ยอดให้ยืมทั้งหมด' : 'ยอดขอยืมทั้งหมด'}
+            {isLend ? t('summary.totalLent') : t('summary.totalBorrowed')}
           </span>
           <h3 className="text-3xl font-bold text-white">฿{totalLent.toLocaleString()}</h3>
           <p className="text-[9px] text-orange-500 font-bold uppercase flex items-center gap-1">
-            <CircleAlert size={10} /> Pending Dues
+            <CircleAlert size={10} /> {t('summary.pendingDues')}
           </p>
         </GlassCard>
         <GlassCard className="col-span-12 lg:col-span-3 p-5 border-l-4 border-emerald flex flex-col justify-between h-32 hover:bg-white/[0.02] transition-colors">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-            {isLend ? 'รับคืนแล้ว' : 'คืนแล้ว (Settled)'}
+            {isLend ? t('summary.received') : t('summary.settled')}
           </span>
           <h3 className="text-3xl font-bold text-emerald">฿{totalRepaid.toLocaleString()}</h3>
-          <p className="text-[9px] text-slate-400 uppercase">Fully Repaid: {tabLoans.filter(l => l.balance <= 0).length} Records</p>
+          <p className="text-[9px] text-slate-400 uppercase">{t('summary.fullyRepaid', { count: tabLoans.filter(l => l.balance <= 0).length })}</p>
         </GlassCard>
         <GlassCard className="col-span-12 lg:col-span-3 p-5 border-l-4 border-blue-400 flex flex-col justify-between h-32 hover:bg-white/[0.02] transition-colors">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">คงเหลือสุทธิ</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('summary.balance')}</span>
           <h3 className="text-3xl font-bold text-white">฿{remaining.toLocaleString()}</h3>
           <div className="w-full bg-navy border border-white/5 h-1.5 rounded-full overflow-hidden mt-1">
             <div className="bg-blue-400 h-full transition-all duration-1000" style={{ width: `${totalLent > 0 ? (remaining / totalLent) * 100 : 0}%` }} />
@@ -339,9 +341,9 @@ export default function LoanTrackerPage() {
         <GlassCard className="col-span-12 lg:col-span-3 p-4 flex items-center justify-center gap-6 h-32 bg-emerald/5 border border-emerald/10 hover:bg-emerald/10 transition-colors">
           <CircularProgress percentage={repayPct} />
           <div className="flex flex-col text-left">
-            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">Overall</span>
+            <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">{t('summary.overall')}</span>
             <span className="text-[10px] text-emerald uppercase font-bold tracking-widest">
-              {isLend ? 'Collection Progress' : 'Repayment Progress'}
+              {isLend ? t('summary.collectionProgress') : t('summary.repaymentProgress')}
             </span>
           </div>
         </GlassCard>
@@ -355,7 +357,7 @@ export default function LoanTrackerPage() {
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
               <input
                 type="text"
-                placeholder={isLend ? 'ค้นหาชื่อผู้ยืม หรือรายการ...' : 'ค้นหาชื่อบัญชีหรือรายการ...'}
+                placeholder={isLend ? t('search.lend') : t('search.borrow')}
                 value={searchQuery}
                 onChange={e => setSearchQuery(e.target.value)}
                 className="w-full bg-navy/50 border border-white/5 rounded-full py-1.5 pl-9 pr-4 text-[10px] text-white focus:outline-none focus:border-emerald placeholder:text-slate-500 transition-all"
@@ -366,15 +368,15 @@ export default function LoanTrackerPage() {
               onChange={e => setStatusFilter(e.target.value as 'all' | 'pending' | 'settled')}
               className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-[10px] text-slate-300 outline-none focus:border-emerald appearance-none cursor-pointer"
             >
-              <option value="pending" className="bg-[#001F3F]">สถานะ: ค้างชำระ</option>
-              <option value="all" className="bg-[#001F3F]">สถานะ: ทั้งหมด</option>
-              <option value="settled" className="bg-[#001F3F]">สถานะ: ชำระครบแล้ว</option>
+              <option value="pending" className="bg-[#001F3F]">{t('filter.pending')}</option>
+              <option value="all" className="bg-[#001F3F]">{t('filter.all')}</option>
+              <option value="settled" className="bg-[#001F3F]">{t('filter.settled')}</option>
             </select>
           </div>
           <div className="flex items-center gap-3">
             {statusFilter === 'pending' && (
               <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1">
-                <EyeOff size={10} /> ซ่อน {tabLoans.filter(l => l.balance <= 0).length} รายการที่ชำระครบแล้ว
+                <EyeOff size={10} /> {t('filter.hiddenCount', { count: tabLoans.filter(l => l.balance <= 0).length })}
               </span>
             )}
             {isLend && hasPermission('loan-tracker', 'canCreate') && (
@@ -387,7 +389,7 @@ export default function LoanTrackerPage() {
                 }}
                 className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-bold bg-blue-500/10 text-blue-400 border border-blue-500/20 hover:bg-blue-500/20 transition-all"
               >
-                <Plus size={12} /> เพิ่มลูกหนี้
+                <Plus size={12} /> {t('actions.addLend')}
               </button>
             )}
             {!isLend && hasPermission('loan-tracker', 'canCreate') && (
@@ -400,7 +402,7 @@ export default function LoanTrackerPage() {
                 }}
                 className="flex items-center gap-2 px-4 py-1.5 rounded-lg text-[10px] font-bold bg-orange-500/10 text-orange-400 border border-orange-500/20 hover:bg-orange-500/20 transition-all"
               >
-                <Plus size={12} /> เพิ่มรายการยืม
+                <Plus size={12} /> {t('actions.addBorrow')}
               </button>
             )}
           </div>
@@ -413,12 +415,12 @@ export default function LoanTrackerPage() {
                 <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] rounded-l-lg" onClick={() => handleSort('code')}>REF <SortIcon column="code" /></th>
                 <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('date')}>DATE <SortIcon column="date" /></th>
                 {isLend && (
-                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('borrower')}>ผู้ยืม <SortIcon column="borrower" /></th>
+                  <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('borrower')}>{t('table.borrower')} <SortIcon column="borrower" /></th>
                 )}
                 <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('description')}>DESCRIPTION <SortIcon column="description" /></th>
                 <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('account')}>ACCOUNT <SortIcon column="account" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('borrowed')}>{isLend ? 'ให้ยืม' : 'BORROWED'} <SortIcon column="borrowed" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('repaid')}>{isLend ? 'รับคืน' : 'REPAID'} <SortIcon column="repaid" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('borrowed')}>{isLend ? t('table.lentAmount') : t('table.borrowedAmount')} <SortIcon column="borrowed" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('repaid')}>{isLend ? t('table.receivedAmount') : t('table.repaidAmount')} <SortIcon column="repaid" /></th>
                 <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('balance')}>BALANCE <SortIcon column="balance" /></th>
                 <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229] rounded-r-lg">ACTIONS</th>
               </tr>
@@ -436,7 +438,7 @@ export default function LoanTrackerPage() {
                     </td>
                     {isLend && (
                       <td className="px-6 py-4 font-bold text-blue-300 text-sm">
-                        {loan.borrowerName || <span className="text-slate-600 text-xs italic">ไม่ระบุ</span>}
+                        {loan.borrowerName || <span className="text-slate-600 text-xs italic">{t('table.noName')}</span>}
                       </td>
                     )}
                     <td className="px-6 py-4 font-medium text-white text-sm">{loan.name}</td>
@@ -464,7 +466,7 @@ export default function LoanTrackerPage() {
                                 onClick={() => { setSelectedLoan(loan); setShowRepayModal(true); setRepayForm({ ...repayForm, type: 'REPAY' }); }}
                                 className={`px-4 py-1.5 rounded-lg text-[10px] font-bold transition-all ${isLend ? 'bg-blue-500 text-white hover:shadow-[0_0_10px_rgba(59,130,246,0.4)]' : 'bg-emerald text-navy hover:shadow-[0_0_10px_rgba(80,200,120,0.4)]'}`}
                               >
-                                {isLend ? 'รับคืน' : 'คืนเงิน'}
+                                {isLend ? t('actions.receive') : t('actions.repay')}
                               </button>
                             )}
                             <button
@@ -483,7 +485,7 @@ export default function LoanTrackerPage() {
               {displayLoans.length === 0 && (
                 <tr>
                   <td colSpan={isLend ? 9 : 8} className="px-6 py-10 text-center text-slate-400">
-                    {isLend ? 'ยังไม่มีรายการลูกหนี้' : 'ไม่มีข้อมูลการยืม'}
+                    {isLend ? t('empty.lend') : t('empty.borrow')}
                   </td>
                 </tr>
               )}
@@ -496,13 +498,13 @@ export default function LoanTrackerPage() {
       <GlassModal
         isOpen={showNewLoanModal}
         onClose={() => { setShowNewLoanModal(false); setIsEditing(false); }}
-        title={isEditing ? 'แก้ไขรายการ' : (isLend ? 'เพิ่มลูกหนี้ใหม่' : 'สร้างรายการยืมใหม่')}
+        title={isEditing ? t('modal.titleEdit') : (isLend ? t('modal.titleCreateLend') : t('modal.titleCreateBorrow'))}
       >
         <form onSubmit={handleCreateLoan} className="flex flex-col gap-4">
 
           {(isLend || (isEditing && selectedLoan?.direction === 'LEND')) && (
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">ชื่อผู้ยืม</label>
+              <label className="text-[10px] font-black text-blue-400 uppercase tracking-widest">{t('modal.borrowerName')}</label>
               <input
                 type="text"
                 className="w-full bg-navy/50 border border-blue-500/20 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-blue-400 placeholder:text-slate-600 transition-all"
@@ -514,7 +516,7 @@ export default function LoanTrackerPage() {
           )}
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">รายละเอียด / วัตถุประสงค์</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('modal.description')}</label>
             <input
               required type="text"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald placeholder:text-slate-600 transition-all"
@@ -525,14 +527,14 @@ export default function LoanTrackerPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">บัญชีต้นทาง</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('modal.sourceAccount')}</label>
             <select
               required
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none transition-all"
               value={newLoanForm.accountId}
               onChange={e => setNewLoanForm({ ...newLoanForm, accountId: e.target.value })}
             >
-              <option value="" className="bg-[#001F3F]">เลือกบัญชี...</option>
+              <option value="" className="bg-[#001F3F]">{t('modal.selectAccount')}</option>
               {accounts.map(a => <option key={a.id} value={a.id} className="bg-[#001F3F]">{a.name}</option>)}
             </select>
           </div>
@@ -540,7 +542,7 @@ export default function LoanTrackerPage() {
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex items-center gap-1">
-                จำนวนเงิน {isEditing && <span className="text-[8px] text-orange-400">(ไม่สามารถแก้ได้)</span>}
+                {t('modal.amount')} {isEditing && <span className="text-[8px] text-orange-400">{t('modal.amountNonEditable')}</span>}
               </label>
               <input
                 required type="number" step="0.01"
@@ -551,7 +553,7 @@ export default function LoanTrackerPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-emerald uppercase tracking-widest">วันที่จริง</label>
+              <label className="text-[10px] font-black text-emerald uppercase tracking-widest">{t('modal.actualDate')}</label>
               <input
                 type="date"
                 className="w-full bg-navy/50 border border-emerald/20 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all [color-scheme:dark]"
@@ -562,7 +564,7 @@ export default function LoanTrackerPage() {
           </div>
 
           <button type="submit" className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-4 hover:shadow-[0_0_15px_rgba(80,200,120,0.3)] transition-all active:scale-[0.98]">
-            บันทึกรายการ
+            {t('modal.save')}
           </button>
         </form>
       </GlassModal>
@@ -571,10 +573,10 @@ export default function LoanTrackerPage() {
       <GlassModal
         isOpen={showRepayModal && selectedLoan !== null}
         onClose={() => { setShowRepayModal(false); setSelectedLoan(null); }}
-        title={isLend ? 'บันทึกการรับเงินคืน' : 'รายการคืนเงิน (Repay)'}
+        title={isLend ? t('modal.titleRepayLend') : t('modal.titleRepayBorrow')}
       >
         <div className="mb-4 bg-white/5 border border-white/10 rounded-xl p-3 flex flex-col gap-1">
-          <span className="text-[10px] text-slate-400 uppercase tracking-widest">สำหรับรายการ</span>
+          <span className="text-[10px] text-slate-400 uppercase tracking-widest">{t('modal.forTransaction')}</span>
           <span className="text-sm font-bold text-white">
             {selectedLoan?.borrowerName && <span className="text-blue-400">{selectedLoan.borrowerName} — </span>}
             {selectedLoan?.name}
@@ -584,8 +586,8 @@ export default function LoanTrackerPage() {
         <form onSubmit={handleTransaction} className="flex flex-col gap-4">
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest flex justify-between">
-              <span>จำนวนเงิน</span>
-              <span className="text-orange-400">ยอดคงเหลือ: ฿{selectedLoan?.balance.toLocaleString()}</span>
+              <span>{t('modal.amount')}</span>
+              <span className="text-orange-400">{t('modal.balance', { amount: selectedLoan?.balance?.toLocaleString() ?? '0' })}</span>
             </label>
             <input
               required type="number" step="0.01"
@@ -597,7 +599,7 @@ export default function LoanTrackerPage() {
           </div>
           <div className="flex flex-col gap-2">
             <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">
-              {isLend ? 'รับเข้าบัญชีไหน' : 'จ่ายจากบัญชีไหน'}
+              {isLend ? t('modal.receiveAccount') : t('modal.payAccount')}
             </label>
             <select
               required
@@ -605,7 +607,7 @@ export default function LoanTrackerPage() {
               value={repayForm.accountId}
               onChange={e => setRepayForm({ ...repayForm, accountId: e.target.value })}
             >
-              <option value="" className="bg-[#001F3F]">เลือกบัญชี...</option>
+              <option value="" className="bg-[#001F3F]">{t('modal.selectAccount')}</option>
               {accounts.map(a => <option key={a.id} value={a.id} className="bg-[#001F3F]">{a.name} (฿{a.balance?.toLocaleString() || 0})</option>)}
             </select>
           </div>
@@ -619,17 +621,17 @@ export default function LoanTrackerPage() {
             />
           </div>
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">หมายเหตุ</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('modal.note')}</label>
             <input
               type="text"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all placeholder:text-slate-600"
               value={repayForm.note}
               onChange={e => setRepayForm({ ...repayForm, note: e.target.value })}
-              placeholder={isLend ? 'คำอธิบายการรับเงินคืน' : 'คำอธิบายการคืนเงิน'}
+              placeholder={isLend ? t('modal.lendNotePlaceholder') : t('modal.borrowNotePlaceholder')}
             />
           </div>
           <button type="submit" className="w-full bg-emerald text-navy font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-4 hover:shadow-[0_0_15px_rgba(80,200,120,0.3)] transition-all active:scale-[0.98]">
-            {isLend ? 'บันทึกการรับเงินคืน' : 'บันทึกการชำระ'}
+            {isLend ? t('modal.saveRepayLend') : t('modal.saveRepayBorrow')}
           </button>
         </form>
       </GlassModal>

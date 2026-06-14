@@ -68,6 +68,293 @@
     "en": "English",
     "switchTo": "สลับภาษา"
   },
+  "transactions": {
+    "title": "ประวัติธุรกรรม",
+    "subtitle": "จัดการข้อมูลทางการเงิน",
+    "addNew": "บันทึกรายการใหม่",
+    "scanSlip": "สแกนสลิป",
+    "search": "ค้นหา...",
+    "allCategories": "ทุกหมวดหมู่",
+    "allAccounts": "ทุกบัญชี",
+    "table": {
+      "date": "วันที่",
+      "description": "รายละเอียด",
+      "category": "หมวดหมู่",
+      "account": "บัญชี",
+      "amount": "จำนวนเงิน",
+      "action": "จัดการ"
+    },
+    "ai": {
+      "title": "AI Slip Intelligence",
+      "subtitle": "อัตโนมัติจากสลิปธนาคาร",
+      "selectSlip": "เลือกสลิป"
+    },
+    "form": {
+      "titleAdd": "บันทึกรายการใหม่",
+      "titleEdit": "แก้ไขรายการ",
+      "amount": "จำนวนเงิน (บาท)",
+      "category": "หมวดหมู่",
+      "selectCategory": "เลือกหมวดหมู่",
+      "fromAccount": "จากบัญชี (From)",
+      "noSourceAccount": "- ไม่มีบัญชีต้นทาง -",
+      "toAccount": "เข้าบัญชี (To)",
+      "noDestAccount": "- ไม่มีบัญชีปลายทาง -",
+      "note": "บันทึกเพิ่มเติม",
+      "notePlaceholder": "ใช้ทำอะไร?",
+      "date": "วันที่",
+      "save": "บันทึกรายการ",
+      "update": "อัปเดตรายการ"
+    },
+    "confirm": {
+      "delete": "ยืนยันการลบรายการนี้?"
+    },
+    "alert": {
+      "deleted": "ลบรายการสำเร็จ",
+      "created": "บันทึกรายการสำเร็จ",
+      "updated": "อัปเดตรายการสำเร็จ",
+      "scanned": "สแกนสลิปสำเร็จ!",
+      "scanFailed": "สแกนไม่สำเร็จ กรุณาลองใหม่",
+      "selectAccount": "กรุณาเลือกบัญชีต้นทางหรือปลายทาง"
+    }
+  },
+  "assets": {
+    "title": "สินทรัพย์",
+    "subtitle": "ติดตามและอัปเดตมูลค่าทรัพย์สินทั้งหมด",
+    "addNew": "บันทึกมูลค่าใหม่",
+    "search": "ค้นหาบัญชี...",
+    "totalAssets": "มูลค่าสินทรัพย์รวม",
+    "nonCounted": "บัญชีที่ไม่นับรวม",
+    "noData": "ไม่พบข้อมูลสินทรัพย์",
+    "allAccounts": "บัญชีทั้งหมด ({count})",
+    "updated": "อัปเดต:",
+    "hidden": "ซ่อน",
+    "loadingData": "กำลังโหลดข้อมูล...",
+    "table": {
+      "account": "ชื่อบัญชี / ประเภท",
+      "type": "ประเภท",
+      "institution": "สถาบัน",
+      "amount": "มูลค่าปัจจุบัน",
+      "action": "จัดการ"
+    },
+    "chart": {
+      "cash": "เงินสดและธนาคาร",
+      "investments": "การลงทุน",
+      "others": "อื่นๆ"
+    },
+    "form": {
+      "titleAdd": "เพิ่มสินทรัพย์",
+      "titleEdit": "แก้ไขสินทรัพย์",
+      "account": "เลือกบัญชี",
+      "newAccount": "+ สร้างบัญชีใหม่",
+      "name": "ชื่อบัญชีใหม่",
+      "type": "ประเภทบัญชี",
+      "bank": "สถาบันการเงิน",
+      "noInstitution": "ไม่มีสถาบัน",
+      "amount": "มูลค่า (บาท)",
+      "note": "บันทึกเพิ่มเติม",
+      "date": "วันที่อัปเดต",
+      "save": "บันทึกมูลค่า",
+      "update": "อัปเดต"
+    },
+    "confirm": {
+      "delete": "ยืนยันการลบข้อมูลสินทรัพย์นี้? (บัญชีจะไม่ถูกลบ)"
+    },
+    "alert": {
+      "removed": "ลบข้อมูลสินทรัพย์สำเร็จ",
+      "added": "เพิ่มข้อมูลสินทรัพย์สำเร็จ",
+      "updated": "อัปเดตข้อมูลสินทรัพย์สำเร็จ"
+    }
+  },
+  "accounts": {
+    "title": "บัญชีของฉัน",
+    "subtitle": "จัดการสภาพคล่องและวงเงินสินเชื่อ",
+    "totalAssets": "สินทรัพย์ทั้งหมด",
+    "liabilities": "หนี้สิน",
+    "personal": "ส่วนตัว",
+    "active": "เปิดใช้งาน",
+    "addNew": "เพิ่มบัญชีใหม่",
+    "noData": "ไม่พบบัญชี",
+    "showInactive": "Inactive ({count})",
+    "hideInactive": "ซ่อน Inactive ({count})",
+    "loadingData": "กำลังโหลดข้อมูล...",
+    "table": {
+      "name": "ชื่อบัญชี",
+      "number": "เลขบัญชี",
+      "type": "ประเภท",
+      "bank": "ธนาคาร",
+      "status": "สถานะ",
+      "actions": "การจัดการ"
+    },
+    "status": {
+      "active": "ใช้งาน",
+      "inactive": "ไม่ได้ใช้"
+    },
+    "form": {
+      "titleAdd": "บัญชีใหม่",
+      "titleEdit": "แก้ไขบัญชี",
+      "name": "ชื่อบัญชี",
+      "number": "เลขที่บัญชี",
+      "type": "ประเภท",
+      "institution": "สถาบันการเงิน",
+      "noInstitution": "ไม่มี",
+      "personal": "บัญชีส่วนตัว",
+      "personalDesc": "ติดตามเป็นสินทรัพย์ส่วนตัว",
+      "status": "สถานะการใช้งาน",
+      "statusDesc": "เปิดการติดตามในระบบ",
+      "cancel": "ยกเลิก",
+      "save": "บันทึกบัญชี"
+    },
+    "confirm": {
+      "delete": "ยืนยันการลบบัญชีนี้?"
+    },
+    "alert": {
+      "deleted": "ลบบัญชีสำเร็จ",
+      "created": "สร้างบัญชีสำเร็จ",
+      "updated": "อัปเดตบัญชีสำเร็จ"
+    }
+  },
+  "loanTracker": {
+    "title": "บัญชีเงินกู้",
+    "loading": "กำลังโหลด...",
+    "tab": {
+      "borrow": "ยืมภายใน",
+      "lend": "ลูกหนี้"
+    },
+    "header": {
+      "lendSubtitle": "ลูกหนี้ / เงินให้ยืม",
+      "borrowSubtitle": "สรุปสถานะการยืม (ภายใน)",
+      "lendDesc": "จัดการลูกหนี้และเงินให้ยืม",
+      "borrowDesc": "ติดตามและจัดการการยืม"
+    },
+    "summary": {
+      "totalLent": "ยอดให้ยืมทั้งหมด",
+      "totalBorrowed": "ยอดขอยืมทั้งหมด",
+      "received": "รับคืนแล้ว",
+      "settled": "คืนแล้ว",
+      "pendingDues": "ค้างชำระ",
+      "fullyRepaid": "ชำระครบแล้ว: {count} รายการ",
+      "balance": "คงเหลือสุทธิ",
+      "overall": "ภาพรวม",
+      "collectionProgress": "ความคืบหน้าการเก็บ",
+      "repaymentProgress": "ความคืบหน้าการชำระ"
+    },
+    "search": {
+      "lend": "ค้นหาชื่อผู้ยืม หรือรายการ...",
+      "borrow": "ค้นหาชื่อบัญชีหรือรายการ..."
+    },
+    "filter": {
+      "pending": "สถานะ: ค้างชำระ",
+      "all": "สถานะ: ทั้งหมด",
+      "settled": "สถานะ: ชำระครบแล้ว",
+      "hiddenCount": "ซ่อน {count} รายการที่ชำระครบแล้ว"
+    },
+    "table": {
+      "borrower": "ผู้ยืม",
+      "lentAmount": "ให้ยืม",
+      "borrowedAmount": "ยอดยืม",
+      "receivedAmount": "รับคืน",
+      "repaidAmount": "คืนแล้ว",
+      "noName": "ไม่ระบุ"
+    },
+    "empty": {
+      "lend": "ยังไม่มีรายการลูกหนี้",
+      "borrow": "ไม่มีข้อมูลการยืม"
+    },
+    "actions": {
+      "addBorrow": "เพิ่มรายการยืม",
+      "addLend": "เพิ่มลูกหนี้",
+      "receive": "รับคืน",
+      "repay": "คืนเงิน"
+    },
+    "modal": {
+      "titleEdit": "แก้ไขรายการ",
+      "titleCreateLend": "เพิ่มลูกหนี้ใหม่",
+      "titleCreateBorrow": "สร้างรายการยืมใหม่",
+      "titleRepayLend": "บันทึกการรับเงินคืน",
+      "titleRepayBorrow": "รายการคืนเงิน",
+      "forTransaction": "สำหรับรายการ",
+      "borrowerName": "ชื่อผู้ยืม",
+      "description": "รายละเอียด / วัตถุประสงค์",
+      "sourceAccount": "บัญชีต้นทาง",
+      "selectAccount": "เลือกบัญชี...",
+      "amount": "จำนวนเงิน",
+      "amountNonEditable": "(ไม่สามารถแก้ได้)",
+      "actualDate": "วันที่จริง",
+      "balance": "ยอดคงเหลือ: ฿{amount}",
+      "receiveAccount": "รับเข้าบัญชีไหน",
+      "payAccount": "จ่ายจากบัญชีไหน",
+      "note": "หมายเหตุ",
+      "lendNotePlaceholder": "คำอธิบายการรับเงินคืน",
+      "borrowNotePlaceholder": "คำอธิบายการคืนเงิน",
+      "save": "บันทึกรายการ",
+      "saveRepayLend": "บันทึกการรับเงินคืน",
+      "saveRepayBorrow": "บันทึกการชำระ"
+    },
+    "alert": {
+      "updated": "อัพเดทรายการสำเร็จ",
+      "created": "สร้างรายการสำเร็จ",
+      "repaid": "บันทึกรายการสำเร็จ",
+      "loadFailed": "โหลดข้อมูลไม่สำเร็จ",
+      "error": "เกิดข้อผิดพลาด"
+    }
+  },
+  "dashboard": {
+    "title": "สรุปสถานะการเงิน",
+    "subtitle": "Wealth & Performance Metrics",
+    "addTransaction": "บันทึกรายการ",
+    "viewAnnual": "ปีทั้งปี",
+    "viewMonthly": "รายเดือน",
+    "setBenchmark": "ตั้งค่าเป้าหมาย",
+    "metrics": {
+      "netWorth": "Net Worth (สินทรัพย์สุทธิ)",
+      "netWorthLabel": "สินทรัพย์สุทธิ",
+      "totalAssets": "Total Assets",
+      "totalAssetsLabel": "สินทรัพย์ทั้งหมด",
+      "totalLiabilities": "Total Liabilities",
+      "totalLiabilitiesLabel": "หนี้สินทั้งหมด"
+    },
+    "kpi": {
+      "header": "Financial Health KPIs",
+      "savingRate": "Saving Rate",
+      "investmentRate": "Investment Rate",
+      "debtRatio": "Debt Ratio",
+      "emergencyFund": "Emergency Fund",
+      "targetPrefix": "เป้า:",
+      "months": "เดือน"
+    },
+    "widgets": {
+      "velocity": "Performance Velocity",
+      "velocitySubtitle": "Income vs Expense Tracking",
+      "allocation": "Asset Allocation",
+      "goals": "Financial Goals",
+      "noGoals": "ยังไม่มีเป้าหมาย",
+      "radar": "Capital Health Radar",
+      "systemScore": "System Score",
+      "noAssetData": "ยังไม่มีข้อมูลสินทรัพย์",
+      "income": "INCOME",
+      "expense": "EXPENSE",
+      "saving": "SAVING",
+      "invest": "INVEST"
+    },
+    "modal": {
+      "title": "บันทึกรายการใหม่",
+      "scanTitle": "Smart Slip Scanner",
+      "scanSubtitle": "อัตโนมัติจากสลิปธนาคาร",
+      "amountLabel": "Amount (THB)",
+      "accountLabel": "บัญชี",
+      "fromAccountLabel": "From Account",
+      "toAccountLabel": "To Account",
+      "categoryLabel": "หมวดหมู่",
+      "noteLabel": "บันทึก (ไม่บังคับ)",
+      "notePlaceholder": "ใช้ทำอะไร?",
+      "selectTarget": "เลือกบัญชีปลายทาง...",
+      "save": "บันทึกข้อมูล",
+      "saveSuccess": "บันทึกรายการสำเร็จ",
+      "alertAmount": "โปรดระบุจำนวนเงินและเลือกบัญชี",
+      "alertDestAccount": "โปรดเลือกบัญชีปลายทาง",
+      "alertCategory": "โปรดเลือกหมวดหมู่รายการ"
+    }
+  },
   "auth": {
     "loadingPortal": "กำลังโหลดระบบ...",
     "login": {

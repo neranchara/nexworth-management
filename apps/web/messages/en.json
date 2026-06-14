@@ -68,6 +68,293 @@
     "en": "English",
     "switchTo": "Switch language"
   },
+  "transactions": {
+    "title": "Transaction History",
+    "subtitle": "Manage your financial records",
+    "addNew": "Record Transaction",
+    "scanSlip": "Scan Slip",
+    "search": "Search...",
+    "allCategories": "All Categories",
+    "allAccounts": "All Accounts",
+    "table": {
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "account": "Account",
+      "amount": "Amount",
+      "action": "Action"
+    },
+    "ai": {
+      "title": "AI Slip Intelligence",
+      "subtitle": "Auto-fill details from bank slip",
+      "selectSlip": "Select Slip"
+    },
+    "form": {
+      "titleAdd": "Record Transaction",
+      "titleEdit": "Edit Transaction",
+      "amount": "Amount (THB)",
+      "category": "Category",
+      "selectCategory": "Select Category",
+      "fromAccount": "From Account",
+      "noSourceAccount": "- No source account -",
+      "toAccount": "To Account",
+      "noDestAccount": "- No destination account -",
+      "note": "Additional Notes",
+      "notePlaceholder": "What was this for?",
+      "date": "Date",
+      "save": "Save Transaction",
+      "update": "Update Transaction"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to delete this transaction?"
+    },
+    "alert": {
+      "deleted": "Transaction deleted successfully.",
+      "created": "Transaction created successfully.",
+      "updated": "Transaction updated successfully.",
+      "scanned": "Slip scanned and auto-filled!",
+      "scanFailed": "Scan failed. Try a clearer image.",
+      "selectAccount": "Please select either a From Account, a To Account, or both."
+    }
+  },
+  "assets": {
+    "title": "Assets",
+    "subtitle": "Track and update all asset values",
+    "addNew": "Record Value",
+    "search": "Search accounts...",
+    "totalAssets": "Total Asset Value",
+    "nonCounted": "Non-tracked Accounts",
+    "noData": "No asset records found.",
+    "allAccounts": "All Accounts ({count})",
+    "updated": "Updated:",
+    "hidden": "Hidden",
+    "loadingData": "Loading data...",
+    "table": {
+      "account": "Account / Type",
+      "type": "Type",
+      "institution": "Institution",
+      "amount": "Current Value",
+      "action": "Action"
+    },
+    "chart": {
+      "cash": "Cash & Banks",
+      "investments": "Investments",
+      "others": "Others"
+    },
+    "form": {
+      "titleAdd": "Add Asset",
+      "titleEdit": "Edit Asset",
+      "account": "Select Account",
+      "newAccount": "+ Create New Account",
+      "name": "New Account Name",
+      "type": "Account Type",
+      "bank": "Financial Institution",
+      "noInstitution": "No Institution",
+      "amount": "Value (THB)",
+      "note": "Additional Notes",
+      "date": "Update Date",
+      "save": "Save Value",
+      "update": "Update"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to remove this asset record? (Account will not be deleted)"
+    },
+    "alert": {
+      "removed": "Asset record removed successfully.",
+      "added": "Asset record added successfully.",
+      "updated": "Asset record updated successfully."
+    }
+  },
+  "accounts": {
+    "title": "My Accounts",
+    "subtitle": "Manage liquidity and credit lines",
+    "totalAssets": "Total Assets",
+    "liabilities": "Liabilities",
+    "personal": "Personal",
+    "active": "Active",
+    "addNew": "Add Account",
+    "noData": "No accounts found.",
+    "showInactive": "Inactive ({count})",
+    "hideInactive": "Hide Inactive ({count})",
+    "loadingData": "Loading data...",
+    "table": {
+      "name": "Account Name",
+      "number": "Account Number",
+      "type": "Type",
+      "bank": "Bank",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "form": {
+      "titleAdd": "New Account",
+      "titleEdit": "Edit Account",
+      "name": "Account Name",
+      "number": "Account Number",
+      "type": "Type",
+      "institution": "Financial Institution",
+      "noInstitution": "None",
+      "personal": "Personal Account",
+      "personalDesc": "Track as personal asset",
+      "status": "Account Status",
+      "statusDesc": "Enable tracking in the system",
+      "cancel": "Cancel",
+      "save": "Save Account"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to delete this account?"
+    },
+    "alert": {
+      "deleted": "Account deleted successfully.",
+      "created": "Account created successfully.",
+      "updated": "Account updated successfully."
+    }
+  },
+  "loanTracker": {
+    "title": "Loan Tracker",
+    "loading": "Loading...",
+    "tab": {
+      "borrow": "Borrow",
+      "lend": "Lend / Receivables"
+    },
+    "header": {
+      "lendSubtitle": "Receivables / Lent Funds",
+      "borrowSubtitle": "Borrowing Status (Internal)",
+      "lendDesc": "Lending Management & Receivables",
+      "borrowDesc": "Lending Management & Monitoring"
+    },
+    "summary": {
+      "totalLent": "Total Lent",
+      "totalBorrowed": "Total Borrowed",
+      "received": "Received Back",
+      "settled": "Settled",
+      "pendingDues": "Pending Dues",
+      "fullyRepaid": "Fully Repaid: {count} Records",
+      "balance": "Net Balance",
+      "overall": "Overall",
+      "collectionProgress": "Collection Progress",
+      "repaymentProgress": "Repayment Progress"
+    },
+    "search": {
+      "lend": "Search borrower name or record...",
+      "borrow": "Search account name or record..."
+    },
+    "filter": {
+      "pending": "Status: Pending",
+      "all": "Status: All",
+      "settled": "Status: Settled",
+      "hiddenCount": "Hiding {count} fully repaid records"
+    },
+    "table": {
+      "borrower": "Borrower",
+      "lentAmount": "LENT",
+      "borrowedAmount": "BORROWED",
+      "receivedAmount": "RECEIVED",
+      "repaidAmount": "REPAID",
+      "noName": "Unknown"
+    },
+    "empty": {
+      "lend": "No receivable records yet.",
+      "borrow": "No borrowing records."
+    },
+    "actions": {
+      "addBorrow": "Add Borrow Record",
+      "addLend": "Add Receivable",
+      "receive": "Receive",
+      "repay": "Repay"
+    },
+    "modal": {
+      "titleEdit": "Edit Record",
+      "titleCreateLend": "Add New Receivable",
+      "titleCreateBorrow": "Create Borrow Record",
+      "titleRepayLend": "Record Payment Received",
+      "titleRepayBorrow": "Repay Record",
+      "forTransaction": "For Transaction",
+      "borrowerName": "Borrower Name",
+      "description": "Description / Purpose",
+      "sourceAccount": "Source Account",
+      "selectAccount": "Select Account...",
+      "amount": "Amount",
+      "amountNonEditable": "(Non-editable)",
+      "actualDate": "Actual Date",
+      "balance": "Balance: ฿{amount}",
+      "receiveAccount": "Receive Into Account",
+      "payAccount": "Pay From Account",
+      "note": "Note",
+      "lendNotePlaceholder": "Description of payment received",
+      "borrowNotePlaceholder": "Description of repayment",
+      "save": "Save Record",
+      "saveRepayLend": "Save Payment Received",
+      "saveRepayBorrow": "Save Repayment"
+    },
+    "alert": {
+      "updated": "Record updated successfully",
+      "created": "Record created successfully",
+      "repaid": "Record saved successfully",
+      "loadFailed": "Failed to load data",
+      "error": "An error occurred"
+    }
+  },
+  "dashboard": {
+    "title": "Financial Overview",
+    "subtitle": "Wealth & Performance Metrics",
+    "addTransaction": "Record Transaction",
+    "viewAnnual": "Full Year",
+    "viewMonthly": "Monthly",
+    "setBenchmark": "Set Benchmarks",
+    "metrics": {
+      "netWorth": "Net Worth",
+      "netWorthLabel": "Net Worth",
+      "totalAssets": "Total Assets",
+      "totalAssetsLabel": "Total Assets",
+      "totalLiabilities": "Total Liabilities",
+      "totalLiabilitiesLabel": "Total Liabilities"
+    },
+    "kpi": {
+      "header": "Financial Health KPIs",
+      "savingRate": "Saving Rate",
+      "investmentRate": "Investment Rate",
+      "debtRatio": "Debt Ratio",
+      "emergencyFund": "Emergency Fund",
+      "targetPrefix": "Target:",
+      "months": "months"
+    },
+    "widgets": {
+      "velocity": "Performance Velocity",
+      "velocitySubtitle": "Income vs Expense Tracking",
+      "allocation": "Asset Allocation",
+      "goals": "Financial Goals",
+      "noGoals": "No active goals",
+      "radar": "Capital Health Radar",
+      "systemScore": "System Score",
+      "noAssetData": "No asset data available",
+      "income": "INCOME",
+      "expense": "EXPENSE",
+      "saving": "SAVING",
+      "invest": "INVEST"
+    },
+    "modal": {
+      "title": "Record New Transaction",
+      "scanTitle": "Smart Slip Scanner",
+      "scanSubtitle": "Auto-fill details from bank slip",
+      "amountLabel": "Amount (THB)",
+      "accountLabel": "Account",
+      "fromAccountLabel": "From Account",
+      "toAccountLabel": "To Account",
+      "categoryLabel": "Category",
+      "noteLabel": "Note (Optional)",
+      "notePlaceholder": "What was this for?",
+      "selectTarget": "Select Target...",
+      "save": "Save Record",
+      "saveSuccess": "Transaction saved successfully",
+      "alertAmount": "Please enter an amount and select an account.",
+      "alertDestAccount": "Please select a destination account.",
+      "alertCategory": "Please select a transaction category."
+    }
+  },
   "auth": {
     "loadingPortal": "Loading Secure Portal...",
     "login": {

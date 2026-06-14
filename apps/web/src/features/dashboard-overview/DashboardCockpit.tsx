@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import dynamic from 'next/dynamic';
 import { useDashboardStore } from '@/store/dashboardStore';
 import api from '@/lib/api';
@@ -50,6 +51,7 @@ import BenchmarkSettingsModal from './components/BenchmarkSettingsModal';
 const MONTHS_TH = ['ม.ค.','ก.พ.','มี.ค.','เม.ย.','พ.ค.','มิ.ย.','ก.ค.','ส.ค.','ก.ย.','ต.ค.','พ.ย.','ธ.ค.'];
 
 export default function DashboardCockpit() {
+  const t = useTranslations('dashboard');
   const [isTransactionModalOpen, setIsTransactionModalOpen] = useState(false);
   const {
     stats,
@@ -182,17 +184,17 @@ export default function DashboardCockpit() {
 
   const handleSubmit = async () => {
     if (!amount || !accountId) {
-      window.alert('โปรดระบุจำนวนเงินและเลือกบัญชี');
+      window.alert(t('modal.alertAmount'));
       return;
     }
 
     if (txType === 'TRANSFER' && !toAccountId) {
-      window.alert('โปรดเลือกบัญชีปลายทาง');
+      window.alert(t('modal.alertDestAccount'));
       return;
     }
 
     if (txType !== 'TRANSFER' && !categoryId) {
-      window.alert('โปรดเลือกหมวดหมู่รายการ');
+      window.alert(t('modal.alertCategory'));
       return;
     }
 
@@ -219,7 +221,7 @@ export default function DashboardCockpit() {
       const successToast = document.createElement('div');
       successToast.id = 'tx-success-toast';
       successToast.className = 'fixed bottom-4 right-4 bg-emerald text-navy px-6 py-3 rounded-xl font-bold z-[200] animate-bounce';
-      successToast.innerText = 'บันทึกรายการสำเร็จ';
+      successToast.innerText = t('modal.saveSuccess');
       document.body.appendChild(successToast);
       setTimeout(() => successToast.remove(), 3000);
     } catch (err: unknown) {
@@ -296,8 +298,8 @@ export default function DashboardCockpit() {
       {/* ── Header ── */}
       <div className="flex items-center justify-between shrink-0 gap-4 flex-wrap">
         <div className="shrink-0">
-          <h2 className="text-2xl font-bold text-white tracking-tight">สรุปสถานะการเงิน</h2>
-          <p className="text-[10px] text-slate tracking-[0.3em] uppercase font-bold">Wealth & Performance Metrics</p>
+          <h2 className="text-2xl font-bold text-white tracking-tight">{t('title')}</h2>
+          <p className="text-[10px] text-slate tracking-[0.3em] uppercase font-bold">{t('subtitle')}</p>
         </div>
 
         <div className="flex items-center gap-3 flex-wrap justify-end w-full sm:w-auto sm:ml-auto">
@@ -309,7 +311,7 @@ export default function DashboardCockpit() {
           >
             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
             <Plus size={15} className="relative z-10" />
-            <span className="relative z-10 hidden sm:inline">บันทึกรายการ</span>
+            <span className="relative z-10 hidden sm:inline">{t('addTransaction')}</span>
           </button>
 
           <WidgetConfigDropdown />
@@ -342,7 +344,7 @@ export default function DashboardCockpit() {
                   viewMode === mode ? 'bg-emerald/20 text-emerald' : 'text-slate hover:text-white'
                 )}
               >
-                {mode === 'annual' ? 'ปีทั้งปี' : 'รายเดือน'}
+                {mode === 'annual' ? t('viewAnnual') : t('viewMonthly')}
               </button>
             ))}
           </div>
@@ -364,70 +366,70 @@ export default function DashboardCockpit() {
       {/* ── Row 1: Core Metrics ── */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-5 shrink-0">
         <GlassCard interactive borderAccent="emerald" className="p-5 flex flex-col justify-between gap-3 group cursor-pointer">
-          <span className="text-[9px] font-black text-slate uppercase tracking-[0.2em]">Net Worth (สินทรัพย์สุทธิ)</span>
+          <span className="text-[9px] font-black text-slate uppercase tracking-[0.2em]">{t('metrics.netWorth')}</span>
           <h3 className="text-3xl font-black text-white tracking-tighter">฿{netWorth.toLocaleString()}</h3>
           <div className="text-[10px] text-emerald font-bold flex items-center gap-1.5">
-            <TrendingUp size={12} /><span>สินทรัพย์สุทธิ</span>
+            <TrendingUp size={12} /><span>{t('metrics.netWorthLabel')}</span>
           </div>
         </GlassCard>
 
         <GlassCard interactive className="p-5 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-black text-slate uppercase tracking-widest">Total Assets</span>
+            <span className="text-[9px] font-black text-slate uppercase tracking-widest">{t('metrics.totalAssets')}</span>
             <Wallet size={14} className="text-emerald/50" />
           </div>
           <p className="text-3xl font-black text-white tracking-tighter">฿{assets.toLocaleString()}</p>
-          <p className="text-[9px] text-slate font-bold">สินทรัพย์ทั้งหมด</p>
+          <p className="text-[9px] text-slate font-bold">{t('metrics.totalAssetsLabel')}</p>
         </GlassCard>
 
         <GlassCard interactive className="p-5 flex flex-col justify-between gap-3">
           <div className="flex items-center justify-between">
-            <span className="text-[9px] font-black text-slate uppercase tracking-widest">Total Liabilities</span>
+            <span className="text-[9px] font-black text-slate uppercase tracking-widest">{t('metrics.totalLiabilities')}</span>
             <CreditCard size={14} className="text-rose/50" />
           </div>
           <p className="text-3xl font-black text-rose tracking-tighter">฿{liabilities.toLocaleString()}</p>
-          <p className="text-[9px] text-slate font-bold">หนี้สินทั้งหมด</p>
+          <p className="text-[9px] text-slate font-bold">{t('metrics.totalLiabilitiesLabel')}</p>
         </GlassCard>
       </div>
 
       {/* ── Row 2: KPI Cards ── */}
       <div className="flex items-center justify-between shrink-0">
-        <span className="text-[9px] font-black text-slate uppercase tracking-[0.2em]">Financial Health KPIs</span>
+        <span className="text-[9px] font-black text-slate uppercase tracking-[0.2em]">{t('kpi.header')}</span>
         <button
           onClick={() => setIsBenchmarkModalOpen(true)}
           className="flex items-center gap-1.5 px-2.5 py-1 text-[8px] font-black text-slate uppercase tracking-widest bg-white/5 border border-white/5 rounded-lg hover:text-white hover:bg-white/10 transition-all"
         >
           <Settings2 size={10} />
-          ตั้งค่าเป้าหมาย
+          {t('setBenchmark')}
         </button>
       </div>
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-5 shrink-0 -mt-3">
         <KpiCard
-          label="Saving Rate"
+          label={t('kpi.savingRate')}
           value={`${savingRate.toFixed(1)}%`}
-          target={`เป้า: ≥ ${(savingTarget * 100).toFixed(0)}%`}
+          target={`${t('kpi.targetPrefix')} ≥ ${(savingTarget * 100).toFixed(0)}%`}
           status={savingRate >= savingTarget * 100 ? 'good' : savingRate >= savingTarget * 50 ? 'warning' : 'danger'}
           icon={<PiggyBank size={16} />}
         />
         <KpiCard
-          label="Investment Rate"
+          label={t('kpi.investmentRate')}
           value={`${investRatio.toFixed(1)}%`}
-          target={`เป้า: ≥ ${(investTarget * 100).toFixed(0)}%`}
+          target={`${t('kpi.targetPrefix')} ≥ ${(investTarget * 100).toFixed(0)}%`}
           status={investRatio >= investTarget * 100 ? 'good' : investRatio >= investTarget * 50 ? 'warning' : 'danger'}
           icon={<BarChart3 size={16} />}
         />
         <KpiCard
-          label="Debt Ratio"
+          label={t('kpi.debtRatio')}
           value={`${debtRatio.toFixed(1)}%`}
-          target={`เป้า: ≤ ${(debtTarget * 100).toFixed(0)}%`}
+          target={`${t('kpi.targetPrefix')} ≤ ${(debtTarget * 100).toFixed(0)}%`}
           status={debtRatio <= debtTarget * 100 ? 'good' : debtRatio <= debtTarget * 150 ? 'warning' : 'danger'}
           icon={<ShieldAlert size={16} />}
           higherIsBetter={false}
         />
         <KpiCard
-          label="Emergency Fund"
-          value={`${emergencyMos.toFixed(1)} เดือน`}
-          target={`เป้า: ≥ ${emergencyTarget.toFixed(0)} เดือน`}
+          label={t('kpi.emergencyFund')}
+          value={`${emergencyMos.toFixed(1)} ${t('kpi.months')}`}
+          target={`${t('kpi.targetPrefix')} ≥ ${emergencyTarget.toFixed(0)} ${t('kpi.months')}`}
           status={emergencyMos >= emergencyTarget ? 'good' : emergencyMos >= emergencyTarget / 2 ? 'warning' : 'danger'}
           icon={<Ambulance size={16} />}
         />
@@ -444,14 +446,14 @@ export default function DashboardCockpit() {
             >
               <div className="flex justify-between items-center mb-4 shrink-0">
                 <div>
-                  <h3 className="text-sm font-black text-white uppercase tracking-widest">Performance Velocity</h3>
-                  <p className="text-[9px] text-slate mt-0.5 uppercase tracking-tighter">Income vs Expense Tracking</p>
+                  <h3 className="text-sm font-black text-white uppercase tracking-widest">{t('widgets.velocity')}</h3>
+                  <p className="text-[9px] text-slate mt-0.5 uppercase tracking-tighter">{t('widgets.velocitySubtitle')}</p>
                 </div>
                 <div className="flex flex-wrap gap-3 justify-end">
-                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald" /> INCOME</span>
-                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-white/10" /> EXPENSE</span>
-                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400" /> SAVING</span>
-                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-400" /> INVEST</span>
+                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-emerald" /> {t('widgets.income')}</span>
+                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-white/10" /> {t('widgets.expense')}</span>
+                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-blue-400" /> {t('widgets.saving')}</span>
+                  <span className="text-[9px] font-bold flex items-center gap-1.5"><span className="w-2 h-2 rounded-full bg-purple-400" /> {t('widgets.invest')}</span>
                 </div>
               </div>
               <div className="flex-1 min-h-0">
@@ -467,13 +469,13 @@ export default function DashboardCockpit() {
             >
               <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald/5 rounded-full blur-2xl group-hover:bg-emerald/10 transition-colors duration-500 pointer-events-none" />
               <div className="flex justify-between items-center mb-3 z-10 shrink-0">
-                <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">Asset Allocation</h3>
+                <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">{t('widgets.allocation')}</h3>
                 <span className="text-[9px] text-emerald bg-emerald/10 px-2 py-0.5 rounded-full">Top 5</span>
               </div>
               <div className="flex-1 min-h-0 w-full relative z-10">
                 {allocationData.length > 0
                   ? <PortfolioDoughnut data={allocationData} />
-                  : <div className="w-full h-full flex items-center justify-center text-[10px] text-slate font-medium">No asset data available</div>
+                  : <div className="w-full h-full flex items-center justify-center text-[10px] text-slate font-medium">{t('widgets.noAssetData')}</div>
                 }
               </div>
             </GlassCard>
@@ -490,7 +492,7 @@ export default function DashboardCockpit() {
             >
               <div className="absolute -right-10 -top-10 w-32 h-32 bg-blue-400/5 rounded-full blur-2xl group-hover:bg-blue-400/10 transition-colors duration-500 pointer-events-none" />
               <div className="flex justify-between items-center mb-4 z-10 shrink-0">
-                <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">Financial Goals</h3>
+                <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">{t('widgets.goals')}</h3>
                 <Target size={14} className="text-blue-400" />
               </div>
               <div className="flex-1 flex flex-col gap-4 overflow-y-auto pr-1 custom-scrollbar">
@@ -510,7 +512,7 @@ export default function DashboardCockpit() {
                 ))}
                 {(stats?.goalTracking || []).length === 0 && (
                   <div className="flex-1 flex flex-col items-center justify-center text-center opacity-50">
-                    <p className="text-[9px] text-slate font-bold uppercase">No active goals</p>
+                    <p className="text-[9px] text-slate font-bold uppercase">{t('widgets.noGoals')}</p>
                   </div>
                 )}
               </div>
@@ -524,14 +526,14 @@ export default function DashboardCockpit() {
               data-testid="cockpit-radar-card"
             >
               <div className="w-full flex items-center justify-between mb-3 shrink-0">
-                <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">Capital Health Radar</h3>
+                <h3 className="text-[10px] font-black text-slate uppercase tracking-widest">{t('widgets.radar')}</h3>
                 <Activity size={14} className="text-emerald animate-pulse" />
               </div>
               <div className="relative w-full flex-1 min-h-0">
                 <HealthRadar scores={stats?.health?.scores || { saving: 0, emergency: 0, debt: 0, investment: 0 }} />
               </div>
               <div className="w-full pt-3 border-t border-white/5 flex justify-between items-center shrink-0">
-                <span className="text-[9px] font-bold text-slate uppercase">System Score</span>
+                <span className="text-[9px] font-bold text-slate uppercase">{t('widgets.systemScore')}</span>
                 <span className="text-xl font-black text-emerald">{stats?.health?.score || 0}<span className="text-[10px] text-slate-500 ml-1">pts</span></span>
               </div>
             </GlassCard>
@@ -544,7 +546,7 @@ export default function DashboardCockpit() {
       <GlassModal 
         isOpen={isTransactionModalOpen} 
         onClose={() => setIsTransactionModalOpen(false)}
-        title="บันทึกรายการใหม่"
+        title={t('modal.title')}
       >
         <div className="flex flex-col gap-5">
           {/* AI Scan Header Action */}
@@ -558,8 +560,8 @@ export default function DashboardCockpit() {
                 {isScanning ? <Loader2 size={16} className="animate-spin" /> : <Scan size={16} />}
               </div>
               <div>
-                <p className="text-[10px] font-black text-emerald uppercase tracking-widest">Smart Slip Scanner</p>
-                <p className="text-[9px] text-slate font-medium">Auto-fill details from bank slip</p>
+                <p className="text-[10px] font-black text-emerald uppercase tracking-widest">{t('modal.scanTitle')}</p>
+                <p className="text-[9px] text-slate font-medium">{t('modal.scanSubtitle')}</p>
               </div>
             </div>
             <input type="file" ref={fileInputRef} className="hidden" accept="image/*" onChange={handleScanSlip} disabled={isScanning} />
@@ -583,7 +585,7 @@ export default function DashboardCockpit() {
 
           {/* Amount Input */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">Amount (THB)</label>
+            <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('modal.amountLabel')}</label>
             <input 
               type="number" 
               data-testid="transactions-amount-input"
@@ -598,7 +600,7 @@ export default function DashboardCockpit() {
             {/* Account Selection */}
             <div className="flex flex-col gap-2">
               <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">
-                {txType === 'TRANSFER' ? 'From Account' : 'Account'}
+                {txType === 'TRANSFER' ? t('modal.fromAccountLabel') : t('modal.accountLabel')}
               </label>
               <select 
                 data-testid="transactions-account-select"
@@ -616,13 +618,13 @@ export default function DashboardCockpit() {
             <div className="flex flex-col gap-2">
               {txType === 'TRANSFER' ? (
                 <>
-                  <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">To Account</label>
+                  <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('modal.toAccountLabel')}</label>
                   <select 
                     value={toAccountId}
                     onChange={(e) => setToAccountId(e.target.value)}
                     className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald/50 appearance-none font-bold cursor-pointer"
                   >
-                    <option value="" className="bg-navy">Select Target...</option>
+                    <option value="" className="bg-navy">{t('modal.selectTarget')}</option>
                     {accounts.filter(acc => acc.id !== accountId).map(acc => (
                       <option key={acc.id} value={acc.id} className="bg-navy">{acc.name}</option>
                     ))}
@@ -630,7 +632,7 @@ export default function DashboardCockpit() {
                 </>
               ) : (
                 <>
-                  <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">Category</label>
+                  <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('modal.categoryLabel')}</label>
                   <select 
                     data-testid="transactions-category-select"
                     value={categoryId}
@@ -648,12 +650,12 @@ export default function DashboardCockpit() {
 
           {/* Note Input */}
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">Note (Optional)</label>
-            <input 
-              type="text" 
+            <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('modal.noteLabel')}</label>
+            <input
+              type="text"
               value={note}
               onChange={(e) => setNote(e.target.value)}
-              placeholder="What was this for?" 
+              placeholder={t('modal.notePlaceholder')} 
               className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald/50 transition-all placeholder:text-slate/20"
             />
           </div>
@@ -665,7 +667,7 @@ export default function DashboardCockpit() {
             className="w-full bg-emerald text-navy font-black text-xs uppercase tracking-widest py-4 rounded-xl mt-2 hover:shadow-lg hover:shadow-emerald/20 transition-all active:scale-[0.98] disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             onClick={handleSubmit}
           >
-            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : 'บันทึกข้อมูล'}
+            {isSubmitting ? <Loader2 size={16} className="animate-spin" /> : t('modal.save')}
           </button>
         </div>
       </GlassModal>
