@@ -60,7 +60,8 @@
     "no": "No",
     "required": "Required",
     "optional": "Optional",
-    "profile": "Profile"
+    "profile": "Profile",
+    "initializingDashboard": "Initializing Dashboard..."
   },
   "lang": {
     "th": "ไทย",

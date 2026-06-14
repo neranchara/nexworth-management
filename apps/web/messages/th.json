@@ -60,7 +60,8 @@
     "no": "ไม่",
     "required": "จำเป็น",
     "optional": "ไม่บังคับ",
-    "profile": "โปรไฟล์"
+    "profile": "โปรไฟล์",
+    "initializingDashboard": "กำลังโหลดระบบ..."
   },
   "lang": {
     "th": "ไทย",

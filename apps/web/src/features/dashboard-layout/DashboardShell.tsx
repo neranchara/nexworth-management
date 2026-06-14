@@ -10,15 +10,18 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { useImpersonation } from '@/context/ImpersonationContext';
 import LanguageToggle from '@/components/common/LanguageToggle';
+import { useTranslations } from 'next-intl';
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
-  const { mainLinks, mgmtLinks, setupLabel } = useDashboardNav();
+  const { mainLinks, mgmtLinks } = useDashboardNav();
   const router = useRouter();
   const { isImpersonating, impersonationData, stopViewAs } = useImpersonation();
+  const tNav = useTranslations('nav');
+  const tCommon = useTranslations('common');
 
   // Initialize sidebar state
   useEffect(() => {
@@ -81,7 +84,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
           <div className="w-12 h-12 bg-emerald/20 rounded-lg flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-emerald border-t-transparent rounded-full animate-spin" />
           </div>
-          <span className="text-[10px] text-slate tracking-widest uppercase font-bold">Initializing Dashboard...</span>
+          <span className="text-[10px] text-slate tracking-widest uppercase font-bold">{tCommon('initializingDashboard')}</span>
         </div>
       </div>
     );
@@ -98,7 +101,6 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         onClose={() => setMobileMenuOpen(false)}
         mainLinks={mainLinks}
         mgmtLinks={mgmtLinks}
-        setupLabel={setupLabel}
       />
       {/* Sidebar (Desktop) */}
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
@@ -134,7 +136,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
                 className="p-2 rounded-xl bg-white/5 text-slate hover:text-white"
-                aria-label="เปิดเมนู"
+                aria-label={tNav('openMenu')}
               >
                 <Menu className="w-5 h-5" />
               </button>
@@ -159,7 +161,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
                  type="button"
                  onClick={() => router.push('/dashboard/profile')}
                  className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-emerald/30 transition-all cursor-pointer"
-                 title="โปรไฟล์"
+                 title={tCommon('profile')}
                >
                   <div className="w-5 h-5 rounded-full bg-emerald/20 border border-emerald/40" />
                </button>
