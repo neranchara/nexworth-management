@@ -17,6 +17,8 @@ import {
   Plus,
   LayoutGrid,
   List,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -57,6 +59,7 @@ export default function AccountsManagementPage() {
   const [viewMode, setViewMode] = useState<'grid' | 'table'>(() =>
     (typeof window !== 'undefined' ? localStorage.getItem('viewMode_accounts') as 'grid' | 'table' : null) || 'grid'
   );
+  const [showInactive, setShowInactive] = useState(false);
 
   const toggleViewMode = (mode: 'grid' | 'table') => {
     setViewMode(mode);
@@ -285,7 +288,9 @@ export default function AccountsManagementPage() {
     });
   };
 
-  const sortedAccounts = getSortedAccounts();
+  const allSorted = getSortedAccounts();
+  const sortedAccounts = showInactive ? allSorted : allSorted.filter(a => a.isActive);
+  const inactiveCount = allSorted.filter(a => !a.isActive).length;
 
   if (loading && accounts.length === 0) return <div className="p-6">Loading data...</div>;
   if (error && accounts.length === 0) return <div className="p-6 text-rose">{error}</div>;
@@ -311,6 +316,22 @@ export default function AccountsManagementPage() {
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Show Inactive Toggle */}
+          {inactiveCount > 0 && (
+            <button
+              onClick={() => setShowInactive(v => !v)}
+              className={clsx(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border',
+                showInactive
+                  ? 'bg-slate-700/60 border-slate-600 text-slate-300'
+                  : 'bg-white/5 border-white/10 text-slate hover:text-white hover:border-white/20'
+              )}
+            >
+              {showInactive ? <EyeOff size={12} /> : <Eye size={12} />}
+              {showInactive ? `ซ่อน Inactive (${inactiveCount})` : `Inactive (${inactiveCount})`}
+            </button>
+          )}
+
           {/* View Toggle */}
           <div className="flex bg-white/5 border border-white/5 rounded-lg p-0.5">
             {(['grid', 'table'] as const).map((mode) => (

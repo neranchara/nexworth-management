@@ -1,6 +1,6 @@
 'use client';
 import { useState, useEffect, useRef, useCallback, Fragment } from 'react';
-import { Plus, ArrowUpCircle, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal, Search, FileText, CircleAlert, HandCoins, PenLine, Info } from 'lucide-react';
+import { Plus, ArrowUpCircle, CheckCircle, AlertCircle, Wallet, ArrowDownCircle, MoreHorizontal, Search, FileText, CircleAlert, HandCoins, PenLine, Info, Eye, EyeOff } from 'lucide-react';
 import api from '@/lib/api';
 import { format } from 'date-fns';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -37,6 +37,8 @@ export default function LoanTrackerPage() {
   const [selectedLoan, setSelectedLoan] = useState<Loan | null>(null);
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
   const [expandedLoanId, setExpandedLoanId] = useState<string | null>(null);
+  const [statusFilter, setStatusFilter] = useState<'all' | 'pending' | 'settled'>('pending');
+  const [searchQuery, setSearchQuery] = useState('');
 
   // Form states
   const [newLoanForm, setNewLoanForm] = useState({ name: '', accountId: '', initialAmount: '', actualDate: '' });
@@ -235,6 +237,21 @@ export default function LoanTrackerPage() {
 
   const sortedLots = getSortedLots();
 
+  const displayLoans = loans.filter(loan => {
+    const matchesSearch = !searchQuery ||
+      loan.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      loan.accountName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (loan.code || '').toLowerCase().includes(searchQuery.toLowerCase());
+
+    const isPending = loan.balance > 0;
+    const matchesStatus =
+      statusFilter === 'all' ||
+      (statusFilter === 'pending' && isPending) ||
+      (statusFilter === 'settled' && !isPending);
+
+    return matchesSearch && matchesStatus;
+  });
+
   const SortIcon = ({ column }: { column: string }) => {
     if (sortConfig?.key !== column) return <MoreHorizontal className="w-3 h-3 ml-1 opacity-20" />;
     return sortConfig.direction === 'asc' ? 
@@ -339,14 +356,30 @@ export default function LoanTrackerPage() {
           <div className="flex items-center gap-4">
             <div className="relative min-w-[250px]">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
-              <input type="text" placeholder="ค้นหาชื่อบัญชีหรือรายการ..." className="w-full bg-navy/50 border border-white/5 rounded-full py-1.5 pl-9 pr-4 text-[10px] text-white focus:outline-none focus:border-emerald placeholder:text-slate-500 transition-all" />
+              <input
+                type="text"
+                placeholder="ค้นหาชื่อบัญชีหรือรายการ..."
+                value={searchQuery}
+                onChange={e => setSearchQuery(e.target.value)}
+                className="w-full bg-navy/50 border border-white/5 rounded-full py-1.5 pl-9 pr-4 text-[10px] text-white focus:outline-none focus:border-emerald placeholder:text-slate-500 transition-all"
+              />
             </div>
-            <select className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-[10px] text-slate-300 outline-none focus:border-emerald appearance-none">
-                <option className="bg-[#001F3F]">สถานะ: ทั้งหมด</option>
-                <option className="bg-[#001F3F]">สถานะ: ค้างชำระ</option>
-                <option className="bg-[#001F3F]">สถานะ: ชำระครบแล้ว</option>
+            <select
+              value={statusFilter}
+              onChange={e => setStatusFilter(e.target.value as 'all' | 'pending' | 'settled')}
+              className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-[10px] text-slate-300 outline-none focus:border-emerald appearance-none cursor-pointer"
+            >
+              <option value="pending" className="bg-[#001F3F]">สถานะ: ค้างชำระ</option>
+              <option value="all" className="bg-[#001F3F]">สถานะ: ทั้งหมด</option>
+              <option value="settled" className="bg-[#001F3F]">สถานะ: ชำระครบแล้ว</option>
             </select>
           </div>
+          {statusFilter === 'pending' && (
+            <span className="text-[9px] text-slate-500 font-bold uppercase tracking-widest flex items-center gap-1">
+              <EyeOff size={10} />
+              ซ่อน {loans.filter(l => l.balance <= 0).length} รายการที่ชำระครบแล้ว
+            </span>
+          )}
         </div>
 
         {/* Table Content */}
@@ -365,10 +398,11 @@ export default function LoanTrackerPage() {
               </tr>
             </thead>
             <tbody>
-              {loans.map((loan) => {
+              {displayLoans.map((loan) => {
                 const isPending = loan.balance > 0;
+                const isSettled = !isPending;
                 return (
-                  <tr key={loan.id} className={`bg-white/[0.02] hover:bg-white/[0.06] transition-all group ${isPending ? 'border-l-4 border-orange-500' : 'border-l-4 border-white/5'}`}>
+                  <tr key={loan.id} className={`transition-all group ${isSettled ? 'opacity-35 pointer-events-none select-none' : 'bg-white/[0.02] hover:bg-white/[0.06]'} ${isPending ? 'border-l-4 border-orange-500' : 'border-l-4 border-white/5'}`}>
                     <td className={`px-6 py-4 rounded-l-xl font-bold ${isPending ? 'text-orange-500' : 'text-slate-500'}`}>
                       {loan.code || '-'}
                     </td>
