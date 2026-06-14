@@ -186,6 +186,14 @@ const runSchemaMigrations = async () => {
   await run(`ALTER TABLE "TransactionCategory" ADD COLUMN IF NOT EXISTS "systemKey" TEXT`);
   await run(`CREATE INDEX IF NOT EXISTS "TransactionCategory_organizationId_systemKey_idx" ON "TransactionCategory"("organizationId", "systemKey")`);
 
+  // Loan: direction + borrowerName (Lendings tab)
+  await run(`ALTER TABLE "Loan" ADD COLUMN IF NOT EXISTS "direction" TEXT NOT NULL DEFAULT 'BORROW'`);
+  await run(`ALTER TABLE "Loan" ADD COLUMN IF NOT EXISTS "borrowerName" TEXT`);
+
+  // TransactionBehavior enum: add LEND_OUT + LEND_REPAY values
+  await run(`ALTER TYPE "TransactionBehavior" ADD VALUE IF NOT EXISTS 'LEND_OUT'`);
+  await run(`ALTER TYPE "TransactionBehavior" ADD VALUE IF NOT EXISTS 'LEND_REPAY'`);
+
   // New FeatureFlag table
   await run(`CREATE TABLE IF NOT EXISTS "FeatureFlag" (
     "id" TEXT NOT NULL,

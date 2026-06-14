@@ -441,6 +441,8 @@ export default function TransactionsPage() {
                       tx.type?.behavior === 'EMERGENCY' ? 'bg-orange-500/10 text-orange-400' :
                       tx.type?.behavior === 'LOAN_BORROW' ? 'bg-purple-500/10 text-purple-400' :
                       tx.type?.behavior === 'LOAN_REPAY' ? 'bg-emerald-500/10 text-emerald-400' :
+                      tx.type?.behavior === 'LEND_OUT' ? 'bg-blue-500/10 text-blue-400' :
+                      tx.type?.behavior === 'LEND_REPAY' ? 'bg-blue-500/10 text-blue-300' :
                       'bg-rose-500/10 text-rose-400'
                     }`}>
                       {tx.category?.name}
