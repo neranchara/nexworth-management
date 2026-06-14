@@ -480,6 +480,7 @@
     "passwordPlaceholder": "ENTER NEW PASSWORD",
     "passwordHint": "Leave empty to keep current password",
     "line": {
+      "description": "Elevate your financial management with LINE Sync — record transactions via chat and scan slips automatically.",
       "generating": "Activating Hub...",
       "generate": "Generate New Pairing Link"
     },
@@ -495,6 +496,48 @@
     "mfa": "Multi-Factor Auth",
     "comingSoon": "Coming Soon",
     "mfaDesc": "Hardware-based authentication and time-based OTP codes — coming in a future version"
+  },
+  "setup": {
+    "title": "Account Settings",
+    "subtitle": "Account Settings & Global Preferences",
+    "tabs": {
+      "profile": "Profile & LINE",
+      "security": "Security",
+      "team": "Team & Permissions"
+    }
+  },
+  "types": {
+    "title": "Transaction Types",
+    "subtitle": "Configure system calculation rules",
+    "addNew": "Add New Type",
+    "active": "Active",
+    "inactive": "Inactive",
+    "edit": "Edit Type",
+    "create": "New Type",
+    "table": {
+      "name": "Type Name",
+      "logic": "System Logic",
+      "behavior": "Behavior",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "name": "Type Name",
+      "behavior": "System Behavior",
+      "status": "Status",
+      "cancel": "Cancel",
+      "save": "Save Type"
+    },
+    "confirm": {
+      "delete": "Are you sure? Deleting a type will fail if it's used by categories."
+    },
+    "alert": {
+      "deleted": "Type deleted successfully",
+      "deleteFailed": "Delete failed",
+      "updated": "Type updated successfully",
+      "created": "Type created successfully",
+      "saveFailed": "Save failed"
+    }
   },
   "auth": {
     "loadingPortal": "Loading Secure Portal...",

@@ -234,7 +234,7 @@ export default function ProfilePage() {
             </div>
             
             <p className="text-xs font-bold text-slate-300 leading-relaxed mb-10 relative z-10">
-              ยกระดับการจัดการเงินของคุณด้วยระบบ LINE Sync ที่รองรับการบันทึกรายการผ่านแชทและสแกนสลิปอัตโนมัติ
+              {t('line.description')}
             </p>
 
             {!pairingCode ? (
