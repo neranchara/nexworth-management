@@ -355,6 +355,147 @@
       "alertCategory": "Please select a transaction category."
     }
   },
+  "goals": {
+    "title": "Financial Goals",
+    "subtitle": "Tracking Dreams & Stability",
+    "addNew": "Create New Goal",
+    "purpose": "Set and track short/long-term goals with AI-powered forecasting based on your current saving rate to build financial motivation.",
+    "summary": {
+      "total": "Total Goal Value",
+      "activeGoals": "{count} Active Goals",
+      "collected": "Collected"
+    },
+    "filter": {
+      "all": "All",
+      "shortTerm": "Short Term",
+      "longTerm": "Long Term"
+    },
+    "card": {
+      "target": "Target:"
+    },
+    "empty": "No goals in this category yet.",
+    "confirm": {
+      "delete": "Are you sure you want to delete this goal? Linked savings data will be unlinked."
+    },
+    "modal": {
+      "createTitle": "Create New Goal",
+      "editTitle": "Edit Goal"
+    },
+    "form": {
+      "name": "Goal Name",
+      "namePlaceholder": "e.g. Home Down Payment, Japan Trip",
+      "targetAmount": "Target Amount",
+      "priority": "Category",
+      "color": "Color Accent",
+      "linkedAsset": "Linked Asset Account",
+      "selectAccount": "Select savings account (Optional)",
+      "linkedDesc": "Goal progress is calculated from the balance of this account.",
+      "deadline": "Deadline",
+      "status": "Status",
+      "cancel": "Cancel",
+      "submit": "Create Goal",
+      "update": "Save Changes"
+    }
+  },
+  "liabilities": {
+    "title": "Liabilities",
+    "subtitle": "Track debt obligations and outstanding balances",
+    "addNew": "Add Liability Record",
+    "search": "Search entries...",
+    "allInstitutions": "All Institutions",
+    "totalLiabilities": "Total Liabilities",
+    "loading": "Loading data...",
+    "noData": "No liability records found.",
+    "table": {
+      "account": "Account / Type",
+      "type": "Type",
+      "institution": "Institution",
+      "amount": "Outstanding",
+      "note": "Note",
+      "action": "Actions"
+    },
+    "form": {
+      "titleAdd": "Add Liability",
+      "titleEdit": "Edit Liability",
+      "account": "Select Liability Account",
+      "newAccount": "+ Create New Liability Account",
+      "newName": "New Liability Name",
+      "bank": "Financial Institution",
+      "noInstitution": "No Institution",
+      "amount": "Amount (THB)",
+      "note": "Additional Notes",
+      "notePlaceholder": "e.g. Current outstanding balance",
+      "date": "Update Date",
+      "save": "Save Liability",
+      "update": "Update",
+      "cancel": "Cancel"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to remove this liability record? (Account will NOT be deleted)"
+    },
+    "alert": {
+      "removed": "Liability record removed successfully",
+      "removeFailed": "Remove failed",
+      "updated": "Liability record updated successfully",
+      "added": "Liability record added successfully",
+      "saveFailed": "Save failed"
+    }
+  },
+  "monthly": {
+    "title": "Monthly Summary",
+    "subtitle": "High-level financial performance by month for {year}.",
+    "loading": "Loading yearly summary...",
+    "accessDenied": "Access Denied",
+    "accessDeniedDesc": "You do not have permission to view the monthly summary.",
+    "summary": {
+      "annualIncome": "Annual Income",
+      "annualExpense": "Annual Expense",
+      "annualSavings": "Annual Savings",
+      "annualNet": "Annual Net"
+    },
+    "table": {
+      "title": "Monthly Breakdown ({year})",
+      "month": "Month",
+      "income": "Income",
+      "expense": "Expense",
+      "savings": "Savings",
+      "goalSavings": "Goal Savings",
+      "investments": "Investments",
+      "debtPaid": "Debt Paid",
+      "netBalance": "Net Balance",
+      "records": "Records",
+      "txs": "txs",
+      "totalAnnual": "Total (Annual)"
+    }
+  },
+  "profile": {
+    "save": "Save Changes",
+    "saving": "Processing...",
+    "identity": "Identity Profile",
+    "identityDesc": "Primary Account Details",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Connection",
+    "password": "Security Key Override",
+    "passwordPlaceholder": "ENTER NEW PASSWORD",
+    "passwordHint": "Leave empty to keep current password",
+    "line": {
+      "generating": "Activating Hub...",
+      "generate": "Generate New Pairing Link"
+    },
+    "alert": {
+      "saved": "Profile updated successfully",
+      "failed": "Update failed"
+    }
+  },
+  "security": {
+    "title": "Security Center",
+    "subtitle": "Cloud Identity Protection & Audit Trails",
+    "protectionStatus": "Protection Status",
+    "mfa": "Multi-Factor Auth",
+    "comingSoon": "Coming Soon",
+    "mfaDesc": "Hardware-based authentication and time-based OTP codes — coming in a future version"
+  },
   "auth": {
     "loadingPortal": "Loading Secure Portal...",
     "login": {

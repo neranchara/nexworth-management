@@ -355,6 +355,147 @@
       "alertCategory": "โปรดเลือกหมวดหมู่รายการ"
     }
   },
+  "goals": {
+    "title": "เป้าหมายการเงิน",
+    "subtitle": "Tracking Dreams & Stability",
+    "addNew": "สร้างเป้าหมายใหม่",
+    "purpose": "กำหนดและติดตามเป้าหมายระยะสั้น/ยาว พร้อมระบบ AI ช่วยพยากรณ์ระยะเวลาความสำเร็จโดยอิงจากอัตราการออมปัจจุบัน เพื่อสร้างแรงจูงใจทางการเงิน",
+    "summary": {
+      "total": "ยอดรวมเป้าหมาย",
+      "activeGoals": "{count} เป้าหมายดำเนินการ",
+      "collected": "สะสมแล้ว"
+    },
+    "filter": {
+      "all": "ทั้งหมด",
+      "shortTerm": "ระยะสั้น",
+      "longTerm": "ระยะยาว"
+    },
+    "card": {
+      "target": "เป้าหมาย:"
+    },
+    "empty": "ยังไม่มีเป้าหมายในหมวดหมู่นี้",
+    "confirm": {
+      "delete": "คุณต้องการลบเป้าหมายนี้ใช่หรือไม่? ข้อมูลการออมที่ผูกไว้จะถูกยกเลิกการเชื่อมต่อ"
+    },
+    "modal": {
+      "createTitle": "สร้างเป้าหมายใหม่",
+      "editTitle": "แก้ไขเป้าหมาย"
+    },
+    "form": {
+      "name": "ชื่อเป้าหมาย",
+      "namePlaceholder": "e.g. ดาวน์บ้าน, เที่ยวญี่ปุ่น",
+      "targetAmount": "ยอดเงินเป้าหมาย",
+      "priority": "หมวดหมู่",
+      "color": "สี",
+      "linkedAsset": "ผูกกับบัญชีสินทรัพย์",
+      "selectAccount": "เลือกบัญชีที่ใช้เก็บเงิน (Optional)",
+      "linkedDesc": "เป้าหมายจะคำนวณความคืบหน้าจากเงินในบัญชีนี้",
+      "deadline": "กำหนดเวลา",
+      "status": "สถานะ",
+      "cancel": "ยกเลิก",
+      "submit": "สร้างเป้าหมาย",
+      "update": "บันทึกการแก้ไข"
+    }
+  },
+  "liabilities": {
+    "title": "หนี้สิน",
+    "subtitle": "ติดตามภาระหนี้และยอดค้างชำระ",
+    "addNew": "บันทึกยอดหนี้ใหม่",
+    "search": "ค้นหารายการ...",
+    "allInstitutions": "สถาบันทั้งหมด",
+    "totalLiabilities": "ยอดหนี้รวมทั้งหมด",
+    "loading": "กำลังโหลดข้อมูล...",
+    "noData": "ไม่พบรายการหนี้สิน",
+    "table": {
+      "account": "ชื่อบัญชี / ประเภท",
+      "type": "ประเภท",
+      "institution": "สถาบัน",
+      "amount": "ยอดคงค้าง",
+      "note": "หมายเหตุ",
+      "action": "จัดการ"
+    },
+    "form": {
+      "titleAdd": "เพิ่มรายการหนี้",
+      "titleEdit": "แก้ไขรายการหนี้",
+      "account": "เลือกบัญชีหนี้สิน",
+      "newAccount": "+ สร้างบัญชีหนี้ใหม่",
+      "newName": "ชื่อบัญชีหนี้ใหม่",
+      "bank": "สถาบันการเงิน",
+      "noInstitution": "ไม่มีสถาบัน",
+      "amount": "ยอดหนี้ (บาท)",
+      "note": "บันทึกเพิ่มเติม",
+      "notePlaceholder": "e.g. ยอดคงค้างปัจจุบัน",
+      "date": "วันที่อัปเดต",
+      "save": "บันทึกยอดหนี้",
+      "update": "อัปเดต",
+      "cancel": "ยกเลิก"
+    },
+    "confirm": {
+      "delete": "คุณต้องการลบรายการหนี้นี้ใช่หรือไม่? (บัญชีจะไม่ถูกลบ)"
+    },
+    "alert": {
+      "removed": "ลบรายการหนี้สำเร็จ",
+      "removeFailed": "ลบไม่สำเร็จ",
+      "updated": "อัปเดตรายการหนี้สำเร็จ",
+      "added": "เพิ่มรายการหนี้สำเร็จ",
+      "saveFailed": "บันทึกไม่สำเร็จ"
+    }
+  },
+  "monthly": {
+    "title": "สรุปรายเดือน",
+    "subtitle": "สรุปผลการเงินแต่ละเดือน ปี {year}",
+    "loading": "กำลังโหลดข้อมูลรายปี...",
+    "accessDenied": "ไม่มีสิทธิ์เข้าถึง",
+    "accessDeniedDesc": "คุณไม่มีสิทธิ์ดูสรุปรายเดือน",
+    "summary": {
+      "annualIncome": "รายได้รวมทั้งปี",
+      "annualExpense": "รายจ่ายรวมทั้งปี",
+      "annualSavings": "เงินออมรวมทั้งปี",
+      "annualNet": "สุทธิทั้งปี"
+    },
+    "table": {
+      "title": "สรุปรายเดือน ({year})",
+      "month": "เดือน",
+      "income": "รายได้",
+      "expense": "รายจ่าย",
+      "savings": "เงินออม",
+      "goalSavings": "ออมเป้าหมาย",
+      "investments": "การลงทุน",
+      "debtPaid": "ชำระหนี้",
+      "netBalance": "ยอดสุทธิ",
+      "records": "รายการ",
+      "txs": "txs",
+      "totalAnnual": "รวม (ทั้งปี)"
+    }
+  },
+  "profile": {
+    "save": "บันทึกการเปลี่ยนแปลง",
+    "saving": "กำลังประมวลผล...",
+    "identity": "ข้อมูลประจำตัว",
+    "identityDesc": "รายละเอียดบัญชีหลัก",
+    "firstName": "ชื่อ",
+    "lastName": "นามสกุล",
+    "email": "อีเมล",
+    "password": "รหัสผ่านใหม่",
+    "passwordPlaceholder": "ใส่รหัสผ่านใหม่",
+    "passwordHint": "เว้นว่างหากไม่ต้องการเปลี่ยนรหัสผ่าน",
+    "line": {
+      "generating": "กำลังเปิดใช้งาน...",
+      "generate": "สร้างลิงก์เชื่อมต่อใหม่"
+    },
+    "alert": {
+      "saved": "บันทึกข้อมูลสำเร็จ",
+      "failed": "บันทึกไม่สำเร็จ"
+    }
+  },
+  "security": {
+    "title": "Security Center",
+    "subtitle": "Cloud Identity Protection & Audit Trails",
+    "protectionStatus": "สถานะความปลอดภัย",
+    "mfa": "Multi-Factor Auth",
+    "comingSoon": "เร็วๆ นี้",
+    "mfaDesc": "ระบบยืนยันตัวตนด้วย Hardware และ OTP — รอการพัฒนาในเวอร์ชันถัดไป"
+  },
   "auth": {
     "loadingPortal": "กำลังโหลดระบบ...",
     "login": {
