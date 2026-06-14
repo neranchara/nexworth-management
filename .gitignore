@@ -55,16 +55,6 @@ docs/
 !CONFIG_POLICY.md
 !PROD_CONFIG_GUIDE.md
 
-# Tests & Mocks
-**/tests/
-**/__tests__/
-**/*.test.ts
-**/*.test.tsx
-**/*.spec.ts
-**/*.spec.tsx
-mock/
-**/mock/
-
 # Test results and logs
 **/test_output.txt
 **/test_results.txt
