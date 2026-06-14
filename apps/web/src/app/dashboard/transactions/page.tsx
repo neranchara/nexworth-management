@@ -526,7 +526,12 @@ export default function TransactionsPage() {
                 className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
               >
                 <option value="">Select Category</option>
-                {categories.map(c => {
+                {categories
+                  .filter(c => {
+                    const behavior = types.find(t => t.id === c.typeId)?.behavior ?? '';
+                    return !['LOAN_BORROW', 'LOAN_REPAY', 'LEND_OUT', 'LEND_REPAY'].includes(behavior);
+                  })
+                  .map(c => {
                   const typeName = types.find(t => t.id === c.typeId)?.name || 'Unknown';
                   return (
                     <option key={c.id} value={c.id} className="bg-[#001229]">
