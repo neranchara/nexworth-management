@@ -62,14 +62,19 @@ async function getOrCreateCategory(
 }
 
 async function main() {
-  console.log(`▶ Migration: ปล่อยกู้ → LEND_OUT Loans [${DRY_RUN ? 'DRY RUN' : 'LIVE'}]`);
+  console.log(`▶ Migration: LEND_OUT transactions → Loan records [${DRY_RUN ? 'DRY RUN' : 'LIVE'}]`);
   console.log('');
 
-  // 1. หา transactions ทั้งหมดที่ category name = "ปล่อยกู้"
+  // 1. หา transactions ทั้งหมดที่เป็น LEND_OUT (ไม่ว่าชื่อ category จะเป็นอะไร)
+  //    และยังไม่มี loanId
   const ployKuTransactions = await prisma.transaction.findMany({
     where: {
-      loanId: null, // ยังไม่ได้ link กับ Loan record
-      category: { name: 'ปล่อยกู้' }
+      loanId: null,
+      OR: [
+        { category: { name: 'ปล่อยกู้' } },
+        { type: { behavior: 'LEND_OUT' as any } },
+        { category: { type: { behavior: 'LEND_OUT' as any } } },
+      ]
     },
     include: {
       category: { include: { type: true } },
@@ -79,16 +84,16 @@ async function main() {
     orderBy: { date: 'asc' }
   });
 
-  console.log(`📋 พบ ${ployKuTransactions.length} รายการ "ปล่อยกู้" ที่ยังไม่มี Loan record`);
+  console.log(`📋 พบ ${ployKuTransactions.length} รายการ LEND_OUT ที่ยังไม่มี Loan record`);
 
   if (ployKuTransactions.length === 0) {
-    console.log('✅ ไม่มีรายการที่ต้อง migrate');
+    console.log('✅ ไม่มีรายการ LEND_OUT ที่ต้อง migrate');
     return;
   }
 
   // แสดง preview ทุก transaction ที่จะ migrate
   console.log('');
-  console.log('รายการที่จะ migrate:');
+  console.log('รายการที่จะ migrate (LEND_OUT → Loan record):');
   ployKuTransactions.forEach((tx, i) => {
     console.log(`  ${i + 1}. [${tx.organizationId}] ${tx.description || '-'} | ฿${tx.amount.toLocaleString()} | ${tx.account?.name || tx.accountId} | ${tx.date.toISOString().split('T')[0]}`);
   });
