@@ -2,23 +2,25 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { 
-  LayoutDashboard, 
-  Receipt, 
-  Wallet, 
-  Target, 
+import {
+  LayoutDashboard,
+  Receipt,
+  Wallet,
+  Target,
   Menu,
 } from 'lucide-react';
 import { clsx } from 'clsx';
+import { useTranslations } from 'next-intl';
 
 export default function MobileBottomNav({ onOpenMenu }: { onOpenMenu?: () => void }) {
   const pathname = usePathname();
+  const t = useTranslations('nav');
 
   const navLinks = [
-    { href: '/dashboard', label: 'หน้าหลัก', icon: LayoutDashboard },
-    { href: '/dashboard/transactions', label: 'ธุรกรรม', icon: Receipt },
-    { href: '/dashboard/assets', label: 'สินทรัพย์', icon: Wallet },
-    { href: '/dashboard/goals', label: 'เป้าหมาย', icon: Target },
+    { href: '/dashboard', labelKey: 'home', icon: LayoutDashboard },
+    { href: '/dashboard/transactions', labelKey: 'transactions', icon: Receipt },
+    { href: '/dashboard/assets', labelKey: 'assets', icon: Wallet },
+    { href: '/dashboard/goals', labelKey: 'goals', icon: Target },
   ];
 
   return (
@@ -26,7 +28,7 @@ export default function MobileBottomNav({ onOpenMenu }: { onOpenMenu?: () => voi
       {navLinks.map((link) => {
         const isActive = pathname === link.href;
         return (
-          <Link 
+          <Link
             key={link.href}
             href={link.href}
             className={clsx(
@@ -36,7 +38,7 @@ export default function MobileBottomNav({ onOpenMenu }: { onOpenMenu?: () => voi
           >
             <link.icon className="w-5 h-5" />
             <span className="text-[9px] font-bold uppercase tracking-tighter">
-              {link.label}
+              {t(link.labelKey as any)}
             </span>
             {isActive && <div className="w-1 h-1 bg-emerald rounded-full absolute bottom-1" />}
           </Link>
@@ -46,10 +48,10 @@ export default function MobileBottomNav({ onOpenMenu }: { onOpenMenu?: () => voi
         type="button"
         onClick={onOpenMenu}
         className="flex flex-col items-center justify-center gap-1 w-1/5 text-slate hover:text-emerald transition-all"
-        aria-label="เมนูทั้งหมด"
+        aria-label={t('menu')}
       >
         <Menu className="w-5 h-5" />
-        <span className="text-[9px] font-bold uppercase tracking-tighter">เมนู</span>
+        <span className="text-[9px] font-bold uppercase tracking-tighter">{t('menu')}</span>
       </button>
     </nav>
   );

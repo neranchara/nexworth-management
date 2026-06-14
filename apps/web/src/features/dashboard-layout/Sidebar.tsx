@@ -8,6 +8,7 @@ import { clsx } from 'clsx';
 import Logo from '@/components/common/Logo';
 import { SETUP_LINK } from './navConfig';
 import { useDashboardNav } from './useDashboardNav';
+import { useTranslations } from 'next-intl';
 
 interface SidebarProps {
   isCollapsed: boolean;
@@ -17,7 +18,8 @@ interface SidebarProps {
 export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   const pathname = usePathname();
   const router = useRouter();
-  const { mainLinks, mgmtLinks, setupLabel } = useDashboardNav();
+  const t = useTranslations('nav');
+  const { mainLinks, mgmtLinks } = useDashboardNav();
 
   const handleLogout = async () => {
     try {
@@ -74,7 +76,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                 />
                 {!isCollapsed && (
                   <span className="whitespace-nowrap overflow-hidden transition-opacity duration-300">
-                    {link.label}
+                    {t(link.labelKey as any)}
                   </span>
                 )}
               </Link>
@@ -86,7 +88,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
           <div className="space-y-1">
             {!isCollapsed && (
               <p className="px-4 text-[10px] font-bold text-slate/40 uppercase tracking-widest mb-2">
-                Management
+                {t('management')}
               </p>
             )}
             {mgmtLinks.map((link) => {
@@ -112,7 +114,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                   />
                   {!isCollapsed && (
                     <span className="whitespace-nowrap overflow-hidden transition-opacity duration-300">
-                      {link.label}
+                      {t(link.labelKey as any)}
                     </span>
                   )}
                 </Link>
@@ -136,7 +138,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         >
           <Settings className="w-5 h-5 shrink-0" />
           {!isCollapsed && (
-            <span className="whitespace-nowrap transition-opacity duration-300">{setupLabel}</span>
+            <span className="whitespace-nowrap transition-opacity duration-300">{t('setup')}</span>
           )}
         </Link>
         
@@ -148,7 +150,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         >
           <LogOut className="w-5 h-5 shrink-0" />
           {!isCollapsed && (
-            <span className="whitespace-nowrap transition-opacity duration-300">ออกจากระบบ</span>
+            <span className="whitespace-nowrap transition-opacity duration-300">{t('logout')}</span>
           )}
         </button>
       </div>
