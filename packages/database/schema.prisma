@@ -278,6 +278,8 @@ model Loan {
   name           String
   totalAmount    Float         @default(0)
   status         String        @default("ACTIVE")
+  direction      String        @default("BORROW")
+  borrowerName   String?
   date           DateTime      @default(now())
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
@@ -416,6 +418,8 @@ enum TransactionBehavior {
   DEBT
   LOAN_BORROW
   LOAN_REPAY
+  LEND_OUT
+  LEND_REPAY
   GOAL
   EMERGENCY
 }

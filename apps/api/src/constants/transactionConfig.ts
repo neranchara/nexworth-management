@@ -4,6 +4,8 @@ export const SYSTEM_CATEGORY_KEYS = {
   TRANSFER_OUT: 'TRANSFER_OUT',
   LOAN_BORROW_SYS: 'LOAN_BORROW_SYS',
   LOAN_REPAY_SYS: 'LOAN_REPAY_SYS',
+  LEND_OUT_SYS: 'LEND_OUT_SYS',
+  LEND_REPAY_SYS: 'LEND_REPAY_SYS',
 } as const;
 
 export type SystemCategoryKey = typeof SYSTEM_CATEGORY_KEYS[keyof typeof SYSTEM_CATEGORY_KEYS];
@@ -26,6 +28,8 @@ export const BEHAVIOR_METADATA: Record<string, {
   DEBT:              { defaultDirection: 'OUTBOUND', isExpenseLike: true,  cashflowBucket: 'debt',    assetMultiplier: -1, liabMultiplier:  1 },
   LOAN_BORROW:       { defaultDirection: 'INBOUND',  isExpenseLike: false, cashflowBucket: 'loan',    assetMultiplier:  1, liabMultiplier:  1 },
   LOAN_REPAY:        { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'loan',    assetMultiplier: -1, liabMultiplier: -1 },
+  LEND_OUT:          { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'loan',    assetMultiplier: -1, liabMultiplier: -1 },
+  LEND_REPAY:        { defaultDirection: 'INBOUND',  isExpenseLike: false, cashflowBucket: 'loan',    assetMultiplier:  1, liabMultiplier:  1 },
   GOAL:              { defaultDirection: 'NEUTRAL',  isExpenseLike: false, cashflowBucket: null,      assetMultiplier:  1, liabMultiplier:  0 },
   EMERGENCY:         { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'saving',  assetMultiplier:  1, liabMultiplier:  0 },
 };

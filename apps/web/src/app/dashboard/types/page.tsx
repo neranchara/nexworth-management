@@ -18,6 +18,8 @@ const DEFAULT_BEHAVIORS = [
   { value: 'DEBT', label: 'หนี้สิน (Debt)', color: 'text-purple-400' },
   { value: 'LOAN_BORROW', label: 'ยืมเงิน (Loan Borrow)', color: 'text-orange-400' },
   { value: 'LOAN_REPAY', label: 'คืนเงิน (Loan Repay)', color: 'text-emerald' },
+  { value: 'LEND_OUT', label: 'ให้ยืมเงิน (Lend Out)', color: 'text-blue-400' },
+  { value: 'LEND_REPAY', label: 'รับเงินคืน (Lend Repay)', color: 'text-blue-300' },
 ];
 
 const DEFAULT_LABELS = {
