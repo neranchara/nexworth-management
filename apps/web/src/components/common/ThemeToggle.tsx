@@ -36,7 +36,7 @@ export default function ThemeToggle({ collapsed = false }: { collapsed?: boolean
         onClick={() => handleSwitch(theme === 'dark' ? 'light' : 'dark')}
         disabled={isPending}
         title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
-        className="w-full flex items-center justify-center px-4 py-3 rounded-xl text-slate hover:text-white hover:bg-white/5 transition-all disabled:opacity-50"
+        className="w-full flex items-center justify-center px-4 py-3 rounded-xl text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all disabled:opacity-50"
       >
         {theme === 'dark'
           ? <Sun className="w-4 h-4 text-emerald" />
@@ -46,7 +46,7 @@ export default function ThemeToggle({ collapsed = false }: { collapsed?: boolean
   }
 
   return (
-    <div className="flex items-center bg-white/5 rounded-lg p-0.5 gap-0.5">
+    <div className="flex items-center bg-slate-100 dark:bg-white/5 rounded-lg p-0.5 gap-0.5">
       <button
         type="button"
         onClick={() => handleSwitch('dark')}
@@ -55,7 +55,7 @@ export default function ThemeToggle({ collapsed = false }: { collapsed?: boolean
         className={`px-2.5 py-1 rounded-md transition-all disabled:opacity-50 flex items-center gap-1 ${
           theme === 'dark'
             ? 'bg-emerald text-midnight shadow'
-            : 'text-slate hover:text-white'
+            : 'text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white'
         }`}
       >
         <Moon className="w-3 h-3" />
@@ -68,7 +68,7 @@ export default function ThemeToggle({ collapsed = false }: { collapsed?: boolean
         className={`px-2.5 py-1 rounded-md transition-all disabled:opacity-50 flex items-center gap-1 ${
           theme === 'light'
             ? 'bg-emerald text-midnight shadow'
-            : 'text-slate hover:text-white'
+            : 'text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white'
         }`}
       >
         <Sun className="w-3 h-3" />
