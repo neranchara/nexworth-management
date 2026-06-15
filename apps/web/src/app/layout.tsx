@@ -6,6 +6,7 @@ import PrewarmDB from "../components/PrewarmDB";
 import { Analytics } from "@vercel/analytics/react";
 import { NextIntlClientProvider } from "next-intl";
 import { getLocale, getMessages } from "next-intl/server";
+import { cookies } from "next/headers";
 
 const prompt = Prompt({
   variable: "--font-prompt",
@@ -25,9 +26,11 @@ export default async function RootLayout({
 }>) {
   const locale = await getLocale();
   const messages = await getMessages();
+  const cookieStore = await cookies();
+  const theme = (cookieStore.get('NEXT_THEME')?.value ?? 'dark') as 'dark' | 'light';
 
   return (
-    <html lang={locale}>
+    <html lang={locale} className={theme}>
       <head>
         <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />

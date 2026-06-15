@@ -10,6 +10,7 @@ import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { useImpersonation } from '@/context/ImpersonationContext';
 import LanguageToggle from '@/components/common/LanguageToggle';
+import ThemeToggle from '@/components/common/ThemeToggle';
 import { useTranslations } from 'next-intl';
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
@@ -143,6 +144,7 @@ export default function DashboardShell({ children }: { children: React.ReactNode
               <span className="font-bold text-lg tracking-tight">NEXWORTH</span>
            </div>
                       <div className="flex items-center gap-4 ml-auto">
+               <ThemeToggle />
                <LanguageToggle collapsed={false} />
                <div className="hidden sm:flex flex-col items-end mr-2">
                   <span className="text-xs font-bold text-white leading-none">
