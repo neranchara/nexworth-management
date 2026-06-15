@@ -34,7 +34,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
   return (
     <aside
       className={clsx(
-        'hidden lg:flex flex-col bg-navy border-r border-slate/10 transition-all duration-300 relative shrink-0 z-50',
+        'hidden lg:flex flex-col bg-white dark:bg-navy border-r border-slate-200 dark:border-slate/10 transition-all duration-300 relative shrink-0 z-50',
         isCollapsed ? 'w-20' : 'w-64'
       )}
     >
@@ -65,13 +65,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                   'flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-medium transition-all group',
                   isActive
                     ? 'bg-emerald/10 text-emerald border-r-2 border-emerald'
-                    : 'text-slate hover:text-white hover:bg-white/5'
+                    : 'text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
                 )}
               >
                 <link.icon
                   className={clsx(
                     'w-5 h-5 shrink-0 transition-colors',
-                    isActive ? 'text-emerald' : 'text-slate group-hover:text-white'
+                    isActive ? 'text-emerald' : 'text-slate-500 dark:text-slate group-hover:text-slate-900 dark:group-hover:text-white'
                   )}
                 />
                 {!isCollapsed && (
@@ -87,7 +87,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         {mgmtLinks.length > 0 && (
           <div className="space-y-1">
             {!isCollapsed && (
-              <p className="px-4 text-[10px] font-bold text-slate/40 uppercase tracking-widest mb-2">
+              <p className="px-4 text-[10px] font-bold text-slate-400 dark:text-slate/40 uppercase tracking-widest mb-2">
                 {t('management')}
               </p>
             )}
@@ -103,13 +103,13 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
                     'flex items-center gap-4 px-4 py-3.5 rounded-xl text-sm font-medium transition-all group',
                     isActive
                       ? 'bg-emerald/10 text-emerald border-r-2 border-emerald'
-                      : 'text-slate hover:text-white hover:bg-white/5'
+                      : 'text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5'
                   )}
                 >
                   <link.icon
                     className={clsx(
                       'w-5 h-5 shrink-0 transition-colors',
-                      isActive ? 'text-emerald' : 'text-slate group-hover:text-white'
+                      isActive ? 'text-emerald' : 'text-slate-500 dark:text-slate group-hover:text-slate-900 dark:group-hover:text-white'
                     )}
                   />
                   {!isCollapsed && (
@@ -124,7 +124,7 @@ export default function Sidebar({ isCollapsed, setIsCollapsed }: SidebarProps) {
         )}
       </nav>
 
-      <div className="p-4 border-t border-slate/10">
+      <div className="p-4 border-t border-slate-200 dark:border-slate/10">
         <Link
           href={SETUP_LINK.href}
           title={isCollapsed ? SETUP_LINK.title : ''}

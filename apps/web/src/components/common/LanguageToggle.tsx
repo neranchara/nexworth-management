@@ -35,7 +35,7 @@ export default function LanguageToggle({ collapsed = false }: { collapsed?: bool
         onClick={() => handleSwitch(locale === 'th' ? 'en' : 'th')}
         disabled={isPending}
         title={locale === 'th' ? 'Switch to English' : 'เปลี่ยนเป็นภาษาไทย'}
-        className="w-full flex items-center justify-center px-4 py-3 rounded-xl text-xs font-bold text-slate hover:text-white hover:bg-white/5 transition-all disabled:opacity-50"
+        className="w-full flex items-center justify-center px-4 py-3 rounded-xl text-xs font-bold text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white hover:bg-slate-100 dark:hover:bg-white/5 transition-all disabled:opacity-50"
       >
         <span className="text-emerald">{locale.toUpperCase()}</span>
       </button>
@@ -44,7 +44,7 @@ export default function LanguageToggle({ collapsed = false }: { collapsed?: bool
 
   return (
     <div className="flex items-center gap-2 px-4 py-3">
-      <div className="flex items-center bg-white/5 rounded-lg p-0.5 gap-0.5">
+      <div className="flex items-center bg-slate-100 dark:bg-white/5 rounded-lg p-0.5 gap-0.5">
         <button
           type="button"
           onClick={() => handleSwitch('th')}
@@ -52,7 +52,7 @@ export default function LanguageToggle({ collapsed = false }: { collapsed?: bool
           className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all disabled:opacity-50 ${
             locale === 'th'
               ? 'bg-emerald text-midnight shadow'
-              : 'text-slate hover:text-white'
+              : 'text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           TH
@@ -64,7 +64,7 @@ export default function LanguageToggle({ collapsed = false }: { collapsed?: bool
           className={`px-2.5 py-1 rounded-md text-[11px] font-bold transition-all disabled:opacity-50 ${
             locale === 'en'
               ? 'bg-emerald text-midnight shadow'
-              : 'text-slate hover:text-white'
+              : 'text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white'
           }`}
         >
           EN
