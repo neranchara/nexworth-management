@@ -64,10 +64,12 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
   }
 
   // 5. Seed Transaction Types with behavior metadata
+  // NEX-FEAT-13: ออม (SAVING) and ลงทุน (INVESTMENT) are separate — no "ออม/ลงทุน"
   const typeData = [
     { name: 'รายรับ',         behavior: 'INCOME' },
     { name: 'รายจ่าย',        behavior: 'EXPENSE' },
-    { name: 'ออม/ลงทุน',      behavior: 'SAVING' },
+    { name: 'ออม',            behavior: 'SAVING' },
+    { name: 'ลงทุน',          behavior: 'INVESTMENT' },
     { name: 'โอนภายใน',       behavior: 'INTERNAL_TRANSFER' },
     { name: 'หนี้',           behavior: 'DEBT' },
     { name: 'ยืมเงินภายใน',   behavior: 'LOAN_BORROW' },
@@ -83,6 +85,8 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
         defaultDirection: meta.defaultDirection,
         isExpenseLike:    meta.isExpenseLike,
         cashflowBucket:   meta.cashflowBucket,
+        assetMultiplier:  meta.assetMultiplier,
+        liabMultiplier:   meta.liabMultiplier,
       },
       create: {
         name:             t.name,
@@ -91,6 +95,8 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
         defaultDirection: meta.defaultDirection,
         isExpenseLike:    meta.isExpenseLike,
         cashflowBucket:   meta.cashflowBucket,
+        assetMultiplier:  meta.assetMultiplier,
+        liabMultiplier:   meta.liabMultiplier,
       }
     });
   }
@@ -106,15 +112,16 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     { name: 'ค่าใช้จ่ายประจำ',  typeName: 'รายจ่าย' },
     { name: 'ค่าใช้จ่ายส่วนตัว', typeName: 'รายจ่าย' },
     { name: 'ครอบครัว',         typeName: 'รายจ่าย' },
-    { name: 'ท่องเที่ยว',        typeName: 'ออม/ลงทุน' },
-    { name: 'ค่าใช้จ่ายรถ',     typeName: 'ออม/ลงทุน' },
-    { name: 'บริจาค',           typeName: 'ออม/ลงทุน' },
-    { name: 'เงินออม',          typeName: 'ออม/ลงทุน' },
-    { name: 'เงินฉุกเฉิน',      typeName: 'ออม/ลงทุน' },
-    { name: 'เงินซื้อรถ',       typeName: 'ออม/ลงทุน' },
-    { name: 'ลงทุนหุ้น',        typeName: 'ออม/ลงทุน' },
-    { name: 'ลงทุนทอง',         typeName: 'ออม/ลงทุน' },
-    { name: 'ลงทุนธุรกิจ',      typeName: 'ออม/ลงทุน' },
+    { name: 'บริจาค',           typeName: 'รายจ่าย' },
+    { name: 'ค่าใช้จ่ายรถ',     typeName: 'รายจ่าย' },
+    // NEX-FEAT-13 split
+    { name: 'เงินออม',          typeName: 'ออม' },
+    { name: 'เงินฉุกเฉิน',      typeName: 'ออม' },
+    { name: 'ลงทุนหุ้น',        typeName: 'ลงทุน' },
+    { name: 'ลงทุนทอง',         typeName: 'ลงทุน' },
+    { name: 'ลงทุนธุรกิจ',      typeName: 'ลงทุน' },
+    { name: 'ท่องเที่ยว',        typeName: 'เงินมีเป้าหมาย' },
+    { name: 'เงินซื้อรถ',       typeName: 'เงินมีเป้าหมาย' },
     { name: 'ชำระหนี้',         typeName: 'หนี้' },
     { name: 'ยืมเงิน',          typeBehavior: 'LOAN_BORROW' },
     { name: 'คืนเงิน',          typeBehavior: 'LOAN_REPAY' },

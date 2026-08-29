@@ -23,3 +23,12 @@ export const GOAL_SAVING_CATEGORY_NAMES = ['ท่องเที่ยว', '�
  * (Does not change posted amounts; only type/behavior classification via category.typeId + tx.typeId.)
  */
 export const EXPENSE_RECLASS_CATEGORY_NAMES = ['บริจาค', 'ค่าใช้จ่ายรถ'] as const;
+
+/** Resolve which type name a legacy category should move to (null = leave alone) */
+export function targetTypeNameForCategory(categoryName: string): string | null {
+  if ((SAVING_CATEGORY_NAMES as readonly string[]).includes(categoryName)) return TYPE_NAME_SAVING;
+  if ((INVESTMENT_CATEGORY_NAMES as readonly string[]).includes(categoryName)) return TYPE_NAME_INVESTMENT;
+  if ((GOAL_SAVING_CATEGORY_NAMES as readonly string[]).includes(categoryName)) return TYPE_NAME_GOAL_SAVING;
+  if ((EXPENSE_RECLASS_CATEGORY_NAMES as readonly string[]).includes(categoryName)) return TYPE_NAME_EXPENSE;
+  return null;
+}
