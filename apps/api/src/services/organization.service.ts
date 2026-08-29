@@ -91,6 +91,7 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     { name: 'ยืมเงินภายใน',   behavior: 'LOAN_BORROW' },
     { name: 'คืนเงินภายใน',   behavior: 'LOAN_REPAY' },
     { name: 'เงินมีเป้าหมาย', behavior: 'GOAL_SAVING' },
+    { name: 'ชำระหนี้บัตรเครดิต', behavior: 'LIABILITY_PAYMENT' },
   ];
   for (const t of typeData) {
     const meta = BEHAVIOR_METADATA[t.behavior];
@@ -142,6 +143,7 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
     { name: 'โอนออกภายใน',  typeBehavior: 'EXPENSE',           systemKey: SYSTEM_CATEGORY_KEYS.TRANSFER_OUT },
     { name: 'ยืมเงินภายใน', typeBehavior: 'LOAN_BORROW',       systemKey: SYSTEM_CATEGORY_KEYS.LOAN_BORROW_SYS },
     { name: 'คืนเงินภายใน', typeBehavior: 'LOAN_REPAY',        systemKey: SYSTEM_CATEGORY_KEYS.LOAN_REPAY_SYS },
+    { name: 'ชำระบัตรเครดิต', typeBehavior: 'LIABILITY_PAYMENT', systemKey: SYSTEM_CATEGORY_KEYS.LIABILITY_PAYMENT_SYS },
   ];
 
   for (const cat of categoryData) {

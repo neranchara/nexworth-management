@@ -513,21 +513,23 @@ export default function TransactionsPage() {
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('form.fromAccount')}</label>
                 <select
+                  data-testid="transactions-form-sel-from-account"
                   required={!formData.toAccountId} value={formData.fromAccountId} onChange={(e) => setFormData({...formData, fromAccountId: e.target.value})}
                   className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
                 >
                   <option value="">{t('form.noSourceAccount')}</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.type === 'LIABILITY' ? '💳 ' : ''}{a.name}</option>)}
                 </select>
               </div>
               <div className="flex flex-col gap-2">
                 <label className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">{t('form.toAccount')}</label>
                 <select
+                  data-testid="transactions-form-sel-to-account"
                   required={!formData.fromAccountId} value={formData.toAccountId} onChange={(e) => setFormData({...formData, toAccountId: e.target.value})}
                   className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
                 >
                   <option value="">{t('form.noDestAccount')}</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.name}</option>)}
+                  {accounts.map(a => <option key={a.id} value={a.id}>{a.type === 'LIABILITY' ? '💳 ' : ''}{a.name}</option>)}
                 </select>
               </div>
             </div>

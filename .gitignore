@@ -41,7 +41,12 @@ tmp/
 # Project Specific
 .agents/
 .workflow/
-docs/
+# docs: ignore by default; allow agent board, jira cards, and standards submodule
+docs/*
+!docs/IMPLEMENTATION_PLAN.md
+!docs/jira-cards/
+!docs/jira-cards/**
+!docs/standards/
 *.n8n
 
 # Prisma
@@ -54,6 +59,12 @@ docs/
 !README.md
 !CONFIG_POLICY.md
 !PROD_CONFIG_GUIDE.md
+!AGENTS.md
+!CLAUDE.md
+!GEMINI.md
+!.cursorrules
+!docs/IMPLEMENTATION_PLAN.md
+!docs/jira-cards/**/*.md
 
 # Test results, coverage and logs
 **/test_output.txt
@@ -73,4 +84,3 @@ build_output.txt
 
 # Training data (OCR)
 *.traineddata
-docs/standards

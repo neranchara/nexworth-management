@@ -14,7 +14,8 @@ import {
 describe('P6 — BEHAVIOR_METADATA coverage', () => {
   const expectedBehaviors = [
     'INCOME', 'EXPENSE', 'SAVING', 'INVESTMENT', 'GOAL_SAVING',
-    'INTERNAL_TRANSFER', 'DEBT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL', 'EMERGENCY'
+    'INTERNAL_TRANSFER', 'DEBT', 'LOAN_BORROW', 'LOAN_REPAY', 'GOAL', 'EMERGENCY',
+    'LIABILITY_PAYMENT'
   ];
 
   it('has metadata for every TransactionBehavior enum value', () => {
@@ -55,6 +56,14 @@ describe('P6 — BEHAVIOR_METADATA coverage', () => {
   it('INTERNAL_TRANSFER is NEUTRAL with no cashflow bucket', () => {
     expect(BEHAVIOR_METADATA['INTERNAL_TRANSFER'].defaultDirection).toBe('NEUTRAL');
     expect(BEHAVIOR_METADATA['INTERNAL_TRANSFER'].cashflowBucket).toBeNull();
+  });
+
+  it('LIABILITY_PAYMENT is OUTBOUND, not expense-like, debt bucket, decreases both cash and debt', () => {
+    expect(BEHAVIOR_METADATA['LIABILITY_PAYMENT'].defaultDirection).toBe('OUTBOUND');
+    expect(BEHAVIOR_METADATA['LIABILITY_PAYMENT'].isExpenseLike).toBe(false);
+    expect(BEHAVIOR_METADATA['LIABILITY_PAYMENT'].cashflowBucket).toBe('debt');
+    expect(BEHAVIOR_METADATA['LIABILITY_PAYMENT'].assetMultiplier).toBe(-1);
+    expect(BEHAVIOR_METADATA['LIABILITY_PAYMENT'].liabMultiplier).toBe(-1);
   });
 });
 
@@ -144,6 +153,33 @@ describe('P6 — getAssetMultiplier()', () => {
     it('INCOME on liability → -1 (decreases debt)', () => {
       expect(getAssetMultiplier('INCOME', true, null)).toBe(-1);
     });
+
+    it('LIABILITY_PAYMENT on liability → -1 (paying down debt decreases it)', () => {
+      expect(getAssetMultiplier('LIABILITY_PAYMENT', true, null)).toBe(-1);
+    });
+
+    it('LIABILITY_PAYMENT on asset → -1 (cash leaves the paying account)', () => {
+      expect(getAssetMultiplier('LIABILITY_PAYMENT', false, null)).toBe(-1);
+    });
+  });
+
+  describe('NEX-BUG-11: DEBT (ชำระหนี้) on a liability account always decreases it', () => {
+    it('DEBT on liability, direction=FROM → -1 (was +1, the bug)', () => {
+      expect(getAssetMultiplier('DEBT', true, 'FROM')).toBe(-1);
+    });
+
+    it('DEBT on liability, direction=TO → -1', () => {
+      expect(getAssetMultiplier('DEBT', true, 'TO')).toBe(-1);
+    });
+
+    it('DEBT on liability, no direction (metadata fallback) → -1', () => {
+      expect(getAssetMultiplier('DEBT', true, null)).toBe(-1);
+    });
+
+    it('DEBT on a normal cash account is unaffected → -1 (cash still decreases)', () => {
+      expect(getAssetMultiplier('DEBT', false, 'FROM')).toBe(-1);
+      expect(getAssetMultiplier('DEBT', false, null)).toBe(-1);
+    });
   });
 });
 
@@ -153,6 +189,7 @@ describe('P6 — SYSTEM_CATEGORY_KEYS', () => {
     expect(SYSTEM_CATEGORY_KEYS.TRANSFER_OUT).toBe('TRANSFER_OUT');
     expect(SYSTEM_CATEGORY_KEYS.LOAN_BORROW_SYS).toBe('LOAN_BORROW_SYS');
     expect(SYSTEM_CATEGORY_KEYS.LOAN_REPAY_SYS).toBe('LOAN_REPAY_SYS');
+    expect(SYSTEM_CATEGORY_KEYS.LIABILITY_PAYMENT_SYS).toBe('LIABILITY_PAYMENT_SYS');
   });
 });
 

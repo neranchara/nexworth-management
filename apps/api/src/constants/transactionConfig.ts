@@ -6,6 +6,7 @@ export const SYSTEM_CATEGORY_KEYS = {
   LOAN_REPAY_SYS: 'LOAN_REPAY_SYS',
   LEND_OUT_SYS: 'LEND_OUT_SYS',
   LEND_REPAY_SYS: 'LEND_REPAY_SYS',
+  LIABILITY_PAYMENT_SYS: 'LIABILITY_PAYMENT_SYS',
 } as const;
 
 export type SystemCategoryKey = typeof SYSTEM_CATEGORY_KEYS[keyof typeof SYSTEM_CATEGORY_KEYS];
@@ -25,13 +26,14 @@ export const BEHAVIOR_METADATA: Record<string, {
   INVESTMENT:        { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'invest',  assetMultiplier:  1, liabMultiplier: -1 },
   GOAL_SAVING:       { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'saving',  assetMultiplier:  1, liabMultiplier:  0 },
   INTERNAL_TRANSFER: { defaultDirection: 'NEUTRAL',  isExpenseLike: false, cashflowBucket: null,      assetMultiplier:  1, liabMultiplier: -1 },
-  DEBT:              { defaultDirection: 'OUTBOUND', isExpenseLike: true,  cashflowBucket: 'debt',    assetMultiplier: -1, liabMultiplier:  1 },
+  DEBT:              { defaultDirection: 'OUTBOUND', isExpenseLike: true,  cashflowBucket: 'debt',    assetMultiplier: -1, liabMultiplier: -1 },
   LOAN_BORROW:       { defaultDirection: 'INBOUND',  isExpenseLike: false, cashflowBucket: 'loan',    assetMultiplier:  1, liabMultiplier:  1 },
   LOAN_REPAY:        { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'loan',    assetMultiplier: -1, liabMultiplier: -1 },
   LEND_OUT:          { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'loan',    assetMultiplier: -1, liabMultiplier: -1 },
   LEND_REPAY:        { defaultDirection: 'INBOUND',  isExpenseLike: false, cashflowBucket: 'loan',    assetMultiplier:  1, liabMultiplier:  1 },
   GOAL:              { defaultDirection: 'NEUTRAL',  isExpenseLike: false, cashflowBucket: null,      assetMultiplier:  1, liabMultiplier:  0 },
   EMERGENCY:         { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'saving',  assetMultiplier:  1, liabMultiplier:  0 },
+  LIABILITY_PAYMENT: { defaultDirection: 'OUTBOUND', isExpenseLike: false, cashflowBucket: 'debt',    assetMultiplier: -1, liabMultiplier: -1 },
 };
 
 // Helper: get direction from type DB field with fallback to BEHAVIOR_METADATA
@@ -48,6 +50,11 @@ export function getCashflowBucket(behavior: string, dbBucket?: string | null): s
 
 // Helper: get asset multiplier from direction or fallback arrays
 export function getAssetMultiplier(behavior: string, isLiability: boolean, direction?: string | null): 1 | -1 | 0 {
+  // NEX-BUG-11: DEBT (ชำระหนี้) is a repayment category — even in single-leg 'FROM' mode,
+  // targeting a liability account means paying it down, not borrowing more. This must be
+  // checked before the generic direction shortcut below, which otherwise treats every
+  // 'FROM'-on-liability case as new borrowing (+1), which is correct for EXPENSE but wrong for DEBT.
+  if (behavior === 'DEBT' && isLiability) return -1;
   if (direction === 'TO') return isLiability ? -1 : 1;
   if (direction === 'FROM') return isLiability ? 1 : -1;
   const meta = BEHAVIOR_METADATA[behavior];

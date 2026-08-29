@@ -422,6 +422,7 @@ enum TransactionBehavior {
   LEND_REPAY
   GOAL
   EMERGENCY
+  LIABILITY_PAYMENT
 }
 
 model FeatureFlag {

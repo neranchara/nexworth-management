@@ -11,6 +11,27 @@ You MUST ALWAYS follow these rules without any exception:
 7. **Tests for New Changes**: ทุกครั้งที่มีการเพิ่ม api,function,modaul หรือ เปลี่ยน logic ให้เพิ่ม test case จากนั้น run test ทุกครั้ง (Every time you add an API, function, module, or change logic, add corresponding test cases and run tests).
 8. **Bug Fixing during Testing**: ทุกครั้งที่มีการ run test ถ้าเจอ bug ต้องทำการ fix แล้ว run test ใหม่จนกว่าจะผ่าน (If tests fail or find a bug, fix it immediately and rerun tests until they all pass).
 9. **Staging DB for Testing**: กรณีที่ run test ให้ต่อไปที่ database env staging ทุกครั้ง (Always connect to the STAGING database env when running tests).
+10. **Task Tracking (Jira-style, MANDATORY)**: ก่อนเริ่ม implement ใดๆ (feature/fix/refactor) ต้อง:
+    - เพิ่ม/แก้ Epic-Story-Sub-task ใน `docs/IMPLEMENTATION_PLAN.md` (รูปแบบเดิม: `[EPIC]`/`[STORY]`/checkbox) และสร้าง `docs/jira-cards/<TICKET-ID>.md` ตาม template เดิม (Status/Priority/Assignee/Epic/Description/Acceptance Criteria/Technical Notes) — ตั้ง TICKET-ID ต่อจากเลขล่าสุดที่มีอยู่
+    - ระหว่างทำงาน: tick `[x]` ทันทีที่ sub-task แต่ละอันเสร็จ ห้ามรวบไปติ๊กตอนจบทีเดียว
+    - เมื่อ Story เสร็จสมบูรณ์: อัปเดต Status เป็น `[COMPLETED] ✅` ทั้งใน `IMPLEMENTATION_PLAN.md` และ jira-card พร้อมเติม Technical Notes สรุปไฟล์ที่แก้/migration ที่รัน/test ที่เพิ่ม
+    - กฎนี้ผูกกับทุก agent/subagent ที่แก้โค้ดจริงใน repo นี้ ไม่ใช่แค่ session หลัก — ห้ามข้ามขั้นตอนนี้แม้เป็นงานเล็ก
+11. **UI data-testid (MANDATORY)**: ทุกครั้งที่สร้างหรือแก้ UI ต้องใส่ `data-testid` ให้ครบทุก Interactive Element (button, link, input, select, textarea, checkbox, file upload, และ element ที่ผู้ใช้คลิก/กรอกได้) ตามรูปแบบ:
+    - รูปแบบ: `data-testid="[module]-[feature]-[elementtype]-[xxx]"` เช่น `accounts-list-btn-add-account`, `accounts-form-input-name`, `layout-nav-link-dashboard`
+    - `elementtype` ที่ใช้บ่อย: `btn`, `input`, `sel`, `link`, `tab`, `modal`
+    - รายการซ้ำใน list ใส่ชื่อ/รหัสต่อท้ายได้ เช่น `accounts-list-btn-edit-${account.name}`
+    - ยึดรายการที่มีอยู่แล้วใน `docs/standards/QA & Testing/e2e-locators-map.md` เป็นหลัก — ห้ามตั้งชื่อใหม่ถ้า ID เดิมมีอยู่แล้ว
+    - เมื่อเพิ่ม ID ใหม่: อัปเดต handover ให้ QA (สรุป `data-testid` ใหม่) ตาม `docs/standards/QA & Testing/QA_COLLABORATION_WORKFLOW.md`
+    - ไม่บังคับกับข้อความ static / ไอคอนตกแต่งที่ไม่มี interaction
+    - (When creating or editing UI, every interactive element MUST have a `data-testid` in the format above; reuse existing IDs from the e2e locators map; hand new IDs off to QA.)
+12. **Solo Simplified Git Flow (MANDATORY for ALL agents)**: โปรเจกต์นี้ใช้โหมด developer คนเดียว — ห้ามใช้ classic GitFlow (`develop` / `release/*`)
+    - Source of truth: `docs/standards/Development & Git/GIT_WORKFLOW.md` และสรุปใน `AGENTS.md`
+    - Branch จาก **`main`** → ทำงานบน **`feature/NEX-xxx`** (หรือ `hotfix/NEX-xxx` เฉพาะ production emergency) → merge กลับ **`main`**
+    - ห้ามสร้าง/บังคับใช้ `develop` หรือ `release/*` — ใช้ git tag `vX.Y.Z` แทน release branch
+    - หนึ่ง branch = หนึ่งเรื่อง/หนึ่ง ticket; commit แบบ `feat(NEX-xxx): ...` / `fix(NEX-xxx): ...`
+    - งานเล็กมาก (typo / docs / แก้กฎบรรทัดเดียว) อาจ commit ตรง `main` ได้หลัง `git pull`
+    - กฎนี้ผูกกับ **ทุก agent/subagent ทุกค่าย** (Cursor, Claude Code, Codex, Copilot, Gemini, ฯลฯ) ที่แก้โค้ดใน repo นี้
+    - (Solo Simplified Flow: branch from `main`, merge to `main`, no `develop`/`release/*`. Full detail in GIT_WORKFLOW.md.)
 
 
 ---
