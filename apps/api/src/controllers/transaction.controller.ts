@@ -385,10 +385,18 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
             const typeMeta = category?.type ? BEHAVIOR_METADATA[behaviorToUse] : null;
             const isRequestedExpenseLike = category?.type?.isExpenseLike ?? typeMeta?.isExpenseLike ?? false;
 
+            // NEX-FEAT-09: paying down a credit card (transfer targeting a LIABILITY account)
+            // gets labeled with a dedicated system category instead of the generic transfer categories.
+            const isToLiability = toAccount?.type === 'LIABILITY';
+            const liabilityPaymentCat = isToLiability
+                ? await getSystemCategory(tx, SYSTEM_CATEGORY_KEYS.LIABILITY_PAYMENT_SYS, 'ชำระบัตรเครดิต', 'LIABILITY_PAYMENT', user.organizationId)
+                : null;
+            if (isToLiability && !liabilityPaymentCat) throw new Error('Cannot find or create LIABILITY_PAYMENT category');
+
             if (isRequestedExpenseLike) {
                 const sourceTx = await processSingleLeg(tx, effectiveFromId as string, category?.id || '', baseTypeId || '', null, 'FROM');
 
-                const transferInCat = await getSystemCategory(tx, SYSTEM_CATEGORY_KEYS.TRANSFER_IN, 'โอนเข้าภายใน', 'INCOME', user.organizationId);
+                const transferInCat = liabilityPaymentCat || await getSystemCategory(tx, SYSTEM_CATEGORY_KEYS.TRANSFER_IN, 'โอนเข้าภายใน', 'INCOME', user.organizationId);
                 if (!transferInCat) throw new Error('Cannot find or create TRANSFER_IN category');
 
                 const destTx = await processSingleLeg(tx, toAccountId as string, transferInCat.id, transferInCat.typeId, sourceTx.id, 'TO');
@@ -402,7 +410,9 @@ export const createTransactionHandler = async (request: FastifyRequest, reply: F
                 await syncLoanRecord(tx, finalSourceTx);
                 return { type: 'EXPENSE_TRANSFER', transaction: finalSourceTx };
             } else {
-                const destTx = await processSingleLeg(tx, toAccountId as string, category?.id || '', baseTypeId || '', null, 'TO');
+                const destCategoryId = liabilityPaymentCat?.id || category?.id || '';
+                const destTypeId = liabilityPaymentCat?.typeId || baseTypeId || '';
+                const destTx = await processSingleLeg(tx, toAccountId as string, destCategoryId, destTypeId, null, 'TO');
 
                 const transferOutCat = await getSystemCategory(tx, SYSTEM_CATEGORY_KEYS.TRANSFER_OUT, 'โอนออกภายใน', 'EXPENSE', user.organizationId);
                 if (!transferOutCat) throw new Error('Cannot find or create TRANSFER_OUT category');
