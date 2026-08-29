@@ -122,11 +122,16 @@ export default function TransactionsPage() {
 
   const groupedAccountOptions = (() => {
     const groups: Record<string, Account[]> = {};
-    accounts.forEach(a => {
-      const typeName = accountTypes.find((t: any) => t.value === a.type)?.label || a.type;
-      if (!groups[typeName]) groups[typeName] = [];
-      groups[typeName].push(a);
-    });
+    // NEX-FEAT-15: hide inactive accounts from the picker, but keep one visible if it's
+    // already selected (editing a record that references a since-deactivated account
+    // must not silently blank the field).
+    accounts
+      .filter(a => a.isActive || a.id === formData.fromAccountId || a.id === formData.toAccountId)
+      .forEach(a => {
+        const typeName = accountTypes.find((t: any) => t.value === a.type)?.label || a.type;
+        if (!groups[typeName]) groups[typeName] = [];
+        groups[typeName].push(a);
+      });
     return Object.entries(groups)
       .sort(([a], [b]) => a.localeCompare(b, 'th'))
       .map(([typeName, accs]) => [

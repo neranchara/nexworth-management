@@ -535,7 +535,7 @@ export default function LoanTrackerPage() {
               onChange={e => setNewLoanForm({ ...newLoanForm, accountId: e.target.value })}
             >
               <option value="" className="bg-[#001F3F]">{t('modal.selectAccount')}</option>
-              {accounts.map(a => <option key={a.id} value={a.id} className="bg-[#001F3F]">{a.name}</option>)}
+              {accounts.filter(a => a.isActive || a.id === newLoanForm.accountId).map(a => <option key={a.id} value={a.id} className="bg-[#001F3F]">{a.name}</option>)}
             </select>
           </div>
 
@@ -608,7 +608,7 @@ export default function LoanTrackerPage() {
               onChange={e => setRepayForm({ ...repayForm, accountId: e.target.value })}
             >
               <option value="" className="bg-[#001F3F]">{t('modal.selectAccount')}</option>
-              {accounts.map(a => <option key={a.id} value={a.id} className="bg-[#001F3F]">{a.name} (฿{a.balance?.toLocaleString() || 0})</option>)}
+              {accounts.filter(a => a.isActive || a.id === repayForm.accountId).map(a => <option key={a.id} value={a.id} className="bg-[#001F3F]">{a.name} (฿{a.balance?.toLocaleString() || 0})</option>)}
             </select>
           </div>
           <div className="flex flex-col gap-2">

@@ -88,14 +88,19 @@ export default function AssetsPage() {
 
       const completeRecordsList = [...allFetchedRecords, ...dummyRecords];
 
-      const filteredRecords = completeRecordsList.filter((r: FinancialRecord) => 
-        currentAllowedAssetTypes.includes(r.account?.type || '') && (r.account?.isPersonal || r.account?.type === 'INVESTMENT')
+      // NEX-FEAT-15 follow-up: inactive accounts shouldn't show in the Assets list either.
+      const filteredRecords = completeRecordsList.filter((r: FinancialRecord) =>
+        currentAllowedAssetTypes.includes(r.account?.type || '') && (r.account?.isPersonal || r.account?.type === 'INVESTMENT') && r.account?.isActive !== false
       );
       const filteredNonCounted = completeRecordsList.filter((r: FinancialRecord) =>
-        currentNonCountedTypes.includes(r.account?.type || '') && r.account?.isPersonal
+        currentNonCountedTypes.includes(r.account?.type || '') && r.account?.isPersonal && r.account?.isActive !== false
       );
 
-      const filteredAccounts = allFetchedAccounts.filter((acc: Account) => 
+      // Not filtered by isActive here on purpose: this feeds the account-picker dropdown
+      // in the form, which already filters inactive accounts out itself while still keeping
+      // an already-selected (now-inactive) account visible when editing — see the .filter()
+      // right before that <select>'s .map().
+      const filteredAccounts = allFetchedAccounts.filter((acc: Account) =>
         currentAllowedAssetTypes.includes(acc.type) && (acc.isPersonal || acc.type === 'INVESTMENT')
       );
       const filteredNonCountedAccounts = allFetchedAccounts.filter((acc: Account) =>
@@ -573,7 +578,7 @@ export default function AssetsPage() {
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald/50 appearance-none disabled:opacity-50"
             >
               <option value="new">{t('form.newAccount')}</option>
-              {accounts.map((acc) => <option key={acc.id} value={acc.id}>{acc.name} ({accountTypes.find(t => t.value === acc.type)?.label || acc.type})</option>)}
+              {accounts.filter((acc) => acc.isActive || acc.id === formData.accountId).map((acc) => <option key={acc.id} value={acc.id}>{acc.name} ({accountTypes.find(t => t.value === acc.type)?.label || acc.type})</option>)}
             </select>
           </div>
 

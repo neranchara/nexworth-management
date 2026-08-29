@@ -61,7 +61,8 @@ export default function LiabilitiesPage() {
         liabilityTypes = typesConfig.value.filter((t: any) => t.category === 'LIABILITY').map((t: any) => t.value);
       }
 
-      setRecords(recordsRes.data.records);
+      // NEX-FEAT-15 follow-up: don't show liabilities for accounts the user has deactivated.
+      setRecords((recordsRes.data.records || []).filter((r: FinancialRecord) => r.account?.isActive !== false));
       const allAccounts = accountsRes.data.accounts || [];
       const liabilityAccounts = allAccounts.filter((acc: Account) => liabilityTypes.includes(acc.type));
       setAccounts(liabilityAccounts);
@@ -355,7 +356,7 @@ export default function LiabilitiesPage() {
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none disabled:opacity-50"
             >
               <option value="new" className="bg-[#001F3F]">{t('form.newAccount')}</option>
-              {accounts.map(acc => <option key={acc.id} value={acc.id} className="bg-[#001F3F]">{acc.name} ({accountTypes.find(t => t.value === acc.type)?.label || acc.type})</option>)}
+              {accounts.filter(acc => acc.isActive || acc.id === formData.accountId).map(acc => <option key={acc.id} value={acc.id} className="bg-[#001F3F]">{acc.name} ({accountTypes.find(t => t.value === acc.type)?.label || acc.type})</option>)}
             </select>
           </div>
 
