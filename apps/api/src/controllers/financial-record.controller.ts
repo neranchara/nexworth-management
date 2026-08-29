@@ -2,6 +2,8 @@ import { FastifyRequest, FastifyReply } from 'fastify';
 import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { FinancialRecordType } from '@prisma/client';
+import { adjustAccountBalance, getSystemCategory } from './transaction.controller.js';
+import { SYSTEM_CATEGORY_KEYS } from '../constants/transactionConfig.js';
 
 const financialRecordSchema = z.object({
   accountId: z.string().uuid().optional().nullable(),
@@ -13,6 +15,79 @@ const financialRecordSchema = z.object({
   type: z.nativeEnum(FinancialRecordType), // Logic type (ASSET/LIABILITY)
   note: z.string().optional().nullable(),
 });
+
+// NEX-FEAT-12: manual balance edits (Liabilities/Assets pages) now post a real Transaction
+// instead of upserting Liability.amount/Asset.amount directly — the transaction ledger becomes
+// the single source of truth for every account's balance, so it can never drift out of sync
+// with the sign/multiplier convention again (see NEX-BUG-12).
+async function postBalanceAdjustmentAndGetRecord(
+  targetAccountId: string,
+  isLiability: boolean,
+  targetAmount: number,
+  note: string | null | undefined,
+  userId: string,
+  organizationId: string
+) {
+  return prisma.$transaction(async (tx) => {
+    const current = isLiability
+      ? await tx.liability.findUnique({ where: { accountId: targetAccountId } })
+      : await tx.asset.findUnique({ where: { accountId: targetAccountId } });
+    const delta = targetAmount - (current?.amount ?? 0);
+
+    const category = await getSystemCategory(
+      tx, SYSTEM_CATEGORY_KEYS.BALANCE_ADJUSTMENT_SYS, 'ปรับยอดเปิดบัญชี', 'BALANCE_ADJUSTMENT', organizationId
+    );
+    if (!category) throw new Error('Cannot find or create BALANCE_ADJUSTMENT category');
+
+    if (delta !== 0) {
+      // adjustAccountBalance resolves BALANCE_ADJUSTMENT with direction=null to a flat +1
+      // multiplier for both asset and liability accounts, so the signed delta applies as-is.
+      await adjustAccountBalance(targetAccountId, delta, category.typeId, null, false, tx);
+
+      const linked = isLiability
+        ? await tx.liability.findUnique({ where: { accountId: targetAccountId } })
+        : await tx.asset.findUnique({ where: { accountId: targetAccountId } });
+
+      await tx.transaction.create({
+        data: {
+          organizationId,
+          userId,
+          accountId: targetAccountId,
+          categoryId: category.id,
+          typeId: category.typeId,
+          amount: Math.abs(delta),
+          direction: null,
+          assetId: !isLiability ? linked?.id : null,
+          liabilityId: isLiability ? linked?.id : null,
+          note: note ?? undefined,
+          date: new Date(),
+        },
+      });
+    }
+
+    if (note !== undefined) {
+      // Keep the note editable even when the balance itself didn't change (delta === 0),
+      // and make sure the row exists on a first save of amount 0.
+      if (isLiability) {
+        await tx.liability.upsert({
+          where: { accountId: targetAccountId },
+          update: { note },
+          create: { accountId: targetAccountId, amount: targetAmount, note, userId },
+        });
+      } else {
+        await tx.asset.upsert({
+          where: { accountId: targetAccountId },
+          update: { note },
+          create: { accountId: targetAccountId, amount: targetAmount, note, userId },
+        });
+      }
+    }
+
+    return isLiability
+      ? tx.liability.findUnique({ where: { accountId: targetAccountId }, include: { account: { include: { bank: true } } } })
+      : tx.asset.findUnique({ where: { accountId: targetAccountId }, include: { account: { include: { bank: true } } } });
+  });
+}
 
 export const listFinancialRecordsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
@@ -94,37 +169,16 @@ export const createFinancialRecordHandler = async (request: FastifyRequest, repl
 
     if (body.type === 'ASSET' || body.type === 'LIABILITY') {
       const isLiability = body.type === 'LIABILITY';
-      const amount = isLiability ? -Math.abs(body.amount) : body.amount;
-      
-      let updatedValue;
-      if (isLiability) {
-        updatedValue = await prisma.liability.upsert({
-          where: { accountId: targetAccountId },
-          update: { amount: amount, note: body.note },
-          create: {
-            accountId: targetAccountId,
-            amount: amount,
-            note: body.note,
-            userId: user.sub,
-          },
-          include: { account: { include: { bank: true } } }
-        });
-      } else {
-        updatedValue = await prisma.asset.upsert({
-          where: { accountId: targetAccountId },
-          update: { amount: amount, note: body.note },
-          create: {
-            accountId: targetAccountId,
-            amount: amount,
-            note: body.note,
-            userId: user.sub,
-          },
-          include: { account: { include: { bank: true } } }
-        });
-      }
+      // NEX-BUG-12: positive = amount owed, matching transaction.controller.ts's convention.
+      const amount = isLiability ? Math.abs(body.amount) : body.amount;
 
-      return reply.status(201).send({ 
-        message: 'Value updated', 
+      const updatedValue = await postBalanceAdjustmentAndGetRecord(
+        targetAccountId, isLiability, amount, body.note, user.sub, user.organizationId
+      );
+      if (!updatedValue) return reply.status(500).send({ error: 'Failed to post balance adjustment' });
+
+      return reply.status(201).send({
+        message: 'Value updated',
         record: {
           id: `acc-${targetAccountId}`,
           accountId: targetAccountId,
@@ -172,25 +226,16 @@ export const updateFinancialRecordHandler = async (request: FastifyRequest, repl
     if (id.startsWith('acc-')) {
       const accountId = id.replace('acc-', '');
       const isLiability = body.type === 'LIABILITY';
-      const amount = isLiability ? -Math.abs(body.amount) : body.amount;
+      // NEX-BUG-12: see note in createFinancialRecordHandler — positive = amount owed.
+      const amount = isLiability ? Math.abs(body.amount) : body.amount;
 
-      let updatedValue;
-      if (isLiability) {
-        updatedValue = await prisma.liability.update({
-          where: { accountId },
-          data: { amount, note: body.note },
-          include: { account: { include: { bank: true } } }
-        });
-      } else {
-        updatedValue = await prisma.asset.update({
-          where: { accountId },
-          data: { amount, note: body.note },
-          include: { account: { include: { bank: true } } }
-        });
-      }
+      const updatedValue = await postBalanceAdjustmentAndGetRecord(
+        accountId, isLiability, amount, body.note, user.sub, user.organizationId
+      );
+      if (!updatedValue) return reply.status(404).send({ error: 'Asset or Liability record not found' });
 
-      return reply.send({ 
-        message: 'Value updated', 
+      return reply.send({
+        message: 'Value updated',
         record: {
           id,
           accountId: updatedValue.accountId,

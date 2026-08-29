@@ -207,6 +207,8 @@ model TransactionType {
   defaultDirection String?               // 'INBOUND' | 'OUTBOUND' | 'NEUTRAL'
   isExpenseLike    Boolean               @default(false)
   cashflowBucket   String?               // 'income' | 'expense' | 'saving' | 'debt' | 'invest' | 'loan'
+  assetMultiplier  Int?                  // -1 | 0 | 1 — effect on an ASSET account's balance
+  liabMultiplier   Int?                  // -1 | 0 | 1 — effect on a LIABILITY account's balance
   transactions     Transaction[]
   categories       TransactionCategory[]
   organization     Organization?         @relation(fields: [organizationId], references: [id])
@@ -423,6 +425,7 @@ enum TransactionBehavior {
   GOAL
   EMERGENCY
   LIABILITY_PAYMENT
+  BALANCE_ADJUSTMENT
 }
 
 model FeatureFlag {

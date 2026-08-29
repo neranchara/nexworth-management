@@ -34,7 +34,8 @@ const SUPER_ADMIN_PASSWORD = process.env.SEED_SUPERADMIN_PASSWORD || 'Nexworth@S
 const GLOBAL_BEHAVIOR_TYPES = [
   { name: 'รายรับ',         behavior: 'INCOME' },
   { name: 'รายจ่าย',        behavior: 'EXPENSE' },
-  { name: 'ออม/ลงทุน',      behavior: 'SAVING' },
+  { name: 'ออม',            behavior: 'SAVING' },
+  { name: 'ลงทุน',          behavior: 'INVESTMENT' },
   { name: 'โอนภายใน',       behavior: 'INTERNAL_TRANSFER' },
   { name: 'หนี้',           behavior: 'DEBT' },
   { name: 'ยืมเงินภายใน',   behavior: 'LOAN_BORROW' },
@@ -42,7 +43,6 @@ const GLOBAL_BEHAVIOR_TYPES = [
   { name: 'เงินมีเป้าหมาย', behavior: 'GOAL_SAVING' },
   { name: 'เงินฉุกเฉิน',    behavior: 'EMERGENCY' },
   { name: 'เป้าหมาย',       behavior: 'GOAL' },
-  { name: 'การลงทุน',       behavior: 'INVESTMENT' },
 ];
 
 // ─────────────────────────────────────────────

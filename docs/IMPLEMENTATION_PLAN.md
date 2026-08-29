@@ -193,7 +193,7 @@
 ---
 
 ## 🔵 [EPIC] Phase 24: Ledger Integrity Foundation
-- **Status:** [PARTIAL] ⚠️ — Story 1 done, Story 2/3 in progress on `feature/NEX-BUG-12-ledger-integrity`
+- **Status:** [DONE IN CODE] ✅ — all 3 stories done on `feature/NEX-BUG-12-ledger-integrity`, staging migrated + verified, not yet merged to `main`
 - **Priority:** Critical
 - **Description:** Close gaps found comparing Nexworth against standard accounting/banking principles — inconsistent sign conventions and manual balance edits that bypass the transaction ledger entirely. Prerequisite before extending the system with new use cases/behaviors (see Phase 25+ backlog discussion, not yet ticketed).
 
@@ -203,25 +203,25 @@
 - **Note:** Checked staging for pre-existing `amount < 0` rows before fixing — found only 1 (mock `บัตรเครดิต UOB`, self-caused by the NEX-BUG-11 correction, not this bug) — no other data affected.
 
 ### 📘 [STORY] NEX-FEAT-11: Move assetMultiplier/liabMultiplier to DB (finish P6 migration)
-- **Status:** [PLANNED] 📅
+- **Status:** [DONE IN CODE] ✅
 - **Description:** `defaultDirection`/`isExpenseLike`/`cashflowBucket` are already DB-driven per `TransactionType`; the two multipliers are still hardcoded in the `BEHAVIOR_METADATA` TS constant. Finish the migration so new behaviors are a data change, not a code change.
 - **Sub-Tasks:**
   - [x] Add `assetMultiplier`/`liabMultiplier` columns to `TransactionType` (schema).
-  - [ ] `getAssetMultiplier()`: accept DB values, prefer them over the constant fallback (same dual-path pattern as `getDirection`/`getCashflowBucket`).
-  - [ ] Update `adjustAccountBalance` call site to pass DB values through.
-  - [ ] Backfill script for existing `TransactionType` rows.
-  - [ ] Seed new orgs with both columns.
-  - [ ] Unit tests.
+  - [x] `getAssetMultiplier()`: accept DB values, prefer them over the constant fallback (same dual-path pattern as `getDirection`/`getCashflowBucket`).
+  - [x] Update `adjustAccountBalance` call site to pass DB values through.
+  - [x] Backfill script for existing `TransactionType` rows — ran on staging, 136 rows backfilled, verified DEBT's fixed `liabMultiplier=-1` carried through correctly.
+  - [x] Seed new orgs with both columns.
+  - [x] Unit tests (5 new tests).
 
 ### 📘 [STORY] NEX-FEAT-12: Route manual balance edits through the Transaction ledger
-- **Status:** [PLANNED] 📅
+- **Status:** [DONE IN CODE] ✅
 - **Description:** Liabilities/Assets page balance edits currently upsert `Liability.amount`/`Asset.amount` directly, bypassing the transaction ledger — the root cause that made NEX-BUG-12 possible. Post a real `BALANCE_ADJUSTMENT` transaction instead, reusing `adjustAccountBalance`.
 - **Sub-Tasks:**
-  - [ ] Add `BALANCE_ADJUSTMENT` to `TransactionBehavior` enum + metadata.
-  - [ ] Seed "ปรับยอดเปิดบัญชี" system type/category for new + existing orgs.
-  - [ ] Rework `createFinancialRecordHandler`/`updateFinancialRecordHandler` to compute delta and post a Transaction instead of raw upsert.
-  - [ ] Verify response contract unchanged (frontend untouched).
-  - [ ] Test coverage + manual staging verification (edit shows up in transaction history).
+  - [x] Add `BALANCE_ADJUSTMENT` to `TransactionBehavior` enum + metadata.
+  - [x] Seed "ปรับยอดเปิดบัญชี" system type/category for new + existing orgs.
+  - [x] Rework `createFinancialRecordHandler`/`updateFinancialRecordHandler` to compute delta and post a Transaction instead of raw upsert.
+  - [x] Verify response contract unchanged (frontend untouched).
+  - [x] Test coverage (7 new + 3 fixed existing tests) + manual E2E on staging (verified against the real UOB mock account — delta, Transaction row, and resulting balance all correct).
 
 ---
 

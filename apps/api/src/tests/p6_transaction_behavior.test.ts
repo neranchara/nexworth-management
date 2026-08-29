@@ -181,6 +181,32 @@ describe('P6 — getAssetMultiplier()', () => {
       expect(getAssetMultiplier('DEBT', false, null)).toBe(-1);
     });
   });
+
+  describe('NEX-FEAT-11: DB-driven multiplier (dual-path with BEHAVIOR_METADATA fallback)', () => {
+    it('no direction, DB values provided → DB value wins over BEHAVIOR_METADATA', () => {
+      // GOAL_SAVING normally has liabMultiplier 0 in BEHAVIOR_METADATA — DB says -1 instead
+      expect(getAssetMultiplier('GOAL_SAVING', true, null, 1, -1)).toBe(-1);
+      expect(getAssetMultiplier('GOAL_SAVING', false, null, 1, -1)).toBe(1);
+    });
+
+    it('no direction, DB value is 0 → 0 is respected, not treated as falsy/missing', () => {
+      expect(getAssetMultiplier('EXPENSE', false, null, 0, 1)).toBe(0);
+    });
+
+    it('no direction, DB values null/undefined → falls back to BEHAVIOR_METADATA', () => {
+      expect(getAssetMultiplier('EXPENSE', false, null, null, null)).toBe(-1);
+      expect(getAssetMultiplier('EXPENSE', false, null, undefined, undefined)).toBe(-1);
+    });
+
+    it('explicit direction still takes priority over DB values', () => {
+      // Even if DB says something else, direction=TO/FROM shortcuts win (unchanged contract)
+      expect(getAssetMultiplier('EXPENSE', false, 'TO', -99 as any, -99 as any)).toBe(1);
+    });
+
+    it('DEBT-on-liability special case still wins over DB values', () => {
+      expect(getAssetMultiplier('DEBT', true, null, 1, 1)).toBe(-1);
+    });
+  });
 });
 
 describe('P6 — SYSTEM_CATEGORY_KEYS', () => {
