@@ -1,0 +1,686 @@
+{
+  "nav": {
+    "dashboard": "Overview",
+    "assets": "Assets",
+    "transactions": "Transactions",
+    "liabilities": "Liabilities",
+    "loanTracker": "Loan Tracker",
+    "goals": "Goals",
+    "accounts": "Accounts",
+    "types": "Types",
+    "banks": "Banks",
+    "categories": "Categories",
+    "users": "Users",
+    "permissions": "Permissions",
+    "setup": "Settings",
+    "logout": "Logout",
+    "management": "Management",
+    "mainMenu": "Main Menu",
+    "home": "Home",
+    "menu": "Menu",
+    "closeMenu": "Close Menu",
+    "openMenu": "Open Menu"
+  },
+  "common": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading",
+    "search": "Search",
+    "confirm": "Confirm",
+    "close": "Close",
+    "add": "Add",
+    "update": "Update",
+    "back": "Back",
+    "next": "Next",
+    "previous": "Previous",
+    "submit": "Submit",
+    "reset": "Reset",
+    "success": "Success",
+    "error": "Error",
+    "noData": "No data",
+    "total": "Total",
+    "status": "Status",
+    "date": "Date",
+    "amount": "Amount",
+    "name": "Name",
+    "description": "Description",
+    "type": "Type",
+    "category": "Category",
+    "note": "Note",
+    "actions": "Actions",
+    "filter": "Filter",
+    "sort": "Sort",
+    "create": "Create",
+    "view": "View",
+    "export": "Export",
+    "import": "Import",
+    "yes": "Yes",
+    "no": "No",
+    "required": "Required",
+    "optional": "Optional",
+    "profile": "Profile",
+    "initializingDashboard": "Initializing Dashboard..."
+  },
+  "lang": {
+    "th": "ไทย",
+    "en": "English",
+    "switchTo": "Switch language"
+  },
+  "transactions": {
+    "title": "Transaction History",
+    "subtitle": "Manage your financial records",
+    "addNew": "Record Transaction",
+    "scanSlip": "Scan Slip",
+    "search": "Search...",
+    "allCategories": "All Categories",
+    "allAccounts": "All Accounts",
+    "table": {
+      "date": "Date",
+      "description": "Description",
+      "category": "Category",
+      "account": "Account",
+      "amount": "Amount",
+      "action": "Action"
+    },
+    "ai": {
+      "title": "AI Slip Intelligence",
+      "subtitle": "Auto-fill details from bank slip",
+      "selectSlip": "Select Slip"
+    },
+    "form": {
+      "titleAdd": "Record Transaction",
+      "titleEdit": "Edit Transaction",
+      "amount": "Amount (THB)",
+      "category": "Category",
+      "selectCategory": "Select Category",
+      "fromAccount": "From Account",
+      "noSourceAccount": "- No source account -",
+      "toAccount": "To Account",
+      "noDestAccount": "- No destination account -",
+      "note": "Additional Notes",
+      "notePlaceholder": "What was this for?",
+      "date": "Date",
+      "save": "Save Transaction",
+      "update": "Update Transaction"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to delete this transaction?"
+    },
+    "alert": {
+      "deleted": "Transaction deleted successfully.",
+      "created": "Transaction created successfully.",
+      "updated": "Transaction updated successfully.",
+      "scanned": "Slip scanned and auto-filled!",
+      "scanFailed": "Scan failed. Try a clearer image.",
+      "selectAccount": "Please select either a From Account, a To Account, or both."
+    }
+  },
+  "assets": {
+    "title": "Assets",
+    "subtitle": "Track and update all asset values",
+    "addNew": "Record Value",
+    "search": "Search accounts...",
+    "totalAssets": "Total Asset Value",
+    "nonCounted": "Non-tracked Accounts",
+    "noData": "No asset records found.",
+    "allAccounts": "All Accounts ({count})",
+    "updated": "Updated:",
+    "hidden": "Hidden",
+    "loadingData": "Loading data...",
+    "table": {
+      "account": "Account / Type",
+      "type": "Type",
+      "institution": "Institution",
+      "amount": "Current Value",
+      "action": "Action"
+    },
+    "chart": {
+      "cash": "Cash & Banks",
+      "investments": "Investments",
+      "others": "Others"
+    },
+    "form": {
+      "titleAdd": "Add Asset",
+      "titleEdit": "Edit Asset",
+      "account": "Select Account",
+      "newAccount": "+ Create New Account",
+      "name": "New Account Name",
+      "type": "Account Type",
+      "bank": "Financial Institution",
+      "noInstitution": "No Institution",
+      "amount": "Value (THB)",
+      "note": "Additional Notes",
+      "date": "Update Date",
+      "save": "Save Value",
+      "update": "Update"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to remove this asset record? (Account will not be deleted)"
+    },
+    "alert": {
+      "removed": "Asset record removed successfully.",
+      "added": "Asset record added successfully.",
+      "updated": "Asset record updated successfully."
+    }
+  },
+  "accounts": {
+    "title": "My Accounts",
+    "subtitle": "Manage liquidity and credit lines",
+    "totalAssets": "Total Assets",
+    "liabilities": "Liabilities",
+    "personal": "Personal",
+    "active": "Active",
+    "addNew": "Add Account",
+    "noData": "No accounts found.",
+    "showInactive": "Inactive ({count})",
+    "hideInactive": "Hide Inactive ({count})",
+    "loadingData": "Loading data...",
+    "table": {
+      "name": "Account Name",
+      "number": "Account Number",
+      "type": "Type",
+      "bank": "Bank",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "status": {
+      "active": "Active",
+      "inactive": "Inactive"
+    },
+    "form": {
+      "titleAdd": "New Account",
+      "titleEdit": "Edit Account",
+      "name": "Account Name",
+      "number": "Account Number",
+      "type": "Type",
+      "institution": "Financial Institution",
+      "noInstitution": "None",
+      "personal": "Personal Account",
+      "personalDesc": "Track as personal asset",
+      "status": "Account Status",
+      "statusDesc": "Enable tracking in the system",
+      "cancel": "Cancel",
+      "save": "Save Account"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to delete this account?"
+    },
+    "alert": {
+      "deleted": "Account deleted successfully.",
+      "created": "Account created successfully.",
+      "updated": "Account updated successfully."
+    }
+  },
+  "loanTracker": {
+    "title": "Loan Tracker",
+    "loading": "Loading...",
+    "tab": {
+      "borrow": "Borrow",
+      "lend": "Lend / Receivables"
+    },
+    "header": {
+      "lendSubtitle": "Receivables / Lent Funds",
+      "borrowSubtitle": "Borrowing Status (Internal)",
+      "lendDesc": "Lending Management & Receivables",
+      "borrowDesc": "Lending Management & Monitoring"
+    },
+    "summary": {
+      "totalLent": "Total Lent",
+      "totalBorrowed": "Total Borrowed",
+      "received": "Received Back",
+      "settled": "Settled",
+      "pendingDues": "Pending Dues",
+      "fullyRepaid": "Fully Repaid: {count} Records",
+      "balance": "Net Balance",
+      "overall": "Overall",
+      "collectionProgress": "Collection Progress",
+      "repaymentProgress": "Repayment Progress"
+    },
+    "search": {
+      "lend": "Search borrower name or record...",
+      "borrow": "Search account name or record..."
+    },
+    "filter": {
+      "pending": "Status: Pending",
+      "all": "Status: All",
+      "settled": "Status: Settled",
+      "hiddenCount": "Hiding {count} fully repaid records"
+    },
+    "table": {
+      "borrower": "Borrower",
+      "lentAmount": "LENT",
+      "borrowedAmount": "BORROWED",
+      "receivedAmount": "RECEIVED",
+      "repaidAmount": "REPAID",
+      "noName": "Unknown"
+    },
+    "empty": {
+      "lend": "No receivable records yet.",
+      "borrow": "No borrowing records."
+    },
+    "actions": {
+      "addBorrow": "Add Borrow Record",
+      "addLend": "Add Receivable",
+      "receive": "Receive",
+      "repay": "Repay"
+    },
+    "modal": {
+      "titleEdit": "Edit Record",
+      "titleCreateLend": "Add New Receivable",
+      "titleCreateBorrow": "Create Borrow Record",
+      "titleRepayLend": "Record Payment Received",
+      "titleRepayBorrow": "Repay Record",
+      "forTransaction": "For Transaction",
+      "borrowerName": "Borrower Name",
+      "description": "Description / Purpose",
+      "sourceAccount": "Source Account",
+      "selectAccount": "Select Account...",
+      "amount": "Amount",
+      "amountNonEditable": "(Non-editable)",
+      "actualDate": "Actual Date",
+      "balance": "Balance: ฿{amount}",
+      "receiveAccount": "Receive Into Account",
+      "payAccount": "Pay From Account",
+      "note": "Note",
+      "lendNotePlaceholder": "Description of payment received",
+      "borrowNotePlaceholder": "Description of repayment",
+      "save": "Save Record",
+      "saveRepayLend": "Save Payment Received",
+      "saveRepayBorrow": "Save Repayment"
+    },
+    "alert": {
+      "updated": "Record updated successfully",
+      "created": "Record created successfully",
+      "repaid": "Record saved successfully",
+      "loadFailed": "Failed to load data",
+      "error": "An error occurred"
+    }
+  },
+  "dashboard": {
+    "title": "Financial Overview",
+    "subtitle": "Wealth & Performance Metrics",
+    "addTransaction": "Record Transaction",
+    "viewAnnual": "Full Year",
+    "viewMonthly": "Monthly",
+    "setBenchmark": "Set Benchmarks",
+    "metrics": {
+      "netWorth": "Net Worth",
+      "netWorthLabel": "Net Worth",
+      "totalAssets": "Total Assets",
+      "totalAssetsLabel": "Total Assets",
+      "totalLiabilities": "Total Liabilities",
+      "totalLiabilitiesLabel": "Total Liabilities"
+    },
+    "kpi": {
+      "header": "Financial Health KPIs",
+      "savingRate": "Saving Rate",
+      "investmentRate": "Investment Rate",
+      "debtRatio": "Debt Ratio",
+      "emergencyFund": "Emergency Fund",
+      "targetPrefix": "Target:",
+      "months": "months"
+    },
+    "widgets": {
+      "velocity": "Performance Velocity",
+      "velocitySubtitle": "Income vs Expense Tracking",
+      "allocation": "Asset Allocation",
+      "goals": "Financial Goals",
+      "noGoals": "No active goals",
+      "radar": "Capital Health Radar",
+      "systemScore": "System Score",
+      "noAssetData": "No asset data available",
+      "income": "INCOME",
+      "expense": "EXPENSE",
+      "saving": "SAVING",
+      "invest": "INVEST"
+    },
+    "modal": {
+      "title": "Record New Transaction",
+      "scanTitle": "Smart Slip Scanner",
+      "scanSubtitle": "Auto-fill details from bank slip",
+      "amountLabel": "Amount (THB)",
+      "accountLabel": "Account",
+      "fromAccountLabel": "From Account",
+      "toAccountLabel": "To Account",
+      "categoryLabel": "Category",
+      "noteLabel": "Note (Optional)",
+      "notePlaceholder": "What was this for?",
+      "selectTarget": "Select Target...",
+      "save": "Save Record",
+      "saveSuccess": "Transaction saved successfully",
+      "alertAmount": "Please enter an amount and select an account.",
+      "alertDestAccount": "Please select a destination account.",
+      "alertCategory": "Please select a transaction category."
+    }
+  },
+  "goals": {
+    "title": "Financial Goals",
+    "subtitle": "Tracking Dreams & Stability",
+    "addNew": "Create New Goal",
+    "purpose": "Set and track short/long-term goals with AI-powered forecasting based on your current saving rate to build financial motivation.",
+    "summary": {
+      "total": "Total Goal Value",
+      "activeGoals": "{count} Active Goals",
+      "collected": "Collected"
+    },
+    "filter": {
+      "all": "All",
+      "shortTerm": "Short Term",
+      "longTerm": "Long Term"
+    },
+    "card": {
+      "target": "Target:"
+    },
+    "empty": "No goals in this category yet.",
+    "confirm": {
+      "delete": "Are you sure you want to delete this goal? Linked savings data will be unlinked."
+    },
+    "modal": {
+      "createTitle": "Create New Goal",
+      "editTitle": "Edit Goal"
+    },
+    "form": {
+      "name": "Goal Name",
+      "namePlaceholder": "e.g. Home Down Payment, Japan Trip",
+      "targetAmount": "Target Amount",
+      "priority": "Category",
+      "color": "Color Accent",
+      "linkedAsset": "Linked Asset Account",
+      "selectAccount": "Select savings account (Optional)",
+      "linkedDesc": "Goal progress is calculated from the balance of this account.",
+      "deadline": "Deadline",
+      "status": "Status",
+      "cancel": "Cancel",
+      "submit": "Create Goal",
+      "update": "Save Changes"
+    }
+  },
+  "liabilities": {
+    "title": "Liabilities",
+    "subtitle": "Track debt obligations and outstanding balances",
+    "addNew": "Add Liability Record",
+    "search": "Search entries...",
+    "allInstitutions": "All Institutions",
+    "totalLiabilities": "Total Liabilities",
+    "loading": "Loading data...",
+    "noData": "No liability records found.",
+    "table": {
+      "account": "Account / Type",
+      "type": "Type",
+      "institution": "Institution",
+      "amount": "Outstanding",
+      "note": "Note",
+      "action": "Actions"
+    },
+    "form": {
+      "titleAdd": "Add Liability",
+      "titleEdit": "Edit Liability",
+      "account": "Select Liability Account",
+      "newAccount": "+ Create New Liability Account",
+      "newName": "New Liability Name",
+      "bank": "Financial Institution",
+      "noInstitution": "No Institution",
+      "amount": "Amount (THB)",
+      "note": "Additional Notes",
+      "notePlaceholder": "e.g. Current outstanding balance",
+      "date": "Update Date",
+      "save": "Save Liability",
+      "update": "Update",
+      "cancel": "Cancel"
+    },
+    "confirm": {
+      "delete": "Are you sure you want to remove this liability record? (Account will NOT be deleted)"
+    },
+    "alert": {
+      "removed": "Liability record removed successfully",
+      "removeFailed": "Remove failed",
+      "updated": "Liability record updated successfully",
+      "added": "Liability record added successfully",
+      "saveFailed": "Save failed"
+    }
+  },
+  "monthly": {
+    "title": "Monthly Summary",
+    "subtitle": "High-level financial performance by month for {year}.",
+    "loading": "Loading yearly summary...",
+    "accessDenied": "Access Denied",
+    "accessDeniedDesc": "You do not have permission to view the monthly summary.",
+    "summary": {
+      "annualIncome": "Annual Income",
+      "annualExpense": "Annual Expense",
+      "annualSavings": "Annual Savings",
+      "annualNet": "Annual Net"
+    },
+    "table": {
+      "title": "Monthly Breakdown ({year})",
+      "month": "Month",
+      "income": "Income",
+      "expense": "Expense",
+      "savings": "Savings",
+      "goalSavings": "Goal Savings",
+      "investments": "Investments",
+      "debtPaid": "Debt Paid",
+      "netBalance": "Net Balance",
+      "records": "Records",
+      "txs": "txs",
+      "totalAnnual": "Total (Annual)"
+    }
+  },
+  "profile": {
+    "save": "Save Changes",
+    "saving": "Processing...",
+    "identity": "Identity Profile",
+    "identityDesc": "Primary Account Details",
+    "firstName": "First Name",
+    "lastName": "Last Name",
+    "email": "Email Connection",
+    "password": "Security Key Override",
+    "passwordPlaceholder": "ENTER NEW PASSWORD",
+    "passwordHint": "Leave empty to keep current password",
+    "line": {
+      "description": "Elevate your financial management with LINE Sync — record transactions via chat and scan slips automatically.",
+      "generating": "Activating Hub...",
+      "generate": "Generate New Pairing Link"
+    },
+    "alert": {
+      "saved": "Profile updated successfully",
+      "failed": "Update failed"
+    }
+  },
+  "security": {
+    "title": "Security Center",
+    "subtitle": "Cloud Identity Protection & Audit Trails",
+    "protectionStatus": "Protection Status",
+    "mfa": "Multi-Factor Auth",
+    "comingSoon": "Coming Soon",
+    "mfaDesc": "Hardware-based authentication and time-based OTP codes — coming in a future version"
+  },
+  "setup": {
+    "title": "Account Settings",
+    "subtitle": "Account Settings & Global Preferences",
+    "tabs": {
+      "profile": "Profile & LINE",
+      "security": "Security",
+      "team": "Team & Permissions"
+    }
+  },
+  "types": {
+    "title": "Transaction Types",
+    "subtitle": "Configure system calculation rules",
+    "addNew": "Add New Type",
+    "active": "Active",
+    "inactive": "Inactive",
+    "edit": "Edit Type",
+    "create": "New Type",
+    "table": {
+      "name": "Type Name",
+      "logic": "System Logic",
+      "behavior": "Behavior",
+      "status": "Status",
+      "actions": "Actions"
+    },
+    "form": {
+      "name": "Type Name",
+      "behavior": "System Behavior",
+      "status": "Status",
+      "cancel": "Cancel",
+      "save": "Save Type"
+    },
+    "confirm": {
+      "delete": "Are you sure? Deleting a type will fail if it's used by categories."
+    },
+    "alert": {
+      "deleted": "Type deleted successfully",
+      "deleteFailed": "Delete failed",
+      "updated": "Type updated successfully",
+      "created": "Type created successfully",
+      "saveFailed": "Save failed"
+    }
+  },
+  "categories": {
+    "loading": "Loading master data...",
+    "title": "Transaction Categories",
+    "subtitle": "Manage master data for income and expense categories. Categorized by dynamic transaction types.",
+    "addNew": "Add New Category",
+    "active": "Active",
+    "inactive": "Inactive",
+    "empty": "No categories defined in system.",
+    "table": { "name": "Category Name", "type": "Type", "status": "Status", "actions": "Actions" },
+    "modal": { "create": "Create New Category", "edit": "Edit Category" },
+    "form": { "name": "Category Name", "type": "Transaction Type", "status": "Status", "statusHint": "Enable/Disable in dropdowns", "selectType": "Select Type", "cancel": "Cancel", "save": "Save Category" },
+    "confirm": { "delete": "Are you sure you want to delete this category?" },
+    "alert": { "deleted": "Category deleted successfully", "deleteFailed": "Delete failed", "updated": "Category updated successfully", "created": "Category created successfully", "saveFailed": "Save failed" }
+  },
+  "banks": {
+    "title": "Bank Master Data",
+    "subtitle": "A list of supported banks in the system for account creation",
+    "addNew": "Add New Bank",
+    "empty": "No banks defined in system.",
+    "table": { "name": "Bank Name", "code": "Code", "color": "Color Mark", "actions": "Actions" },
+    "modal": { "create": "Create New Bank", "edit": "Edit Bank" },
+    "form": { "name": "Bank Name", "code": "Bank Code (Unique)", "color": "Brand Color", "cancel": "Cancel", "save": "Save Bank" },
+    "confirm": { "delete": "Are you sure you want to delete this bank? It will fail if any accounts are using it." },
+    "alert": { "deleted": "Bank deleted successfully", "deleteFailed": "Delete failed", "updated": "Bank updated successfully", "created": "Bank created successfully", "saveFailed": "Save failed" }
+  },
+  "users": {
+    "title": "Users",
+    "searchPlaceholder": "Search...",
+    "addNew": "Add User",
+    "empty": "No users found.",
+    "table": { "name": "Name", "email": "Email", "role": "Role", "organization": "Organization", "status": "Status", "actions": "Actions" },
+    "modal": { "myAccount": "My Account Details", "viewDetails": "View User Details", "editProfile": "Edit Profile", "newUser": "New User" },
+    "form": { "firstName": "First Name", "lastName": "Last Name", "email": "Email Address", "password": "Password", "passwordOptional": "(optional)", "role": "Role", "org": "Org", "activeAccount": "Active Account", "resetPassword": "Reset Password", "save": "Save User", "select": "Select..." },
+    "confirm": { "resetPassword": "Generate a new random password and send it to the user's email?", "delete": "Delete this user?" },
+    "alert": { "deleted": "Deleted", "statusUpdated": "Status updated", "updated": "Updated", "created": "Created", "saveFailed": "Save failed", "deleteFailed": "Delete failed", "resetFailed": "Reset failed", "updateFailed": "Update failed" }
+  },
+  "team": {
+    "title": "Team & Permissions",
+    "subtitle": "Organization Members",
+    "memberCount": "Active Members",
+    "activeMembers": "Active Members",
+    "activeMembersDesc": "Users currently in the organization",
+    "you": "You",
+    "noMembers": "No active members found",
+    "pendingInvitations": "Pending Invitations",
+    "pendingInvitationsDesc": "Awaiting user acceptance",
+    "invite": "Invite Member",
+    "inviteDesc": "Send access invitation",
+    "comingSoon": "Coming Soon",
+    "comingSoonDesc": "The invite member feature is currently in development and will be available in the next version.",
+    "confirm": { "revoke": "Are you sure you want to revoke this invitation?" },
+    "alert": { "invited": "Invitation sent successfully", "inviteFailed": "Failed to send invitation", "revoked": "Invitation revoked successfully", "revokeFailed": "Failed to revoke invitation" }
+  },
+  "permissions": {
+    "title": "Role Permissions",
+    "subtitle": "Manage roles and access levels",
+    "newRole": "New Role",
+    "userCount": "{count} Users",
+    "configure": "Configure",
+    "config": "Config",
+    "systemRole": "System Role",
+    "table": { "role": "Role", "description": "Description", "type": "Type", "users": "Users", "actions": "Actions" },
+    "modal": { "create": "New Role", "edit": "Edit Role" },
+    "form": { "name": "Role Name", "description": "Description", "systemRole": "System Management Role", "save": "Save" },
+    "confirm": { "delete": "Delete \"{name}\"?" }
+  },
+  "organizations": {
+    "title": "Organizations",
+    "subtitle": "Manage and monitor all system organizations.",
+    "searchPlaceholder": "Search...",
+    "create": "Create Org",
+    "viewHub": "View Hub",
+    "stats": { "users": "Users", "accounts": "Accounts", "txs": "TXs" },
+    "modal": { "title": "Create New Organization", "adminSection": "Default Admin Account" },
+    "form": { "orgName": "Organization Name", "firstName": "First Name", "lastName": "Last Name", "email": "Email Address", "password": "Default Password", "cancel": "Cancel", "submit": "Create Organization" }
+  },
+  "auth": {
+    "loadingPortal": "Loading Secure Portal...",
+    "login": {
+      "subtitle": "Login to your secure financial portal",
+      "tagline": "Transparency and Clarity in Wealth Management",
+      "emailLabel": "Username / Email",
+      "passwordLabel": "Password",
+      "forgotPassword": "Forgot Password?",
+      "loginBtn": "LOGIN",
+      "processing": "Processing...",
+      "noAccount": "Don't have an account? Create one"
+    },
+    "forgotPassword": {
+      "heading": "Reset Security Key",
+      "subtitle": "Enter your email address to receive reset instructions.",
+      "emailLabel": "Registered Email",
+      "sendBtn": "SEND RESET LINK",
+      "sending": "Sending Request...",
+      "backToLogin": "BACK TO LOGIN"
+    },
+    "inbox": {
+      "heading": "Check Your Inbox",
+      "message": "We have sent a secure link to reset your password to {email}.",
+      "returnBtn": "RETURN TO LOGIN"
+    },
+    "register": {
+      "subtitle": "Join Nexworth Financial Ecosystem",
+      "tagline": "Start managing your wealth with clarity",
+      "firstNameLabel": "First Name",
+      "lastNameLabel": "Last Name",
+      "emailLabel": "Email Address",
+      "passwordLabel": "Password",
+      "createBtn": "CREATE ACCOUNT",
+      "creating": "Creating Account...",
+      "hasAccount": "Already have an account? Login",
+      "successHeading": "Welcome to Nexworth",
+      "successMessage": "Your account and organization have been successfully created.",
+      "redirecting": "Redirecting to login..."
+    },
+    "resetPassword": {
+      "pageSubtitle": "Security Credential Recovery",
+      "verifying": "Verifying Security Token...",
+      "initializing": "Initialising Security Protocol...",
+      "heading": "Set New Password",
+      "subheading": "Resetting security credentials for {email}",
+      "newPasswordLabel": "New Password",
+      "confirmPasswordLabel": "Confirm New Password",
+      "updateBtn": "Update Password",
+      "processing": "Processing Security Update...",
+      "successHeading": "Password Updated",
+      "successMessage": "Your credentials have been securely updated. Redirecting you to the login portal...",
+      "errorMismatch": "Passwords do not match.",
+      "errorInvalidToken": "Invalid or missing reset token."
+    },
+    "invite": {
+      "subtitle": "Team Invitation",
+      "invalidHeading": "Invalid Link",
+      "invitedHeading": "You've been invited!",
+      "invitedMessage": "Please log in or create an account to accept the invitation and join the workspace.",
+      "loginBtn": "LOGIN TO ACCEPT",
+      "createAccountBtn": "CREATE ACCOUNT",
+      "processing": "Processing Invitation...",
+      "successHeading": "Welcome Aboard",
+      "errorHeading": "Action Failed",
+      "goToDashboard": "GO TO DASHBOARD",
+      "returnToDashboard": "RETURN TO DASHBOARD"
+    }
+  }
+}

@@ -1,10 +1,12 @@
 'use client';
 
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { SecurityLogs } from '@/components/user/SecurityLogs';
 import { Shield, Smartphone } from 'lucide-react';
 
 export default function UserSecurityPage() {
+  const t = useTranslations('security');
   return (
     <div className="flex-1 flex flex-col min-h-0 animate-in fade-in slide-in-from-bottom-4 duration-700">
       
@@ -19,8 +21,8 @@ export default function UserSecurityPage() {
             </div>
           </div>
           <div>
-            <h1 className="text-4xl font-black text-white tracking-tighter uppercase">Security Center</h1>
-            <p className="text-emerald font-black uppercase tracking-[0.4em] text-[10px] mt-2 opacity-80">Cloud Identity Protection & Audit Trails</p>
+            <h1 className="text-4xl font-black text-white tracking-tighter uppercase">{t('title')}</h1>
+            <p className="text-emerald font-black uppercase tracking-[0.4em] text-[10px] mt-2 opacity-80">{t('subtitle')}</p>
           </div>
         </div>
       </header>
@@ -36,7 +38,7 @@ export default function UserSecurityPage() {
         <div className="xl:col-span-4">
           <div className="flex items-center gap-3 px-1 mb-6">
             <div className="w-1 h-5 bg-emerald rounded-full" />
-            <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">Protection Status</h2>
+            <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">{t('protectionStatus')}</h2>
           </div>
 
           <div className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 backdrop-blur-sm">
@@ -45,12 +47,12 @@ export default function UserSecurityPage() {
                 <Smartphone size={18} />
               </div>
               <div>
-                <h3 className="text-xs font-black text-white uppercase tracking-widest">Multi-Factor Auth</h3>
-                <span className="text-[9px] font-black text-slate uppercase tracking-widest">Coming Soon</span>
+                <h3 className="text-xs font-black text-white uppercase tracking-widest">{t('mfa')}</h3>
+                <span className="text-[9px] font-black text-slate uppercase tracking-widest">{t('comingSoon')}</span>
               </div>
             </div>
             <p className="text-[11px] text-slate leading-relaxed">
-              Hardware-based authentication and time-based OTP codes — รอการพัฒนาในเวอร์ชันถัดไป
+              {t('mfaDesc')}
             </p>
           </div>
         </div>

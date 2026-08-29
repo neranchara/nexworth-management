@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { TransactionType } from '@/types/models';
@@ -18,27 +19,12 @@ const DEFAULT_BEHAVIORS = [
   { value: 'DEBT', label: 'หนี้สิน (Debt)', color: 'text-purple-400' },
   { value: 'LOAN_BORROW', label: 'ยืมเงิน (Loan Borrow)', color: 'text-orange-400' },
   { value: 'LOAN_REPAY', label: 'คืนเงิน (Loan Repay)', color: 'text-emerald' },
+  { value: 'LEND_OUT', label: 'ให้ยืมเงิน (Lend Out)', color: 'text-blue-400' },
+  { value: 'LEND_REPAY', label: 'รับเงินคืน (Lend Repay)', color: 'text-blue-300' },
 ];
 
-const DEFAULT_LABELS = {
-  title: 'ประเภทพฤติกรรม',
-  subtitle: 'ตั้งค่ากฎการคำนวณของระบบ',
-  addNew: 'เพิ่มประเภทใหม่',
-  logic: 'ตรรกะระบบ',
-  active: 'เปิดใช้งาน',
-  inactive: 'ปิดใช้งาน',
-  edit: 'แก้ไขพฤติกรรม',
-  create: 'พฤติกรรมใหม่',
-  form: {
-    name: 'ชื่อประเภท',
-    behavior: 'พฤติกรรมระบบ',
-    status: 'สถานะการใช้งาน',
-    cancel: 'ยกเลิก',
-    save: 'บันทึกพฤติกรรม'
-  }
-};
-
 export default function TransactionTypesPage() {
+  const tl = useTranslations('types');
   const [types, setTypes] = useState<TransactionType[]>([]);
   const [alert, setAlert] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
   const alertTimeoutRef = useRef<NodeJS.Timeout | null>(null);
@@ -56,7 +42,6 @@ export default function TransactionTypesPage() {
   const { user } = useAuthStore();
 
   const [behaviors, setBehaviors] = useState<any[]>(DEFAULT_BEHAVIORS);
-  const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
   const [viewMode, setViewMode] = useState<'grid' | 'table'>(() =>
     (typeof window !== 'undefined' ? localStorage.getItem('viewMode_types') as 'grid' | 'table' : null) || 'grid'
   );
@@ -71,19 +56,13 @@ export default function TransactionTypesPage() {
       const [typeRes, configRes] = await Promise.all([
         api.get('/types'),
         api.get('/configs', { params: { category: 'UI_TRANSLATIONS' } }),
-        api.get('/configs', { params: { key: 'TRANSACTION_BEHAVIORS' } }) // specifically for behaviors
       ]);
-      
-      setTypes(typeRes.data.types || []);
-      
-      // Load UI Labels
-      const uiLabels = configRes.data.data?.find((c: any) => c.key === 'UI_LABELS_TYPES');
-      if (uiLabels) setLabels(uiLabels.value);
 
-      // Load Behaviors
+      setTypes(typeRes.data.types || []);
+
       const dbBehaviors = configRes.data.data?.find((c: any) => c.key === 'TRANSACTION_BEHAVIORS');
       if (dbBehaviors) setBehaviors(dbBehaviors.value);
-      
+
     } catch {
       console.error('Failed to load transaction types or config');
     }
@@ -125,14 +104,14 @@ export default function TransactionTypesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure? Deleting a type will fail if it's used by categories.")) return;
+    if (!window.confirm(tl('confirm.delete'))) return;
     try {
       await api.delete(`/types/${id}`);
-      showAlert('Type deleted successfully', 'success');
+      showAlert(tl('alert.deleted'), 'success');
       fetchTypes();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Delete failed', 'error');
+      showAlert(errorResponse.response?.data?.error || tl('alert.deleteFailed'), 'error');
     }
   };
 
@@ -141,16 +120,16 @@ export default function TransactionTypesPage() {
     try {
       if (isEditing && currentTypeId) {
         await api.put(`/types/${currentTypeId}`, formData);
-        showAlert('Type updated successfully', 'success');
+        showAlert(tl('alert.updated'), 'success');
       } else {
         await api.post('/types', formData);
-        showAlert('Type created successfully', 'success');
+        showAlert(tl('alert.created'), 'success');
       }
       setIsModalOpen(false);
       fetchTypes();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Save failed', 'error');
+      showAlert(errorResponse.response?.data?.error || tl('alert.saveFailed'), 'error');
     }
   };
 
@@ -179,9 +158,9 @@ export default function TransactionTypesPage() {
         <div>
           <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3 uppercase">
             <Layers className="w-8 h-8 text-emerald" />
-            {labels.title}
+            {tl('title')}
           </h1>
-          <p className="text-[10px] text-slate mt-1 uppercase font-black tracking-[0.2em]">{labels.subtitle}</p>
+          <p className="text-[10px] text-slate mt-1 uppercase font-black tracking-[0.2em]">{tl('subtitle')}</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -207,7 +186,7 @@ export default function TransactionTypesPage() {
           >
             <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
             <Plus size={18} className="relative z-10" />
-            <span className="text-xs uppercase tracking-[0.1em] relative z-10">{labels.addNew}</span>
+            <span className="text-xs uppercase tracking-[0.1em] relative z-10">{tl('addNew')}</span>
           </button>
         </div>
       </div>
@@ -251,7 +230,7 @@ export default function TransactionTypesPage() {
                 <div className="flex items-center justify-between pt-2 border-t border-white/5">
                   <div className="flex items-center gap-1.5 text-[8px] font-black text-slate uppercase tracking-widest">
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${t.isActive ? 'bg-emerald animate-pulse' : 'bg-slate-700'}`} />
-                    {t.isActive ? labels.active : labels.inactive}
+                    {t.isActive ? tl('active') : tl('inactive')}
                   </div>
                   <span className={`text-[9px] font-bold italic opacity-70 ${behaviorInfo?.color || 'text-slate'}`}>
                     {behaviorInfo?.label}
@@ -266,11 +245,11 @@ export default function TransactionTypesPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/5">
-                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">ชื่อประเภท</th>
-                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">ตรรกะระบบ</th>
-                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">พฤติกรรม</th>
-                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">สถานะ</th>
-                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">Actions</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">{tl('table.name')}</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">{tl('table.logic')}</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">{tl('table.behavior')}</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">{tl('table.status')}</th>
+                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">{tl('table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -293,7 +272,7 @@ export default function TransactionTypesPage() {
                       <div className="flex items-center gap-1.5">
                         <span className={`w-1.5 h-1.5 rounded-full ${t.isActive ? 'bg-emerald animate-pulse' : 'bg-slate-700'}`} />
                         <span className={`text-[9px] font-bold ${t.isActive ? 'text-emerald' : 'text-slate'}`}>
-                          {t.isActive ? labels.active : labels.inactive}
+                          {t.isActive ? tl('active') : tl('inactive')}
                         </span>
                       </div>
                     </td>
@@ -322,7 +301,7 @@ export default function TransactionTypesPage() {
               <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
                  <h2 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
                    {isEditing ? <Edit2 className="w-5 h-5 text-emerald" /> : <Layers className="w-5 h-5 text-emerald" />}
-                   {isEditing ? labels.edit : labels.create}
+                   {isEditing ? tl('edit') : tl('create')}
                  </h2>
                  <button onClick={() => setIsModalOpen(false)} className="text-slate hover:text-white transition-colors">
                    <X className="w-6 h-6" />
@@ -331,7 +310,7 @@ export default function TransactionTypesPage() {
               
               <form onSubmit={handleFormSubmit} className="p-8 space-y-6">
                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.name}</label>
+                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{tl('form.name')}</label>
                     <input 
                       type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                       placeholder="e.g. Daily Expense"
@@ -340,7 +319,7 @@ export default function TransactionTypesPage() {
                  </div>
 
                  <div className="space-y-1.5">
-                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.behavior}</label>
+                    <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{tl('form.behavior')}</label>
                     <select 
                       required value={formData.behavior} onChange={(e) => setFormData({...formData, behavior: e.target.value})}
                       className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 appearance-none transition-all"
@@ -358,7 +337,7 @@ export default function TransactionTypesPage() {
 
                  <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
                     <div>
-                      <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.status}</p>
+                      <p className="text-xs font-black text-white uppercase tracking-tight">{tl('form.status')}</p>
                       <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Enable system rule</p>
                     </div>
                     <button 
@@ -371,9 +350,9 @@ export default function TransactionTypesPage() {
                  </div>
 
                  <div className="flex justify-end gap-4 pt-4">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors">{labels.form.cancel}</button>
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors">{tl('form.cancel')}</button>
                     <button type="submit" className="px-8 py-3 bg-emerald text-navy font-black text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] active:scale-95 transition-all">
-                      {isEditing ? labels.form.save : labels.form.save}
+                      {tl('form.save')}
                     </button>
                  </div>
               </form>

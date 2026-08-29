@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Users, UserPlus, Mail, Shield, CheckCircle, AlertCircle, Loader2, Clock, Trash2, ShieldCheck, MailWarning, Construction } from 'lucide-react';
@@ -32,6 +33,7 @@ interface Role {
 }
 
 export default function TeamPage() {
+  const t = useTranslations('team');
   const { user } = useAuthStore();
   const [members, setMembers] = useState<User[]>([]);
   const [invitations, setInvitations] = useState<Invitation[]>([]);
@@ -77,28 +79,28 @@ export default function TeamPage() {
   const handleInvite = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!inviteEmail || !inviteRoleId) return;
-    
+
     try {
       setIsInviting(true);
       await api.post('/invitations', { email: inviteEmail, roleId: inviteRoleId });
-      setAlert({ message: 'Invitation sent successfully', type: 'success' });
+      setAlert({ message: t('alert.invited'), type: 'success' });
       setInviteEmail('');
-      fetchData(); // Refresh the lists
+      fetchData();
     } catch (err: any) {
-      setAlert({ message: err.response?.data?.error || 'Failed to send invitation', type: 'error' });
+      setAlert({ message: err.response?.data?.error || t('alert.inviteFailed'), type: 'error' });
     } finally {
       setIsInviting(false);
     }
   };
 
   const handleRevoke = async (id: string) => {
-    if (!confirm('Are you sure you want to revoke this invitation?')) return;
+    if (!confirm(t('confirm.revoke'))) return;
     try {
       await api.delete(`/invitations/${id}`);
-      setAlert({ message: 'Invitation revoked successfully', type: 'success' });
-      fetchData(); // Refresh lists
+      setAlert({ message: t('alert.revoked'), type: 'success' });
+      fetchData();
     } catch (err: any) {
-      setAlert({ message: err.response?.data?.error || 'Failed to revoke invitation', type: 'error' });
+      setAlert({ message: err.response?.data?.error || t('alert.revokeFailed'), type: 'error' });
     }
   };
 
@@ -123,14 +125,14 @@ export default function TeamPage() {
               <Users size={36} />
             </div>
             <div>
-              <h1 className="text-3xl font-black text-white tracking-tighter">Team & Permissions</h1>
-              <p className="text-emerald font-black uppercase tracking-[0.3em] text-[10px] mt-2 opacity-80">Organization Members</p>
+              <h1 className="text-3xl font-black text-white tracking-tighter">{t('title')}</h1>
+              <p className="text-emerald font-black uppercase tracking-[0.3em] text-[10px] mt-2 opacity-80">{t('subtitle')}</p>
             </div>
           </div>
           
           <div className="flex flex-col items-end">
              <div className="text-3xl font-black text-white">{members.length}</div>
-             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">Active Members</div>
+             <div className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('memberCount')}</div>
           </div>
         </div>
       </div>
@@ -158,8 +160,8 @@ export default function TeamPage() {
                   <ShieldCheck size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">Active Members</h2>
-                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Users currently in the organization</p>
+                  <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">{t('activeMembers')}</h2>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">{t('activeMembersDesc')}</p>
                 </div>
               </div>
             </div>
@@ -174,7 +176,7 @@ export default function TeamPage() {
                     <div>
                       <div className="font-bold text-sm text-white flex items-center gap-2">
                         {member.firstName} {member.lastName}
-                        {member.id === user?.id && <span className="text-[9px] px-2 py-0.5 bg-emerald/20 text-emerald rounded-full uppercase tracking-widest">You</span>}
+                        {member.id === user?.id && <span className="text-[9px] px-2 py-0.5 bg-emerald/20 text-emerald rounded-full uppercase tracking-widest">{t('you')}</span>}
                       </div>
                       <div className="text-xs text-slate-400 mt-0.5">{member.email}</div>
                     </div>
@@ -188,7 +190,7 @@ export default function TeamPage() {
               ))}
               
               {members.length === 0 && (
-                <div className="text-center py-10 text-slate-500 text-sm font-bold uppercase tracking-widest">No active members found</div>
+                <div className="text-center py-10 text-slate-500 text-sm font-bold uppercase tracking-widest">{t('noMembers')}</div>
               )}
             </div>
           </div>
@@ -201,8 +203,8 @@ export default function TeamPage() {
                   <MailWarning size={20} />
                 </div>
                 <div>
-                  <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">Pending Invitations</h2>
-                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Awaiting user acceptance</p>
+                  <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">{t('pendingInvitations')}</h2>
+                  <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">{t('pendingInvitationsDesc')}</p>
                 </div>
               </div>
 
@@ -255,8 +257,8 @@ export default function TeamPage() {
                 <UserPlus size={20} />
               </div>
               <div>
-                <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">Invite Member</h2>
-                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Send access invitation</p>
+                <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">{t('invite')}</h2>
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">{t('inviteDesc')}</p>
               </div>
             </div>
 
@@ -264,9 +266,9 @@ export default function TeamPage() {
               <div className="w-14 h-14 bg-white/5 rounded-2xl flex items-center justify-center mx-auto mb-4 border border-white/10 text-slate">
                 <Construction size={24} />
               </div>
-              <h3 className="text-sm font-black text-white mb-2 uppercase tracking-widest">Coming Soon</h3>
+              <h3 className="text-sm font-black text-white mb-2 uppercase tracking-widest">{t('comingSoon')}</h3>
               <p className="text-[10px] text-slate leading-relaxed uppercase tracking-widest">
-                ระบบเชิญสมาชิกอยู่ระหว่างพัฒนา<br />จะเปิดใช้งานในเวอร์ชันถัดไป
+                {t('comingSoonDesc')}
               </p>
             </div>
           </div>

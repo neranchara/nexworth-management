@@ -1,5 +1,6 @@
 'use client';
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { Link2, Copy, CheckCircle, AlertCircle, User, Loader2, Eye, EyeOff, QrCode, Sparkles, ShieldCheck } from 'lucide-react';
@@ -9,6 +10,7 @@ import GlassCard from '@/components/ui/GlassCard';
 import { APP_CONFIG } from '@/config/app.config';
 
 export default function ProfilePage() {
+  const t = useTranslations('profile');
   const { user, updateUser } = useAuthStore();
   const [firstName, setFirstName] = useState(user?.firstName || '');
   const [lastName, setLastName] = useState(user?.lastName || '');
@@ -63,10 +65,10 @@ export default function ProfilePage() {
       // Update global store
       updateUser({ firstName, lastName, email });
       
-      setAlert({ message: 'Profile updated successfully', type: 'success' });
+      setAlert({ message: t('alert.saved'), type: 'success' });
       setPassword('');
     } catch (err: any) {
-      setAlert({ message: err.response?.data?.error || 'Update failed', type: 'error' });
+      setAlert({ message: err.response?.data?.error || t('alert.failed'), type: 'error' });
     } finally {
       setIsSaving(false);
     }
@@ -119,7 +121,7 @@ export default function ProfilePage() {
           >
             <div className="absolute inset-0 bg-white/20 translate-y-full group-hover/btn:translate-y-0 transition-transform duration-300" />
             {isSaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <CheckCircle size={16} className="relative z-10" />}
-            <span className="relative z-10">{isSaving ? 'Processing...' : 'Save Changes'}</span>
+            <span className="relative z-10">{isSaving ? t('saving') : t('save')}</span>
           </button>
         </div>
       </div>
@@ -146,15 +148,15 @@ export default function ProfilePage() {
                 <User size={20} />
               </div>
               <div>
-                <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">Identity Profile</h2>
-                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">Primary Account Details</p>
+                <h2 className="text-xs font-black text-white uppercase tracking-[0.3em]">{t('identity')}</h2>
+                <p className="text-[9px] text-slate-500 font-bold uppercase tracking-widest mt-1">{t('identityDesc')}</p>
               </div>
             </div>
             
             <div className="space-y-8">
               <div className="grid grid-cols-2 gap-6">
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">First Name</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('firstName')}</label>
                   <input 
                     type="text" 
                     value={firstName} 
@@ -163,7 +165,7 @@ export default function ProfilePage() {
                   />
                 </div>
                 <div className="space-y-3">
-                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Last Name</label>
+                  <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('lastName')}</label>
                   <input 
                     type="text" 
                     value={lastName} 
@@ -174,7 +176,7 @@ export default function ProfilePage() {
               </div>
               
               <div className="space-y-3">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Email Connection</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('email')}</label>
                 <input 
                   type="email" 
                   value={email} 
@@ -184,13 +186,13 @@ export default function ProfilePage() {
               </div>
               
               <div className="space-y-3">
-                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">Security Key Override</label>
+                <label className="block text-[10px] font-black text-slate-400 uppercase tracking-[0.2em] ml-1">{t('password')}</label>
                 <div className="relative">
                   <input 
                     type={showPassword ? "text" : "password"} 
                     value={password} 
                     onChange={(e) => setPassword(e.target.value)}
-                    placeholder="ENTER NEW PASSWORD"
+                    placeholder={t('passwordPlaceholder')}
                     className="w-full bg-white/[0.03] border border-white/10 rounded-2xl px-5 py-4 text-sm font-bold text-white outline-none focus:border-emerald/50 focus:bg-white/[0.05] transition-all placeholder:text-slate-600 shadow-inner pr-14 tracking-widest"
                   />
                   <button
@@ -206,7 +208,7 @@ export default function ProfilePage() {
                 </div>
                 <div className="flex items-center gap-2 px-1">
                    <AlertCircle size={10} className="text-slate-600" />
-                   <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">Leave empty to keep current password</p>
+                   <p className="text-[9px] text-slate-600 font-bold uppercase tracking-widest">{t('passwordHint')}</p>
                 </div>
               </div>
             </div>
@@ -232,7 +234,7 @@ export default function ProfilePage() {
             </div>
             
             <p className="text-xs font-bold text-slate-300 leading-relaxed mb-10 relative z-10">
-              ยกระดับการจัดการเงินของคุณด้วยระบบ LINE Sync ที่รองรับการบันทึกรายการผ่านแชทและสแกนสลิปอัตโนมัติ
+              {t('line.description')}
             </p>
 
             {!pairingCode ? (
@@ -242,7 +244,7 @@ export default function ProfilePage() {
                 className="w-full flex items-center justify-center gap-4 bg-[#06C755] text-navy px-8 py-5 rounded-2xl text-[11px] font-black uppercase tracking-[0.2em] transition-all hover:shadow-[0_0_30px_rgba(6,199,85,0.4)] hover:-translate-y-1 active:scale-95 disabled:opacity-50"
               >
                 {isLoading ? <Loader2 className="w-5 h-5 animate-spin" /> : <QrCode size={20} />}
-                {isLoading ? 'Activating Hub...' : 'Generate New Pairing Link'}
+                {isLoading ? t('line.generating') : t('line.generate')}
               </button>
             ) : (
               <div className="space-y-10 animate-in fade-in zoom-in-95 duration-500 relative z-10">

@@ -9,15 +9,20 @@ import { useDashboardNav } from './useDashboardNav';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
 import { useImpersonation } from '@/context/ImpersonationContext';
+import LanguageToggle from '@/components/common/LanguageToggle';
+import ThemeToggle from '@/components/common/ThemeToggle';
+import { useTranslations } from 'next-intl';
 
 export default function DashboardShell({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { user, isAuthenticated, isLoading, checkAuth } = useAuthStore();
-  const { mainLinks, mgmtLinks, setupLabel } = useDashboardNav();
+  const { mainLinks, mgmtLinks } = useDashboardNav();
   const router = useRouter();
   const { isImpersonating, impersonationData, stopViewAs } = useImpersonation();
+  const tNav = useTranslations('nav');
+  const tCommon = useTranslations('common');
 
   // Initialize sidebar state
   useEffect(() => {
@@ -75,12 +80,12 @@ export default function DashboardShell({ children }: { children: React.ReactNode
 
   if (isLoading || !isLoaded) {
     return (
-      <div className="h-screen w-screen flex items-center justify-center bg-midnight">
+      <div className="h-screen w-screen flex items-center justify-center bg-slate-50 dark:bg-midnight">
         <div className="animate-pulse flex flex-col items-center gap-4">
           <div className="w-12 h-12 bg-emerald/20 rounded-lg flex items-center justify-center">
             <div className="w-6 h-6 border-2 border-emerald border-t-transparent rounded-full animate-spin" />
           </div>
-          <span className="text-[10px] text-slate tracking-widest uppercase font-bold">Initializing Dashboard...</span>
+          <span className="text-[10px] text-slate tracking-widest uppercase font-bold">{tCommon('initializingDashboard')}</span>
         </div>
       </div>
     );
@@ -91,19 +96,18 @@ export default function DashboardShell({ children }: { children: React.ReactNode
   }
 
   return (
-    <div className="h-screen w-screen flex overflow-hidden bg-midnight text-slate-100 selection:bg-emerald/30">
+    <div className="h-screen w-screen flex overflow-hidden bg-slate-50 dark:bg-midnight text-slate-900 dark:text-slate-100 selection:bg-emerald/30">
       <MobileNavDrawer
         open={mobileMenuOpen}
         onClose={() => setMobileMenuOpen(false)}
         mainLinks={mainLinks}
         mgmtLinks={mgmtLinks}
-        setupLabel={setupLabel}
       />
       {/* Sidebar (Desktop) */}
       <Sidebar isCollapsed={isCollapsed} setIsCollapsed={setIsCollapsed} />
 
       {/* Main Content Area */}
-      <div className="flex-1 flex flex-col min-w-0 relative bg-gradient-to-tr from-midnight via-midnight to-navy/30">
+      <div className="flex-1 flex flex-col min-w-0 relative dark:bg-gradient-to-tr dark:from-midnight dark:via-midnight dark:to-navy/30">
         
         {/* Impersonation Warning Banner */}
         {isImpersonating && impersonationData && (
@@ -127,37 +131,39 @@ export default function DashboardShell({ children }: { children: React.ReactNode
         )}
         
         {/* Top Header (Optional/Minimal) */}
-        <header className="h-16 flex items-center justify-between px-6 border-b border-white/5 shrink-0 z-40">
+        <header className="h-16 flex items-center justify-between px-6 border-b border-slate-200 dark:border-white/5 shrink-0 z-40">
            <div className="flex items-center gap-3 lg:hidden">
               <button
                 type="button"
                 onClick={() => setMobileMenuOpen(true)}
-                className="p-2 rounded-xl bg-white/5 text-slate hover:text-white"
-                aria-label="เปิดเมนู"
+                className="p-2 rounded-xl bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-slate hover:text-slate-900 dark:hover:text-white"
+                aria-label={tNav('openMenu')}
               >
                 <Menu className="w-5 h-5" />
               </button>
               <span className="font-bold text-lg tracking-tight">NEXWORTH</span>
            </div>
                       <div className="flex items-center gap-4 ml-auto">
+               <ThemeToggle />
+               <LanguageToggle collapsed={false} />
                <div className="hidden sm:flex flex-col items-end mr-2">
-                  <span className="text-xs font-bold text-white leading-none">
+                  <span className="text-xs font-bold text-slate-900 dark:text-white leading-none">
                      {user.firstName
                        ? `${user.firstName}${user.lastName ? ` ${user.lastName}` : ''}`
                        : user.email}
                      {user.role && (
-                       <span className="text-slate font-normal">, {user.role}</span>
+                       <span className="text-slate-500 dark:text-slate font-normal">, {user.role}</span>
                      )}
                   </span>
-                  <span className="text-[9px] text-slate uppercase tracking-tighter mt-1">
+                  <span className="text-[9px] text-slate-500 dark:text-slate uppercase tracking-tighter mt-1">
                     {user.orgName || '—'}
                   </span>
                </div>
                <button
                  type="button"
                  onClick={() => router.push('/dashboard/profile')}
-                 className="w-9 h-9 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center hover:bg-white/10 hover:border-emerald/30 transition-all cursor-pointer"
-                 title="โปรไฟล์"
+                 className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-white/5 border border-slate-200 dark:border-white/10 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-white/10 hover:border-emerald/30 transition-all cursor-pointer"
+                 title={tCommon('profile')}
                >
                   <div className="w-5 h-5 rounded-full bg-emerald/20 border border-emerald/40" />
                </button>

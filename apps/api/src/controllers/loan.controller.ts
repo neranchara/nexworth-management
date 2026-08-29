@@ -3,10 +3,14 @@ import { prisma } from '../lib/prisma';
 import { z } from 'zod';
 import { SYSTEM_CATEGORY_KEYS, BEHAVIOR_METADATA } from '../constants/transactionConfig.js';
 
+type LoanBehavior = 'LOAN_BORROW' | 'LOAN_REPAY' | 'LEND_OUT' | 'LEND_REPAY';
+
 const createLoanSchema = z.object({
   name: z.string().min(1),
   accountId: z.string().uuid(),
   initialAmount: z.number().positive(),
+  direction: z.enum(['BORROW', 'LEND']).default('BORROW'),
+  borrowerName: z.string().optional(),
   date: z.string().datetime().optional(),
   actualDate: z.string().datetime().nullable().optional(),
   note: z.string().optional(),
@@ -15,6 +19,7 @@ const createLoanSchema = z.object({
 const updateLoanSchema = z.object({
   name: z.string().min(1).optional(),
   accountId: z.string().uuid().optional(),
+  borrowerName: z.string().nullable().optional(),
   actualDate: z.string().datetime().nullable().optional(),
 });
 
@@ -27,18 +32,35 @@ const addTransactionSchema = z.object({
   note: z.string().optional(),
 });
 
-const getCategory = async (behavior: 'LOAN_BORROW' | 'LOAN_REPAY', organizationId: string) => {
-  const systemKey = behavior === 'LOAN_BORROW' ? SYSTEM_CATEGORY_KEYS.LOAN_BORROW_SYS : SYSTEM_CATEGORY_KEYS.LOAN_REPAY_SYS;
-  const fallbackName = behavior === 'LOAN_BORROW' ? 'ยืมเงินภายใน' : 'คืนเงินภายใน';
+const BEHAVIOR_MAP: Record<string, Record<string, LoanBehavior>> = {
+  BORROW: { BORROW: 'LOAN_BORROW', REPAY: 'LOAN_REPAY' },
+  LEND:   { BORROW: 'LEND_OUT',    REPAY: 'LEND_REPAY' },
+};
+
+const SYSTEM_KEY_MAP: Record<LoanBehavior, string> = {
+  LOAN_BORROW: SYSTEM_CATEGORY_KEYS.LOAN_BORROW_SYS,
+  LOAN_REPAY:  SYSTEM_CATEGORY_KEYS.LOAN_REPAY_SYS,
+  LEND_OUT:    SYSTEM_CATEGORY_KEYS.LEND_OUT_SYS,
+  LEND_REPAY:  SYSTEM_CATEGORY_KEYS.LEND_REPAY_SYS,
+};
+
+const FALLBACK_NAME_MAP: Record<LoanBehavior, string> = {
+  LOAN_BORROW: 'ยืมเงินภายใน',
+  LOAN_REPAY:  'คืนเงินภายใน',
+  LEND_OUT:    'ให้ยืมเงิน',
+  LEND_REPAY:  'รับเงินคืน',
+};
+
+const getCategory = async (behavior: LoanBehavior, organizationId: string) => {
+  const systemKey = SYSTEM_KEY_MAP[behavior];
+  const fallbackName = FALLBACK_NAME_MAP[behavior];
   const meta = BEHAVIOR_METADATA[behavior];
 
-  // 1. Lookup by systemKey
   let cat = await prisma.transactionCategory.findFirst({
     where: { systemKey, organizationId },
     include: { type: true }
   });
 
-  // 2. Fallback by name + behavior
   if (!cat) {
     cat = await prisma.transactionCategory.findFirst({
       where: { name: fallbackName, organizationId, type: { behavior } },
@@ -47,7 +69,6 @@ const getCategory = async (behavior: 'LOAN_BORROW' | 'LOAN_REPAY', organizationI
     if (cat) await prisma.transactionCategory.update({ where: { id: cat.id }, data: { systemKey } });
   }
 
-  // 3. Create if not found
   if (!cat) {
     let type = await prisma.transactionType.findFirst({ where: { behavior, organizationId } });
     if (!type) {
@@ -64,37 +85,29 @@ const getCategory = async (behavior: 'LOAN_BORROW' | 'LOAN_REPAY', organizationI
   return { ...cat, type: cat.type };
 };
 
-/**
- * Adjust asset balance only (Loan Tracker = ระบบโอนภายใน ไม่แตะ Liabilities)
- * BORROW = ยืมเงินออกไป -> Asset ลด
- * REPAY  = รับคืนเงิน   -> Asset เพิ่ม
- */
-const adjustAssetBalance = async (accountId: string, amount: number, type: 'BORROW' | 'REPAY', isRemoval: boolean = false) => {
+const adjustAssetBalance = async (accountId: string, amount: number, type: 'INCREASE' | 'DECREASE') => {
   const account = await prisma.account.findUnique({ where: { id: accountId } });
-  if (!account || account.type === 'LIABILITY') return; // Only process Asset accounts
+  if (!account || account.type === 'LIABILITY') return;
 
-  // BORROW: ลด, REPAY: เพิ่ม (if isRemoval, invert)
-  let adjustment = type === 'REPAY' ? amount : -amount;
-  if (isRemoval) adjustment = -adjustment;
+  const adjustment = type === 'INCREASE' ? amount : -amount;
 
   await prisma.asset.upsert({
     where: { accountId },
     update: { amount: { increment: adjustment } },
-    create: {
-      accountId,
-      amount: adjustment,
-      userId: account.userId,
-      organizationId: account.organizationId
-    }
+    create: { accountId, amount: adjustment, userId: account.userId, organizationId: account.organizationId }
   });
 };
 
 export const listLoansHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as { sub: string, organizationId: string };
-    
+    const { direction } = request.query as { direction?: string };
+
     const loans = await prisma.loan.findMany({
-      where: { organizationId: user.organizationId },
+      where: {
+        organizationId: user.organizationId,
+        ...(direction ? { direction } : {})
+      },
       include: {
         asset: { include: { account: { select: { id: true, name: true, bank: true } } } },
         liability: { include: { account: { select: { id: true, name: true, bank: true } } } },
@@ -106,42 +119,56 @@ export const listLoansHandler = async (request: FastifyRequest, reply: FastifyRe
       orderBy: { createdAt: 'desc' }
     });
 
+    const orphanedIds = loans
+      .filter(l => !l.asset?.account && !l.liability?.account)
+      .map(l => l.accountId);
+
+    const directAccounts = orphanedIds.length > 0
+      ? await prisma.account.findMany({
+          where: { id: { in: orphanedIds } },
+          select: { id: true, name: true }
+        })
+      : [];
+    const directAccountMap = new Map(directAccounts.map(a => [a.id, a.name]));
+
     const parsedLoans = loans.map(loan => {
-      let borrowed = 0;
+      const loanDirection = loan.direction || 'BORROW';
+      const primaryBehavior   = loanDirection === 'LEND' ? 'LEND_OUT'    : 'LOAN_BORROW';
+      const secondaryBehavior = loanDirection === 'LEND' ? 'LEND_REPAY'  : 'LOAN_REPAY';
+
+      let lent = 0;
       let repaid = 0;
-      let latestRepaymentActualDate: Date | null = null;
-      
+      let latestRepaymentDate: Date | null = null;
+
       loan.transactions.forEach(tx => {
         const behavior = tx.type?.behavior || tx.category.type?.behavior;
-        if (behavior === 'LOAN_BORROW') borrowed += tx.amount;
-        if (behavior === 'LOAN_REPAY') {
+        if (behavior === primaryBehavior) lent += tx.amount;
+        if (behavior === secondaryBehavior) {
           repaid += tx.amount;
-          if (tx.actualDate) {
-             if (!latestRepaymentActualDate || new Date(tx.actualDate) > latestRepaymentActualDate) {
-               latestRepaymentActualDate = new Date(tx.actualDate);
-             }
-          } else if (new Date(tx.date) > (latestRepaymentActualDate || new Date(0))) {
-             // Fallback to record date if no actual date
-             latestRepaymentActualDate = new Date(tx.date);
+          const refDate = tx.actualDate ? new Date(tx.actualDate) : new Date(tx.date);
+          if (!latestRepaymentDate || refDate > latestRepaymentDate) {
+            latestRepaymentDate = refDate;
           }
         }
       });
 
       const accountInfo = loan.asset?.account || loan.liability?.account;
-      
+
       return {
         id: loan.id,
         code: loan.code,
         name: loan.name,
+        direction: loanDirection,
+        borrowerName: loan.borrowerName || null,
         accountId: loan.accountId,
-        accountName: accountInfo?.name || 'บัญชีที่ถูกลบ',
+        accountName: accountInfo?.name || directAccountMap.get(loan.accountId) || 'บัญชีที่ถูกลบ',
         date: loan.date,
         actualDate: loan.actualDate,
-        status: borrowed <= repaid ? 'PAID' : 'ACTIVE',
-        totalBorrowed: borrowed,
+        status: lent <= repaid ? 'PAID' : 'ACTIVE',
+        totalBorrowed: lent,
         totalRepaid: repaid,
-        balance: borrowed - repaid,
-        latestRepaymentDate: latestRepaymentActualDate,
+        balance: lent - repaid,
+        latestRepaymentDate,
         transactions: loan.transactions
       };
     });
@@ -157,16 +184,15 @@ export const createLoanHandler = async (request: FastifyRequest, reply: FastifyR
   try {
     const user = request.user as { sub: string, organizationId: string };
     const body = createLoanSchema.parse(request.body);
-    
-    // Verify account exists
+
     const account = await prisma.account.findUnique({ where: { id: body.accountId } });
     if (!account || account.organizationId !== user.organizationId) {
       return reply.status(404).send({ error: 'Account not found' });
     }
 
-    // Generate a simple code like L001
-    const count = await prisma.loan.count({ where: { organizationId: user.organizationId } });
-    const code = `L${String(count + 1).padStart(3, '0')}`;
+    const prefix = body.direction === 'LEND' ? 'D' : 'L';
+    const count = await prisma.loan.count({ where: { organizationId: user.organizationId, direction: body.direction } });
+    const code = `${prefix}${String(count + 1).padStart(3, '0')}`;
 
     const loanDate = body.date ? new Date(body.date) : new Date();
 
@@ -190,13 +216,16 @@ export const createLoanHandler = async (request: FastifyRequest, reply: FastifyR
         assetId,
         liabilityId,
         name: body.name,
+        direction: body.direction,
+        borrowerName: body.borrowerName,
         totalAmount: body.initialAmount,
         date: loanDate,
         actualDate: body.actualDate ? new Date(body.actualDate) : undefined,
       }
     });
 
-    const category = await getCategory('LOAN_BORROW', user.organizationId);
+    const primaryBehavior: LoanBehavior = body.direction === 'LEND' ? 'LEND_OUT' : 'LOAN_BORROW';
+    const category = await getCategory(primaryBehavior, user.organizationId);
 
     await prisma.transaction.create({
       data: {
@@ -216,8 +245,8 @@ export const createLoanHandler = async (request: FastifyRequest, reply: FastifyR
       }
     });
 
-    // Update Asset balance: BORROW = ยืมเงินออก -> ยอด Asset ลด
-    await adjustAssetBalance(body.accountId, body.initialAmount, 'BORROW');
+    // Money always leaves the account on initial create (BORROW=ยืมออก, LEND=ให้ยืม)
+    await adjustAssetBalance(body.accountId, body.initialAmount, 'DECREASE');
 
     return reply.status(201).send({ message: 'Loan created successfully', loan: newLoan });
   } catch (error) {
@@ -238,15 +267,15 @@ export const addLoanTransactionHandler = async (request: FastifyRequest, reply: 
       return reply.status(404).send({ error: 'Loan not found' });
     }
 
-    const categoryType = body.type === 'BORROW' ? 'LOAN_BORROW' : 'LOAN_REPAY';
-    const category = await getCategory(categoryType, user.organizationId);
+    const loanDirection = loan.direction || 'BORROW';
+    const behaviorKey = BEHAVIOR_MAP[loanDirection][body.type];
+    const category = await getCategory(behaviorKey, user.organizationId);
     const txDate = body.date ? new Date(body.date) : new Date();
 
     let txAccountId = loan.accountId;
     let txAssetId = loan.assetId;
     let txLiabilityId = loan.liabilityId;
 
-    // Use the user-selected account for the transaction if provided (e.g. which account to pay from)
     if (body.accountId) {
       const account = await prisma.account.findUnique({ where: { id: body.accountId } });
       if (account && account.organizationId === user.organizationId) {
@@ -263,7 +292,11 @@ export const addLoanTransactionHandler = async (request: FastifyRequest, reply: 
       }
     }
 
-    const transaction = await prisma.transaction.create({
+    const descLabel = body.type === 'REPAY'
+      ? (loanDirection === 'LEND' ? 'รับเงินคืน' : 'คืนเงิน')
+      : (loanDirection === 'LEND' ? 'ให้ยืมเพิ่ม' : 'ยืมเพิ่ม');
+
+    await prisma.transaction.create({
       data: {
         userId: user.sub,
         organizationId: user.organizationId,
@@ -277,22 +310,20 @@ export const addLoanTransactionHandler = async (request: FastifyRequest, reply: 
         date: txDate,
         actualDate: body.actualDate ? new Date(body.actualDate) : undefined,
         note: body.note,
-        description: `${body.type === 'BORROW' ? 'ยืมเพิ่ม' : 'คืนเงิน'}: ${loan.name}`,
+        description: `${descLabel}: ${loan.name}`,
       }
     });
 
-    // Update Asset balance based on transaction type
-    // If it's a REPAY and BA specifies it as 'รายจ่าย' (Expense), money leaves the selected account
-    // So we use type 'BORROW' for adjustAssetBalance to decrease the balance, or write a custom update
-    if (body.type === 'REPAY') {
-       // Decrease balance for the account used to repay
-       await adjustAssetBalance(txAccountId, body.amount, 'BORROW');
+    // Asset balance adjustment:
+    // BORROW dir — REPAY: money leaves repay account (DECREASE), extra BORROW: money leaves source (DECREASE)
+    // LEND dir   — REPAY: money returns to account (INCREASE), extra LEND: money leaves account (DECREASE)
+    if (loanDirection === 'LEND') {
+      await adjustAssetBalance(txAccountId, body.amount, body.type === 'REPAY' ? 'INCREASE' : 'DECREASE');
     } else {
-       // If borrow more (เงินเข้าบัญชี) -> Increase balance
-       await adjustAssetBalance(txAccountId, body.amount, 'REPAY');
+      await adjustAssetBalance(txAccountId, body.amount, 'DECREASE');
     }
 
-    return reply.status(201).send({ message: 'Transaction added successfully', transaction });
+    return reply.status(201).send({ message: 'Transaction added successfully' });
   } catch (error) {
     if (error instanceof z.ZodError) return reply.status(400).send({ error: error.format() });
     request.log.error(error);
@@ -334,6 +365,7 @@ export const updateLoanHandler = async (request: FastifyRequest, reply: FastifyR
       data: {
         name: body.name,
         accountId: body.accountId,
+        borrowerName: body.borrowerName !== undefined ? body.borrowerName : undefined,
         assetId,
         liabilityId,
         actualDate: body.actualDate !== undefined ? (body.actualDate ? new Date(body.actualDate) : null) : undefined,

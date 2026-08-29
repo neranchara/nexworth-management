@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import { useSearchParams } from 'next/navigation';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
@@ -25,6 +26,7 @@ interface Role {
 }
 
 export default function RolesListPage() {
+  const t = useTranslations('permissions');
   const [roles, setRoles] = useState<Role[]>([]);
   const [organizations, setOrganizations] = useState<{id: string, name: string}[]>([]);
   const [loading, setLoading] = useState(true);
@@ -146,7 +148,7 @@ export default function RolesListPage() {
           </div>
           <div>
             <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-2">
-              Role Permissions
+              {t('title')}
               {orgId && (
                 <span className="flex items-center gap-2 text-white/30 ml-1">
                   <ChevronRight className="w-4 h-4" />
@@ -154,7 +156,7 @@ export default function RolesListPage() {
                 </span>
               )}
             </h1>
-            <p className="text-slate text-[11px] font-bold uppercase tracking-widest mt-0.5">Manage roles and access levels</p>
+            <p className="text-slate text-[11px] font-bold uppercase tracking-widest mt-0.5">{t('subtitle')}</p>
           </div>
         </div>
 
@@ -181,7 +183,7 @@ export default function RolesListPage() {
               className="bg-emerald text-navy px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
             >
               <Plus className="w-3.5 h-3.5" />
-              New Role
+              {t('newRole')}
             </button>
           )}
         </div>
@@ -256,14 +258,14 @@ export default function RolesListPage() {
               <div className="flex items-center justify-between pt-3 border-t border-white/5">
                 <div className="flex items-center gap-2 text-slate">
                   <Users className="w-3 h-3" />
-                  <span className="text-[11px] font-bold">{role._count?.users || 0} Users</span>
+                  <span className="text-[11px] font-bold">{t('userCount', { count: role._count?.users || 0 })}</span>
                 </div>
                 <button
                   onClick={() => router.push(`/dashboard/permissions/${role.id}${orgId ? `?orgId=${orgId}` : ''}`)}
                   data-testid={`permissions-list-btn-config-${role.name}`}
                   className="flex items-center gap-1.5 text-[11px] font-black text-emerald hover:text-white uppercase tracking-wider transition-colors"
                 >
-                  Configure
+                  {t('configure')}
                   <ArrowRight className="w-3 h-3" />
                 </button>
               </div>
@@ -275,11 +277,11 @@ export default function RolesListPage() {
           <table className="w-full">
             <thead>
               <tr className="border-b border-white/5">
-                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">Role</th>
-                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">คำอธิบาย</th>
-                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">ประเภท</th>
-                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">Users</th>
-                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">Actions</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">{t('table.role')}</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">{t('table.description')}</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">{t('table.type')}</th>
+                <th className="px-4 py-3 text-left text-[9px] font-black text-slate uppercase tracking-widest">{t('table.users')}</th>
+                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">{t('table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -317,7 +319,7 @@ export default function RolesListPage() {
                         data-testid={`permissions-list-btn-config-${role.name}`}
                         className="flex items-center gap-1 text-[10px] font-black text-emerald hover:text-white transition-colors px-2 py-1"
                       >
-                        Config <ArrowRight className="w-3 h-3" />
+                        {t('config')} <ArrowRight className="w-3 h-3" />
                       </button>
                       {hasPermission('permissions', 'canUpdate') && (
                         <button
@@ -352,7 +354,7 @@ export default function RolesListPage() {
           <div className="bg-navy/80 backdrop-blur-xl rounded-2xl shadow-2xl w-full max-w-sm overflow-hidden border border-white/10">
             <div className="flex justify-between items-center px-5 py-4 border-b border-white/10">
               <h2 className="text-sm font-black text-white uppercase tracking-widest">
-                {isEditingRole ? 'Edit Role' : 'New Role'}
+                {isEditingRole ? t('modal.edit') : t('modal.create')}
               </h2>
               <button onClick={() => setIsModalOpen(false)} className="text-slate hover:text-white transition-colors">
                 <X className="w-4 h-4" />
@@ -361,7 +363,7 @@ export default function RolesListPage() {
 
             <form onSubmit={handleCreateOrUpdateRole} className="p-5 space-y-4">
               <div>
-                <label className="block text-[10px] font-black text-slate uppercase tracking-widest mb-1.5">Role Name</label>
+                <label className="block text-[10px] font-black text-slate uppercase tracking-widest mb-1.5">{t('form.name')}</label>
                 <input
                   type="text" required value={roleName} onChange={(e) => setRoleName(e.target.value)}
                   data-testid="permissions-form-input-name"
@@ -370,7 +372,7 @@ export default function RolesListPage() {
               </div>
 
               <div>
-                <label className="block text-[10px] font-black text-slate uppercase tracking-widest mb-1.5">Description <span className="text-[9px] lowercase font-medium opacity-60">(optional)</span></label>
+                <label className="block text-[10px] font-black text-slate uppercase tracking-widest mb-1.5">{t('form.description')} <span className="text-[9px] lowercase font-medium opacity-60">(optional)</span></label>
                 <textarea
                   value={roleDescription} onChange={(e) => setRoleDescription(e.target.value)}
                   data-testid="permissions-form-input-description"
@@ -380,7 +382,7 @@ export default function RolesListPage() {
 
               {user?.isSystemAdmin && (
                 <div className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/5">
-                  <span className="text-xs font-bold text-slate">System Management Role</span>
+                  <span className="text-xs font-bold text-slate">{t('form.systemRole')}</span>
                   <button
                     type="button"
                     onClick={() => setIsSystemRole(!isSystemRole)}
@@ -401,7 +403,7 @@ export default function RolesListPage() {
                   data-testid="permissions-form-btn-save"
                   className="w-full py-2.5 bg-emerald text-navy text-xs font-black rounded-xl hover:shadow-[0_0_20px_rgba(80,200,120,0.4)] transition-all active:scale-95"
                 >
-                  Save
+                  {t('form.save')}
                 </button>
               </div>
             </form>

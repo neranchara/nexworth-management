@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useTranslations } from 'next-intl';
 import api from '@/lib/api';
 import { useAuthStore } from '@/store/authStore';
 import { useRouter } from 'next/navigation';
@@ -20,6 +21,7 @@ interface Organization {
 }
 
 export default function OrganizationsPage() {
+  const t = useTranslations('organizations');
   const { user } = useAuthStore();
   const router = useRouter();
   const [organizations, setOrganizations] = useState<Organization[]>([]);
@@ -98,9 +100,9 @@ export default function OrganizationsPage() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900 dark:text-white tracking-tight flex items-center gap-2">
             <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
-            Organizations
+            {t('title')}
           </h1>
-          <p className="text-gray-500 dark:text-gray-400 mt-1 text-[13px]">Manage and monitor all system organizations.</p>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 text-[13px]">{t('subtitle')}</p>
         </div>
         
         <div className="flex items-center gap-3">
@@ -108,7 +110,7 @@ export default function OrganizationsPage() {
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 w-4 h-4" />
             <input 
               type="text" 
-              placeholder="Search..."
+              placeholder={t('searchPlaceholder')}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               data-testid="orgs-list-input-search"
@@ -121,7 +123,7 @@ export default function OrganizationsPage() {
             className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
           >
             <Plus className="w-3.5 h-3.5" />
-            Create Org
+            {t('create')}
           </button>
         </div>
       </div>
@@ -163,17 +165,17 @@ export default function OrganizationsPage() {
               <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
                 <Users className="w-3.5 h-3.5 text-blue-500 mx-auto mb-1" />
                 <p className="text-[12px] font-bold text-gray-900 dark:text-white">{org._count.users}</p>
-                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">Users</p>
+                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">{t('stats.users')}</p>
               </div>
               <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
                 <Wallet className="w-3.5 h-3.5 text-purple-500 mx-auto mb-1" />
                 <p className="text-[12px] font-bold text-gray-900 dark:text-white">{org._count.accounts}</p>
-                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">Accounts</p>
+                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">{t('stats.accounts')}</p>
               </div>
               <div className="text-center p-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
                 <Receipt className="w-3.5 h-3.5 text-green-500 mx-auto mb-1" />
                 <p className="text-[12px] font-bold text-gray-900 dark:text-white">{org._count.transactions}</p>
-                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">TXs</p>
+                <p className="text-[9px] text-gray-400 uppercase font-bold tracking-tight">{t('stats.txs')}</p>
               </div>
             </div>
  
@@ -182,7 +184,7 @@ export default function OrganizationsPage() {
               data-testid={`orgs-list-btn-view-${org.name}`}
               className="w-full py-2 bg-gray-100 dark:bg-gray-700 hover:bg-blue-600 hover:text-white text-gray-600 dark:text-gray-300 rounded-lg text-[11px] font-bold transition-all flex items-center justify-center gap-1.5 active:scale-95 group-hover:bg-blue-600 group-hover:text-white"
             >
-              View Hub
+              {t('viewHub')}
               <ChevronRight className="w-3 h-3" />
             </button>
           </div>
@@ -195,14 +197,14 @@ export default function OrganizationsPage() {
             <div className="p-6 border-b dark:border-gray-700 flex items-center justify-between bg-gray-50 dark:bg-gray-900/50">
               <h2 className="text-xl font-bold text-gray-900 dark:text-white flex items-center gap-2">
                 <Plus className="text-blue-600" />
-                Create New Organization
+                {t('modal.title')}
               </h2>
               <button onClick={() => setShowCreateModal(false)} className="text-gray-400 hover:text-gray-600 dark:hover:text-gray-200">✕</button>
             </div>
             
             <form onSubmit={handleCreate} className="p-6 space-y-4">
               <div>
-                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Organization Name</label>
+                <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('form.orgName')}</label>
                 <input 
                   type="text" 
                   required
@@ -217,12 +219,12 @@ export default function OrganizationsPage() {
               <div className="pt-4 border-t dark:border-gray-700">
                 <h3 className="text-sm font-bold text-blue-600 dark:text-blue-400 mb-3 flex items-center gap-2">
                   <ShieldCheck className="w-4 h-4" />
-                  Default Admin Account
+                  {t('modal.adminSection')}
                 </h3>
                 
                 <div className="grid grid-cols-2 gap-4 mb-4">
                    <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">First Name</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('form.firstName')}</label>
                     <input 
                       type="text" 
                       value={newOrg.adminFirstName}
@@ -232,7 +234,7 @@ export default function OrganizationsPage() {
                     />
                   </div>
                    <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Last Name</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('form.lastName')}</label>
                     <input 
                       type="text" 
                       value={newOrg.adminLastName}
@@ -245,7 +247,7 @@ export default function OrganizationsPage() {
 
                 <div className="space-y-4">
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Email Address</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('form.email')}</label>
                     <input 
                       type="email" 
                       required
@@ -257,7 +259,7 @@ export default function OrganizationsPage() {
                     />
                   </div>
                   <div>
-                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">Default Password</label>
+                    <label className="block text-xs font-bold text-gray-500 uppercase tracking-wider mb-1">{t('form.password')}</label>
                     <input 
                       type="password" 
                       required
@@ -271,21 +273,21 @@ export default function OrganizationsPage() {
               </div>
 
               <div className="pt-6 flex gap-3">
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setShowCreateModal(false)}
                   className="flex-1 py-3 border border-gray-200 dark:border-gray-700 text-gray-600 dark:text-gray-400 font-bold rounded-xl hover:bg-gray-50 dark:hover:bg-gray-700 transition-all"
                 >
-                  Cancel
+                  {t('form.cancel')}
                 </button>
-                <button 
-                  type="submit" 
+                <button
+                  type="submit"
                   disabled={creating}
                   data-testid="orgs-form-btn-submit"
                   className="flex-1 py-3 bg-blue-600 text-white font-bold rounded-xl hover:bg-blue-700 transition-all shadow-lg shadow-blue-200 dark:shadow-none flex items-center justify-center gap-2"
                 >
                   {creating ? <Loader2 className="w-5 h-5 animate-spin" /> : <Plus className="w-5 h-5" />}
-                  Create Organization
+                  {t('form.submit')}
                 </button>
               </div>
             </form>

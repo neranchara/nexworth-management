@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
+import { useTranslations } from 'next-intl';
 import api from '@/lib/api';
 import { Edit2, Trash2, X, CheckCircle, AlertCircle, Plus, CreditCard, ArrowUpCircle, ArrowDownCircle, MoreHorizontal, Search, Landmark } from 'lucide-react';
 import { usePermissions } from '@/hooks/usePermissions';
@@ -9,34 +10,8 @@ import GlassCard from '@/components/ui/GlassCard';
 import GlassModal from '@/components/ui/GlassModal';
 
 
-const DEFAULT_LABELS = {
-  title: 'หนี้สิน (Liabilities)',
-  subtitle: 'ติดตามภาระหนี้และยอดค้างชำระ',
-  addNew: 'บันทึกยอดหนี้ใหม่',
-  search: 'ค้นหาบัญชี...',
-  totalLiabilities: 'ยอดหนี้รวมทั้งหมด',
-  table: {
-    account: 'ชื่อบัญชี / ประเภท',
-    type: 'ประเภท',
-    institution: 'สถาบัน',
-    amount: 'ยอดคงค้าง',
-    action: 'จัดการ'
-  },
-  form: {
-    account: 'เลือกบัญชีหนี้สิน',
-    newAccount: '+ สร้างบัญชีหนี้ใหม่',
-    name: 'ชื่อเจ้าหนี้ / สินเชื่อ',
-    type: 'ประเภทหนี้',
-    bank: 'สถาบันการเงิน',
-    amount: 'ยอดหนี้ (บาท)',
-    note: 'บันทึกเพิ่มเติม',
-    date: 'วันที่อัปเดต',
-    cancel: 'ยกเลิก',
-    save: 'บันทึกยอดหนี้'
-  }
-};
-
 export default function LiabilitiesPage() {
+  const t = useTranslations('liabilities');
   const [records, setRecords] = useState<FinancialRecord[]>([]);
   const [accounts, setAccounts] = useState<Account[]>([]);
   const { hasPermission } = usePermissions();
@@ -45,7 +20,6 @@ export default function LiabilitiesPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'date', direction: 'desc' });
-  const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
   const [accountTypes, setAccountTypes] = useState<any[]>([]);
 
   // Alert state
@@ -72,18 +46,13 @@ export default function LiabilitiesPage() {
   const fetchData = useCallback(async () => {
     try {
       setLoading(true);
-      const [recordsRes, accountsRes, banksRes, statsRes, uiRes, configRes] = await Promise.all([
+      const [recordsRes, accountsRes, banksRes, statsRes, configRes] = await Promise.all([
         api.get('/financial-records?type=LIABILITY'),
         api.get('/accounts?type=LIABILITY'),
         api.get('/banks'),
         api.get('/dashboard/stats'),
-        api.get('/configs', { params: { key: 'UI_LABELS_LIABILITIES' } }),
         api.get('/configs', { params: { category: 'DROPDOWNS' } }),
       ]);
-
-      if (uiRes.data.data?.[0]?.value) {
-        setLabels(uiRes.data.data[0].value);
-      }
 
       const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
       let liabilityTypes = ['LIABILITY'];
@@ -152,14 +121,14 @@ export default function LiabilitiesPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm('Are you sure you want to remove this liability record? (Account will NOT be deleted)')) return;
+    if (!window.confirm(t('confirm.delete'))) return;
     try {
       await api.delete(`/financial-records/${id}`);
-      showAlert('Liability record removed successfully', 'success');
+      showAlert(t('alert.removed'), 'success');
       fetchData();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
-      showAlert(errorResponse.response?.data?.error || 'Remove failed', 'error');
+      showAlert(errorResponse.response?.data?.error || t('alert.removeFailed'), 'error');
     }
   };
 
@@ -178,10 +147,10 @@ export default function LiabilitiesPage() {
 
       if (isEditing && currentRecordId) {
         await api.put(`/financial-records/${currentRecordId}`, payload);
-        showAlert('Liability record updated successfully', 'success');
+        showAlert(t('alert.updated'), 'success');
       } else {
         await api.post('/financial-records', payload);
-        showAlert('Liability record added successfully', 'success');
+        showAlert(t('alert.added'), 'success');
       }
       setIsModalOpen(false);
       fetchData();
@@ -190,7 +159,7 @@ export default function LiabilitiesPage() {
       const errorData = errorResponse.response?.data?.error;
       const message = (typeof errorData === 'object' && errorData?.issues?.[0]?.message)
         || (typeof errorData === 'string' ? errorData : null)
-        || 'Save failed';
+        || t('alert.saveFailed');
       showAlert(message, 'error');
     }
   };
@@ -249,7 +218,7 @@ export default function LiabilitiesPage() {
 
   const totalLiabilities = dashboardStats?.summary?.totalLiabilities || 0;
 
-  if (loading && records.length === 0) return <div className="p-6 text-white">Loading data...</div>;
+  if (loading && records.length === 0) return <div className="p-6 text-white">{t('loading')}</div>;
   if (error && records.length === 0) return <div className="p-6 text-rose-400">{error}</div>;
 
   return (
@@ -267,12 +236,12 @@ export default function LiabilitiesPage() {
       {/* Header — same structure as Transaction History */}
       <header className="flex items-center justify-between shrink-0">
         <div>
-          <h2 className="text-xl font-bold text-white">{labels.title}</h2>
-          <p className="text-[10px] text-slate-400 uppercase tracking-widest -mt-0.5">{labels.subtitle}</p>
+          <h2 className="text-xl font-bold text-white">{t('title')}</h2>
+          <p className="text-[10px] text-slate-400 uppercase tracking-widest -mt-0.5">{t('subtitle')}</p>
         </div>
         <div className="flex items-center gap-3">
           <span className="text-slate-400 text-[10px] font-bold uppercase tracking-widest px-2">
-            {labels.totalLiabilities}: <span className="text-rose-400 text-sm font-black">฿{totalLiabilities.toLocaleString()}</span>
+            {t('totalLiabilities')}: <span className="text-rose-400 text-sm font-black">฿{totalLiabilities.toLocaleString()}</span>
           </span>
           {hasPermission('liabilities', 'canCreate') && (
             <button
@@ -280,7 +249,7 @@ export default function LiabilitiesPage() {
               data-testid="liabilities-list-btn-add-liab"
               className="bg-emerald text-navy px-8 py-3 rounded-full text-xs font-black uppercase tracking-widest transition-all shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] hover:-translate-y-0.5 active:scale-95 flex items-center gap-2"
             >
-              <Plus className="w-4 h-4" /> {labels.addNew}
+              <Plus className="w-4 h-4" /> {t('addNew')}
             </button>
           )}
         </div>
@@ -290,13 +259,13 @@ export default function LiabilitiesPage() {
       <GlassCard className="p-3 flex flex-wrap gap-3 items-center shrink-0 bg-navy/40">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 w-3 h-3" />
-          <input 
-            type="text" placeholder="Search entries..." 
+          <input
+            type="text" placeholder={t('search')}
             className="w-full bg-navy/50 border border-white/5 rounded-lg py-1.5 pl-9 pr-4 text-xs text-white focus:outline-none focus:border-emerald placeholder:text-slate-500 transition-all"
           />
         </div>
         <select className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald appearance-none">
-          <option className="bg-[#001F3F]">All Institutions</option>
+          <option className="bg-[#001F3F]">{t('allInstitutions')}</option>
           {banks.map(b => <option key={b.id} value={b.id} className="bg-[#001F3F]">{b.name}</option>)}
         </select>
       </GlassCard>
@@ -307,18 +276,18 @@ export default function LiabilitiesPage() {
           <table className="w-full text-left text-xs border-separate border-spacing-y-2">
             <thead className="sticky top-0 z-[60]">
               <tr>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('name')}>{labels.table.account} <SortIcon column="name" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('date')}>{labels.table.type} <SortIcon column="date" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('bank')}>{labels.table.institution} <SortIcon column="bank" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('amount')}>{labels.table.amount} <SortIcon column="amount" /></th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">Note</th>
-                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">{labels.table.action}</th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('name')}>{t('table.account')} <SortIcon column="name" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('date')}>{t('table.type')} <SortIcon column="date" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('bank')}>{t('table.institution')} <SortIcon column="bank" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-right cursor-pointer hover:text-white transition-colors shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]" onClick={() => handleSort('amount')}>{t('table.amount')} <SortIcon column="amount" /></th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">{t('table.note')}</th>
+                <th className="px-6 py-4 bg-[#001229] text-slate-400 uppercase font-bold text-[10px] text-center shadow-[0_-16px_0_0_#001229,0_8px_0_0_#001229]">{t('table.action')}</th>
               </tr>
             </thead>
             <tbody>
               {sortedRecords.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="px-6 py-10 text-center text-slate-400">No liability records found.</td>
+                  <td colSpan={6} className="px-6 py-10 text-center text-slate-400">{t('noData')}</td>
                 </tr>
               ) : (
                 sortedRecords.map((record) => {
@@ -375,17 +344,17 @@ export default function LiabilitiesPage() {
       </GlassCard>
 
       {/* GlassModal for Add/Edit */}
-      <GlassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? labels.form.titleEdit || 'Edit Liability' : labels.form.titleAdd || 'Add Liability'}>
+      <GlassModal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)} title={isEditing ? t('form.titleEdit') : t('form.titleAdd')}>
         <form onSubmit={handleFormSubmit} className="flex flex-col gap-4 max-h-[60vh] overflow-y-auto custom-scrollbar pr-1">
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.account}</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.account')}</label>
             <select
               required disabled={isEditing} value={formData.accountId}
               onChange={(e) => setFormData({ ...formData, accountId: e.target.value })}
               data-testid="liabilities-form-sel-account"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none disabled:opacity-50"
             >
-              <option value="new" className="bg-[#001F3F]">{labels.form.newAccount}</option>
+              <option value="new" className="bg-[#001F3F]">{t('form.newAccount')}</option>
               {accounts.map(acc => <option key={acc.id} value={acc.id} className="bg-[#001F3F]">{acc.name} ({accountTypes.find(t => t.value === acc.type)?.label || acc.type})</option>)}
             </select>
           </div>
@@ -393,7 +362,7 @@ export default function LiabilitiesPage() {
           {formData.accountId === 'new' && !isEditing && (
             <div className="p-4 bg-rose-500/5 border border-rose-500/20 rounded-xl flex flex-col gap-3">
               <div className="flex flex-col gap-2">
-                <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">New Liability Name</label>
+                <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{t('form.newName')}</label>
                 <input
                   type="text" placeholder="e.g. หนี้เพื่อน A" required={formData.accountId === 'new'}
                   value={formData.newAccountName}
@@ -403,14 +372,14 @@ export default function LiabilitiesPage() {
                 />
               </div>
                 <div className="flex flex-col gap-2">
-                  <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{labels.form.bank}</label>
+                  <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{t('form.bank')}</label>
                   <select
                     value={formData.bankId}
                     onChange={(e) => setFormData({ ...formData, bankId: e.target.value })}
                     data-testid="liabilities-form-sel-bank"
                     className="w-full bg-navy/50 border border-rose-500/20 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-rose-400 appearance-none"
                   >
-                    <option value="" className="bg-[#001F3F]">No Institution</option>
+                    <option value="" className="bg-[#001F3F]">{t('form.noInstitution')}</option>
                     {banks.map(b => <option key={b.id} value={b.id} className="bg-[#001F3F]">{b.name}</option>)}
                   </select>
                 </div>
@@ -419,7 +388,7 @@ export default function LiabilitiesPage() {
 
           <div className="grid grid-cols-2 gap-4">
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{labels.form.amount}</label>
+              <label className="text-[10px] font-black text-rose-400 uppercase tracking-widest">{t('form.amount')}</label>
               <input
                 type="number" step="0.01" required value={formData.amount}
                 onChange={(e) => setFormData({ ...formData, amount: parseFloat(e.target.value) || 0 })}
@@ -428,7 +397,7 @@ export default function LiabilitiesPage() {
               />
             </div>
             <div className="flex flex-col gap-2">
-              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.date}</label>
+              <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.date')}</label>
               <input
                 type="date" required value={formData.date}
                 onChange={(e) => setFormData({ ...formData, date: e.target.value })}
@@ -439,18 +408,18 @@ export default function LiabilitiesPage() {
           </div>
 
           <div className="flex flex-col gap-2">
-            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{labels.form.note}</label>
+            <label className="text-[10px] font-black text-slate-400 uppercase tracking-widest">{t('form.note')}</label>
             <textarea
               value={formData.note}
               onChange={(e) => setFormData({ ...formData, note: e.target.value })}
-              placeholder="e.g. Current outstanding balance"
+              placeholder={t('form.notePlaceholder')}
               data-testid="liabilities-form-input-note"
               className="w-full bg-navy/50 border border-white/10 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald transition-all min-h-[80px] placeholder:text-slate-600"
             />
           </div>
 
           <button type="submit" data-testid="liabilities-form-btn-save" className="w-full bg-rose-600 text-white font-black text-sm uppercase tracking-wider py-4 rounded-xl mt-2 hover:shadow-[0_0_20px_rgba(225,29,72,0.3)] transition-all active:scale-[0.98]">
-            {isEditing ? labels.form.update || 'Update' : labels.form.save || 'Save'}
+            {isEditing ? t('form.update') : t('form.save')}
           </button>
         </form>
       </GlassModal>

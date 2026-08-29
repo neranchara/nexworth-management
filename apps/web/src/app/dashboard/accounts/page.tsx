@@ -17,46 +17,28 @@ import {
   Plus,
   LayoutGrid,
   List,
+  EyeOff,
+  Eye,
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { usePermissions } from '@/hooks/usePermissions';
 import { Account, Bank } from '@/types/models';
 import GlassCard from '@/components/ui/GlassCard';
 import BankIcon from '@/components/ui/BankIcon';
-
-
-const DEFAULT_LABELS = {
-  title: 'บัญชีของฉัน',
-  subtitle: 'จัดการสภาพคล่องและวงเงินสินเชื่อ',
-  totalAssets: 'สินทรัพย์ทั้งหมด',
-  liabilities: 'หนี้สิน',
-  personal: 'ส่วนตัว',
-  active: 'เปิดใช้งาน',
-  addNew: 'เพิ่มบัญชีใหม่',
-  noData: 'ไม่พบบัญชี',
-  form: {
-    name: 'ชื่อบัญชี',
-    number: 'เลขที่บัญชี',
-    type: 'ประเภท',
-    institution: 'สถาบันการเงิน',
-    personal: 'บัญชีส่วนตัว',
-    status: 'สถานะการใช้งาน',
-    cancel: 'ยกเลิก',
-    save: 'บันทึกบัญชี'
-  }
-};
+import { useTranslations } from 'next-intl';
 
 export default function AccountsManagementPage() {
+  const t = useTranslations('accounts');
   const [accounts, setAccounts] = useState<Account[]>([]);
   const [banks, setBanks] = useState<Bank[]>([]);
   const [accountTypes, setAccountTypes] = useState<{label: string, value: string}[]>([]);
-  const [labels, setLabels] = useState<any>(DEFAULT_LABELS);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' } | null>({ key: 'name', direction: 'asc' });
   const [viewMode, setViewMode] = useState<'grid' | 'table'>(() =>
     (typeof window !== 'undefined' ? localStorage.getItem('viewMode_accounts') as 'grid' | 'table' : null) || 'grid'
   );
+  const [showInactive, setShowInactive] = useState(false);
 
   const toggleViewMode = (mode: 'grid' | 'table') => {
     setViewMode(mode);
@@ -99,30 +81,19 @@ export default function AccountsManagementPage() {
   const fetchAccountsAndBanks = async () => {
     try {
       setLoading(true);
-      const [accountsRes, banksRes, configRes, uiRes] = await Promise.all([
+      const [accountsRes, banksRes, configRes] = await Promise.all([
         api.get('/accounts'),
         api.get('/banks'),
-        api.get('/configs', { params: { category: 'DROPDOWNS' } }),
-        api.get('/configs', { params: { key: 'UI_LABELS_ACCOUNTS' } })
+        api.get('/configs', { params: { category: 'DROPDOWNS' } })
       ]);
       setAccounts(accountsRes.data.accounts || []);
       setBanks(banksRes.data.banks || []);
-      
+
       const typesConfig = configRes.data.data.find((c: any) => c.key === 'ACCOUNT_TYPES');
       if (typesConfig) {
         setAccountTypes(typesConfig.value);
       }
 
-      if (uiRes.data.data?.[0]?.value) {
-        setLabels({
-          ...DEFAULT_LABELS,
-          ...uiRes.data.data[0].value,
-          form: {
-            ...DEFAULT_LABELS.form,
-            ...(uiRes.data.data[0].value.form || {})
-          }
-        });
-      }
       if (banksRes.data.banks?.length > 0 && formData.bankId === '') {
         setFormData(prev => ({ ...prev, bankId: banksRes.data.banks[0].id }));
       }
@@ -181,10 +152,10 @@ export default function AccountsManagementPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!window.confirm("Are you sure you want to delete this account?")) return;
+    if (!window.confirm(t('confirm.delete'))) return;
     try {
       await api.delete(`/accounts/${id}`);
-      showAlert('Account deleted successfully', 'success');
+      showAlert(t('alert.deleted'), 'success');
       fetchAccountsAndBanks();
     } catch (err: unknown) {
       const errorResponse = err as { response?: { data?: { error?: string } } };
@@ -197,10 +168,10 @@ export default function AccountsManagementPage() {
     try {
       if (isEditing && currentAccountId) {
         await api.put(`/accounts/${currentAccountId}`, formData);
-        showAlert('Account updated successfully', 'success');
+        showAlert(t('alert.updated'), 'success');
       } else {
         await api.post('/accounts', formData);
-        showAlert('Account created successfully', 'success');
+        showAlert(t('alert.created'), 'success');
       }
       setIsModalOpen(false);
       fetchAccountsAndBanks();
@@ -285,9 +256,11 @@ export default function AccountsManagementPage() {
     });
   };
 
-  const sortedAccounts = getSortedAccounts();
+  const allSorted = getSortedAccounts();
+  const sortedAccounts = showInactive ? allSorted : allSorted.filter(a => a.isActive);
+  const inactiveCount = allSorted.filter(a => !a.isActive).length;
 
-  if (loading && accounts.length === 0) return <div className="p-6">Loading data...</div>;
+  if (loading && accounts.length === 0) return <div className="p-6">{t('loadingData')}</div>;
   if (error && accounts.length === 0) return <div className="p-6 text-rose">{error}</div>;
 
   return (
@@ -305,12 +278,28 @@ export default function AccountsManagementPage() {
         <div>
           <h1 className="text-3xl font-black text-white tracking-tighter flex items-center gap-3 uppercase">
             <Building2 className="w-8 h-8 text-emerald" />
-            {labels.title}
+            {t('title')}
           </h1>
-          <p className="text-[10px] text-slate mt-1 uppercase font-black tracking-[0.2em]">{labels.subtitle}</p>
+          <p className="text-[10px] text-slate mt-1 uppercase font-black tracking-[0.2em]">{t('subtitle')}</p>
         </div>
         
         <div className="flex items-center gap-3">
+          {/* Show Inactive Toggle */}
+          {inactiveCount > 0 && (
+            <button
+              onClick={() => setShowInactive(v => !v)}
+              className={clsx(
+                'flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-[10px] font-bold uppercase tracking-widest transition-all border',
+                showInactive
+                  ? 'bg-slate-700/60 border-slate-600 text-slate-300'
+                  : 'bg-white/5 border-white/10 text-slate hover:text-white hover:border-white/20'
+              )}
+            >
+              {showInactive ? <EyeOff size={12} /> : <Eye size={12} />}
+              {showInactive ? t('hideInactive', { count: inactiveCount }) : t('showInactive', { count: inactiveCount })}
+            </button>
+          )}
+
           {/* View Toggle */}
           <div className="flex bg-white/5 border border-white/5 rounded-lg p-0.5">
             {(['grid', 'table'] as const).map((mode) => (
@@ -335,7 +324,7 @@ export default function AccountsManagementPage() {
             >
               <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
               <Plus size={18} className="relative z-10" />
-              <span className="text-xs uppercase tracking-[0.1em] relative z-10">{labels.addNew}</span>
+              <span className="text-xs uppercase tracking-[0.1em] relative z-10">{t('addNew')}</span>
             </button>
           )}
         </div>
@@ -344,10 +333,10 @@ export default function AccountsManagementPage() {
       {/* Summary Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
         {[
-          { label: labels.totalAssets, count: accounts.filter(a => a.type !== 'LIABILITY').length, icon: TrendingUp, color: 'text-emerald' },
-          { label: labels.liabilities, count: accounts.filter(a => a.type === 'LIABILITY').length, icon: AlertCircle, color: 'text-rose' },
-          { label: labels.personal, count: accounts.filter(a => a.isPersonal).length, icon: User, color: 'text-blue-400' },
-          { label: labels.active, count: accounts.filter(a => a.isActive).length, icon: CheckCircle, color: 'text-emerald' },
+          { label: t('totalAssets'), count: accounts.filter(a => a.type !== 'LIABILITY').length, icon: TrendingUp, color: 'text-emerald' },
+          { label: t('liabilities'), count: accounts.filter(a => a.type === 'LIABILITY').length, icon: AlertCircle, color: 'text-rose' },
+          { label: t('personal'), count: accounts.filter(a => a.isPersonal).length, icon: User, color: 'text-blue-400' },
+          { label: t('active'), count: accounts.filter(a => a.isActive).length, icon: CheckCircle, color: 'text-emerald' },
         ].map((stat, i) => (
           <GlassCard key={i} className="p-4 flex items-center gap-4">
             <div className={`p-2 rounded-lg bg-white/5 ${stat.color}`}>
@@ -365,7 +354,7 @@ export default function AccountsManagementPage() {
       {sortedAccounts.length === 0 ? (
         <GlassCard className="p-12 text-center rounded-[1.25rem]">
           <Building2 className="w-12 h-12 text-slate/20 mx-auto mb-4" />
-          <p className="text-slate font-bold uppercase text-[10px] tracking-widest">{labels.noData}</p>
+          <p className="text-slate font-bold uppercase text-[10px] tracking-widest">{t('noData')}</p>
         </GlassCard>
       ) : viewMode === 'grid' ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
@@ -426,11 +415,11 @@ export default function AccountsManagementPage() {
             <thead>
               <tr className="border-b border-white/5">
                 {[
-                  { key: 'name', label: 'ชื่อบัญชี' },
-                  { key: 'accountNumber', label: 'เลขบัญชี' },
-                  { key: 'type', label: 'ประเภท' },
-                  { key: 'bank', label: 'ธนาคาร' },
-                  { key: 'isActive', label: 'สถานะ' },
+                  { key: 'name', label: t('table.name') },
+                  { key: 'accountNumber', label: t('table.number') },
+                  { key: 'type', label: t('table.type') },
+                  { key: 'bank', label: t('table.bank') },
+                  { key: 'isActive', label: t('table.status') },
                 ].map(col => (
                   <th
                     key={col.key}
@@ -443,7 +432,7 @@ export default function AccountsManagementPage() {
                     )}
                   </th>
                 ))}
-                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">Actions</th>
+                <th className="px-4 py-3 text-right text-[9px] font-black text-slate uppercase tracking-widest">{t('table.actions')}</th>
               </tr>
             </thead>
             <tbody>
@@ -480,7 +469,7 @@ export default function AccountsManagementPage() {
                     <div className="flex items-center gap-1.5">
                       <span className={`w-1.5 h-1.5 rounded-full ${account.isActive ? 'bg-emerald animate-pulse' : 'bg-slate-700'}`} />
                       <span className={`text-[9px] font-bold ${account.isActive ? 'text-emerald' : 'text-slate'}`}>
-                        {account.isActive ? 'Active' : 'Inactive'}
+                        {account.isActive ? t('status.active') : t('status.inactive')}
                       </span>
                     </div>
                   </td>
@@ -512,7 +501,7 @@ export default function AccountsManagementPage() {
               <div className="flex justify-between items-center p-6 border-b border-white/5 bg-white/5">
                  <h2 className="text-xl font-black text-white flex items-center gap-3 uppercase tracking-tighter">
                    {isEditing ? <Edit2 className="w-5 h-5 text-emerald" /> : <Building2 className="w-5 h-5 text-emerald" />}
-                   {isEditing ? 'แก้ไขบัญชี' : 'บัญชีใหม่'}
+                   {isEditing ? t('form.titleEdit') : t('form.titleAdd')}
                  </h2>
                  <button onClick={() => setIsModalOpen(false)} className="text-slate hover:text-white transition-colors">
                    <X className="w-6 h-6" />
@@ -522,7 +511,7 @@ export default function AccountsManagementPage() {
               <form onSubmit={handleFormSubmit} className="p-8 space-y-6">
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.name}</label>
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('form.name')}</label>
                       <input 
                         type="text" required value={formData.name} onChange={(e) => setFormData({...formData, name: e.target.value})}
                         placeholder="e.g. Savings Primary"
@@ -532,7 +521,7 @@ export default function AccountsManagementPage() {
                     </div>
                     
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.number}</label>
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('form.number')}</label>
                       <input 
                         type="text" value={formData.accountNumber} onChange={(e) => setFormData({...formData, accountNumber: e.target.value})}
                         placeholder="Optional"
@@ -543,7 +532,7 @@ export default function AccountsManagementPage() {
 
                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.type}</label>
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('form.type')}</label>
                         <select 
                         required value={formData.type} onChange={(e) => {
                           const val = e.target.value;
@@ -563,13 +552,13 @@ export default function AccountsManagementPage() {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{labels.form.institution}</label>
+                      <label className="text-[10px] font-black text-slate uppercase tracking-widest opacity-40">{t('form.institution')}</label>
                       <select 
                         required value={formData.bankId} onChange={(e) => setFormData({...formData, bankId: e.target.value})}
                         data-testid="accounts-form-sel-bank"
                         className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-white font-bold text-xs outline-none focus:border-emerald/50 appearance-none transition-all"
                       >
-                        <option className="bg-navy" value="">None</option>
+                        <option className="bg-navy" value="">{t('form.noInstitution')}</option>
                         {banks && banks.map(b => (
                           <option className="bg-navy" key={b.id} value={b.id}>{b?.name}</option>
                         ))}
@@ -605,8 +594,8 @@ export default function AccountsManagementPage() {
                  <div className="flex flex-col gap-4 pt-4 border-t border-white/5">
                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
                        <div>
-                         <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.personal}</p>
-                         <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Track as personal asset</p>
+                         <p className="text-xs font-black text-white uppercase tracking-tight">{t('form.personal')}</p>
+                         <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">{t('form.personalDesc')}</p>
                        </div>
                        <button 
                          type="button"
@@ -619,8 +608,8 @@ export default function AccountsManagementPage() {
 
                      <div className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5">
                        <div>
-                         <p className="text-xs font-black text-white uppercase tracking-tight">{labels.form.status}</p>
-                         <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">Enable system tracking</p>
+                         <p className="text-xs font-black text-white uppercase tracking-tight">{t('form.status')}</p>
+                         <p className="text-[9px] text-slate font-bold uppercase tracking-tighter">{t('form.statusDesc')}</p>
                        </div>
                        <button 
                          type="button"
@@ -634,9 +623,9 @@ export default function AccountsManagementPage() {
                   </div>
 
                  <div className="flex justify-end gap-4 pt-4">
-                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors">{labels.form.cancel}</button>
+                    <button type="button" onClick={() => setIsModalOpen(false)} className="px-6 py-3 text-slate font-black uppercase text-[10px] tracking-widest hover:text-white transition-colors">{t('form.cancel')}</button>
                     <button type="submit" data-testid="accounts-form-btn-save" className="px-8 py-3 bg-emerald text-navy font-black text-xs uppercase tracking-widest rounded-xl shadow-[0_0_20px_rgba(80,200,120,0.3)] hover:shadow-[0_0_30px_rgba(80,200,120,0.5)] active:scale-95 transition-all">
-                      {isEditing ? labels.form.save : labels.form.save}
+                      {t('form.save')}
                     </button>
                  </div>
               </form>
