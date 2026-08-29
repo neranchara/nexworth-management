@@ -54,6 +54,10 @@ docs/
 !README.md
 !CONFIG_POLICY.md
 !PROD_CONFIG_GUIDE.md
+!AGENTS.md
+!CLAUDE.md
+!GEMINI.md
+!.cursorrules
 
 # Test results, coverage and logs
 **/test_output.txt
