@@ -120,6 +120,21 @@ export default function TransactionsPage() {
     setCurrentTxId(null);
   };
 
+  const groupedAccountOptions = (() => {
+    const groups: Record<string, Account[]> = {};
+    accounts.forEach(a => {
+      const typeName = accountTypes.find((t: any) => t.value === a.type)?.label || a.type;
+      if (!groups[typeName]) groups[typeName] = [];
+      groups[typeName].push(a);
+    });
+    return Object.entries(groups)
+      .sort(([a], [b]) => a.localeCompare(b, 'th'))
+      .map(([typeName, accs]) => [
+        typeName,
+        accs.slice().sort((a, b) => a.name.localeCompare(b.name, 'th')),
+      ] as [string, Account[]]);
+  })();
+
   const openAddModal = () => {
     resetForm();
     setIsModalOpen(true);
@@ -493,19 +508,34 @@ export default function TransactionsPage() {
                 className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
               >
                 <option value="">{t('form.selectCategory')}</option>
-                {categories
-                  .filter(c => {
-                    const behavior = types.find(t => t.id === c.typeId)?.behavior ?? '';
-                    return !['LOAN_BORROW', 'LOAN_REPAY', 'LEND_OUT', 'LEND_REPAY'].includes(behavior);
-                  })
-                  .map(c => {
-                  const typeName = types.find(t => t.id === c.typeId)?.name || 'Unknown';
-                  return (
-                    <option key={c.id} value={c.id} className="bg-[#001229]">
-                      [{typeName}] {c.name}
-                    </option>
-                  );
-                })}
+                {(() => {
+                  const groups: Record<string, TransactionCategory[]> = {};
+                  categories
+                    .filter(c => {
+                      const behavior = types.find(t => t.id === c.typeId)?.behavior ?? '';
+                      return !['LOAN_BORROW', 'LOAN_REPAY', 'LEND_OUT', 'LEND_REPAY'].includes(behavior);
+                    })
+                    .forEach(c => {
+                      const typeName = types.find(t => t.id === c.typeId)?.name || 'Unknown';
+                      if (!groups[typeName]) groups[typeName] = [];
+                      groups[typeName].push(c);
+                    });
+
+                  return Object.entries(groups)
+                    .sort(([a], [b]) => a.localeCompare(b, 'th'))
+                    .map(([typeName, cats]) => (
+                      <optgroup key={typeName} label={typeName} className="bg-[#001229]">
+                        {cats
+                          .slice()
+                          .sort((a, b) => a.name.localeCompare(b.name, 'th'))
+                          .map(c => (
+                            <option key={c.id} value={c.id} className="bg-[#001229]">
+                              {c.name}
+                            </option>
+                          ))}
+                      </optgroup>
+                    ));
+                })()}
               </select>
             </div>
 
@@ -518,7 +548,13 @@ export default function TransactionsPage() {
                   className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
                 >
                   <option value="">{t('form.noSourceAccount')}</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.type === 'LIABILITY' ? '💳 ' : ''}{a.name}</option>)}
+                  {groupedAccountOptions.map(([typeName, accs]) => (
+                    <optgroup key={typeName} label={typeName} className="bg-[#001229]">
+                      {accs.map(a => (
+                        <option key={a.id} value={a.id}>{a.type === 'LIABILITY' ? '💳 ' : ''}{a.name}</option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
               <div className="flex flex-col gap-2">
@@ -529,7 +565,13 @@ export default function TransactionsPage() {
                   className="w-full bg-[#001229] border border-white/5 rounded-xl px-4 py-3 text-sm text-white outline-none focus:border-emerald appearance-none"
                 >
                   <option value="">{t('form.noDestAccount')}</option>
-                  {accounts.map(a => <option key={a.id} value={a.id}>{a.type === 'LIABILITY' ? '💳 ' : ''}{a.name}</option>)}
+                  {groupedAccountOptions.map(([typeName, accs]) => (
+                    <optgroup key={typeName} label={typeName} className="bg-[#001229]">
+                      {accs.map(a => (
+                        <option key={a.id} value={a.id}>{a.type === 'LIABILITY' ? '💳 ' : ''}{a.name}</option>
+                      ))}
+                    </optgroup>
+                  ))}
                 </select>
               </div>
             </div>

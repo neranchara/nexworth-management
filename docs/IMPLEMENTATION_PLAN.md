@@ -190,6 +190,10 @@
 - **Status:** [DONE IN CODE] ✅
 - **Evidence:** `getAssetMultiplier` special-case for `DEBT` + liability; unit tests
 
+### 📘 [STORY] NEX-FEAT-14: Group + sort the category dropdown on Transactions page
+- **Status:** [DONE IN CODE] ✅
+- **Evidence:** `<optgroup>` grouping by `TransactionType`, Thai-locale alphabetical sort, in `transactions/page.tsx`
+
 ---
 
 ## 🔵 [EPIC] Phase 24: Ledger Integrity Foundation
@@ -225,16 +229,32 @@
 
 ---
 
+## 🟣 [EPIC] Phase 25: Transaction Type Taxonomy Cleanup
+- **Status:** [DONE IN CODE] ✅
+- **Priority:** High
+- **Description:** Align user-facing types with financial rules — ออม ≠ ลงทุน; GOAL account ≠ GOAL_SAVING behavior.
+
+### 📘 [STORY] NEX-FEAT-13: Split ออม/ลงทุน → ออม (SAVING) + ลงทุน (INVESTMENT)
+- **Status:** [DONE IN CODE] ✅
+- **Sub-Tasks:**
+  - [x] Seed new orgs with `ออม` + `ลงทุน` (API + bot + seed-master).
+  - [x] Remap categories (saving / investment / goal-park / expense reclass).
+  - [x] Backfill script covering org-scoped **and** global `organizationId=null` leftovers.
+  - [x] Unit tests (`saving_investment_split.test.ts` 5/5).
+  - [x] Ran on `stg_nexworth_db` — legacy `ออม/ลงทุน` active count = 0.
+
+---
+
 ## 📅 Roadmap Summary (agent-facing — synced 2026-08-29)
 
 ### Done in code (do not rebuild)
 - Phase 17; NEX-FEAT-01; NEX-BUG-01 (+ password toggle); NEX-FEAT-02  
 - NEX-FEAT-06 (AuditLog base); NEX-FEAT-07 (View-As base); Phase 23 (FEAT-09, BUG-11)  
-- NEX-BUG-12 (Liability sign convention)  
+- NEX-BUG-12 (Liability sign convention); NEX-FEAT-11 / NEX-FEAT-12 (Phase 24)  
+- **NEX-FEAT-13** (ออม/ลงทุน split) — Phase 25  
 - Invitation **stack** (model + API + Team UI + accept page) — treat as PARTIAL gaps only
 
 ### Immediate focus (safe for next agent)
-0. **NEX-FEAT-11 / NEX-FEAT-12** (Phase 24) — DB-driven multipliers + ledger-backed balance edits, in progress on `feature/NEX-BUG-12-ledger-integrity`
 1. **NEX-BUG-03** — finish encoding gaps + staging verify Thai UI  
 2. **NEX-BUG-04** — align slip tests + staging real-slip verify  
 3. **NEX-SEC-01** — PII masking on existing AuditLog middleware  
