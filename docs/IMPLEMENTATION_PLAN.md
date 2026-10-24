@@ -289,6 +289,18 @@
 - **Status:** [COMPLETED] ✅
 - **Priority:** Critical
 
+### 🐛 [STORY] NEX-BUG-18: One-off scripts silently ignore `DATABASE_URL` shell overrides
+- **Status:** [COMPLETED] ✅
+- **Evidence:** A diagnostic script run with `$env:DATABASE_URL="<production neon URL>" npx tsx src/scripts/...` produced output identical to a local staging run. Added a connection self-check and confirmed it: connects to local `stg_nexworth_db` regardless of the shell's `DATABASE_URL`.
+- **Root cause:** Scripts importing the shared `lib/prisma.ts` client get a `PrismaClient` with no `datasources` override — Prisma's generated client auto-loads `packages/database/.env` (hardcoded to local staging), which wins over the shell's exported `DATABASE_URL`. **This means NEX-BUG-15's earlier "production" backfill (reported "13 roles") almost certainly never reached real production** — it was local staging at an earlier point in this session. The live Render-deployed API itself is unaffected (`config/index.ts` skips local dotenv loading when `RENDER` is set).
+- **Sub-Tasks:**
+  - [x] New `apps/api/src/lib/prisma-script.ts` — explicit `datasources: { db: { url: process.env.DATABASE_URL } }` override + `logConnectedDatabase()` self-check (prints the DB name only, never credentials), exits clearly if `DATABASE_URL` isn't set.
+  - [x] `backfill-goals-permission.ts` switched to the new helper.
+  - [x] New `audit-account-balances.ts` (parameterized by email + optional account type) — reconciles stored `Asset.amount` against a fresh sum of transaction history, flags likely duplicates.
+  - [x] `tsc --noEmit` clean; verified the override actually works by pointing at a different local DB and seeing the self-check output change.
+  - [ ] **[NEEDS VERIFY]** Re-run `backfill-goals-permission.ts` against real production using the fixed script — until then, "เป้าหมาย" may still be missing from non-system-admin roles' nav on production despite NEX-BUG-15 being deployed.
+  - [ ] Not done (out of scope): re-verify whether any *other* historical backfill script's claimed staging/production run was similarly actually a no-op against the wrong DB.
+
 ### 🐛 [STORY] NEX-BUG-17: Production `TransactionType` table missing `assetMultiplier`/`liabMultiplier` — every transaction/dashboard/loan query crashed
 - **Status:** [COMPLETED] ✅ (pending deploy)
 - **Evidence:** Once NEX-BUG-16 got the API actually deploying, Render logs showed `PrismaClientKnownRequestError P2022`: `The column 'TransactionType.assetMultiplier' does not exist in the current database` — every query touching `TransactionType` (Dashboard, Transactions, Loan Tracker) crashed, which looked like "all data gone" but wasn't.
