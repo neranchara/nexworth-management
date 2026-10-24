@@ -290,13 +290,13 @@
 - **Priority:** Critical
 
 ### 🐛 [STORY] NEX-BUG-16: `apps/api` Render build fails — tsconfig `moduleResolution` removed in TypeScript 6.x
-- **Status:** [PLANNED] 📅 (attempt 1 merged but did NOT fix the Render build — attempt 2 open)
+- **Status:** [COMPLETED] ✅ — attempt 2 confirmed live on Render
 - **Evidence:** Render deploy of the NEX-BUG-15 merge (`24e0eac`) failed: `error TS5108: Option 'moduleResolution=node10' has been removed`.
 - **Sub-Tasks:**
   - [x] Attempt 1 (PR #38, merged): `ignoreDeprecations` `"5.0"` → `"6.0"` — verified locally (`tsc`, `build:api`), **but Render redeploy still failed with the identical error.**
-  - [x] Attempt 2 (`hotfix/NEX-BUG-16b-moduleresolution-bundler`): drop `moduleResolution: "node"` + `ignoreDeprecations` entirely, use `moduleResolution: "bundler"` (paired with the existing `module: "CommonJS"`) — doesn't depend on deprecation-suppression at all. Verified locally: `tsc --noEmit`, `npm run build:api`, and the controller test suite all clean.
-  - [ ] **[NEEDS VERIFY]** Actual Render deploy succeeds with attempt 2 — don't trust local verification alone this time, confirm the real build log.
-  - [ ] Once deploy is green: re-verify NEX-BUG-14/NEX-FEAT-16/NEX-BUG-15 are actually live.
+  - [x] Attempt 2 (PR #39, merged): drop `moduleResolution: "node"` + `ignoreDeprecations` entirely, use `moduleResolution: "bundler"` (paired with the existing `module: "CommonJS"`). Verified locally: `tsc --noEmit`, `npm run build:api`, and the controller test suite all clean.
+  - [x] **[VERIFIED]** Render deploy succeeded — "Build successful", service Live, schema migrations applied, `ACCOUNT_TYPES` seeded, server listening, health checks 200.
+  - [ ] Re-verify NEX-BUG-14/NEX-FEAT-16/NEX-BUG-15 are actually visible/working now that the API is live on the correct code.
 
 ---
 
