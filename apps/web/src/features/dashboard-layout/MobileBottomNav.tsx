@@ -11,17 +11,26 @@ import {
 } from 'lucide-react';
 import { clsx } from 'clsx';
 import { useTranslations } from 'next-intl';
+import { useAuthStore } from '@/store/authStore';
+import { usePermissions } from '@/hooks/usePermissions';
 
 export default function MobileBottomNav({ onOpenMenu }: { onOpenMenu?: () => void }) {
   const pathname = usePathname();
   const t = useTranslations('nav');
+  const { user } = useAuthStore();
+  const { hasPermission } = usePermissions();
 
-  const navLinks = [
-    { href: '/dashboard', labelKey: 'home', icon: LayoutDashboard },
-    { href: '/dashboard/transactions', labelKey: 'transactions', icon: Receipt },
-    { href: '/dashboard/assets', labelKey: 'assets', icon: Wallet },
-    { href: '/dashboard/goals', labelKey: 'goals', icon: Target },
+  const allNavLinks = [
+    { href: '/dashboard', labelKey: 'home', icon: LayoutDashboard, resource: 'dashboard' },
+    { href: '/dashboard/transactions', labelKey: 'transactions', icon: Receipt, resource: 'transactions' },
+    { href: '/dashboard/assets', labelKey: 'assets', icon: Wallet, resource: 'assets' },
+    { href: '/dashboard/goals', labelKey: 'goals', icon: Target, resource: 'goals' },
   ];
+
+  // Same gating as the desktop sidebar (useDashboardNav) so the two navs never disagree.
+  const navLinks = allNavLinks.filter(
+    (link) => user?.isSystemAdmin || hasPermission(link.resource)
+  );
 
   return (
     <nav className="lg:hidden h-16 border-t border-slate-200 dark:border-slate/10 flex items-center justify-around px-2 shrink-0 z-50 fixed bottom-0 inset-x-0 backdrop-blur-xl bg-white/90 dark:bg-navy/80">
