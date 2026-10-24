@@ -1,6 +1,12 @@
 // READ-ONLY diagnostic script - does not write/modify/delete anything.
 // Reconciles each of a user's accounts' stored Asset.amount against a fresh sum of that
-// account's Transaction history, and flags likely-duplicate transactions.
+// account's Transaction history, and flags likely-duplicate transactions - including
+// where each "duplicate" actually transfers to (via linkedTransactionId), so a transfer
+// fanned out to several different destination accounts isn't mistaken for a true dupe.
+//
+// NOTE: only reconciles Asset.amount (not Liability.amount) - liability-type accounts
+// (e.g. credit cards) will show "storedBalance: undefined" and a bogus-looking MISMATCH;
+// that's a limitation of this script, not a real discrepancy.
 //
 // Usage:
 //   DATABASE_URL="<connection string>" npx tsx src/scripts/audit-account-balances.ts <email> [accountType]
@@ -26,6 +32,13 @@ async function main() {
     include: { asset: true, bank: true }
   });
 
+  // id -> name, for resolving a duplicate transaction's transfer destination.
+  const allAccountsInOrg = await prisma.account.findMany({
+    where: { organizationId: user.organizationId },
+    select: { id: true, name: true, type: true }
+  });
+  const accountNameById = new Map(allAccountsInOrg.map(a => [a.id, `${a.name} (${a.type})`]));
+
   console.log(`=== Accounts for ${email}${accountType ? ` (type=${accountType})` : ''} ===`);
   for (const a of accounts) {
     console.log({ id: a.id, name: a.name, type: a.type, bank: a.bank?.name, isActive: a.isActive, storedBalance: a.asset?.amount });
@@ -44,12 +57,14 @@ async function main() {
     console.log(`Total transactions: ${txs.length}`);
 
     let runningBalance = 0;
-    const seen = new Map<string, number>();
+    const seen = new Map<string, typeof txs>();
     for (const tx of txs) {
       const sign = tx.direction === 'FROM' ? -1 : 1;
       runningBalance += sign * Math.abs(tx.amount);
       const key = `${tx.date.toISOString().slice(0, 10)}|${tx.amount}|${tx.description || ''}`;
-      seen.set(key, (seen.get(key) || 0) + 1);
+      const group = seen.get(key) || [];
+      group.push(tx);
+      seen.set(key, group);
     }
 
     const stored = acc.asset?.amount ?? 0;
@@ -59,10 +74,17 @@ async function main() {
 
     console.log('\n--- Possible duplicates (same date+amount+description more than once) ---');
     let dupCount = 0;
-    for (const [key, count] of seen.entries()) {
-      if (count > 1) {
-        console.log(`  x${count}:  ${key}`);
+    for (const [key, group] of seen.entries()) {
+      if (group.length > 1) {
         dupCount++;
+        console.log(`  x${group.length}:  ${key}`);
+        for (const tx of group) {
+          const linkedToAccount = tx.linkedTransactionId
+            ? await prisma.transaction.findUnique({ where: { id: tx.linkedTransactionId }, select: { accountId: true } })
+            : null;
+          const destination = linkedToAccount ? (accountNameById.get(linkedToAccount.accountId) ?? linkedToAccount.accountId) : null;
+          console.log(`      id=${tx.id}  linkedTransactionId=${tx.linkedTransactionId ?? '(none)'}  ${destination ? `-> transfers to: ${destination}` : '(no linked transaction - likely not a transfer)'}`);
+        }
       }
     }
     if (dupCount === 0) console.log('  (none found)');
