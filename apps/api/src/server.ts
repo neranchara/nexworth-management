@@ -181,6 +181,11 @@ const runSchemaMigrations = async () => {
   await run(`ALTER TABLE "TransactionType" ADD COLUMN IF NOT EXISTS "defaultDirection" TEXT`);
   await run(`ALTER TABLE "TransactionType" ADD COLUMN IF NOT EXISTS "isExpenseLike" BOOLEAN NOT NULL DEFAULT false`);
   await run(`ALTER TABLE "TransactionType" ADD COLUMN IF NOT EXISTS "cashflowBucket" TEXT`);
+  // NEX-BUG-17: assetMultiplier/liabMultiplier (NEX-FEAT-11) were never added here — ran on
+  // staging via a one-off `prisma db push` + backfill script, but production never got the
+  // column at all, breaking every query that touches TransactionType (P2022).
+  await run(`ALTER TABLE "TransactionType" ADD COLUMN IF NOT EXISTS "assetMultiplier" INTEGER`);
+  await run(`ALTER TABLE "TransactionType" ADD COLUMN IF NOT EXISTS "liabMultiplier" INTEGER`);
 
   // New TransactionCategory column + index
   await run(`ALTER TABLE "TransactionCategory" ADD COLUMN IF NOT EXISTS "systemKey" TEXT`);
