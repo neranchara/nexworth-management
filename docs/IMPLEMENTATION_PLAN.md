@@ -280,12 +280,13 @@
 - **Description:** User-requested enhancement — show a totals summary (income/expense/net) for whatever subset of transactions the current filters (month/year/search/type/category/account) resolve to, instead of only the raw list.
 
 ### 📘 [STORY] NEX-FEAT-16: Show income/expense/net summary for the active transaction filter
-- **Status:** [PLANNED] 📅
+- **Status:** [COMPLETED] ✅
 - **Sub-Tasks:**
-  - [ ] Compute totals from `sortedTransactions` (the already-filtered list) in `apps/web/src/app/dashboard/transactions/page.tsx`.
-  - [ ] Render a small summary row (count, total income, total expense, net) above the transactions table.
-  - [ ] i18n keys in `th.json`/`en.json` under `transactions.summary`.
-  - [ ] `tsc --noEmit` clean.
+  - [x] Compute totals from `sortedTransactions` (the already-filtered list) in `apps/web/src/app/dashboard/transactions/page.tsx`.
+  - [x] Render a small summary row (count, total income, total expense, net) above the transactions table.
+  - [x] i18n keys in `th.json`/`en.json` under `transactions.summary`.
+  - [x] `tsc --noEmit` clean.
+  - [x] 2 unit tests (`TransactionsFilteredSummary.test.tsx`).
 
 ---
 

@@ -76,6 +76,12 @@
     "search": "ค้นหา...",
     "allCategories": "ทุกหมวดหมู่",
     "allAccounts": "ทุกบัญชี",
+    "summary": {
+      "count": "จำนวนรายการ",
+      "income": "รายรับรวม",
+      "expense": "รายจ่ายรวม",
+      "net": "สุทธิ"
+    },
     "table": {
       "date": "วันที่",
       "description": "รายละเอียด",
