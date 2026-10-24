@@ -289,6 +289,17 @@
 - **Status:** [COMPLETED] ✅
 - **Priority:** Critical
 
+### 🐛 [STORY] NEX-BUG-17: Production `TransactionType` table missing `assetMultiplier`/`liabMultiplier` — every transaction/dashboard/loan query crashed
+- **Status:** [COMPLETED] ✅ (pending deploy)
+- **Evidence:** Once NEX-BUG-16 got the API actually deploying, Render logs showed `PrismaClientKnownRequestError P2022`: `The column 'TransactionType.assetMultiplier' does not exist in the current database` — every query touching `TransactionType` (Dashboard, Transactions, Loan Tracker) crashed, which looked like "all data gone" but wasn't.
+- **Root cause:** NEX-FEAT-11 added these columns to `schema.prisma` and backfilled them on **staging only** (`prisma db push`, one-off script) — the corresponding `ALTER TABLE ... ADD COLUMN IF NOT EXISTS` lines were never added to the hand-rolled `runSchemaMigrations()` boot function in `server.ts` that production actually relies on for schema sync (this repo has no `prisma migrate` history).
+- **Sub-Tasks:**
+  - [x] `server.ts`: add the two missing `ADD COLUMN IF NOT EXISTS` lines for `TransactionType.assetMultiplier`/`liabMultiplier` (nullable `Int?`, purely additive).
+  - [x] Confirmed `getAssetMultiplier()` already falls back safely to the hardcoded `BEHAVIOR_METADATA` constant when the DB value is `null` — production rows will be `NULL` (no backfill run there) but financial math is unaffected, identical to pre-NEX-FEAT-11 behavior.
+  - [x] `tsc --noEmit` clean.
+  - [ ] **[NEEDS VERIFY]** after deploy: Dashboard/Transactions/Loan Tracker show real data again on production.
+  - [ ] Optional, non-blocking follow-up: run the NEX-FEAT-11 backfill script against production so the columns get real per-row values instead of relying on the fallback indefinitely.
+
 ### 🐛 [STORY] NEX-BUG-16: `apps/api` Render build fails — tsconfig `moduleResolution` removed in TypeScript 6.x
 - **Status:** [PLANNED] 📅 (attempt 1 merged but did NOT fix the Render build — attempt 2 open)
 - **Evidence:** Render deploy of the NEX-BUG-15 merge (`24e0eac`) failed: `error TS5108: Option 'moduleResolution=node10' has been removed`.
