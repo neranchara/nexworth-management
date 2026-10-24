@@ -257,6 +257,38 @@
 
 ---
 
+## 🟢 [EPIC] Phase 26: Goals Experience Consistency
+- **Status:** [PLANNED] 📅
+- **Priority:** Medium
+- **Description:** The formal `Goal` model (created via the Goals page "+" button) and `GOAL`/`GOAL_SAVING`-type Accounts (created via the Accounts page) are two parallel ways users end up tracking a savings goal. The Dashboard cockpit widget already has a fallback that synthesizes goal cards from GOAL-type accounts when no formal `Goal` rows exist — the Goals page itself does not, so a user who only ever created GOAL-type accounts sees their goals on the Dashboard but an empty list on the dedicated Goals page.
+
+### 🐛 [STORY] NEX-BUG-14: Goals page doesn't show GOAL/GOAL_SAVING-type accounts as goals
+- **Status:** [COMPLETED] ✅
+- **Evidence:** Confirmed on `stg_nexworth_db` for user `neranchara.ksr@gmail.com` (org "bigboss") — 0 rows in `Goal` table, but 4 active `GOAL`-type accounts ("Cloud Pocket ทำบุญ", "Cloud Pocket ค่าใช้จ่ายรถ", "Cloud Pocket เที่ยว", "ออมสิน บัญชีเงินซื้อรถ") with `targetAmount` set — these show on the Dashboard "Financial Goals" widget (via its fallback in `calculateFinancialStats`) but not on `/dashboard/goals`.
+- **Sub-Tasks:**
+  - [x] `listGoalsHandler` (`apps/api/src/controllers/goal.controller.ts`): when the org has no real `Goal` rows, synthesize read-only goal entries from `GOAL`/`GOAL_SAVING`-type accounts (same pattern as `dashboard.controller.ts`'s fallback), flagged `isVirtual: true`.
+  - [x] `getGoalsSummaryHandler`: same fallback for the summary totals (`totalGoalsValue`/`totalCollected`/`goalCount`).
+  - [x] Frontend `goals/page.tsx`: hide edit/delete controls on `isVirtual` entries (there's no `Goal` row to update/delete via `PUT/DELETE /goals/:id`).
+  - [x] Unit tests for the new fallback paths (4 new tests, `src/tests/controllers/goal.controller.test.ts`).
+  - [ ] **[NEEDS VERIFY]** staging: confirm the 4 real accounts above now render on the Goals page (not click-tested live — no login credentials in this session; verified against real DB row values via unit tests instead).
+
+---
+
+## 🟢 [EPIC] Phase 27: Transactions Page UX — Filtered Summary
+- **Status:** [PLANNED] 📅
+- **Priority:** Low
+- **Description:** User-requested enhancement — show a totals summary (income/expense/net) for whatever subset of transactions the current filters (month/year/search/type/category/account) resolve to, instead of only the raw list.
+
+### 📘 [STORY] NEX-FEAT-16: Show income/expense/net summary for the active transaction filter
+- **Status:** [PLANNED] 📅
+- **Sub-Tasks:**
+  - [ ] Compute totals from `sortedTransactions` (the already-filtered list) in `apps/web/src/app/dashboard/transactions/page.tsx`.
+  - [ ] Render a small summary row (count, total income, total expense, net) above the transactions table.
+  - [ ] i18n keys in `th.json`/`en.json` under `transactions.summary`.
+  - [ ] `tsc --noEmit` clean.
+
+---
+
 ## 📅 Roadmap Summary (agent-facing — synced 2026-08-29)
 
 ### Done in code (do not rebuild)

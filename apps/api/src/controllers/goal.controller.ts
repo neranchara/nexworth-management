@@ -20,6 +20,38 @@ const updateGoalSchema = z.object({
   deadline: z.string().datetime().nullable().optional(),
 });
 
+/**
+ * NEX-BUG-14: Some users track a savings goal purely as a GOAL/GOAL_SAVING-type
+ * Account (set up from the Accounts page) rather than a formal Goal record (set
+ * up from the Goals page "+" button). The Dashboard cockpit widget already falls
+ * back to these accounts when an org has no real Goal rows
+ * (see dashboard.controller.ts calculateFinancialStats) — mirror that fallback
+ * here so the Goals page doesn't show an empty list for the same org.
+ */
+async function getVirtualGoalsFromAccounts(organizationId: string) {
+  const accounts = await prisma.account.findMany({
+    where: { organizationId, type: { in: ['GOAL', 'GOAL_SAVING'] } },
+    include: { asset: true }
+  });
+
+  return accounts.map(acc => {
+    const currentAmount = acc.asset?.amount ?? 0;
+    const targetAmount = acc.targetAmount || currentAmount || 1;
+    return {
+      id: acc.id,
+      name: acc.name,
+      targetAmount,
+      currentAmount,
+      progressPercentage: targetAmount > 0 ? (currentAmount / targetAmount) * 100 : 0,
+      color: 'Blue' as const,
+      priority: 'NORMAL' as const,
+      status: 'ACTIVE' as const,
+      deadline: null,
+      isVirtual: true,
+    };
+  });
+}
+
 export const listGoalsHandler = async (request: FastifyRequest, reply: FastifyReply) => {
   try {
     const user = request.user as { sub: string, organizationId: string };
@@ -33,6 +65,11 @@ export const listGoalsHandler = async (request: FastifyRequest, reply: FastifyRe
       },
       orderBy: { createdAt: 'desc' }
     });
+
+    if (goals.length === 0) {
+      const virtualGoals = await getVirtualGoalsFromAccounts(user.organizationId);
+      return reply.send({ goals: virtualGoals });
+    }
 
     const parsedGoals = goals.map(goal => {
       let currentAmount = 0;
@@ -68,14 +105,23 @@ export const getGoalsSummaryHandler = async (request: FastifyRequest, reply: Fas
 
     let totalGoalsValue = 0;
     let totalCollected = 0;
-    const goalCount = goals.length;
+    let goalCount = goals.length;
 
-    goals.forEach(goal => {
-      totalGoalsValue += goal.targetAmount;
-      goal.allocations.forEach(alloc => {
-        totalCollected += alloc.allocatedAmount;
+    if (goals.length === 0) {
+      const virtualGoals = await getVirtualGoalsFromAccounts(user.organizationId);
+      goalCount = virtualGoals.length;
+      virtualGoals.forEach(goal => {
+        totalGoalsValue += goal.targetAmount;
+        totalCollected += goal.currentAmount;
       });
-    });
+    } else {
+      goals.forEach(goal => {
+        totalGoalsValue += goal.targetAmount;
+        goal.allocations.forEach(alloc => {
+          totalCollected += alloc.allocatedAmount;
+        });
+      });
+    }
 
     const overallProgress = totalGoalsValue > 0 ? (totalCollected / totalGoalsValue) * 100 : 0;
 
