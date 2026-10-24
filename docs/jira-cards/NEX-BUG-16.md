@@ -14,13 +14,21 @@ npm error Lifecycle script `build` failed with error: npm error code 2
 
 Not caused by any of NEX-BUG-14/NEX-FEAT-16/NEX-BUG-15's actual code changes — those just happened to be the deploy that first triggered a fresh build.
 
-## Fix
-- `apps/api/tsconfig.json`: `"ignoreDeprecations": "5.0"` → `"6.0"` (one line, matches the already-correct value in `apps/bot/tsconfig.json`).
-- Considered switching to `moduleResolution: "node16"` instead (matches `tsconfig.base.json`) but that also requires `module: "Node16"`, which is a much bigger ESM migration — not safe to rush while production is down. Deferred; `ignoreDeprecations: "6.0"` is the matching fix already proven in this same repo for `apps/bot`.
+## Fix — attempt 1 (PR #38, `hotfix/NEX-BUG-16-tsconfig-build-fix`) — INSUFFICIENT
+- `apps/api/tsconfig.json`: `"ignoreDeprecations": "5.0"` → `"6.0"` (matched the already-correct value in `apps/bot/tsconfig.json`).
+- Verified locally: `tsc --noEmit` and `npm run build:api` both clean, exit 0.
+- **Merged and redeployed on Render — still failed with the exact same `TS5108` error, same line/column.** `ignoreDeprecations` apparently cannot suppress this on whatever TypeScript resolution Render's build actually uses, even though `package-lock.json` pins the identical `typescript@6.0.3` used locally. Root cause of *why* local and Render disagree wasn't pinned down further — moved straight to a fix that doesn't depend on version-sensitive deprecation suppression at all.
+
+## Fix — attempt 2 (this branch) — the actual fix
+- `apps/api/tsconfig.json`: drop `moduleResolution: "node"` (the removed `node10` alias) and `ignoreDeprecations` entirely. Use `moduleResolution: "bundler"` instead, kept paired with the existing `module: "CommonJS"`.
+- `"bundler"` only affects how `tsc` locates **types** during type-checking — it has no effect on the emitted JS (`module: "CommonJS"` still controls the actual `require()` output), so the compiled `dist/` output and runtime behavior are unchanged.
+- Unlike `moduleResolution: "node16"` (tested and rejected — TS enforces `module` must also be `"Node16"`, a much bigger ESM migration), `"bundler"` has no such pairing requirement and is already used successfully elsewhere in this monorepo (`packages/database`, `packages/ai-engine`), just paired there with `module: "ESNext"` instead of `"CommonJS"` — confirmed by testing that `bundler` + `CommonJS` also compiles clean here.
 
 ## Verification
-- `npx tsc --noEmit` in `apps/api` — clean, exit 0 (previously: `error TS5107` printed, though it didn't abort locally since the installed TS patch version wasn't as strict as Render's at the time).
+- `npx tsc --noEmit` in `apps/api` — clean, exit 0, zero warnings.
 - `npm run build:api` from repo root — the exact script Render runs (`db:generate` → build `database` → build `ai-engine` → build `api`) — completes clean, exit 0.
+- `npx vitest run src/tests/controllers` — 7/7 passed (no runtime/type regression from the resolution change).
+- **[NEEDS VERIFY]** Render deploy with this fix — attempt 1 looked identically "verified locally" and still failed on Render, so don't consider this closed until the actual Render build log is clean.
 
 ## Technical Notes
-Branch: `hotfix/NEX-BUG-16-tsconfig-build-fix` from `main`, merge straight back to `main` per Solo Simplified Git Flow's hotfix rule. After merge, re-trigger the Render deploy that failed (or it may auto-redeploy on push, depending on the service's trigger settings) — this is what unblocks NEX-BUG-14/NEX-FEAT-16/NEX-BUG-15 from actually going live.
+Branch: `hotfix/NEX-BUG-16b-moduleresolution-bundler` from `main` (attempt 1, `hotfix/NEX-BUG-16-tsconfig-build-fix`, is already merged as PR #38 but didn't fix the deploy — this is the follow-up). Merge straight to `main` per Solo Simplified Git Flow's hotfix rule, then re-trigger the Render deploy. This is what unblocks NEX-BUG-14/NEX-FEAT-16/NEX-BUG-15 from actually going live.
