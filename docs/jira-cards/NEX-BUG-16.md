@@ -1,5 +1,5 @@
 # Jira Card: NEX-BUG-16
-**Status**: [COMPLETED] ✅
+**Status**: [COMPLETED] ✅ (attempt 2 confirmed live on Render)
 **Priority**: Critical (production deploy blocker)
 **Assignee**: Claude Code
 **Epic**: Hotfix
@@ -28,7 +28,7 @@ Not caused by any of NEX-BUG-14/NEX-FEAT-16/NEX-BUG-15's actual code changes —
 - `npx tsc --noEmit` in `apps/api` — clean, exit 0, zero warnings.
 - `npm run build:api` from repo root — the exact script Render runs (`db:generate` → build `database` → build `ai-engine` → build `api`) — completes clean, exit 0.
 - `npx vitest run src/tests/controllers` — 7/7 passed (no runtime/type regression from the resolution change).
-- **[NEEDS VERIFY]** Render deploy with this fix — attempt 1 looked identically "verified locally" and still failed on Render, so don't consider this closed until the actual Render build log is clean.
+- **[VERIFIED]** Render deploy with attempt 2 — build succeeded (`Build successful`), deployed, service live: schema migrations applied, `ACCOUNT_TYPES` seeded, server listening, health checks returning 200. Confirmed via the actual Render build log, not just local verification.
 
 ## Technical Notes
 Branch: `hotfix/NEX-BUG-16b-moduleresolution-bundler` from `main` (attempt 1, `hotfix/NEX-BUG-16-tsconfig-build-fix`, is already merged as PR #38 but didn't fix the deploy — this is the follow-up). Merge straight to `main` per Solo Simplified Git Flow's hotfix rule, then re-trigger the Render deploy. This is what unblocks NEX-BUG-14/NEX-FEAT-16/NEX-BUG-15 from actually going live.
