@@ -401,6 +401,11 @@ export default function AccountsManagementPage() {
                       #{account.tag}
                     </span>
                   )}
+                  {account.isPersonal && (
+                    <span className="ml-1.5 inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[7px] font-bold uppercase tracking-tight" title={t('form.personalDesc')}>
+                      <User className="w-2 h-2" /> {t('personal')}
+                    </span>
+                  )}
                 </div>
                 {account.bank && (
                   <BankIcon code={account.bank.code} name={account.bank.name} color={account.bank.color || '#50C878'} size={20} />
@@ -419,6 +424,7 @@ export default function AccountsManagementPage() {
                   { key: 'accountNumber', label: t('table.number') },
                   { key: 'type', label: t('table.type') },
                   { key: 'bank', label: t('table.bank') },
+                  { key: 'isPersonal', label: t('personal') },
                   { key: 'isActive', label: t('table.status') },
                 ].map(col => (
                   <th
@@ -464,6 +470,15 @@ export default function AccountsManagementPage() {
                           <span className="text-[10px] font-bold text-white">{account.bank.name}</span>
                         </div>
                       : <span className="text-slate">—</span>}
+                  </td>
+                  <td className="px-4 py-3">
+                    {account.isPersonal ? (
+                      <span className="inline-flex items-center gap-1 px-1.5 py-0.5 rounded bg-blue-500/10 border border-blue-500/20 text-blue-400 text-[8px] font-bold uppercase tracking-tight">
+                        <User className="w-2.5 h-2.5" /> {t('personal')}
+                      </span>
+                    ) : (
+                      <span className="text-slate text-[9px]">—</span>
+                    )}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-1.5">

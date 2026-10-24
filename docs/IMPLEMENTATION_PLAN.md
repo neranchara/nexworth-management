@@ -337,6 +337,14 @@
   - [x] `tsc --noEmit` clean.
   - [x] 2 unit tests (`TransactionsFilteredSummary.test.tsx`).
 
+### 📘 [STORY] NEX-FEAT-17: Show isPersonal per account on the Accounts page
+- **Status:** [COMPLETED] ✅
+- **Description:** `isPersonal` directly controls whether an account counts toward the Dashboard's Net Worth/Total Assets (`calculateFinancialStats`: `acc.isPersonal || isInvestment`) — only the top summary stat showed a count, not which accounts were actually marked personal.
+- **Sub-Tasks:**
+  - [x] Table view: new "ส่วนตัว" (Personal) column with a badge, sortable.
+  - [x] Grid view: same badge shown inline when `isPersonal` is true.
+  - [x] `tsc --noEmit` clean.
+
 ---
 
 ## 📅 Roadmap Summary (agent-facing — synced 2026-08-29)
