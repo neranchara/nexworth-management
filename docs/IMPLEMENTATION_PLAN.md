@@ -190,10 +190,14 @@
 - **Status:** [DONE IN CODE] ✅
 - **Evidence:** `getAssetMultiplier` special-case for `DEBT` + liability; unit tests
 
+### 📘 [STORY] NEX-FEAT-14: Group + sort the category dropdown on Transactions page
+- **Status:** [DONE IN CODE] ✅
+- **Evidence:** `<optgroup>` grouping by `TransactionType`, Thai-locale alphabetical sort, in `transactions/page.tsx`
+
 ---
 
 ## 🔵 [EPIC] Phase 24: Ledger Integrity Foundation
-- **Status:** [PARTIAL] ⚠️ — Story 1 done, Story 2/3 in progress on `feature/NEX-BUG-12-ledger-integrity`
+- **Status:** [DONE IN CODE] ✅ — all 3 stories done on `feature/NEX-BUG-12-ledger-integrity`, staging migrated + verified, not yet merged to `main`
 - **Priority:** Critical
 - **Description:** Close gaps found comparing Nexworth against standard accounting/banking principles — inconsistent sign conventions and manual balance edits that bypass the transaction ledger entirely. Prerequisite before extending the system with new use cases/behaviors (see Phase 25+ backlog discussion, not yet ticketed).
 
@@ -203,25 +207,53 @@
 - **Note:** Checked staging for pre-existing `amount < 0` rows before fixing — found only 1 (mock `บัตรเครดิต UOB`, self-caused by the NEX-BUG-11 correction, not this bug) — no other data affected.
 
 ### 📘 [STORY] NEX-FEAT-11: Move assetMultiplier/liabMultiplier to DB (finish P6 migration)
-- **Status:** [PLANNED] 📅
+- **Status:** [DONE IN CODE] ✅
 - **Description:** `defaultDirection`/`isExpenseLike`/`cashflowBucket` are already DB-driven per `TransactionType`; the two multipliers are still hardcoded in the `BEHAVIOR_METADATA` TS constant. Finish the migration so new behaviors are a data change, not a code change.
 - **Sub-Tasks:**
   - [x] Add `assetMultiplier`/`liabMultiplier` columns to `TransactionType` (schema).
-  - [ ] `getAssetMultiplier()`: accept DB values, prefer them over the constant fallback (same dual-path pattern as `getDirection`/`getCashflowBucket`).
-  - [ ] Update `adjustAccountBalance` call site to pass DB values through.
-  - [ ] Backfill script for existing `TransactionType` rows.
-  - [ ] Seed new orgs with both columns.
-  - [ ] Unit tests.
+  - [x] `getAssetMultiplier()`: accept DB values, prefer them over the constant fallback (same dual-path pattern as `getDirection`/`getCashflowBucket`).
+  - [x] Update `adjustAccountBalance` call site to pass DB values through.
+  - [x] Backfill script for existing `TransactionType` rows — ran on staging, 136 rows backfilled, verified DEBT's fixed `liabMultiplier=-1` carried through correctly.
+  - [x] Seed new orgs with both columns.
+  - [x] Unit tests (5 new tests).
 
 ### 📘 [STORY] NEX-FEAT-12: Route manual balance edits through the Transaction ledger
-- **Status:** [PLANNED] 📅
+- **Status:** [DONE IN CODE] ✅
 - **Description:** Liabilities/Assets page balance edits currently upsert `Liability.amount`/`Asset.amount` directly, bypassing the transaction ledger — the root cause that made NEX-BUG-12 possible. Post a real `BALANCE_ADJUSTMENT` transaction instead, reusing `adjustAccountBalance`.
 - **Sub-Tasks:**
-  - [ ] Add `BALANCE_ADJUSTMENT` to `TransactionBehavior` enum + metadata.
-  - [ ] Seed "ปรับยอดเปิดบัญชี" system type/category for new + existing orgs.
-  - [ ] Rework `createFinancialRecordHandler`/`updateFinancialRecordHandler` to compute delta and post a Transaction instead of raw upsert.
-  - [ ] Verify response contract unchanged (frontend untouched).
-  - [ ] Test coverage + manual staging verification (edit shows up in transaction history).
+  - [x] Add `BALANCE_ADJUSTMENT` to `TransactionBehavior` enum + metadata.
+  - [x] Seed "ปรับยอดเปิดบัญชี" system type/category for new + existing orgs.
+  - [x] Rework `createFinancialRecordHandler`/`updateFinancialRecordHandler` to compute delta and post a Transaction instead of raw upsert.
+  - [x] Verify response contract unchanged (frontend untouched).
+  - [x] Test coverage (7 new + 3 fixed existing tests) + manual E2E on staging (verified against the real UOB mock account — delta, Transaction row, and resulting balance all correct).
+
+### 🐛 [STORY] NEX-BUG-13: Net Worth / dashboard totals count inactive accounts
+- **Status:** [DONE IN CODE] ✅ — done on `fix/NEX-BUG-13-networth-inactive-accounts` (separate unmerged branch — not yet in this branch's history)
+- **Evidence:** `isActive: true` added to the account query in `calculateFinancialStats`; verified live on staging (toggled a real account, confirmed totals moved by exactly its balance and restored correctly)
+
+### 📘 [STORY] NEX-FEAT-15: Filter inactive accounts out of account-picker dropdowns
+- **Status:** [DONE IN CODE] ✅
+- **Description:** Follow-up to NEX-BUG-13 — 7 account `<select>`s across 6 pages let users pick an inactive account for new/edited records. Filtered them out everywhere, using `accounts.filter(a => a.isActive || a.id === <currentFormValue>)` so editing a record that already references a since-deactivated account never silently blanks the field.
+- **Sub-Tasks:**
+  - [x] `DashboardCockpit.tsx` (2 selects), `transactions/page.tsx` (extended `groupedAccountOptions`), `goals/page.tsx`, `assets/page.tsx`, `liabilities/page.tsx`, `loan-tracker/page.tsx` (2 selects).
+  - [x] `tsc --noEmit` clean (also had to widen `DashboardCockpit.tsx`'s local `accounts` state type to include `isActive`).
+  - [ ] **[NEEDS VERIFY]** Not click-tested live in a browser (would need authenticated sessions across 6 pages) — logic verified by type-check + code review only.
+
+---
+
+## 🟣 [EPIC] Phase 25: Transaction Type Taxonomy Cleanup
+- **Status:** [DONE IN CODE] ✅
+- **Priority:** High
+- **Description:** Align user-facing types with financial rules — ออม ≠ ลงทุน; GOAL account ≠ GOAL_SAVING behavior.
+
+### 📘 [STORY] NEX-FEAT-13: Split ออม/ลงทุน → ออม (SAVING) + ลงทุน (INVESTMENT)
+- **Status:** [DONE IN CODE] ✅
+- **Sub-Tasks:**
+  - [x] Seed new orgs with `ออม` + `ลงทุน` (API + bot + seed-master).
+  - [x] Remap categories (saving / investment / goal-park / expense reclass).
+  - [x] Backfill script covering org-scoped **and** global `organizationId=null` leftovers.
+  - [x] Unit tests (`saving_investment_split.test.ts` 5/5).
+  - [x] Ran on `stg_nexworth_db` — legacy `ออม/ลงทุน` active count = 0.
 
 ---
 
@@ -230,11 +262,11 @@
 ### Done in code (do not rebuild)
 - Phase 17; NEX-FEAT-01; NEX-BUG-01 (+ password toggle); NEX-FEAT-02  
 - NEX-FEAT-06 (AuditLog base); NEX-FEAT-07 (View-As base); Phase 23 (FEAT-09, BUG-11)  
-- NEX-BUG-12 (Liability sign convention)  
+- NEX-BUG-12 (Liability sign convention); NEX-FEAT-11 / NEX-FEAT-12 (Phase 24)  
+- **NEX-FEAT-13** (ออม/ลงทุน split) — Phase 25  
 - Invitation **stack** (model + API + Team UI + accept page) — treat as PARTIAL gaps only
 
 ### Immediate focus (safe for next agent)
-0. **NEX-FEAT-11 / NEX-FEAT-12** (Phase 24) — DB-driven multipliers + ledger-backed balance edits, in progress on `feature/NEX-BUG-12-ledger-integrity`
 1. **NEX-BUG-03** — finish encoding gaps + staging verify Thai UI  
 2. **NEX-BUG-04** — align slip tests + staging real-slip verify  
 3. **NEX-SEC-01** — PII masking on existing AuditLog middleware  

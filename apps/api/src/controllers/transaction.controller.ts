@@ -5,7 +5,7 @@ import { validateTransactionDate } from '../lib/utils';
 import { SYSTEM_CATEGORY_KEYS, BEHAVIOR_METADATA, getAssetMultiplier } from '../constants/transactionConfig.js';
 
 // Auto-heal helper: lookup system category by systemKey first, fall back to name, then create
-async function getSystemCategory(db: any, systemKey: string, fallbackName: string, behavior: string, orgId: string) {
+export async function getSystemCategory(db: any, systemKey: string, fallbackName: string, behavior: string, orgId: string) {
   let cat = await db.transactionCategory.findFirst({
     where: { systemKey, organizationId: orgId },
     include: { type: true }
@@ -61,7 +61,7 @@ export const adjustAccountBalance = async (accountId: string, amount: number, ty
   let multiplier = 0;
 
   // Priority: explicit direction → DB metadata → BEHAVIOR_METADATA fallback
-  multiplier = getAssetMultiplier(behavior, isLiability, direction) as 1 | -1 | 0;
+  multiplier = getAssetMultiplier(behavior, isLiability, direction, type.assetMultiplier, type.liabMultiplier) as 1 | -1 | 0;
 
   const finalAdjustment = isRemoval ? -(amount * multiplier) : (amount * multiplier);
 

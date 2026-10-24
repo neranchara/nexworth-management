@@ -84,7 +84,7 @@ export default function DashboardCockpit() {
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Meta Data
-  const [accounts, setAccounts] = useState<{ id: string; name: string; balance: number }[]>([]);
+  const [accounts, setAccounts] = useState<{ id: string; name: string; balance: number; isActive?: boolean }[]>([]);
   const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
 
   const fetchMeta = useCallback(async () => {
@@ -608,7 +608,7 @@ export default function DashboardCockpit() {
                 onChange={(e) => setAccountId(e.target.value)}
                 className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald/50 appearance-none font-bold cursor-pointer"
               >
-                {accounts.map(acc => (
+                {accounts.filter(acc => acc.isActive || acc.id === accountId).map(acc => (
                   <option key={acc.id} value={acc.id} className="bg-navy">{acc.name}</option>
                 ))}
               </select>
@@ -625,7 +625,7 @@ export default function DashboardCockpit() {
                     className="w-full bg-white/5 border border-white/5 rounded-xl px-4 py-3 text-xs text-white outline-none focus:border-emerald/50 appearance-none font-bold cursor-pointer"
                   >
                     <option value="" className="bg-navy">{t('modal.selectTarget')}</option>
-                    {accounts.filter(acc => acc.id !== accountId).map(acc => (
+                    {accounts.filter(acc => acc.id !== accountId && (acc.isActive || acc.id === toAccountId)).map(acc => (
                       <option key={acc.id} value={acc.id} className="bg-navy">{acc.name}</option>
                     ))}
                   </select>

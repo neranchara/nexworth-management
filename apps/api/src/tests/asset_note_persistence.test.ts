@@ -1,10 +1,18 @@
 import { vi, describe, it, expect, beforeEach } from 'vitest';
-import { 
-  createFinancialRecordHandler, 
+import {
+  createFinancialRecordHandler,
   listFinancialRecordsHandler,
-  updateFinancialRecordHandler 
+  updateFinancialRecordHandler
 } from '../controllers/financial-record.controller';
 import { prisma } from '../lib/prisma';
+import { getSystemCategory } from '../controllers/transaction.controller';
+
+// NEX-FEAT-12: create/update now go through prisma.$transaction + adjustAccountBalance/
+// getSystemCategory (transaction.controller.ts) instead of prisma.asset.upsert/update directly.
+vi.mock('../controllers/transaction.controller', () => ({
+  adjustAccountBalance: vi.fn(),
+  getSystemCategory: vi.fn(),
+}));
 
 // Mock the prisma library
 vi.mock('../lib/prisma', () => ({
@@ -27,11 +35,37 @@ vi.mock('../lib/prisma', () => ({
     financialRecord: {
       create: vi.fn(),
       findMany: vi.fn(),
-    }
+    },
+    $transaction: vi.fn(),
   },
 }));
 
 const VALID_ACC_ID = '648e8940-02e0-474c-8515-373305a4156c';
+
+// Builds a mock `tx` client (used inside prisma.$transaction) and wires findUnique/upsert
+// on it to return the given asset shape — CASE 1/3 below only assert on the final response
+// and on what gets passed to tx.asset.upsert, mirroring what they used to assert on
+// prisma.asset.upsert before NEX-FEAT-12 routed edits through the ledger.
+const wireTransaction = (assetShape: { accountId: string; amount: number; note: string | null; account: any }) => {
+  const tx = {
+    asset: {
+      // 1st call: "current" lookup before computing the delta (no existing record → 0).
+      // Later calls (linked-id fetch, final response fetch): return the resulting shape.
+      findUnique: vi.fn().mockResolvedValueOnce(null).mockResolvedValue(assetShape),
+      upsert: vi.fn().mockResolvedValue(assetShape),
+    },
+    liability: {
+      findUnique: vi.fn().mockResolvedValueOnce(null).mockResolvedValue(assetShape),
+      upsert: vi.fn().mockResolvedValue(assetShape),
+    },
+    transaction: {
+      create: vi.fn().mockResolvedValue({ id: 'tx-1' }),
+    },
+  };
+  (prisma.$transaction as any).mockImplementation((cb: any) => cb(tx));
+  (getSystemCategory as any).mockResolvedValue({ id: 'cat-adj', typeId: 'type-adj' });
+  return tx;
+};
 
 describe('Asset Note Persistence Logic', () => {
   let mockRequest: any;
@@ -60,11 +94,10 @@ describe('Asset Note Persistence Logic', () => {
       note: 'My special investment note'
     };
 
-    (prisma.asset.upsert as any).mockResolvedValue({
+    const tx = wireTransaction({
       accountId: VALID_ACC_ID,
       amount: 5000,
       note: 'My special investment note',
-      updatedAt: new Date(),
       account: { name: 'Test Account', bank: null }
     });
 
@@ -73,9 +106,9 @@ describe('Asset Note Persistence Logic', () => {
     expect(mockReply.status).toHaveBeenCalledWith(201);
     const sentData = mockReply.send.mock.calls[0][0];
     expect(sentData.record.note).toBe('My special investment note');
-    
-    // Verify that note was passed to Prisma upsert
-    const upsertArgs = (prisma.asset.upsert as any).mock.calls[0][0];
+
+    // Verify that note was passed through to the note-upsert on the tx client
+    const upsertArgs = (tx.asset.upsert as any).mock.calls[0][0];
     expect(upsertArgs.create.note).toBe('My special investment note');
     expect(upsertArgs.update.note).toBe('My special investment note');
   });
@@ -107,11 +140,10 @@ describe('Asset Note Persistence Logic', () => {
       note: 'Updated note'
     };
 
-    (prisma.asset.update as any).mockResolvedValue({
+    const tx = wireTransaction({
       accountId: VALID_ACC_ID,
       amount: 6000,
       note: 'Updated note',
-      updatedAt: new Date(),
       account: { name: 'Test Account', bank: null }
     });
 
@@ -119,8 +151,8 @@ describe('Asset Note Persistence Logic', () => {
 
     const sentData = mockReply.send.mock.calls[0][0];
     expect(sentData.record.note).toBe('Updated note');
-    
-    const updateArgs = (prisma.asset.update as any).mock.calls[0][0];
-    expect(updateArgs.data.note).toBe('Updated note');
+
+    const upsertArgs = (tx.asset.upsert as any).mock.calls[0][0];
+    expect(upsertArgs.update.note).toBe('Updated note');
   });
 });

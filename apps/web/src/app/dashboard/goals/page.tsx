@@ -403,7 +403,7 @@ export default function GoalsPage() {
               value={newGoalForm.accountId} onChange={e => setNewGoalForm({...newGoalForm, accountId: e.target.value})}
             >
               <option value="">{t('form.selectAccount')}</option>
-              {accounts.map(acc => (
+              {accounts.filter(acc => acc.isActive || acc.id === newGoalForm.accountId).map(acc => (
                 <option key={acc.id} value={acc.id}>{acc.name} (฿{acc.balance?.toLocaleString()})</option>
               ))}
             </select>
