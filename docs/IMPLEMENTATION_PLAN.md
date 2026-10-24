@@ -281,7 +281,22 @@
   - [x] `MobileBottomNav.tsx`: gate its Goals tab on `hasPermission('goals')` too.
   - [x] 3 unit tests for the nav permission gate.
   - [x] **[VERIFIED]** staging: confirmed directly in the DB that `neranchara.ksr@gmail.com`'s Admin role now has full `goals` permission.
-  - [ ] **[NEEDS VERIFY]** production: this branch's backfill only ran against staging — needs to run against prod too at deploy (idempotent, safe to re-run).
+  - [x] **[VERIFIED]** production: backfill run against the live production DB by the user — "Found 13 roles across all orgs" / "13 Permission rows upserted".
+
+---
+
+## 🔴 [EPIC] Hotfix: Production Deploy Blockers
+- **Status:** [COMPLETED] ✅
+- **Priority:** Critical
+
+### 🐛 [STORY] NEX-BUG-16: `apps/api` Render build fails — tsconfig `moduleResolution` removed in TypeScript 6.x
+- **Status:** [COMPLETED] ✅
+- **Evidence:** Render deploy of the NEX-BUG-15 merge (`24e0eac`) failed: `error TS5108: Option 'moduleResolution=node10' has been removed`. `apps/api/tsconfig.json` had `"ignoreDeprecations": "5.0"`; `apps/bot/tsconfig.json` already had the correct `"6.0"` — api was just never updated to match.
+- **Sub-Tasks:**
+  - [x] `apps/api/tsconfig.json`: `ignoreDeprecations` `"5.0"` → `"6.0"`.
+  - [x] `npx tsc --noEmit` clean.
+  - [x] `npm run build:api` (the exact script Render runs) clean end-to-end.
+  - [ ] **[NEEDS VERIFY]** Render redeploy succeeds and the 3 pending fixes (NEX-BUG-14/NEX-FEAT-16/NEX-BUG-15) are confirmed live.
 
 ---
 
