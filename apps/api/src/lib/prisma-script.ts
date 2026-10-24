@@ -14,6 +14,16 @@ if (!process.env.DATABASE_URL) {
   process.exit(1);
 }
 
+// Safe-to-print diagnostics - username only, never the password, never the full string.
+{
+  const url = process.env.DATABASE_URL;
+  const usernameMatch = url.match(/^[a-z]+:\/\/([^:]+):/);
+  console.log(`[prisma-script] DATABASE_URL length: ${url.length} chars`);
+  console.log(`[prisma-script] DATABASE_URL username: ${usernameMatch?.[1] ?? '(could not parse)'}`);
+  console.log(`[prisma-script] DATABASE_URL contains "neon.tech": ${url.includes('neon.tech')}`);
+  console.log(`[prisma-script] DATABASE_URL contains "localhost": ${url.includes('localhost')}`);
+}
+
 export const prisma = new PrismaClient({
   datasources: { db: { url: process.env.DATABASE_URL } }
 });
