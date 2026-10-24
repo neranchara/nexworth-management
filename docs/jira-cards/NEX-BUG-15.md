@@ -32,4 +32,4 @@ User-reported: the desktop sidebar (vertical nav) and the mobile bottom nav (hor
 - `npx tsc --noEmit` clean on both `apps/api` and `apps/web`.
 - `npx vitest run src/tests/MobileBottomNav.test.tsx` — 3/3 passed.
 - Backfill executed against `stg_nexworth_db`: "Found 54 roles across all orgs" / "54 Permission rows upserted". Spot-checked the reporting user's role directly afterward (see AC above).
-- **Still needs doing at deploy time:** run `backfill-goals-permission.ts` against the production DB too (this branch only touched staging) — it's idempotent (`upsert`), safe to run more than once.
+- **Production backfill confirmed (see NEX-BUG-18).** Re-ran `backfill-goals-permission.ts` from a standalone PowerShell window (not an IDE-integrated terminal — those were found to silently re-point `DATABASE_URL` at local staging, see NEX-BUG-18) with the real production `DATABASE_URL`: connected to `neondb`, `Found 13 roles across all orgs`, `13 Permission rows upserted`. Idempotent, safe to have run more than once if an earlier attempt also happened to reach production.
