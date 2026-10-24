@@ -21,6 +21,7 @@ interface Goal {
   priority: 'SECURITY' | 'SHORT_TERM' | 'LONG_TERM' | 'NORMAL';
   status: 'ACTIVE' | 'COMPLETED' | 'ARCHIVED';
   deadline: string | null;
+  isVirtual?: boolean;
 }
 
 interface GoalsSummary {
@@ -283,22 +284,28 @@ export default function GoalsPage() {
                         <span className="text-[9px] font-bold text-slate-300 uppercase bg-white/5 px-2 py-1 rounded tracking-widest">
                           {goal.priority.replace('_', ' ')}
                         </span>
-                        <div className="flex gap-1.5 mt-1.5">
-                          <button 
-                            onClick={() => openEditModal(goal)}
-                            className="text-slate-400 hover:text-emerald transition-colors p-1"
-                            title="แก้ไขเป้าหมาย"
-                          >
-                            <Settings className="w-3.5 h-3.5" />
-                          </button>
-                          <button 
-                            onClick={() => handleDeleteGoal(goal.id)}
-                            className="text-rose-500/50 hover:text-rose-500 transition-colors p-1"
-                            title="ลบเป้าหมาย"
-                          >
-                            <AlertTriangle className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                        {goal.isVirtual ? (
+                          <span className="text-[8px] text-slate-500 italic mt-1.5" title={t('card.virtualHint')}>
+                            {t('card.virtualBadge')}
+                          </span>
+                        ) : (
+                          <div className="flex gap-1.5 mt-1.5">
+                            <button
+                              onClick={() => openEditModal(goal)}
+                              className="text-slate-400 hover:text-emerald transition-colors p-1"
+                              title="แก้ไขเป้าหมาย"
+                            >
+                              <Settings className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              onClick={() => handleDeleteGoal(goal.id)}
+                              className="text-rose-500/50 hover:text-rose-500 transition-colors p-1"
+                              title="ลบเป้าหมาย"
+                            >
+                              <AlertTriangle className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                     <div className="mt-3 flex-1">

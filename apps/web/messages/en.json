@@ -371,7 +371,9 @@
       "longTerm": "Long Term"
     },
     "card": {
-      "target": "Target:"
+      "target": "Target:",
+      "virtualBadge": "From account",
+      "virtualHint": "Created from a goal-type account. Edit or delete it from the Accounts page."
     },
     "empty": "No goals in this category yet.",
     "confirm": {

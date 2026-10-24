@@ -263,14 +263,14 @@
 - **Description:** The formal `Goal` model (created via the Goals page "+" button) and `GOAL`/`GOAL_SAVING`-type Accounts (created via the Accounts page) are two parallel ways users end up tracking a savings goal. The Dashboard cockpit widget already has a fallback that synthesizes goal cards from GOAL-type accounts when no formal `Goal` rows exist — the Goals page itself does not, so a user who only ever created GOAL-type accounts sees their goals on the Dashboard but an empty list on the dedicated Goals page.
 
 ### 🐛 [STORY] NEX-BUG-14: Goals page doesn't show GOAL/GOAL_SAVING-type accounts as goals
-- **Status:** [PLANNED] 📅
+- **Status:** [COMPLETED] ✅
 - **Evidence:** Confirmed on `stg_nexworth_db` for user `neranchara.ksr@gmail.com` (org "bigboss") — 0 rows in `Goal` table, but 4 active `GOAL`-type accounts ("Cloud Pocket ทำบุญ", "Cloud Pocket ค่าใช้จ่ายรถ", "Cloud Pocket เที่ยว", "ออมสิน บัญชีเงินซื้อรถ") with `targetAmount` set — these show on the Dashboard "Financial Goals" widget (via its fallback in `calculateFinancialStats`) but not on `/dashboard/goals`.
 - **Sub-Tasks:**
-  - [ ] `listGoalsHandler` (`apps/api/src/controllers/goal.controller.ts`): when the org has no real `Goal` rows, synthesize read-only goal entries from `GOAL`/`GOAL_SAVING`-type accounts (same pattern as `dashboard.controller.ts`'s fallback), flagged e.g. `isVirtual: true`.
-  - [ ] `getGoalsSummaryHandler`: same fallback for the summary totals (`totalGoalsValue`/`totalCollected`/`goalCount`).
-  - [ ] Frontend `goals/page.tsx`: hide edit/delete controls on `isVirtual` entries (there's no `Goal` row to update/delete via `PUT/DELETE /goals/:id`).
-  - [ ] Unit tests for the new fallback paths.
-  - [ ] **[NEEDS VERIFY]** staging: confirm the 4 real accounts above now render on the Goals page.
+  - [x] `listGoalsHandler` (`apps/api/src/controllers/goal.controller.ts`): when the org has no real `Goal` rows, synthesize read-only goal entries from `GOAL`/`GOAL_SAVING`-type accounts (same pattern as `dashboard.controller.ts`'s fallback), flagged `isVirtual: true`.
+  - [x] `getGoalsSummaryHandler`: same fallback for the summary totals (`totalGoalsValue`/`totalCollected`/`goalCount`).
+  - [x] Frontend `goals/page.tsx`: hide edit/delete controls on `isVirtual` entries (there's no `Goal` row to update/delete via `PUT/DELETE /goals/:id`).
+  - [x] Unit tests for the new fallback paths (4 new tests, `src/tests/controllers/goal.controller.test.ts`).
+  - [ ] **[NEEDS VERIFY]** staging: confirm the 4 real accounts above now render on the Goals page (not click-tested live — no login credentials in this session; verified against real DB row values via unit tests instead).
 
 ---
 

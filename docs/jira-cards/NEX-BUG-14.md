@@ -1,5 +1,5 @@
 # Jira Card: NEX-BUG-14
-**Status**: [PLANNED] 📅
+**Status**: [COMPLETED] ✅
 **Priority**: Medium
 **Assignee**: Claude Code
 **Epic**: Phase 26: Goals Experience Consistency
@@ -18,13 +18,23 @@ The formal `Goal` model (created via the Goals page "+ สร้างเป้�
 - Conclusion: these show on the Dashboard widget (via its fallback) but render as an empty list on the Goals page itself — which is why the user "ไม่เห็นรายการที่เคยตั้งเป้าหมายไว้" there.
 
 ## Acceptance Criteria
-- [ ] `listGoalsHandler`: when `prisma.goal.findMany({ organizationId })` returns 0 rows, synthesize goal-shaped entries from `GOAL`/`GOAL_SAVING`-type accounts for that org (mirroring the Dashboard fallback), each flagged `isVirtual: true`.
-- [ ] `getGoalsSummaryHandler`: apply the same fallback so `totalGoalsValue`/`totalCollected`/`goalCount`/`overallProgress` reflect the virtual goals too when there are no real ones.
-- [ ] `goals/page.tsx`: hide the edit (pencil) and delete buttons on cards where `isVirtual` is true — there is no `Goal` row for `PUT/DELETE /goals/:id` to act on.
-- [ ] Real `Goal` rows always take priority — the fallback only runs when the org has zero real `Goal` rows (consistent with the existing Dashboard behavior, so the two surfaces never disagree).
-- [ ] Unit tests covering: org with real goals only, org with virtual-only, org with neither.
-- [ ] `tsc --noEmit` clean on both `apps/api` and `apps/web`.
-- [ ] **[NEEDS VERIFY]** staging: confirm the 4 real "Cloud Pocket" / "ออมสิน" accounts above now render on `/dashboard/goals` for this user.
+- [x] `listGoalsHandler`: when `prisma.goal.findMany({ organizationId })` returns 0 rows, synthesize goal-shaped entries from `GOAL`/`GOAL_SAVING`-type accounts for that org (mirroring the Dashboard fallback), each flagged `isVirtual: true`.
+- [x] `getGoalsSummaryHandler`: apply the same fallback so `totalGoalsValue`/`totalCollected`/`goalCount`/`overallProgress` reflect the virtual goals too when there are no real ones.
+- [x] `goals/page.tsx`: hide the edit (pencil) and delete buttons on cards where `isVirtual` is true — there is no `Goal` row for `PUT/DELETE /goals/:id` to act on. Shows a small "จากบัญชี" badge instead.
+- [x] Real `Goal` rows always take priority — the fallback only runs when the org has zero real `Goal` rows (consistent with the existing Dashboard behavior, so the two surfaces never disagree).
+- [x] Unit tests covering: org with real goals only, org with virtual-only, org with neither.
+- [x] `tsc --noEmit` clean on both `apps/api` and `apps/web`.
+- [ ] **[NEEDS VERIFY]** staging: confirm the 4 real "Cloud Pocket" / "ออมสิน" accounts above now render on `/dashboard/goals` for this user — not click-tested live in an authenticated browser session (no login credentials available in this session). Verified instead by re-running the new fallback logic's exact shape against the real `stg_nexworth_db` row values (see Technical Notes).
 
 ## Technical Notes
-(fill in after implementation: files touched, test results)
+**Files touched:**
+- `apps/api/src/controllers/goal.controller.ts` — added `getVirtualGoalsFromAccounts()` helper; `listGoalsHandler` and `getGoalsSummaryHandler` now fall back to it when the org has 0 real `Goal` rows.
+- `apps/web/src/app/dashboard/goals/page.tsx` — `Goal` interface gets `isVirtual?: boolean`; card renders a "จากบัญชี" badge instead of edit/delete buttons when `isVirtual`.
+- `apps/web/messages/th.json`, `en.json` — new `goals.card.virtualBadge` / `virtualHint` keys.
+- `apps/api/src/tests/controllers/goal.controller.test.ts` — new, 4 tests (real-goals path untouched / virtual fallback for list / empty case / virtual fallback for summary totals).
+
+**Verification:**
+- `npx vitest run src/tests/controllers` — 7/7 passed (new goal tests + existing dashboard tests).
+- `npx tsc --noEmit` clean on `apps/api` (pre-existing unrelated `moduleResolution` deprecation warning only).
+- Full `apps/api` suite has 5 pre-existing failures (registration_flow, telemetry_db) unrelated to this change — untouched files, same failures before this branch.
+- Confirmed against real `stg_nexworth_db` data for `neranchara.ksr@gmail.com` (org "bigboss"): 0 `Goal` rows, 4 `GOAL`-type accounts — the new test's virtual-fallback case uses these exact account shapes/values.
