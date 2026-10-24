@@ -272,6 +272,17 @@
   - [ ] Unit tests for the new fallback paths.
   - [ ] **[NEEDS VERIFY]** staging: confirm the 4 real accounts above now render on the Goals page.
 
+### 🐛 [STORY] NEX-BUG-15: Desktop sidebar hides "เป้าหมาย" (Goals); mobile bottom nav shows it unconditionally
+- **Status:** [COMPLETED] ✅
+- **Root cause:** `'goals'` was never added to the RBAC resource list (`organization.service.ts`'s `resources` array, `seed-master-db.ts`'s `ALL_RESOURCES`) — no role in any org has a `Permission` row for it, so `hasPermission('goals')` is false for everyone except system admins. Desktop `Sidebar.tsx` filters `MAIN_NAV_LINKS` through `hasPermission()` and drops Goals; `MobileBottomNav.tsx` hardcodes its own list with no permission check at all, so it shows Goals regardless — hence the two navs visibly disagree.
+- **Sub-Tasks:**
+  - [x] Add `'goals'` to `resources` in `organization.service.ts` and `ALL_RESOURCES` in `seed-master-db.ts`.
+  - [x] Backfill script: upsert a `'goals'` Permission row for every existing Role (full CRUD for `Admin`, view-only for everyone else) — ran against staging, 54 roles updated.
+  - [x] `MobileBottomNav.tsx`: gate its Goals tab on `hasPermission('goals')` too.
+  - [x] 3 unit tests for the nav permission gate.
+  - [x] **[VERIFIED]** staging: confirmed directly in the DB that `neranchara.ksr@gmail.com`'s Admin role now has full `goals` permission.
+  - [ ] **[NEEDS VERIFY]** production: this branch's backfill only ran against staging — needs to run against prod too at deploy (idempotent, safe to re-run).
+
 ---
 
 ## 🟢 [EPIC] Phase 27: Transactions Page UX — Filtered Summary

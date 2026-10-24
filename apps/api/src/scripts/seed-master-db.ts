@@ -61,7 +61,7 @@ const SYSTEM_ROLES = [
 const ALL_RESOURCES = [
   'dashboard', 'users', 'transactions', 'permissions', 'monthly',
   'loan-tracker', 'liabilities', 'assets', 'accounts', 'banks',
-  'types', 'categories', 'organizations',
+  'types', 'categories', 'organizations', 'goals',
 ];
 
 async function seedGlobalBehaviorTypes() {

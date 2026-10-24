@@ -22,9 +22,9 @@ export const setupOrganizationDefaults = async (orgId: string, adminUserId: stri
 
   // 3. Seed Permissions for each role
   const resources = [
-    'dashboard', 'users', 'transactions', 'permissions', 'monthly', 
-    'loan-tracker', 'liabilities', 'assets', 'accounts', 'banks', 
-    'types', 'categories'
+    'dashboard', 'users', 'transactions', 'permissions', 'monthly',
+    'loan-tracker', 'liabilities', 'assets', 'accounts', 'banks',
+    'types', 'categories', 'goals'
   ];
 
   for (const resource of resources) {
