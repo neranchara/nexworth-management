@@ -4,9 +4,10 @@
 // hides "เป้าหมาย" while the mobile bottom nav (hardcoded, no permission check) shows it.
 // Backfill a 'goals' Permission row for every existing Role, matching the same
 // full-CRUD-for-Admin / view-only-for-everyone-else pattern used when seeding new orgs.
-import { prisma } from '../lib/prisma.js';
+import { prisma, logConnectedDatabase } from '../lib/prisma-script.js';
 
 async function main() {
+  await logConnectedDatabase();
   console.log('▶ NEX-BUG-15 Backfill: Role → goals Permission');
 
   const roles = await prisma.role.findMany({ select: { id: true, name: true, organizationId: true } });
