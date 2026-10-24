@@ -40,8 +40,9 @@ async function main() {
   const accountNameById = new Map(allAccountsInOrg.map(a => [a.id, `${a.name} (${a.type})`]));
 
   console.log(`=== Accounts for ${email}${accountType ? ` (type=${accountType})` : ''} ===`);
+  console.log('(isPersonal: whether this account counts toward Dashboard Net Worth / Total Assets - see calculateFinancialStats)');
   for (const a of accounts) {
-    console.log({ id: a.id, name: a.name, type: a.type, bank: a.bank?.name, isActive: a.isActive, storedBalance: a.asset?.amount });
+    console.log({ id: a.id, name: a.name, type: a.type, bank: a.bank?.name, isActive: a.isActive, isPersonal: a.isPersonal, storedBalance: a.asset?.amount });
   }
 
   for (const acc of accounts) {
