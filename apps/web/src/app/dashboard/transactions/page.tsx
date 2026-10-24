@@ -272,6 +272,13 @@ export default function TransactionsPage() {
     return true;
   });
 
+  const filterSummary = sortedTransactions.reduce((acc, tx) => {
+    const amount = Math.abs(tx.amount);
+    if (tx.direction === 'FROM') acc.expense += amount;
+    else acc.income += amount;
+    return acc;
+  }, { income: 0, expense: 0 });
+
   const handleScanSlip = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -395,10 +402,33 @@ export default function TransactionsPage() {
             <option value="" className="bg-navy">{t('allCategories')}</option>
             {categories.map(c => <option key={c.id} value={c.id} className="bg-navy">{c.name}</option>)}
          </select>
-         <select value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
+         <select data-testid="transactions-list-sel-filter-account" value={filterAccount} onChange={(e) => setFilterAccount(e.target.value)} className="bg-navy/80 border border-white/5 rounded-lg py-1.5 px-3 text-xs text-slate-300 outline-none focus:border-emerald">
             <option value="" className="bg-navy">{t('allAccounts')}</option>
             {accounts.map(a => <option key={a.id} value={a.id} className="bg-navy">{a.name}</option>)}
          </select>
+      </GlassCard>
+
+      <GlassCard className="p-3 shrink-0 bg-navy/40">
+         <div data-testid="transactions-summary-bar" className="flex flex-wrap gap-6 items-center">
+           <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">{t('summary.count')}</span>
+              <span data-testid="transactions-summary-text-count" className="text-sm font-bold text-white">{sortedTransactions.length}</span>
+           </div>
+           <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">{t('summary.income')}</span>
+              <span data-testid="transactions-summary-text-income" className="text-sm font-bold text-emerald">+{filterSummary.income.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+           </div>
+           <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">{t('summary.expense')}</span>
+              <span data-testid="transactions-summary-text-expense" className="text-sm font-bold text-rose-400">-{filterSummary.expense.toLocaleString(undefined, { minimumFractionDigits: 2 })}</span>
+           </div>
+           <div className="flex flex-col gap-0.5">
+              <span className="text-[9px] text-slate-400 uppercase font-bold tracking-widest">{t('summary.net')}</span>
+              <span data-testid="transactions-summary-text-net" className={`text-sm font-bold ${filterSummary.income - filterSummary.expense >= 0 ? 'text-emerald' : 'text-rose-400'}`}>
+                {(filterSummary.income - filterSummary.expense).toLocaleString(undefined, { minimumFractionDigits: 2 })}
+              </span>
+           </div>
+         </div>
       </GlassCard>
 
       <GlassCard className="flex-1 overflow-hidden bg-navy/40">

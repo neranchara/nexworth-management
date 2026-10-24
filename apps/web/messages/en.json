@@ -76,6 +76,12 @@
     "search": "Search...",
     "allCategories": "All Categories",
     "allAccounts": "All Accounts",
+    "summary": {
+      "count": "Records",
+      "income": "Total Income",
+      "expense": "Total Expense",
+      "net": "Net"
+    },
     "table": {
       "date": "Date",
       "description": "Description",
