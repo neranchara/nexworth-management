@@ -298,7 +298,7 @@
   - [x] `backfill-goals-permission.ts` switched to the new helper.
   - [x] New `audit-account-balances.ts` (parameterized by email + optional account type) — reconciles stored `Asset.amount` against a fresh sum of transaction history, flags likely duplicates.
   - [x] `tsc --noEmit` clean; verified the override actually works by pointing at a different local DB and seeing the self-check output change.
-  - [ ] **[NEEDS VERIFY]** Re-run `backfill-goals-permission.ts` against real production using the fixed script — until then, "เป้าหมาย" may still be missing from non-system-admin roles' nav on production despite NEX-BUG-15 being deployed.
+  - [x] **[VERIFIED]** Re-ran `backfill-goals-permission.ts` against real production (`neondb`) from a standalone PowerShell window — `Found 13 roles across all orgs` / `13 Permission rows upserted`. Root cause of the repeated false negatives: running the same commands in an **IDE-integrated terminal (Cursor)** silently re-pointed `DATABASE_URL` at local staging regardless of the manual `$env:` override — a standalone OS terminal does not have this problem.
   - [ ] Not done (out of scope): re-verify whether any *other* historical backfill script's claimed staging/production run was similarly actually a no-op against the wrong DB.
 
 ### 🐛 [STORY] NEX-BUG-17: Production `TransactionType` table missing `assetMultiplier`/`liabMultiplier` — every transaction/dashboard/loan query crashed
